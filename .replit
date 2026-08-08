@@ -24,13 +24,13 @@ args = "CareStudy Preview"
 name = "CareStudy Preview"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PATH=\"$HOME/.nix-profile/bin:$PATH\" .pythonlibs/bin/streamlit run carestudy_rag/src/app.py --server.port 8000 --server.address 0.0.0.0 --server.headless true"
-waitForPort = 8000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PATH=\"$HOME/.nix-profile/bin:$PATH\" .pythonlibs/bin/streamlit run carestudy_rag/src/app.py --server.port 8000 --server.address 0.0.0.0 --server.headless true --server.enableCORS false --server.enableXsrfProtection false --browser.serverAddress 0.0.0.0"
+waitForPort = 8000
 
 [agent]
 stack = "PNPM_WORKSPACE"

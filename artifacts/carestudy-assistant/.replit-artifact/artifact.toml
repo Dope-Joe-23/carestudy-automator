@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "CareStudy Drafting Assistant"
+description = "A nursing care-study drafting workspace that organizes six chapters, captures patient notes, and previews grounded section drafting without inventing patient facts."
+version = "1.0.0"
+id = "artifacts/carestudy-assistant"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20545
+
+[services.development]
+run = "pnpm --filter @workspace/carestudy-assistant run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/carestudy-assistant", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/carestudy-assistant/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20545"
+BASE_PATH = "/"

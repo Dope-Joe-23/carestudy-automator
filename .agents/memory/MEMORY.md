@@ -1,0 +1,1 @@
+- [Preview routing](preview-routing.md) — Standalone Streamlit workflows may run but remain blank in the preview pane; a registered web artifact route renders reliably.
