@@ -6,7 +6,7 @@ information the sample care studies in attached_assets/ contain.
 """
 
 
-def _f(field_id, label, placeholder="", ftype="text", options=None, hint=""):
+def _f(field_id, label, placeholder="", ftype="text", options=None, hint="", required=False):
     return {
         "id": field_id,
         "label": label,
@@ -14,6 +14,7 @@ def _f(field_id, label, placeholder="", ftype="text", options=None, hint=""):
         "type": ftype,
         "options": options or [],
         "hint": hint,
+        "required": required,
     }
 
 
@@ -33,9 +34,9 @@ SECTIONS = {
     "1.1 Patient's Particulars": {
         "blurb": "Biographical details that identify the patient and the admission.",
         "fields": [
-            _f("initials", "Patient's name / initials", "e.g. Mrs. P.A"),
-            _f("age", "Age", "e.g. 49 years"),
-            _f("sex", "Sex", "", "select", ["Female", "Male"]),
+            _f("initials", "Patient's name / initials", "e.g. Mrs. P.A", required=True),
+            _f("age", "Age", "e.g. 49 years", required=True),
+            _f("sex", "Sex", "", "select", ["Female", "Male"], required=True),
             _f("dob", "Date of birth", "YYYY-MM-DD"),
             _f("religion", "Religion", "e.g. Christian / Muslim"),
             _f("ethnicity", "Ethnicity / tribe", "e.g. Akan / Mole-Dagbani"),
@@ -46,7 +47,7 @@ SECTIONS = {
             _f("hospitalNumber", "Hospital number", "e.g. 002145/23"),
             _f("ward", "Ward / unit", "e.g. Female Medical Ward"),
             _f("admissionDateTime", "Date & time of admission", "e.g. 21st August, 2023, 2:30 pm"),
-            _f("diagnosis", "Admission diagnosis", "e.g. Sickle cell disease — acute chest syndrome"),
+            _f("diagnosis", "Admission diagnosis", "e.g. Sickle cell disease — acute chest syndrome", required=True),
             _f("informant", "Informant & reliability", "e.g. Patient herself — reliable"),
         ],
         "rows": None,

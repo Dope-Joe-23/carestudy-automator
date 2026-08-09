@@ -36,20 +36,21 @@ def render_field(heading, field, container=None):
     ftype = field["type"]
     help_text = field["hint"] or None
     target = container if container is not None else st
+    label = field["label"] + (" *" if field.get("required") else "")
 
     if ftype == "textarea":
         target.text_area(
-            field["label"], key=key, height=84,
+            label, key=key, height=84,
             placeholder=field["placeholder"], help=help_text,
         )
     elif ftype == "select":
         options = [""] + field["options"]
         target.selectbox(
-            field["label"], options, key=key, help=help_text,
+            label, options, key=key, help=help_text,
         )
     else:
         target.text_input(
-            field["label"], key=key, placeholder=field["placeholder"], help=help_text,
+            label, key=key, placeholder=field["placeholder"], help=help_text,
         )
 
 
@@ -118,6 +119,13 @@ for tab, (chapter_name, headings) in zip(tabs, CHAPTERS):
                     render_section_fields(heading)
                 if section.get("rows"):
                     render_section_rows(heading)
+
+                required_missing = [
+                    f["label"] for f in section["fields"]
+                    if f.get("required") and not st.session_state.get(f"f_{heading}_{f['id']}", "").strip()
+                ]
+                if required_missing:
+                    st.caption("⚠️ Required fields missing: " + ", ".join(required_missing))
 
                 free_notes = st.text_area(
                     "Your own clinical notes (free text)",

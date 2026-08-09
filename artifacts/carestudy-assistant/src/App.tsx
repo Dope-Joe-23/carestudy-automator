@@ -11,6 +11,7 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
+  CircleAlert,
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
@@ -201,6 +202,13 @@ function computeStatus(section: Section): SectionStatus {
   return hasContent ? 'noted' : 'empty';
 }
 
+/** Required fields that still need the student's input (soft — never blocks drafting). */
+function missingRequiredFields(section: Section): TemplateField[] {
+  return section.fields.filter(
+    (field) => field.required && !(section.data[field.id] ?? '').trim(),
+  );
+}
+
 function composeSectionInput(section: Section): string {
   const parts: string[] = [];
 
@@ -260,6 +268,11 @@ function FieldControl({
           <Check className="size-2.5" strokeWidth={3.2} />
         </span>
         {field.label}
+        {field.required && (
+          <span className="text-destructive" aria-hidden="true">
+            *
+          </span>
+        )}
       </label>
 
       {field.type === 'textarea' ? (
@@ -271,6 +284,7 @@ function FieldControl({
           rows={3}
           className="min-h-[76px] bg-card leading-relaxed"
           aria-describedby={field.hint ? `hint-${field.id}` : undefined}
+          aria-required={field.required || undefined}
         />
       ) : field.type === 'select' ? (
         <Select
@@ -297,6 +311,7 @@ function FieldControl({
           onChange={(event) => onChange(event.target.value)}
           className="h-9 bg-card"
           aria-describedby={field.hint ? `hint-${field.id}` : undefined}
+          aria-required={field.required || undefined}
         />
       ) : (
         <Input
@@ -307,6 +322,7 @@ function FieldControl({
           placeholder={field.placeholder}
           className="h-9 bg-card"
           aria-describedby={field.hint ? `hint-${field.id}` : undefined}
+          aria-required={field.required || undefined}
         />
       )}
 
@@ -470,6 +486,13 @@ function Home() {
     );
   };
 
+  const chapterMissingRequired = (chapterIndex: number) =>
+    chapters[chapterIndex].sections.reduce(
+      (sum, section) =>
+        section.status === 'drafted' ? sum : sum + missingRequiredFields(section).length,
+      0,
+    );
+
   const updateCurrentSection = (updates: Partial<Section>) => {
     setChapters((previous) =>
       previous.map((chapter, chapterIndex) => {
@@ -592,6 +615,7 @@ function Home() {
   const filledCount = sectionFilledCount(currentSection);
   const totalCount = sectionInputCount(currentSection);
   const rowCount = currentSection.rowData.length;
+  const currentRequiredMissing = missingRequiredFields(currentSection);
   const atFirst = activeChapter === 0 && activeSection === 0;
   const atLast =
     activeChapter === chapters.length - 1 &&
@@ -636,6 +660,7 @@ function Home() {
               {chapters.map((chapter, index) => {
                 const Icon = CHAPTER_ICONS[index] ?? FileText;
                 const completion = chapterCompletion(index);
+                const missingRequired = chapterMissingRequired(index);
                 return (
                   <SidebarMenuItem key={chapter.name}>
                     <SidebarMenuButton
@@ -652,6 +677,15 @@ function Home() {
                         <span className="tabular font-mono text-[10px] text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
                           {completion}%
                         </span>
+                        {missingRequired > 0 && (
+                          <span
+                            className="flex shrink-0 items-center gap-1 rounded-full bg-amber-400/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-amber-400 group-data-[collapsible=icon]:hidden"
+                            title={`${missingRequired} required field${missingRequired === 1 ? '' : 's'} missing`}
+                          >
+                            <CircleAlert className="size-3" />
+                            {missingRequired}
+                          </span>
+                        )}
                       </span>
                       <span className="flex h-1 w-full overflow-hidden rounded-full bg-sidebar-border/70 group-data-[collapsible=icon]:hidden">
                         <span
@@ -828,6 +862,7 @@ function Home() {
               <CardContent className="space-y-1 p-2">
                 {currentChapter.sections.map((section, index) => {
                   const completion = sectionCompletion(section);
+                  const requiredMissing = missingRequiredFields(section);
                   return (
                     <button
                       key={section.id}
@@ -859,6 +894,15 @@ function Home() {
                         </span>
                       </span>
                       <span className="tabular text-[11px] text-muted-foreground">{completion}%</span>
+                      {requiredMissing.length > 0 && section.status !== 'drafted' && (
+                        <span
+                          className="flex shrink-0 items-center gap-1 rounded-full border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-amber-600 dark:text-amber-400"
+                          title={`Required: ${requiredMissing.map((f) => f.label).join(', ')}`}
+                        >
+                          <CircleAlert className="size-3" />
+                          {requiredMissing.length}
+                        </span>
+                      )}
                       {section.status === 'drafted' && (
                         <CheckCircle2 className="size-3.5 shrink-0 text-primary" />
                       )}
@@ -950,6 +994,19 @@ function Home() {
                             : `${filledCount} / ${totalCount}`}
                         </span>
                       </div>
+
+                      {currentRequiredMissing.length > 0 && !currentSection.draft.trim() && (
+                        <p
+                          role="status"
+                          className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-700 dark:text-amber-400"
+                        >
+                          <CircleAlert className="mt-px size-3.5 shrink-0" />
+                          <span>
+                            <span className="font-semibold">Required fields missing:</span>{' '}
+                            {currentRequiredMissing.map((f) => f.label).join(' · ')}
+                          </span>
+                        </p>
+                      )}
 
                       {currentSection.fields.length > 0 && (
                         <div className="mt-4 grid gap-x-4 gap-y-4 sm:grid-cols-2">

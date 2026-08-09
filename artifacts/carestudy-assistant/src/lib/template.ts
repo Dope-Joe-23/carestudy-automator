@@ -22,6 +22,8 @@ export type TemplateField = {
   options?: string[];
   /** grid columns the field should occupy (2 = full width) */
   span?: 1 | 2;
+  /** soft requirement — flagged in the UI, never blocks drafting */
+  required?: boolean;
 };
 
 export type TemplateRowColumn = {
@@ -110,18 +112,21 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
             label: "Patient's name / initials",
             placeholder: "e.g. Mrs. P.A",
             type: "text",
+            required: true,
           },
           {
             id: "age",
             label: "Age",
             placeholder: "e.g. 49 years",
             type: "text",
+            required: true,
           },
           {
             id: "sex",
             label: "Sex",
             type: "select",
             options: ["Female", "Male"],
+            required: true,
           },
           {
             id: "dob",
@@ -181,6 +186,7 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
             label: "Admission diagnosis",
             placeholder: "e.g. Sickle cell disease — acute chest syndrome",
             type: "text",
+            required: true,
           },
           {
             id: "informant",
