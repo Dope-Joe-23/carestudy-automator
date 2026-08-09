@@ -72,6 +72,13 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    proxy: {
+      // Forward API calls to the Express API server (which runs the RAG engine)
+      '/api': {
+        target: process.env.API_SERVER_URL || 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     port,

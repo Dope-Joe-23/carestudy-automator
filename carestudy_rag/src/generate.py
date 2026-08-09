@@ -106,10 +106,16 @@ def draft_section(heading: str, patient_notes: str, k_template: int = 3, k_refer
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--heading", required=True)
-    parser.add_argument("--notes", required=True, help="Path to a text file with the student's patient notes")
+    parser.add_argument("--notes", help="Path to a text file with the student's patient notes")
+    parser.add_argument("--stdin", action="store_true", help="Read patient notes from stdin instead of a file")
     args = parser.parse_args()
 
-    with open(args.notes) as f:
-        notes = f.read()
+    if args.stdin:
+        notes = sys.stdin.read()
+    elif args.notes:
+        with open(args.notes) as f:
+            notes = f.read()
+    else:
+        parser.error("provide --notes FILE or --stdin")
 
     print(draft_section(args.heading, notes))

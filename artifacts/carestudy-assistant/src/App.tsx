@@ -47,6 +47,7 @@ import {
   type TemplateField,
   type TemplateRowDef,
 } from '@/lib/template';
+import { requestDraft } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -493,14 +494,18 @@ function Home() {
       0,
     );
 
-  const updateCurrentSection = (updates: Partial<Section>) => {
+  const updateSection = (
+    chapterIndex: number,
+    sectionIndex: number,
+    updates: Partial<Section>,
+  ) => {
     setChapters((previous) =>
-      previous.map((chapter, chapterIndex) => {
-        if (chapterIndex !== activeChapter) return chapter;
+      previous.map((chapter, ci) => {
+        if (ci !== chapterIndex) return chapter;
         return {
           ...chapter,
-          sections: chapter.sections.map((section, sectionIndex) =>
-            sectionIndex === activeSection
+          sections: chapter.sections.map((section, si) =>
+            si === sectionIndex
               ? { ...section, ...updates, status: computeStatus({ ...section, ...updates }) }
               : section,
           ),
@@ -508,6 +513,9 @@ function Home() {
       }),
     );
   };
+
+  const updateCurrentSection = (updates: Partial<Section>) =>
+    updateSection(activeChapter, activeSection, updates);
 
   const setFieldValue = (fieldId: string, value: string) => {
     updateCurrentSection({ data: { ...currentSection.data, [fieldId]: value } });
@@ -542,31 +550,32 @@ function Home() {
     }
   };
 
-  const draftSection = () => {
+  const draftSection = async () => {
     if (!draftAvailable || isDrafting) return;
+    // Capture the target section now: the request takes seconds, and the user
+    // may navigate to another section before it resolves.
+    const targetChapter = activeChapter;
+    const targetSection = activeSection;
+    const heading = currentSection.heading;
     setIsDrafting(true);
-    window.setTimeout(() => {
+    try {
       const composed = composeSectionInput(currentSection);
-      const output = [
-        `Dry-run draft for ${currentSection.heading}`,
-        '',
-        'Structured template input:',
-        composed || '(no fields or notes collected yet)',
-        '',
-        'Drafting note:',
-        'This section has been shaped from the structured fields and clinical notes above. Add, remove, or revise any wording so it reflects your clinical judgement and course requirements.',
-        '',
-        'Reference status: template examples retrieved; reference material available for structure only.',
-        'Safety check: no patient facts were invented or inferred.',
-        'AI status: no AI key is connected. This is a local, transparent dry-run.',
-      ].join('\n');
-      updateCurrentSection({ draft: output });
+      const draft = await requestDraft(heading, composed);
+      updateSection(targetChapter, targetSection, { draft });
       setCopied(false);
-      setIsDrafting(false);
       toast.success(`Draft ready — ${currentSection.heading}`, {
-        description: 'Review and refine the wording before submission.',
+        description: 'Retrieved from your library and drafted locally. Review and refine the wording before submission.',
       });
-    }, 620);
+    } catch (error) {
+      toast.error('Drafting failed', {
+        description:
+          error instanceof Error
+            ? error.message
+            : 'The drafting service is unreachable. Is the API server running?',
+      });
+    } finally {
+      setIsDrafting(false);
+    }
   };
 
   const clearSection = () => {
@@ -1075,7 +1084,7 @@ function Home() {
                         {isDrafting ? (
                           <>
                             <span className="size-1.5 animate-pulse rounded-full bg-primary-foreground/70" />
-                            Preparing dry-run…
+                            Drafting…
                           </>
                         ) : (
                           <>
@@ -1113,7 +1122,7 @@ function Home() {
                           </span>
                           <div>
                             <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                              Dry-run output
+                              Draft output
                             </p>
                             <p className="text-sm font-medium">
                               {currentSection.draft
@@ -1150,7 +1159,7 @@ function Home() {
                         <div className="mt-4 space-y-3">
                           <p className="text-sm leading-relaxed text-muted-foreground">
                             {draftAvailable
-                              ? 'Ready when you are. The dry-run will only use the fields and notes you provide.'
+                              ? 'Ready when you are. Drafting uses the fields and notes you provide — grounded in your care study library.'
                               : 'Nothing collected yet. Fill the template above, or jot down bedside observations, then draft this section.'}
                           </p>
                           <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
@@ -1194,7 +1203,7 @@ function Home() {
             <span className="flex items-center gap-1.5 text-primary">
               <ShieldCheck className="size-3.5" /> Designed to support your thinking, never replace it.
             </span>
-            <span className="opacity-60">Local preview · no AI key connected</span>
+            <span className="opacity-60">Retrieval-grounded drafting · runs on your machine</span>
           </footer>
         </div>
       </SidebarInset>

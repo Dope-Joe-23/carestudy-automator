@@ -10,7 +10,46 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: drafting
+    description: Care study section drafting
 paths:
+  /sections/draft:
+    post:
+      operationId: draftSection
+      tags: [drafting]
+      summary: Draft one care study section via the RAG engine
+      description: >-
+        Runs the local Python RAG pipeline (retrieval + Claude) for a section.
+        Returns the drafted text, or a transparent dry-run report when no
+        ANTHROPIC_API_KEY is available on the server.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [heading, notes]
+              properties:
+                heading:
+                  type: string
+                  example: 1.10 Literature Review
+                notes:
+                  type: string
+                  description: The student's own clinical notes for the section
+      responses:
+        "200":
+          description: Drafted section text
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draft:
+                    type: string
+        "422":
+          description: Missing heading or notes
+        "500":
+          description: Drafting failed
   /healthz:
     get:
       operationId: healthCheck
