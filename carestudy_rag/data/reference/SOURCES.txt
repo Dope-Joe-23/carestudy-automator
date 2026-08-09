@@ -1,0 +1,50 @@
+Reference library sources
+========================================
+Retrieved: 2026-08-09
+License: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+Source: Wikipedia (https://www.wikipedia.org/)
+
+- Pneumonia (7249 words) -> pneumonia.txt
+  https://en.wikipedia.org/wiki/Pneumonia
+- Hypertension (5927 words) -> hypertension.txt
+  https://en.wikipedia.org/wiki/Hypertension
+- Diabetes mellitus type 2 (4628 words) -> diabetes_type_2.txt
+  https://en.wikipedia.org/wiki/Diabetes_mellitus_type_2
+- Sickle cell disease (8206 words) -> sickle_cell_disease.txt
+  https://en.wikipedia.org/wiki/Sickle_cell_disease
+- Malaria (10688 words) -> malaria.txt
+  https://en.wikipedia.org/wiki/Malaria
+- Appendicitis (4893 words) -> appendicitis.txt
+  https://en.wikipedia.org/wiki/Appendicitis
+- Asthma (6221 words) -> asthma.txt
+  https://en.wikipedia.org/wiki/Asthma
+- Urinary tract infection (4066 words) -> urinary_tract_infection.txt
+  https://en.wikipedia.org/wiki/Urinary_tract_infection
+- Peptic ulcer disease (4166 words) -> peptic_ulcer_disease.txt
+  https://en.wikipedia.org/wiki/Peptic_ulcer_disease
+- Iron-deficiency anemia (4329 words) -> iron_deficiency_anemia.txt
+  https://en.wikipedia.org/wiki/Iron-deficiency_anemia
+- Tuberculosis (8615 words) -> tuberculosis.txt
+  https://en.wikipedia.org/wiki/Tuberculosis
+- Myocardial infarction (7202 words) -> myocardial_infarction.txt
+  https://en.wikipedia.org/wiki/Myocardial_infarction
+- Ceftriaxone (1776 words) -> ceftriaxone.txt
+  https://en.wikipedia.org/wiki/Ceftriaxone
+- Paracetamol (4973 words) -> paracetamol.txt
+  https://en.wikipedia.org/wiki/Paracetamol
+- Amoxicillin (2123 words) -> amoxicillin.txt
+  https://en.wikipedia.org/wiki/Amoxicillin
+- Metformin (5135 words) -> metformin.txt
+  https://en.wikipedia.org/wiki/Metformin
+- Furosemide (1851 words) -> furosemide.txt
+  https://en.wikipedia.org/wiki/Furosemide
+- Artemether/lumefantrine (902 words) -> artemether_lumefantrine.txt
+  https://en.wikipedia.org/wiki/Artemether/lumefantrine
+- Folic acid (6104 words) -> folic_acid.txt
+  https://en.wikipedia.org/wiki/Folic_acid
+- Insulin (medication) (7057 words) -> insulin_medication.txt
+  https://en.wikipedia.org/wiki/Insulin_(medication)
+- Nursing process (1170 words) -> nursing_process.txt
+  https://en.wikipedia.org/wiki/Nursing_process
+- Nursing diagnosis (1826 words) -> nursing_diagnosis.txt
+  https://en.wikipedia.org/wiki/Nursing_diagnosis

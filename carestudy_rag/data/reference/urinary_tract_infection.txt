@@ -1,0 +1,156 @@
+Urinary tract infection
+
+A urinary tract infection (UTI) is an infection that affects a part of the urinary tract, which includes the bladder, urethra and the kidney. Lower UTIs affect the bladder (cystitis) or urethra while upper UTIs affect the kidney (pyelonephritis). Symptoms from a lower UTI include burning or pain during urination, pain in the lower abdomen and the urge to urinate even when the bladder is empty. Symptoms of a kidney infection are more systemic and include fever or flank pain, usually in addition to the symptoms of a lower UTI. Rarely, the urine may appear bloody. Symptoms may be less clear in very young or old people.
+The most common cause of infection is E. coli, though other bacteria or fungi may sometimes be the cause. Risk factors include being female, sexual intercourse, diabetes, using a catheter, and family history. Additional factors that have been found to increase the risk of infection include urinary retention (delaying urination), insufficient water intake, use of spermicides as a contraceptive method, and poor genital hygiene.
+Kidney infections usually occurs when a bladder infection spreads, but may also come from bacteria in the blood. Diagnosis in young healthy women can be based on symptoms alone. In those with vague symptoms, diagnosis can be harder because bacteria may be present even if there is no infection.
+In uncomplicated cases, UTIs are usually treated with a short course of antibiotics. Resistance to many of the antibiotics used to treat this condition is increasing. In complicated cases, a longer course or intravenous antibiotics may be needed. If symptoms do not improve in two or three days, further diagnostic testing may be needed. People with bacteria or white blood cells in their urine but no symptoms usually do not need antibiotics. For people with recurrent infections, methenamine may be prescribed. Postmenopausal women may also be offered vaginal estrogen replacement. If these do not work, preventative antibiotics can be considered.
+Approximately 400 million UTI cases occur each year. They are more common in women than men, and are the most common bacterial infection in women. Up to 10% of women have a urinary tract infection in a given year, and half of women have at least one infection at some point in their lifetime. They occur most frequently between the ages of 16 and 35 years. Recurrences are common. Urinary tract infections have been described since ancient times with the first documented description in the Ebers Papyrus dated to c. 1550 BC.
+
+
+== Signs and symptoms ==
+
+The most common symptoms of a UTI are burning with urination and having to urinate frequently (or an urge to urinate) in the absence of vaginal discharge and significant pain. These symptoms may vary from mild to severe and in healthy women last an average of six days. Some pain above the pubic bone or in the lower back may be present. People experiencing an upper urinary tract infection, or pyelonephritis, may experience flank pain, fever, or nausea and vomiting in addition to the classic symptoms of a lower urinary tract infection. Rarely, there may be blood or visible pus in the urine.
+
+
+=== Children ===
+In young children, the only symptom of a urinary tract infection (UTI) may be a fever. Because of the lack of more obvious symptoms, when girls under the age of two or uncircumcised boys less than a year old exhibit a fever, a culture of the urine is recommended by many medical associations. Infants may feed poorly, vomit, sleep more, or show signs of jaundice. In older children, new onset urinary incontinence (loss of bladder control) may occur. About 1 in 400 infants of one to three months of age with a UTI also have bacterial meningitis.
+
+
+=== Elderly ===
+Urinary tract symptoms are frequently lacking in the elderly. The presentations may be vague and include incontinence, a change in mental status, or fatigue as the only symptoms. Delirium can co-occur with UTIs in elderly people. Some present to a health care provider with sepsis, an infection of the blood, as the first symptoms. Diagnosis can be complicated by the fact that many elderly people have preexisting incontinence or dementia. Rarely, for UTIs associated with urinary catheters, the urine turns purple (purple urine bag syndrome).
+It is reasonable to obtain a urine culture in those with signs of systemic infection who may be unable to report urinary symptoms, such as when advanced dementia is present. Systemic signs of infection include a fever or increase in temperature of more than 1.1 °C (2.0 °F) from usual, chills, and an increased white blood cell count.
+
+
+== Cause ==
+
+Pathogenic E. coli from the gut is the cause of 75% of uncomplicated UTIs, and 65% of complicated UTIs. Rarely they may be due to viral or fungal infections. Healthcare-associated urinary tract infections (mostly related to urinary catheterization) involve a much broader range of pathogens including: Klebsiella pneumoniae, Proteus mirabilis, Pseudomonas aeruginosa and Enterococcus faecalis. These species can form biofilms and colonise catheters. In sub-Saharan Africa, Staphylococcus aureus, which typically occurs secondary to blood-borne infections, is more common.
+Chlamydia trachomatis and Mycoplasma genitalium can infect the urethra but not the bladder. These infections are usually classified as a urethritis rather than urinary tract infection.
+
+
+=== Intercourse ===
+In young sexually active women, sexual activity is the cause of 75–90% of bladder infections, with the risk of infection related to the frequency of sex. The term "honeymoon cystitis" has been applied to this phenomenon of frequent UTIs during early marriage. In post-menopausal women, sexual activity does not affect the risk of developing a UTI. Spermicide use, independent of sexual frequency, increases the risk of UTIs. Diaphragm use is also associated. Condom use without spermicide or use of birth control pills does not increase the risk of uncomplicated urinary tract infection.
+Anal intercourse may increase the risk of UTI in men and in women if followed by vaginal sex.
+Although sex is a risk factor, UTIs are not classified as sexually transmitted infections (STIs).
+
+
+=== Sex ===
+Women are more prone to UTIs than men because, in females, the urethra is much shorter and closer to the anus. As a woman's estrogen levels decrease with menopause, her risk of urinary tract infections increases due to the loss of protective vaginal flora. Additionally, vaginal atrophy that can sometimes occur after menopause is associated with recurrent urinary tract infections.
+Chronic prostatitis in the forms of chronic prostatitis/chronic pelvic pain syndrome and chronic bacterial prostatitis (not acute bacterial prostatitis or asymptomatic inflammatory prostatitis) may cause recurrent urinary tract infections in males. Risk of infections increases as males age. While bacteria is commonly present in the urine of older males this does not appear to affect the risk of urinary tract infections.
+
+
+=== Urinary catheters ===
+Urinary catheterization increases the risk for urinary tract infections. The risk of bacteriuria (bacteria in the urine) is between three and six percent per day, and prophylactic antibiotics are not effective in decreasing symptomatic infections. The risk of an associated infection can be decreased by catheterizing only when necessary, using aseptic technique for insertion, and maintaining unobstructed closed drainage of the catheter.
+Male scuba divers using condom catheters and female divers using external catching devices for their dry suits are also susceptible to urinary tract infections.
+
+
+=== Others ===
+A predisposition for bladder infections may run in families. This is believed to be related to genetics. Other risk factors include diabetes, being uncircumcised, and having a large prostate. In children UTIs are associated with vesicoureteral reflux (an abnormal movement of urine from the bladder into ureters or kidneys) and constipation.
+Persons with spinal cord injury are at increased risk for urinary tract infection in part because of chronic use of a catheter, and in part because of voiding dysfunction. It is the most common cause of infection in this population, as well as the most common cause of hospitalization.
+
+
+== Pathogenesis ==
+
+The bacteria that cause urinary tract infections typically enter the bladder via the urethra. However, infection may also occur via the blood or lymph. It is believed that the bacteria are usually transmitted to the urethra from the bowel, with females at greater risk due to their anatomy. After gaining entry to the bladder, E. coli are able to attach to the bladder wall and form a biofilm that resists the body's immune response.
+About half of the recurrent infections have the same strain as the first infection. This implies that there is a reservoir of the pathogen somewhere in the body. Potential locations of these reservoirs are the gut or vaginal microbiome, or even the bladder itself. Bacteria that cause UTIs have been found in all three locations.
+
+
+== Diagnosis ==
+
+In straightforward cases, a diagnosis may be made and treatment given based on symptoms alone without further laboratory confirmation.
+
+
+=== Urine analysis ===
+In complicated or questionable cases, it may be useful to confirm the diagnosis via urinalysis. For instance, a nitrate test can diagnose some UTIs, as a subset of bacteria produce this. Not all bacteria do, however, so a negative test does not exclude a UTI. Other dipstick values useful for diagnosing UTIs are high pH (some bacteria split urea), the presence of blood, and or leukocyte esterase. Another test, urine microscopy, looks for the presence of red blood cells, white blood cells, or bacteria.
+Urine culture is deemed positive if it shows a bacterial colony count of greater than or equal to 103 colony-forming units per mL of a typical urinary tract organism. Antibiotic sensitivity can also be tested with these cultures, making them useful in the selection of antibiotic treatment. As symptoms can be vague and without reliable tests for urinary tract infections, diagnosis can be difficult in the elderly.
+
+
+=== Classification ===
+A urinary tract infection may involve only the lower urinary tract, in which case it is known as a bladder infection. Alternatively, it may involve the upper urinary tract, in which case it is known as pyelonephritis. If the urine contains significant bacteria but there are no symptoms, the condition is known as asymptomatic bacteriuria. If a urinary tract infection involves the upper tract, and the person has diabetes mellitus, is pregnant, is male, or immunocompromised, it is considered complicated. Otherwise if a woman is healthy and premenopausal it is considered uncomplicated. In children when a urinary tract infection is associated with a fever, it is deemed to be an upper urinary tract infection.
+
+
+=== Children ===
+To make the diagnosis of a urinary tract infection in children, a positive urinary culture is required. Contamination poses a frequent challenge depending on the method of collection used, thus a cutoff of 105 CFU/mL is used for a "clean-catch" mid stream sample, 104 CFU/mL is used for catheter-obtained specimens, and 102 CFU/mL is used for suprapubic aspirations (a sample drawn directly from the bladder with a needle). The use of "urine bags" to collect samples is discouraged by the World Health Organization due to the high rate of contamination when cultured, and catheterization is preferred in those not toilet trained.
+Some, such as the American Academy of Pediatrics recommends renal ultrasound and voiding cystourethrogram (watching a person's urethra and urinary bladder with real time x-rays while they urinate) in all children less than two years old who have had a urinary tract infection. However, because there is a lack of effective treatment if problems are found, others such as the National Institute for Health and Care Excellence only recommends routine imaging in those less than six months old or who have unusual findings.
+
+
+=== Differential diagnosis ===
+In women with cervicitis (inflammation of the cervix) or vaginitis (inflammation of the vagina) and in young men with UTI symptoms, a Chlamydia trachomatis or Neisseria gonorrhoeae infection may be the cause. These infections are typically classified as a urethritis rather than a urinary tract infection. Vaginitis may also be due to a yeast infection. Interstitial cystitis (chronic pain in the bladder) may be considered for people who experience multiple episodes of UTI symptoms but urine cultures remain negative and not improved with antibiotics. Prostatitis (inflammation of the prostate) may also be considered in the differential diagnosis.
+Hemorrhagic cystitis, characterized by blood in the urine, can occur secondary to several causes, including infections, radiation therapy, underlying cancer, medications, and toxins. Medications that commonly cause this problem include the chemotherapeutic agent cyclophosphamide with rates of 2–40%. Eosinophilic cystitis is a rare condition where eosinophiles are present in the bladder wall. Signs and symptoms are similar to a bladder infection. Its cause is not entirely clear; however, it may be linked to food allergies, infections, and medications among others.
+
+
+== Prevention ==
+A number of behaviors are recommended to prevent UTIs from recurring. They include urinating after sex, avoiding douching, wiping from front to back after defecation, and wearing breathable underwear. It is unclear how much these help; clinical guidelines typically regard the evidence as weak. NICE also recommends not holding up urine frequently and drinking sufficiently. There is lack of evidence surrounding the effect of tampon use. In those with frequent urinary tract infections who use spermicide or a diaphragm as a method of contraception, they are advised to use alternative methods.
+Using urinary catheters as little and for as short a time as possible, in addition to appropriate care of the catheter when used, prevents catheter-associated urinary tract infections. They should be inserted using sterile technique in hospital; however, non-sterile technique may be appropriate in those who self-catheterize. The urinary catheter set up should also be kept sealed. Evidence does not support a significant decrease in risk when silver-alloy catheters are used.
+
+
+=== Medications ===
+For peri-menopausal or postmenopausal women with recurrent infections, topical vaginal estrogen has been found to reduce recurrence. For other people, or if topical estrogen does not work sufficiently, a single dose of antibiotics after a triggering event (like intercourse) can be considered. Methenamine is another medication used for prevention. As an anti-septic, antibiotic resistance does not develop against it.
+European guidelines, including the UK guidelines, recommend a prolonged course of daily antibiotics after other options are proven ineffective or inappropriate. Where possible, the choice of antibiotic should be informed by a recent culture and the results of a susceptibility test. The American Urological Association recommends continuous antibiotics as one of many first-line options for recurrent UTIs.
+Antibiotics following short-term urinary catheterization decrease the subsequent risk of a bladder infection. A number of UTI vaccines are in development as of 2025.
+
+
+=== Children ===
+Low-dose antibiotics slightly reduce the risk of recurrent UTIs in children. However, the benefit is small; many children stop having repeat infections without antibiotics, and antibiotic use can increase the likelihood that future UTIs will be resistant to treatment. Circumcision of boys has been observed to exhibit a strong protective effect against UTIs, with some research suggesting as much as a 90% reduction in symptomatic UTI incidence among male infants, if they are circumcised. The protective effect is even stronger in boys born with urogenital abnormalities.
+
+
+=== Dietary supplements ===
+Cranberry products can reduce the risk of UTIs in certain groups (women with reoccurring UTIs, children, and people having had clinical interventions), but not in pregnant women, the elderly or people with urination disorders. They can also be used as an adjuvant to antibiotics and other standard treatments. Some evidence suggests that cranberry juice is more effective at UTI control than dehydrated tablets or capsules. Cranberry supplements are high in sugar content, which may worsen the risks associated with UTIs in patients with diabetes mellitus.
+D-mannose is often marketed as a dietary supplement that prevents UTIs; however, there is little evidence supporting its use. A randomised controlled trial compared daily d-mannose with a placebo (fructose) among women with recurrent urinary tract infections over 6 months. D-mannose offered no benefit over placebo in reducing UTIs.
+Certain probiotics might help reduce UTI recurrence, but evidence is weaker than for cranberries.
+
+
+== Treatment ==
+The mainstay of treatment is antibiotics. Fosfomycin can be used as an effective treatment for both UTIs and complicated UTIs, including acute pyelonephritis. The standard regimen for complicated UTIs is an oral 3 g dose administered once every 48 or 72 hours for a total of 3 doses or a 6 grams every 8 hours for 7 days to 14 days when fosfomycin is given in IV form. Gepotidacin was approved for medical use in the United States in March 2025. It is the first new antibiotic approved in the US for UTIs in nearly 30 years.
+Phenazopyridine is occasionally prescribed during the first few days in addition to antibiotics to help with the burning and urgency sometimes felt during a bladder infection. However, it is not routinely recommended due to safety concerns with its use, specifically an elevated risk of methemoglobinemia (higher than normal level of methemoglobin in the blood). Paracetamol may be used for fevers. There is no good evidence for the use of cranberry products for treating current infections.
+
+
+=== Uncomplicated ===
+Uncomplicated infections can be diagnosed and treated based on symptoms alone. Antibiotics taken by mouth such as nitrofurantoin, pivmecillinam, or fosfomycin are typically first line. Fosfomycin may be used as a single dose, whereas nitrofurantoin and pivmecillinam require a 3 to 5 day course. Cephalosporins, amoxicillin/clavulanic acid, or a fluoroquinolone may also be used. Antibiotic resistance to bacteria that cause UTIs has been increasing, and trimethoprim/sulfamethoxazole is now only recommended in areas with low E. coli antibiotic resistance.
+The Food and Drug Administration (FDA) recommends against the use of fluoroquinolones, including a Boxed Warning, when other options are available due to higher risks of serious side effects, such as tendinitis, tendon rupture and worsening of myasthenia gravis. The Infectious Diseases Society of America noted concern of generating resistance to this class of medication. Amoxicillin-clavulanate appears less effective than other options. For simple UTIs, children often respond to a three-day course of antibiotics. The combination sulopenem etzadroxil/probenecid (Orlynvah) was approved for medical use in the United States in October 2024.
+Women with recurrent simple UTIs are over 90% accurate in identifying new infections. They may benefit from self-treatment upon occurrence of symptoms, with medical follow-up only if the initial treatment fails.
+For mild to moderate uncomplicated UTIs, antibiotics may be completely avoided initially, following discussion with the patient. For instance, ibuprofen can be recommended while a culture is performed to confirm diagnosis and to test how susceptible the infection is to various antibiotics. Delaying or avoiding antibiotics leads to a longer recovery period, but many UTIs do resolve without antibiotics. The risk of progression to a kidney infection is higher than with antibiotic use, but remains low. A 'wait-and-see' antibiotic prescription can be provided. Overall, this strategy substantially reduces antibiotic use.
+
+
+=== Complicated ===
+Complicated UTIs are more difficult to treat and usually requires more aggressive evaluation, treatment, and follow-up. It may require identifying and addressing the underlying complication. Increasing antibiotic resistance is causing concern about the future of treating those with complicated and recurrent UTI.
+Cefepime/zidebactam (Zaynich) was approved for medical use in the United States in May 2026.
+
+
+=== Asymptomatic bacteriuria ===
+Those who have bacteria in the urine but no symptoms should not generally be treated with antibiotics. This includes those who are old, those with spinal cord injuries, and those who have urinary catheters. Pregnancy is an exception and it is recommended that women take seven days of antibiotics. If not treated it causes up to 30% of mothers to develop pyelonephritis and increases risk of low birth weight and preterm birth. Some also support treatment of those with diabetes mellitus and treatment before urinary tract procedures which will likely cause bleeding.
+
+
+=== Pregnant women ===
+Urinary tract infections, even asymptomatic presence of bacteria in the urine, are more concerning in pregnancy due to the increased risk of kidney infections. During pregnancy, high progesterone levels elevate the risk of decreased muscle tone of the ureters and bladder, which leads to a greater likelihood of reflux, where urine flows back up the ureters and towards the kidneys. While pregnant women do not have an increased risk of asymptomatic bacteriuria, if bacteriuria is present they do have a 25–40% risk of a kidney infection. Thus if urine testing shows signs of an infection—even in the absence of symptoms—treatment is recommended. Cephalexin or nitrofurantoin are typically used because they are generally considered safe in pregnancy. A kidney infection during pregnancy may result in preterm birth or pre-eclampsia (a state of high blood pressure and kidney dysfunction during pregnancy that can lead to seizures). Some women have UTIs that keep coming back in pregnancy. There is insufficient research on how to best treat these recurrent infections.
+
+
+=== Pyelonephritis ===
+Pyelonephritis is treated more aggressively than a simple bladder infection using either a longer course of oral antibiotics or intravenous antibiotics. Seven days of the oral fluoroquinolone ciprofloxacin is typically used in areas where the resistance rate is less than 10%. If the local antibiotic resistance rates are greater than 10%, a dose of intravenous ceftriaxone is often prescribed. Trimethoprim/sulfamethoxazole or amoxicillin/clavulanate orally for 14 days is another reasonable option. In those who exhibit more severe symptoms, admission to a hospital for ongoing antibiotics may be needed. Complications such as ureteral obstruction from a kidney stone may be considered if symptoms do not improve following two or three days of treatment.
+
+
+== Prognosis ==
+With treatment, symptoms generally improve within 36 hours. Up to 42% of uncomplicated infections may resolve on their own within a few days or weeks.
+15–25% of adults and children have chronic symptomatic UTIs including recurrent infections, persistent infections (infection with the same pathogen), a re-infection (new pathogen), or a relapsed infection (the same pathogen causes a new infection after it was completely gone). Recurrent urinary tract infections are defined as at least two infections (episodes) in a six-month time period or three infections in twelve months, and can occur in adults and in children.
+About 10–20% of children with upper urinary tract infection, which involves the kidney (pyelonephritis), will go on to develop scarring of the affected kidney. Then, 10–20% of those who develop scarring will have an increased risk of hypertension in later life. Recurrent UTIs are a rare cause of further kidney problems if there are no underlying abnormalities of the kidneys, resulting in less than a third of a percent (0.33%) of chronic kidney disease in adults.
+
+
+== Epidemiology ==
+Urinary tract infections occur almost four times more frequently in females than in males. Urinary tract infections are the most frequent bacterial infection in women. They occur most frequently between the ages of 16 and 35 years, with 10% of women getting an infection yearly and more than 40–60% having an infection at some point in their lives. Recurrences are common, with nearly half of people getting a second infection within a year.
+Pyelonephritis occurs between 20 and 30 times less frequently. They are the most common cause of hospital-acquired infections accounting for approximately 40%. Rates of asymptomatic bacteria in the urine increase with age from two to seven percent in women of child-bearing age to as high as 50% in elderly women in care homes. Rates of asymptomatic bacteria in the urine among men over 75 are between 7–10%. 2–10% of pregnant women have asymptomatic bacteria in the urine and higher rates are reported in women who live in some underdeveloped countries.
+Urinary tract infections may affect 10% of people during childhood. Among children, urinary tract infections are most common in uncircumcised males less than three months of age, followed by females less than one year old. Estimates of frequency among children, however, vary widely. In a group of children with a fever, ranging in age between birth and two years, 2–20% were diagnosed with a UTI.
+
+
+== Veterinary medicine ==
+Domestic cats are less susceptible to bacterial urinary tract infections than domestic dogs.
+
+
+== History ==
+Urinary tract infections have been described since ancient times with the first documented description in the Ebers Papyrus dated to c. 1550 BC. It was described by the Egyptians as "sending forth heat from the bladder". Effective treatment did not occur until the development and availability of antibiotics in the 1930s, before which time herbs, bloodletting and rest were recommended.
+
+
+== See also ==
+
+Urinary anti-infective agent
+
+
+== References ==

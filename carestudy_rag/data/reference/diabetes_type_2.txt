@@ -1,0 +1,161 @@
+Diabetes mellitus type 2
+
+Type 2 diabetes (T2D), formerly known as adult-onset diabetes, is a form of diabetes mellitus that is characterized by high blood sugar, insulin resistance, and relative lack of insulin. Common symptoms include increased thirst, frequent urination, fatigue and unexplained weight loss. Other symptoms include increased hunger, having a sensation of pins and needles, and sores (wounds) that heal slowly. Symptoms often develop slowly. Long-term complications from high blood sugar include heart disease; stroke; diabetic retinopathy, which can result in blindness; kidney failure; and poor blood flow in the lower limbs, which may lead to amputations. A sudden onset of hyperosmolar hyperglycemic state may occur; however, ketoacidosis is uncommon.
+Type 2 diabetes primarily occurs as a result of obesity and lack of exercise. Some people are genetically more at risk than others. Type 2 diabetes makes up about 90% of cases of diabetes, with the other 10% due primarily to type 1 diabetes and gestational diabetes.
+Diagnosis of diabetes is by blood tests such as fasting plasma glucose, oral glucose tolerance test, or glycated hemoglobin (A1c).
+Type 2 diabetes is often preventable by staying at a normal weight, exercising regularly, and eating a healthy diet (a popular example is a diet high in fruits and vegetables and low in sugar and saturated fat).
+Treatment may involve exercise, dietary changes, and medication. Metformin is often recommended. Many people may eventually also require insulin injections. In those on insulin, routinely checking blood sugar levels (such as through a continuous glucose monitor) is advised; however, this may not be needed in those who are not on insulin therapy. Bariatric surgery often improves diabetes in those who are obese.
+Rates of type 2 diabetes have increased markedly since 1960 in parallel with obesity. As of 2015, there were approximately 392 million people diagnosed with the disease compared to around 30 million in 1985. Typically, it begins in middle or older age, although rates of type 2 diabetes are increasing in young people. Type 2 diabetes is associated with a ten-year-shorter life expectancy. Diabetes was one of the first diseases ever described, dating back to an Egyptian manuscript from c. 1500 BCE. Two types of diabetes were identified in 400–500 CE, one type associated with youth (now identified as type 1) and the other associated with being overweight (now identified as type 2). The importance of insulin in the disease was determined in the 1920s.
+
+
+== Signs and symptoms ==
+
+The classic symptoms of diabetes are frequent urination (polyuria), increased thirst (polydipsia), increased hunger (polyphagia), and weight loss. Other symptoms may include blurred vision, itchiness, peripheral neuropathy, recurrent vaginal infections, and fatigue, as well as loss of taste.  Many people, however, have no symptoms during the first few years and are diagnosed on routine testing. A small number of people with type 2 diabetes can develop a hyperosmolar hyperglycemic state (a condition of very high blood sugar associated with a decreased level of consciousness and low blood pressure).
+
+
+=== Complications ===
+
+Type 2 diabetes is typically a chronic disease associated with a ten-year-shorter life expectancy. This is partly due to a number of complications with which it is associated, including two to four times the risk of cardiovascular disease, including ischemic heart disease and stroke; a 20-fold increase in lower limb amputations, and increased rates of hospitalizations. In the developed world, and increasingly elsewhere, type 2 diabetes is the largest cause of nontraumatic blindness and kidney failure. It has also been associated with an increased risk of cognitive dysfunction and dementia through disease processes such as Alzheimer's disease and vascular dementia. Other complications include hyperpigmentation of skin (acanthosis nigricans), sexual dysfunction, diabetic ketoacidosis, and frequent infections. There is also an association between type 2 diabetes and mild hearing loss.
+
+
+== Causes ==
+The development of type 2 diabetes is caused by a combination of lifestyle and genetic factors. While some of these factors are under personal control, such as diet and obesity, other factors are not, such as increasing age, female sex, and genetics. Generous consumption of alcohol is also a risk factor. Obesity is more common in women than men in many parts of Africa. The nutritional status of a mother during fetal development may also play a role.
+
+
+=== Lifestyle ===
+
+Lifestyle factors are important to the development of type 2 diabetes, including obesity and being overweight (defined by a body mass index of greater than 25), lack of physical activity, poor diet, psychological stress, and urbanization. Excess body fat is associated with 30% of cases in those of Chinese and Japanese descent, 60–80% of cases in those of European and African descent, and 100% of cases in Pima Indians and Pacific Islanders. Among those who are not obese, a high waist–hip ratio is often present. Smoking appears to increase the risk of type 2 diabetes. Lack of sleep has also been linked to type 2 diabetes. Laboratory studies have linked short-term sleep deprivations to changes in glucose metabolism, nervous system activity, or hormonal factors that may lead to diabetes.
+Dietary factors also influence the risk of developing type 2 diabetes. Consumption of sugar-sweetened drinks in excess is associated with an increased risk. The type of fats in the diet are important, with saturated fat and trans fatty acids increasing the risk, and polyunsaturated and monounsaturated fat decreasing the risk. Eating a lot of white rice appears to play a role in increasing risk. A lack of exercise is believed to cause 7% of cases. Sedentary lifestyle is another risk factor. Persistent organic pollutants may also play a role.
+
+
+=== Genetics ===
+
+Diabetes is associated with many genes which may contribute to an increased probability of becoming a type 2 diabetic. The heritability of diabetes is estimated at 72%. More than 36 genes and 80 single nucleotide polymorphisms (SNPs) have been found that are associated with type 2 diabetes. All of these genes together may account for only 10% of the total heritable component of the disease. The TCF7L2 allele, for example, is associated with an increased risk of developing diabetes by 1.5 times and has the strongest association of the common genetic variants. Most of the genes linked to diabetes are involved in pancreatic beta cell functions.
+There are a number of rare cases of diabetes that arise due to an abnormality in a single gene (known as monogenic forms of diabetes or "other specific types of diabetes"). These include maturity onset diabetes of the young (MODY), Donohue syndrome, and Rabson–Mendenhall syndrome, among others. Maturity onset diabetes of the young constitutes 1–5% of all cases of diabetes in young people.
+Epigenetic regulation may have a role in type 2 diabetes.
+
+
+=== Medical conditions ===
+There are a number of medications and other health problems that can predispose to diabetes. Some of the medications include: glucocorticoids, thiazides, beta blockers, atypical antipsychotics, and statins. Those who have previously had gestational diabetes are at a higher risk of developing type 2 diabetes. Other health problems that are associated include: acromegaly, Cushing's syndrome, hyperthyroidism, pheochromocytoma, and certain cancers such as glucagonomas. Individuals with cancer may be at a higher risk of mortality if they also have diabetes. Testosterone deficiency is also associated with type 2 diabetes. Eating disorders may also interact with type 2 diabetes, with bulimia nervosa increasing the risk and anorexia nervosa decreasing it.
+
+
+== Pathophysiology ==
+
+Type 2 diabetes is due to insulin resistance. As the disease progresses, there is often an increase of insulin production by beta cells, leading to a higher level of insulin in the blood (hyperinsulinemia), but the increased level of insulin is eventually insufficient to control the glucose concentration. Insulin resistance refers to the inability of cells to respond adequately to normal levels of insulin, at the molecular level of pathological mechanism, this is typically due to impairment of the insulin signal transduction pathway—specifically, aberrant inhibition of one or more proximal components in the signaling cascade downstream of the insulin receptor, such as the insulin receptor itself, insulin receptor substrate (IRS) proteins, or AKT.
+Insulin resistance occurs within the muscles, liver, and fat tissue. In the liver, insulin normally suppresses glucose release. However, in the setting of insulin resistance, the liver inappropriately releases glucose into the blood. The proportion of insulin resistance versus beta cell dysfunction differs among individuals, with some having primarily insulin resistance and only a minor defect in insulin secretion and others with slight insulin resistance and primarily a lack of insulin secretion.
+Importantly, insulin resistance also occurs within pancreatic islet β-cells themselves. Because normal β-cell function depends on intact insulin signaling within the β-cell, disruption of this pathway can impair insulin production and secretion, contributing to β-cell dysfunction of type 2 diabetes.
+Other potentially important mechanisms associated with type 2 diabetes and insulin resistance include: increased breakdown of lipids within fat cells, resistance to and lack of incretin, high glucagon levels in the blood, increased retention of salt and water by the kidneys, and inappropriate regulation of metabolism by the central nervous system. However, not all people with insulin resistance develop diabetes since an impairment of insulin secretion by pancreatic beta cells is also required.
+In the early stages of insulin resistance, the mass of beta cells expands, increasing the output of insulin to compensate for the insulin insensitivity, so that the disposition index remains constant. But when type 2 diabetes has become manifest, the person will have lost about half of their beta cells.
+The causes of the aging-related insulin resistance seen in obesity and in type 2 diabetes are uncertain. Effects of intracellular lipid metabolism and ATP production in liver and muscle cells may contribute to insulin resistance.
+
+
+== Diagnosis ==
+
+The World Health Organization definition of diabetes (both type 1 and type 2) is for a single raised glucose reading with symptoms, or for raised glucose readings on two separate dates, of either:
+
+fasting plasma glucose ≥ 7.0 mmol/L (126 mg/dL)
+or
+glucose tolerance test with two hours after the oral dose a plasma glucose ≥ 11.1 mmol/L (200 mg/dL)
+A random blood sugar of greater than 11.1 mmol/L (200 mg/dL) in association with typical symptoms or a glycated hemoglobin (HbA1c) of ≥ 48 mmol/mol (≥ 6.5 DCCT %) is another method of diagnosing diabetes. In 2009, an International Expert Committee that included representatives of the American Diabetes Association (ADA), the International Diabetes Federation (IDF), and the European Association for the Study of Diabetes (EASD) recommended that a HbA1c threshold of ≥ 48 mmol/mol (≥ 6.5 DCCT %) should be used to diagnose diabetes. This recommendation was adopted by the American Diabetes Association in 2010. Positive tests should be repeated unless the person presents with typical symptoms and blood sugar >11.1 mmol/L (>200 mg/dL).
+
+Threshold for diagnosis of diabetes is based on the relationship between results of glucose tolerance tests, fasting glucose or HbA1c and complications such as retinal problems. A fasting or random blood sugar is preferred over the glucose tolerance test, as they are more convenient for people. HbA1c has the advantages that fasting is not required and results are more stable but has the disadvantage that the test is more costly than measurement of blood glucose. It is estimated that 20% of people with diabetes in the United States do not realize that they have the disease.
+Type 2 diabetes is characterized by high blood glucose in the context of insulin resistance and relative insulin deficiency. This is in contrast to type 1 diabetes in which there is an absolute insulin deficiency due to destruction of islet cells in the pancreas and gestational diabetes that is a new onset of high blood sugars associated with pregnancy. Type 1 and type 2 diabetes can typically be distinguished based on the presenting circumstances. If the diagnosis is in doubt antibody testing may be useful to confirm type 1 diabetes and C-peptide levels may be useful to confirm type 2 diabetes, with C-peptide levels normal or high in type 2 diabetes, but low in type 1 diabetes.
+
+
+== Screening ==
+The United States Preventive Services Task Force (USPSTF) recommended in 2021 screening for type 2 diabetes in adults aged 35 to 70 years old who are overweight (i.e. BMI over 25) or have obesity. For people of Asian descent, screening is recommended if they have a BMI over 23. Screening at an earlier age may be considered in people with a family history of diabetes; some ethnic groups, including Hispanics, African Americans, and Native Americans; a history of gestational diabetes; polycystic ovary syndrome. Screening can be repeated every 3 years.
+According to the US Preventive Services Task Force in a recommendation statement, screening for diabetes in people without risk factors or symptoms is not recommended. However, the American Diabetes Association (ADA) recommended in 2024 screening in all adults from the age of 35 years. ADA also recommends screening in adults of all ages with a BMI over 25 (or over 23 in Asian Americans) with another risk factor: first-degree relative with diabetes, ethnicity at high risk for diabetes, blood pressure ≥130/80 mmHg or on therapy for hypertension, history of cardiovascular disease, physical inactivity, polycystic ovary syndrome or severe obesity. ADA recommends repeat screening every 3 years at minimum. ADA recommends yearly tests in people with prediabetes. People with previous gestational diabetes or pancreatitis are also recommended screening.
+There is no evidence that screening changes the risk of death and any benefit of screening on adverse effects, incidence of type 2 diabetes, HbA1c or socioeconomic effects are not clear.
+In the UK, NICE guidelines suggest taking action to prevent diabetes for people with a body mass index (BMI) of 30 or more. For people of Black African, African-Caribbean, South Asian and Chinese descent the recommendation to start prevention starts at the BMI of 27,5. A study based on a large sample of people in England suggest even lower BMIs for certain ethnic groups for the start of prevention, for example 24 in South Asian and 21 in Bangladeshi populations.
+
+
+== Prevention ==
+
+Onset of type 2 diabetes can be delayed or prevented through proper nutrition and regular exercise. Intensive lifestyle measures may reduce the risk by over half. The benefit of exercise occurs regardless of the person's initial weight or subsequent weight loss. High levels of physical activity reduce the risk of diabetes by about 28%. Evidence for the benefit of dietary changes alone, however, is limited, with some evidence for a diet high in green leafy vegetables and some for limiting the intake of sugary drinks. There is an association between higher intake of sugar-sweetened fruit juice and diabetes, but no evidence of an association with 100% fruit juice. A 2019 review found evidence of benefit from dietary fiber.
+A 2017 review found that, long term, lifestyle changes decreased the risk by 28%, while medication does not reduce risk after withdrawal. While low vitamin D levels are associated with an increased risk of diabetes, correcting the levels by supplementing vitamin D3 does not improve that risk.
+In those with prediabetes, diet in combination with physical activity delays or reduces the risk of type 2 diabetes, according to a 2017 Cochrane review. In those with prediabetes, metformin may delay or reduce the risk of developing type 2 diabetes compared to diet and exercise or a placebo intervention, but not compared to intensive diet and exercise, and there was not enough data on outcomes such as mortality and diabetic complications and health-related quality of life, according to a 2019 Cochrane review. In those with prediabetes, alpha-glucosidase inhibitors such as acarbose may delay or reduce the risk of type 2 diabetes when compared to placebo, however there was no conclusive evidence that acarbose improved cardiovascular mortality or cardiovascular events, according to a 2018 Cochrane review. In those with prediabetes, pioglitazone may delay or reduce the risk of developing type 2 diabetes compared to placebo or no intervention, but no difference was seen compared to metformin, and data were missing on mortality and complications and quality of life, according to a 2020 Cochrane review. In those with prediabetes, there was insufficient data to draw any conclusions on whether SGLT2 inhibitors may delay or reduce the risk of developing type 2 diabetes, according to a 2016 Cochrane review.
+
+
+== Management ==
+
+Management of type 2 diabetes focuses on lifestyle interventions, lowering other cardiovascular risk factors, and maintaining blood glucose levels in the normal range. Self-monitoring of blood glucose for people with newly diagnosed type 2 diabetes may be used in combination with education, although the benefit of self-monitoring in those not using multi-dose insulin is questionable. In those who do not want to measure blood levels, measuring urine levels may be done. Managing other cardiovascular risk factors, such as hypertension, high cholesterol, and microalbuminuria, improves a person's life expectancy. Decreasing the systolic blood pressure to less than 140 mmHg is associated with a lower risk of death and better outcomes. Intensive blood pressure management (less than 130/80 mmHg) as opposed to standard blood pressure management (less than 140–160 mmHg systolic to 85–100 mmHg diastolic) results in a slight decrease in stroke risk but no effect on overall risk of death.
+Intensive blood sugar lowering (HbA1c < 6%) as opposed to standard blood sugar lowering (HbA1c of 7–7.9%) does not appear to change mortality. The goal of treatment is typically an HbA1c of 7 to 8% or a fasting glucose of less than 7.2 mmol/L (130 mg/dL); however these goals may be changed after professional clinical consultation, taking into account particular risks of hypoglycemia and life expectancy. Hypoglycemia is associated with adverse outcomes in older people with type 2 diabetes. Despite guidelines recommending that intensive blood sugar control be based on balancing immediate harms with long-term benefits, many people – for example people with a life expectancy of less than nine years who will not benefit, are over-treated.
+It is recommended that all people with type 2 diabetes get regular eye examinations. There is moderate evidence suggesting that treating gum disease by scaling and root planing results in an improvement in blood sugar levels for people with diabetes.
+
+
+=== Lifestyle ===
+
+
+==== Exercise ====
+A proper diet and regular exercise are foundations of diabetic care, with one review indicating that a greater amount of exercise improved outcomes. Regular exercise may improve blood sugar control, decrease body fat content, and decrease blood lipid levels.
+
+
+==== Diet ====
+
+Calorie restriction to promote weight loss is generally recommended. Around 80 percent of obese people with type 2 diabetes achieve complete remission with no need for medication if they sustain a weight loss of at least 15 kilograms (33 lb), but most patients are not able to achieve or sustain significant weight loss. Even modest weight loss can produce significant improvements in glycemic control and reduce the need for medication.
+Several diets may be effective such as the DASH diet, Mediterranean diet, low-fat diet, or monitored carbohydrate diets such as a low carbohydrate diet. Other recommendations include emphasizing intake of fruits, vegetables, reduced saturated fat and low-fat dairy products, and with a macronutrient intake tailored to the individual, to distribute calories and carbohydrates throughout the day. A 2021 review showed that consumption of tree nuts (walnuts, almonds, and hazelnuts) reduced fasting blood glucose in diabetic people. As of 2015, there is insufficient data to recommend nonnutritive sweeteners, which may help reduce caloric intake. An elevated intake of microbiota-accessible carbohydrates can help reducing the effects of T2D. Viscous fiber supplements may be useful in those with diabetes.
+Culturally appropriate education may help people with type 2 diabetes control their blood sugar levels for up to 24 months. There is not enough evidence to determine if lifestyle interventions affect mortality in those who already have type 2 diabetes.
+
+
+==== Stress management ====
+Although psychological stress is recognized as a risk factor for type 2 diabetes, the effect of stress management interventions on disease progression are not established. A Cochrane review is under way to assess the effects of mindfulness‐based interventions for adults with type 2 diabetes.
+
+
+=== Medications ===
+
+
+==== Blood sugar control ====
+
+There are several classes of diabetes medications available. Metformin is generally recommended as a first line treatment as there is some evidence that it decreases mortality; however, this conclusion is questioned. Metformin should not be used in those with severe kidney or liver problems. The American Diabetes Association and European Association for the Study of Diabetes recommend using a GLP-1 receptor agonist or SGLT2 inhibitor as the first-line treatment in patients who have or are at high risk for atherosclerotic cardiovascular disease, heart failure, or chronic kidney disease. The higher cost of these drugs compared to metformin has limited their use.
+Other classes of medications include: sulfonylureas, thiazolidinediones, dipeptidyl peptidase-4 inhibitors, SGLT2 inhibitors, and GLP-1 receptor agonists. A 2018 review found that SGLT2 inhibitors and GLP-1 agonists, but not DPP-4 inhibitors, were associated with lower mortality than placebo or no treatment. Rosiglitazone, a thiazolidinedione, has not been found to improve long-term outcomes even though it improves blood sugar levels. Additionally it is associated with increased rates of heart disease and death.
+Injections of insulin may either be added to oral medication or used alone. Most people do not initially need insulin. When it is used, a long-acting formulation is typically added at night, with oral medications being continued. Doses are then increased to effect (blood sugar levels being well controlled). When nightly insulin is insufficient, twice daily insulin may achieve better control. The long acting insulins glargine and detemir are equally safe and effective, and do not appear much better than NPH insulin, but as they are significantly more expensive, they are not cost effective as of 2010. In those who are pregnant, insulin is generally the treatment of choice.
+
+
+==== Blood pressure lowering ====
+Many international guidelines recommend blood pressure treatment targets that are lower than 140/90 mmHg for people with diabetes. However, there is only limited evidence regarding what the lower targets should be. A 2016 systematic review found potential harm to treating to targets lower than 140 mmHg, and a subsequent review in 2019 found no evidence of additional benefit from blood pressure lowering to between 130 and 140 mmHg, although there was an increased risk of adverse events. 2023 European Society of Cardiology guidelines recommend systolic blood pressure lowering to 130 mmHg in most people with diabetes.
+In people with diabetes and hypertension and either albuminuria or chronic kidney disease, an inhibitor of the renin-angiotensin system (such as an ACE inhibitor or angiotensin receptor blocker) to reduce the risks of progression of kidney disease and present cardiovascular events. There is some evidence that angiotensin converting enzyme inhibitors (ACEIs) are superior to other inhibitors of the renin-angiotensin system such as angiotensin receptor blockers (ARBs), or aliskiren in preventing cardiovascular disease. Although a 2016 review found similar effects of ACEIs and ARBs on major cardiovascular and renal outcomes. There is no evidence that combining ACEIs and ARBs provides additional benefits.
+
+
+==== Other ====
+The use of statins in diabetes to prevent cardiovascular disease should be considered after evaluating the person's total risk for cardiovascular disease.
+The use of aspirin (acetylsalicylic acid) to prevent cardiovascular disease in diabetes is controversial. Aspirin is recommended in people with previous cardiovascular disease, however routine use of aspirin has not been found to improve outcomes in uncomplicated diabetes. Aspirin as primary prevention may have greater risk than benefit, but could be considered in people aged 50 to 70 with another significant cardiovascular risk factor and low risk of bleeding after information about possible risks and benefits as part of shared-decision making.
+Vitamin D supplementation to people with type 2 diabetes may improve markers of insulin resistance and HbA1c.
+Sharing their electronic health records with people who have type 2 diabetes helps them to reduce their blood sugar levels. It is a way of helping people understand their own health condition and involving them actively in its management.
+
+
+=== Surgery ===
+Weight loss surgery in those who are obese is an effective measure to treat diabetes. Many are able to maintain normal blood sugar levels with little or no medication following surgery and long-term mortality is decreased. There however is some short-term mortality risk of less than 1% from the surgery. The body mass index cutoffs for when surgery is appropriate are not yet clear. It is recommended that this option be considered in those who are unable to get both their weight and blood sugar under control.
+
+
+== Epidemiology ==
+
+The International Diabetes Federation estimates nearly 537 million people lived with diabetes worldwide in 2021, 90–95% of whom have type 2 diabetes. Diabetes is common both in the developed and the developing world.
+Some ethnic groups such as South Asians, Pacific Islanders, Latinos, and Native Americans are at particularly high risk of developing type 2 diabetes. Type 2 diabetes in normal weight individuals represents 60 to 80 percent of all cases in some Asian countries. The mechanism causing diabetes in non-obese individuals is poorly understood.
+Rates of diabetes in 1985 were estimated at 30 million, increasing to 135 million in 1995 and 217 million in 2005. This increase is believed to be primarily due to the global population aging, a decrease in exercise, and increasing rates of obesity. Traditionally considered a disease of adults, type 2 diabetes is increasingly diagnosed in children in parallel with rising obesity rates. The five countries with the greatest number of people with diabetes as of 2000 are India having 31.7 million, China 20.8 million, the United States 17.7 million, Indonesia 8.4 million, and Japan 6.8 million. It is recognized as a global epidemic by the World Health Organization.
+
+
+== History ==
+
+Diabetes is one of the first diseases described with an Egyptian manuscript from c. 1500 BCE mentioning "too great emptying of the urine." The first described cases are believed to be of type 1 diabetes. Indian physicians around the same time identified the disease and classified it as madhumeha or honey urine noting that the urine would attract ants. The term "diabetes" or "to pass through" was first used in 230 BCE by the Greek Apollonius Memphites. The disease was rare during the time of the Roman Empire with Galen commenting that he had only seen two cases during his career.
+Type 1 and type 2 diabetes were identified as separate conditions for the first time by the Indian physicians Sushruta and Charaka in 400–500 CE with type 1 associated with youth and type 2 with being overweight. Effective treatment was not developed until the early part of the 20th century when the Canadians Frederick Banting and Charles Best discovered insulin in 1921 and 1922. This was followed by the development of the longer acting NPH insulin in the 1940s.
+In 1916, Elliot Joslin proposed that in people with diabetes, periods of fasting are helpful. Subsequent research has supported this, and weight loss is a first line treatment in type 2 diabetes.
+
+
+== Research ==
+In 2020, Diabetes Severity Score (DISSCO) was developed which is a tool that could be better than HbA1c identify if a person's condition is declining. It uses a computer algorithm to analyze data from anonymized electronic patient records and produces a score based on 34 indicators.
+
+
+=== Stem cells ===
+
+In April 2024 scientists reported the first case of reversion of type 2 diabetes by use of stem cells in a 59-year-old man treated in 2021 who has since remained insulin-free. Replication in more patients and evidence over longer periods would be needed before considering this treatment as a possible cure.
+
+
+== References ==
+
+
+== External links ==
+
+IDF Diabetes Atlas 2021
+National Institute of Diabetes and Digestive and Kidney Diseases
+Centers for Disease Control and Prevention
+ADA's Standards of Medical Care in Diabetes 2025

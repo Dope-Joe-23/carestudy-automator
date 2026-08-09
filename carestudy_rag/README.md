@@ -46,6 +46,14 @@ export ANTHROPIC_API_KEY=sk-ant-...    # get one at console.anthropic.com
   NANDA-I nursing diagnosis handbook, pathophysiology references) in
   `data/reference/`.
 
+  A starter library (22 open-licensed Wikipedia articles: pneumonia,
+  hypertension, sickle cell disease, malaria, ceftriaxone, paracetamol,
+  metformin, nursing process/diagnosis, etc., all CC BY-SA 4.0) is already
+  bundled there. See `data/reference/SOURCES.txt` for attribution, and
+  `scripts_fetch_reference.py` to add more topics — just edit its `TOPICS`
+  dict and re-run. Drop in proprietary textbooks/formularies (BNF, NANDA
+  handbooks) the same way if you have licensed copies.
+
 ## 2. Build the indexes
 
 ```bash
