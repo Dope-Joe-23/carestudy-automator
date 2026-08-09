@@ -16,6 +16,14 @@ CHAPTER_RE = re.compile(r"^CHAPTER\s+\w+\s*$", re.IGNORECASE)
 SUBSECTION_RE = re.compile(r"^\d+\.\d+(\.\d+)?\s+\S.*$")
 
 
+def clean_heading(text: str) -> str:
+    """Strip TOC dot leaders (… runs, dots, dashes), collapse whitespace, and
+    normalise smart quotes so headings match typed queries."""
+    cleaned = text.rstrip(" .·…—–-•")
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned.replace("\u2019", "'").replace("\u2018", "'")
+
+
 @dataclass
 class Chunk:
     chapter: str
@@ -50,13 +58,14 @@ def chunk_document(text: str, source_name: str) -> List[Chunk]:
 
         if CHAPTER_RE.match(stripped):
             flush()
-            current_chapter = stripped.title()
+            current_chapter = clean_heading(stripped).title()
             # the next non-empty line is usually the chapter title, e.g. "ASSESSMENT OF PATIENT AND FAMILY"
             j = i + 1
             while j < len(lines) and not lines[j].strip():
                 j += 1
             if j < len(lines):
-                current_chapter = f"{stripped.title()}: {lines[j].strip().title()}"
+                title = clean_heading(lines[j]).title()
+                current_chapter = f"{clean_heading(stripped).title()}: {title}"
                 i = j
             current_heading = "Introduction"
             i += 1
@@ -64,7 +73,7 @@ def chunk_document(text: str, source_name: str) -> List[Chunk]:
 
         if SUBSECTION_RE.match(stripped):
             flush()
-            current_heading = stripped
+            current_heading = clean_heading(stripped)
             buffer.append(stripped)
             i += 1
             continue
