@@ -48,3 +48,29 @@ Source: Wikipedia (https://www.wikipedia.org/)
   https://en.wikipedia.org/wiki/Nursing_process
 - Nursing diagnosis (1826 words) -> nursing_diagnosis.txt
   https://en.wikipedia.org/wiki/Nursing_diagnosis
+
+WHO fact sheets
+========================================
+Retrieved: 2026-08-12
+License: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+Source: World Health Organization (https://www.who.int/news-room/fact-sheets)
+
+- Asthma (2026) -> who_asthma.txt
+  https://www.who.int/news-room/fact-sheets/detail/asthma
+- Diabetes (2024) -> who_diabetes.txt
+  https://www.who.int/news-room/fact-sheets/detail/diabetes
+- Hypertension (2025) -> who_hypertension.txt
+  https://www.who.int/news-room/fact-sheets/detail/hypertension
+- Malaria (2025) -> who_malaria.txt
+  https://www.who.int/news-room/fact-sheets/detail/malaria
+- Tuberculosis (2026) -> who_tuberculosis.txt
+  https://www.who.int/news-room/fact-sheets/detail/tuberculosis
+- Pneumonia in children (2022) -> who_pneumonia.txt
+  https://www.who.int/news-room/fact-sheets/detail/pneumonia
+- Sickle-cell disease (2025) -> who_sickle_cell_disease.txt
+  https://www.who.int/news-room/fact-sheets/detail/sickle-cell-disease
+- Anaemia (2025) -> who_anaemia.txt
+  https://www.who.int/news-room/fact-sheets/detail/anaemia
+
+Note: WHO fact sheets are CC BY-NC-SA 3.0 IGO. Re-run
+`python scripts_fetch_who.py` to refresh them or pick up newer editions.

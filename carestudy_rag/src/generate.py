@@ -1,113 +1,533 @@
-"""
+"""\
 Draft one care-study section from the student's own patient notes,
 using retrieved template examples (style) and reference material (facts).
+
+Matching the sample care studies, every section opens with a short
+definition/introduction carrying an in-text citation, general clinical facts
+are cited as they are used, and the literature review is organised with
+subheadings and bullet lists. The sources consulted are returned alongside
+the draft so the app can store and print them as the study's references.
 
 Usage:
     python src/generate.py --heading "1.2 Family's Medical/Surgical History" \
         --notes notes.txt
 
-Requires env var ANTHROPIC_API_KEY.
+Requires env var ANTHROPIC_API_KEY, or ANTHROPIC_AUTH_TOKEN when using
+an Anthropic-compatible gateway such as OpenRouter. ANTHROPIC_BASE_URL
+and ANTHROPIC_MODEL optionally override the endpoint and model.
 """
 import argparse
+import json
 import os
+import re
 import sys
+from dataclasses import dataclass, field
+from typing import Dict, List
 
 sys.path.insert(0, os.path.dirname(__file__))
-from retrieval import SimpleIndex
+from retrieval import RetrievedChunk, SimpleIndex
 
 TEMPLATE_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "template_index.pkl")
 REFERENCE_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "reference_index.pkl")
+CITATIONS_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "reference", "citations.json")
 
 SYSTEM_PROMPT = """You are drafting one section of a nursing patient/family care study, \
 a standard clinical education assignment. You will be given:
 1. The section heading to write.
-2. The STUDENT'S OWN notes about their real patient for this section (the only \
-source of patient-specific facts).
+2. The STUDENT'S OWN notes about their real patient for this section, plus any \
+of the patient's uploaded documents (the only sources of patient-specific \
+facts; patient facts are never cited).
 3. Example passages from past care studies, showing the expected structure, tone, \
 and level of detail for this kind of section.
 4. Reference material (textbook/formulary excerpts) for grounding any general \
 clinical facts (drug info, pathophysiology, standard interventions).
 
 Rules:
+- Follow the FORMAT instruction in the user prompt: the section must be written \
+either as flowing narrative prose or as a markdown table, whichever is \
+specified there. Do not choose a different format.
+- BEGIN every section with a short 1-3 sentence introduction that defines or \
+frames the section's topic, exactly like the sample care studies. Where the \
+reference material covers the topic, include an in-text citation in that \
+introduction.
+- CITE your sources in-text, in the style of the sample care studies (e.g. \
+"(Jarvis, 2020)", "(WHO, 2023)"). Whenever you state a general clinical fact \
+(definition, pathophysiology, drug class, normal range, standard intervention) \
+that comes from a reference chunk, attach that chunk's citation in EXACTLY the \
+format shown in the REFERENCE MATERIAL block, e.g. "(Wikipedia: Pneumonia, 2026)".
+- NEVER fabricate a citation. Cite only sources that appear in the REFERENCE \
+MATERIAL block. Do not invent author names, years, or sources, and do not put \
+a citation on patient-specific facts from the student's notes. If a general \
+fact has no supporting reference chunk, state it plainly without inventing a \
+citation.
+- Do not mention the reference material, example passages, or any source file \
+names in the draft ("see reference" and similar phrases are forbidden).
+- When prose is required: write complete, grammatically correct sentences \
+organised into short, readable paragraphs. Use bullet points ("- item") for \
+enumerations where a list reads better than prose (risk factors, \
+complications, nursing considerations, steps). Use bold subheadings \
+("**Definition**") to organise any section with natural subsections, \
+especially the Literature Review.
+- Format every date with an ordinal day suffix wrapped in <sup>...</sup> tags: \
+"1<sup>st</sup> August 2026", "22<sup>nd</sup> July 2025", "3<sup>rd</sup> March \
+2024". Never write a bare day like "1 August" — always "1<sup>st</sup> August".
+- When a table is required: one row per item, short clear column headers, no \
+empty "Item | Detail" columns — the table will be converted to a properly \
+formatted Word table.
+- Do not repeat the section heading at the start of your answer; the heading is \
+already displayed above the draft. Begin directly with the content.
 - Every patient-specific fact (history, vitals, findings, care given) must come \
-from the student's notes. Never invent patient details that are not in the notes.
+from the student's notes or the patient's uploaded documents. Never invent \
+patient details that are not in either.
 - General clinical facts (drug classifications, normal ranges, standard nursing \
 interventions) should be grounded in the reference material provided. If the \
 reference material doesn't cover something, say so rather than guessing.
-- Match the structure, heading format, and academic tone shown in the example \
-passages.
 - If the student's notes are too thin to write a credible section, say exactly \
 what additional information is needed instead of filling gaps with invention.
 """
 
 
-def build_prompt(heading: str, patient_notes: str, template_examples, reference_chunks) -> str:
+FORMAT_PROSE = (
+    "FORMAT: Write this section as flowing narrative prose. Convert EVERY piece of "
+    "patient data into natural, complete sentences organised into short paragraphs "
+    "— this is a written care study, not a form. NEVER output \"Label: value\" lines, "
+    "\"- \" bullet dumps, markdown tables, or \"Item | Detail\" tables, even for "
+    "demographic data (name, age, occupation, address) or clinical data (vitals, "
+    "findings). For example, do not write \"Patient initials: P.A. / Occupation: "
+    "Doctor\"; write instead \"The patient, identified by the initials P.A., is a "
+    "doctor resident in Abesim in the Bono Region.\" Short bullet lists are allowed "
+    "only for genuine enumerations of separate concepts (risk factors, complications, "
+    "nursing considerations) — never for the section's collected data. Bold "
+    "subheadings may organise subsections, but the text under them must be sentences."
+)
+
+FORMAT_TABLE = (
+    "FORMAT: This section is conventionally presented as a TABLE (e.g. drugs "
+    "prescribed, a nursing care plan, or an outcome evaluation grid). Output the "
+    "content as a markdown pipe table with one row per item and short, clear "
+    "column headers. It will be converted into a properly formatted Word table. "
+    "You may begin with a single brief introductory sentence above the table."
+)
+
+CHAPTER_INTRO_FORMAT = (
+    "FORMAT (Chapter Introduction): Write ONE short paragraph (3-5 sentences) "
+    "that opens this chapter of the patient/family care study, in the formal "
+    "academic style of the sample care studies. State what the chapter covers "
+    "and why it matters to the study. Begin with a definition or framing "
+    "statement; where the reference material covers the chapter's topic, include "
+    "one in-text citation in the format shown in the REFERENCE MATERIAL block "
+    "(never fabricate a citation). Do not use subheadings, bullet lists, or "
+    "tables, and do not mention patient-specific facts from the notes."
+)
+
+LITERATURE_REVIEW_FORMAT = (
+    "FORMAT (Literature Review): Structure this review with bold subheadings, "
+    "each followed by a short paragraph or a bulleted list. Use these "
+    "subheadings in this order: **Definition**, **Anatomy and Physiology**, "
+    "**Incidence and Prevalence**, **Causes and Risk Factors**, "
+    "**Pathophysiology**, **Clinical Features**, **Diagnostic Investigations**, "
+    "**Treatment and Management**, **Complications**, **Nursing "
+    "Considerations**. Support key claims with in-text citations from the "
+    "REFERENCE MATERIAL, and prefer bullet lists for enumerations (causes, risk "
+    "factors, complications, nursing considerations). Skip any subheading the "
+    "reference material and patient notes do not cover rather than padding."
+)
+
+# Citation metadata loaded from data/reference/citations.json.
+CITATION_MAP: Dict[str, dict] = {}
+try:
+    with open(CITATIONS_PATH, "r", encoding="utf-8") as f:
+        CITATION_MAP = json.load(f)
+except Exception:
+    CITATION_MAP = {}
+
+
+@dataclass
+class DraftResult:
+    """A drafted section plus the reference sources it was grounded on."""
+
+    draft: str
+    references: List[dict] = field(default_factory=list)
+
+
+def _humanize_source(source_name: str) -> str:
+    """'iron_deficiency_anemia.txt' -> 'Iron deficiency anemia'."""
+    base = os.path.splitext(os.path.basename(source_name or ""))[0]
+    return base.replace("_", " ").replace("-", " ").strip().title() or "Reference"
+
+
+def citation_from_meta(meta: dict, source_name: str) -> dict:
+    """Build {label, inText, url} from a citation metadata entry.
+
+    Shared by the bundled registry (citations.json) and the user's personal
+    library so both are cited in the same style:
+      - Explicit inText+label override wins verbatim.
+      - WHO fact sheets / textbooks ({author, year, citeKey, venue, title,
+        url}) -> in-text "(WHO, 2024)", "(Potter & Perry, 2021)" like the samples.
+      - Wikipedia entries (plain {title, url}): "(Wikipedia: Title, 2026)".
+      - Anything without usable metadata gets a NEUTRAL fallback — no
+        fabricated author, year, or venue.
+    """
+    title = meta.get("title") or _humanize_source(source_name)
+    url = meta.get("url") or ""
+    if meta.get("inText"):
+        # Explicit in-text marker (with optional verbatim label) wins.
+        in_text = meta["inText"]
+        label = meta.get("label")
+        if not label:
+            author = meta.get("author") or "Reference library"
+            year = str(meta.get("year") or 2026)
+            venue = meta.get("venue") or ""
+            label = f"{author}. ({year}). {title}." + (f" {venue.rstrip('.')}." if venue else "")
+    elif meta.get("citeKey") or meta.get("author") or meta.get("venue"):
+        # Textbook / fact-sheet style: "(WHO, 2024)", "(Potter & Perry, 2021)".
+        # Author/venue alone (no citeKey) still never gets misattributed to
+        # Wikipedia — it falls back to an author-based in-text marker.
+        author = meta.get("author") or "Reference library"
+        year = str(meta.get("year") or 2026)
+        venue = meta.get("venue") or ""
+        if meta.get("citeKey"):
+            in_text = f"({meta['citeKey']}, {year})"
+        elif author and author != "Reference library":
+            in_text = f"({author}, {year})"
+        else:
+            in_text = f"({title}, {year})"
+        label = f"{author}. ({year}). {title}." + (f" {venue.rstrip('.')}." if venue else "")
+    elif meta:
+        # Legacy Wikipedia entries (plain {title, url}) keep their format.
+        in_text = f"(Wikipedia: {title}, 2026)"
+        label = (
+            f"Wikipedia contributors. (2026). {title}. In Wikipedia, "
+            f"The Free Encyclopedia."
+        )
+    else:
+        # Unregistered source: stay neutral rather than misattribute it.
+        in_text = f"({title})"
+        label = f"{title}. Care study reference library."
+    if url and f"Retrieved from {url}" not in label:
+        label += f" Retrieved from {url}"
+    return {"label": label, "inText": in_text, "url": url or None}
+
+
+def reference_citation(source_name: str) -> dict:
+    """Citation for a bundled reference-library source (citations.json)."""
+    meta = CITATION_MAP.get(os.path.basename(source_name) or "", {})
+    return citation_from_meta(meta, source_name)
+
+
+def chunk_citation(chunk: RetrievedChunk) -> dict:
+    """A chunk's citation: personal-library chunks carry one baked in at ingest
+    time (the user supplied its metadata); everything else is looked up in the
+    bundled registry or falls back neutral."""
+    if chunk.citation and isinstance(chunk.citation, dict) and chunk.citation.get("label"):
+        return {
+            "label": str(chunk.citation["label"]),
+            "inText": str(chunk.citation.get("inText") or f"({chunk.citation['label']})"),
+            "url": chunk.citation.get("url") or None,
+        }
+    return reference_citation(chunk.source)
+
+
+def build_references(chunks: List[RetrievedChunk]) -> List[dict]:
+    """Deduplicated citation entries for the chunks retrieved for a section.
+
+    Dedupes on both the full label and the in-text marker, so a personal-library
+    source that overlaps the bundled library (e.g. the same WHO fact sheet added
+    as a URL) can never emit two REFERENCES entries with the same "(WHO, 2026)"
+    marker under different labels.
+    """
+    seen_labels = set()
+    seen_intext = set()
+    references = []
+    for chunk in chunks:
+        citation = chunk_citation(chunk)
+        if citation["label"] in seen_labels or citation["inText"] in seen_intext:
+            continue
+        seen_labels.add(citation["label"])
+        seen_intext.add(citation["inText"])
+        references.append(citation)
+    return references
+
+
+def is_literature_review(heading: str, tabular: bool = False) -> bool:
+    """Whether a heading is the Literature Review section (1.10)."""
+    if tabular:
+        return False
+    normalized = heading.strip().lower()
+    return "literature" in normalized or normalized.startswith("1.10")
+
+
+def build_prompt(
+    heading: str,
+    patient_notes: str,
+    template_examples,
+    reference_chunks,
+    study_chunks=None,
+    library_chunks=None,
+    tabular: bool = False,
+    chapter_intro: bool = False,
+) -> str:
     examples_text = "\n\n---\n\n".join(
         f"[Example from {c.source}]\n{c.text}" for c in template_examples
     ) or "(no template examples found)"
 
-    reference_text = "\n\n---\n\n".join(
-        f"[Reference: {c.source}]\n{c.text}" for c in reference_chunks
-    ) or "(no reference material found for this topic)"
+    # The patient's own uploaded documents (admission sheets, lab results,
+    # referral letters) are the authoritative source of patient-specific facts.
+    # They are deliberately NOT citable in-text: like the student's typed notes,
+    # patient facts are never cited, so the model is told to use them without
+    # citing or naming them.
+    study_parts = []
+    for chunk in study_chunks or []:
+        study_parts.append(
+            f"[Patient document: {os.path.basename(chunk.source)}]\n{chunk.text}"
+        )
+    study_text = "\n\n---\n\n".join(study_parts)
 
-    return f"""SECTION TO WRITE: {heading}
+    # Personal-library sources come first — the student added them on purpose
+    # and supplied their citation metadata — then the bundled library.
+    reference_parts = []
+    for chunk in list(library_chunks or []) + list(reference_chunks or []):
+        citation = chunk_citation(chunk)
+        reference_parts.append(
+            f"[Reference: {os.path.basename(chunk.source)}]\n"
+            f"In-text citation: {citation['inText']}\n"
+            f"Full citation: {citation['label']}\n\n"
+            f"{chunk.text}"
+        )
+    reference_text = "\n\n---\n\n".join(reference_parts) or (
+        "(no reference material found for this topic)"
+    )
+
+    if chapter_intro:
+        format_instruction = CHAPTER_INTRO_FORMAT
+    elif tabular:
+        format_instruction = FORMAT_TABLE
+    else:
+        format_instruction = FORMAT_PROSE
+    if not chapter_intro and is_literature_review(heading, tabular):
+        format_instruction = LITERATURE_REVIEW_FORMAT
+
+    study_block = ""
+    if study_text:
+        study_block = (
+            "\n\nPATIENT'S OWN DOCUMENTS (the patient's actual clinical documents — "
+            "authoritative for patient-specific facts alongside the notes above. "
+            "Do NOT cite them in-text and do not mention file names):\n"
+            + study_text
+        )
+
+    return f"""{'CHAPTER TO INTRODUCE' if chapter_intro else 'SECTION TO WRITE'}: {heading}
 
 STUDENT'S PATIENT NOTES (the only source of patient-specific facts):
-{patient_notes}
+{patient_notes}{study_block}
 
 EXAMPLE PASSAGES (structure/style reference only, not this patient's facts):
 {examples_text}
 
-REFERENCE MATERIAL (for grounding general clinical facts):
+REFERENCE MATERIAL (for grounding general clinical facts — cite these in-text):
 {reference_text}
+
+{format_instruction}
 
 Write the section now, following the rules in the system prompt."""
 
 
-def draft_section(heading: str, patient_notes: str, k_template: int = 3, k_reference: int = 4) -> str:
-    if not patient_notes.strip():
-        return ("No patient notes were provided for this section. Add the student's "
-                "actual assessment/observation notes before drafting — nothing will "
-                "be invented on their behalf.")
+def load_indexes():
+    """Load both retrieval indexes once.
 
+    Loading is slow (the pickled TF-IDF matrices can take tens of seconds), so
+    long-lived callers such as the draft worker load once at startup and reuse
+    the same objects across requests instead of paying the reload per request.
+    Missing/corrupt index files degrade to empty retrieval rather than crashing.
+    """
     template_index = SimpleIndex()
     reference_index = SimpleIndex()
+    for index, path in (
+        (template_index, TEMPLATE_INDEX_PATH),
+        (reference_index, REFERENCE_INDEX_PATH),
+    ):
+        if os.path.exists(path):
+            try:
+                index.load(path)
+            except Exception as exc:
+                print(f"WARNING: failed to load {path}: {exc}", file=sys.stderr, flush=True)
+    return template_index, reference_index
 
-    template_examples, reference_chunks = [], []
-    if os.path.exists(TEMPLATE_INDEX_PATH):
-        template_index.load(TEMPLATE_INDEX_PATH)
-        template_examples = template_index.query(heading, k=k_template)
-    if os.path.exists(REFERENCE_INDEX_PATH):
-        reference_index.load(REFERENCE_INDEX_PATH)
-        reference_chunks = reference_index.query(patient_notes, k=k_reference)
 
-    prompt = build_prompt(heading, patient_notes, template_examples, reference_chunks)
+# Post-generation prose guard. Some models collapse data-heavy sections (e.g.
+# 1.1 Patient's Particulars) into "Label: value" bullets despite FORMAT_PROSE;
+# these helpers detect that and trigger one corrective rewrite.
+#
+# A bullet only counts as a dump signal when it carries a "Label: value"
+# payload ("- Patient initials: P.A."). Conceptual enumerations that some
+# sections legitimately use ("- Smoking", "- 5 mg nocte") must never trigger
+# the rewrite, so plain bullets without a colon are ignored. Labels may start
+# with a digit ("3rd visit: ...") or a letter ("Ward/unit: ...").
+_BULLET_LABEL_RE = re.compile(r"^\s*[-•*]\s+[^:]*:\s")
+_LABEL_VALUE_RE = re.compile(r"^\s*[A-Za-z0-9][A-Za-z0-9 /&'().\-]*:\s")
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        return ("[DRY RUN - no ANTHROPIC_API_KEY set]\n\n"
-                "Retrieved template examples:\n" +
-                "\n".join(f"- {c.heading} ({c.source}, score={c.score:.2f})" for c in template_examples) +
-                "\n\nRetrieved reference chunks:\n" +
-                "\n".join(f"- {c.heading} ({c.source}, score={c.score:.2f})" for c in reference_chunks) +
-                "\n\nSet ANTHROPIC_API_KEY to generate the actual drafted text.")
 
-    import anthropic
-    client = anthropic.Anthropic(api_key=api_key)
+def _looks_like_data_dump(draft: str) -> bool:
+    """True when a draft degenerated into a "Label: value" data dump.
+
+    A genuine enumeration-heavy section (e.g. a literature review) still passes:
+    its bullet lines are a minority of a mostly-prose draft. A dump is dominated
+    by short list lines instead.
+    """
+    lines = [line.strip() for line in draft.splitlines() if line.strip()]
+    if not lines:
+        return False
+    dump_lines = sum(
+        1
+        for line in lines
+        if (_BULLET_LABEL_RE.match(line) or _LABEL_VALUE_RE.match(line)) and len(line) <= 90
+    )
+    return dump_lines >= 3 and dump_lines / len(lines) >= 0.4
+
+
+REWRITE_AS_PROSE_PROMPT = (
+    "The following draft was supposed to be flowing narrative prose but came out "
+    "as a bullet or \"Label: value\" data dump. Rewrite it as natural, complete "
+    "sentences organised into short paragraphs. Keep every fact, number, and date "
+    "exactly as given (dates must stay in the 1<sup>st</sup> August 2026 style), and "
+    "keep any in-text citations. Do NOT use bullets, dashes, \"Label: value\" lines, "
+    "tables, or subheadings. Output only the rewritten prose.\n\nDRAFT:\n{draft}"
+)
+
+
+def _rewrite_as_prose(client, draft: str) -> str:
+    """One corrective pass that turns a data-dump draft into narrative prose.
+
+    This is deliberately the cap: the rewrite output is accepted as-is without
+    re-checking, so a weak model can never loop the rewrite forever.
+    """
     response = client.messages.create(
-        model="claude-sonnet-4-6",
+        model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
         max_tokens=1500,
         system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": prompt}],
+        messages=[{"role": "user", "content": REWRITE_AS_PROSE_PROMPT.format(draft=draft)}],
     )
     return "".join(block.text for block in response.content if block.type == "text")
 
 
+def draft_section(
+    heading: str,
+    patient_notes: str,
+    k_template: int = 3,
+    k_reference: int = 4,
+    k_study: int = 4,
+    k_library: int = 3,
+    tabular: bool = False,
+    chapter_intro: bool = False,
+    template_index=None,
+    reference_index=None,
+    study_chunks=None,
+    library_chunks=None,
+) -> DraftResult:
+    if not patient_notes.strip():
+        return DraftResult(
+            draft=("No patient notes were provided for this section. Add the student's "
+                   "actual assessment/observation notes before drafting — nothing will "
+                   "be invented on their behalf."),
+            references=[],
+        )
+
+    if template_index is None or reference_index is None:
+        template_index, reference_index = load_indexes()
+
+    # SimpleIndex.query already returns [] when its matrix is not loaded.
+    template_examples = template_index.query(heading, k=k_template)
+    reference_chunks = reference_index.query(patient_notes, k=k_reference)
+    references = build_references(list(library_chunks or []) + reference_chunks)
+
+    prompt = build_prompt(
+        heading,
+        patient_notes,
+        template_examples,
+        reference_chunks,
+        study_chunks=study_chunks,
+        library_chunks=library_chunks,
+        tabular=tabular,
+        chapter_intro=chapter_intro,
+    )
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
+    if not api_key and not auth_token:
+        dry = [f"- {c.heading} ({c.source}, score={c.score:.2f})" for c in template_examples]
+        dry += [f"- {c.heading} ({c.source}, score={c.score:.2f})" for c in reference_chunks]
+        dry += [
+            f"- [LIBRARY] {os.path.basename(c.source)} (score={c.score:.2f})"
+            for c in (library_chunks or [])
+        ]
+        dry += [
+            f"- [PATIENT DOCUMENT] {os.path.basename(c.source)} (score={c.score:.2f})"
+            for c in (study_chunks or [])
+        ]
+        return DraftResult(
+            draft=("[DRY RUN - no ANTHROPIC_API_KEY set]\n\n"
+                   "Retrieved template examples and reference chunks:\n" +
+                   "\n".join(dry) +
+                   "\n\nSet ANTHROPIC_API_KEY (or ANTHROPIC_AUTH_TOKEN for "
+                   "Anthropic-compatible gateways like OpenRouter) to generate the "
+                   "actual drafted text."),
+            references=references,
+        )
+
+    import anthropic
+
+    client_kwargs: dict = {
+        "base_url": os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com",
+    }
+    if auth_token:
+        # OpenRouter and other Anthropic-compatible gateways expect
+        # Authorization: Bearer (auth_token) instead of x-api-key.
+        client_kwargs["auth_token"] = auth_token
+    else:
+        client_kwargs["api_key"] = api_key
+
+    client = anthropic.Anthropic(**client_kwargs)
+    response = client.messages.create(
+        model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
+        # The literature review is a long structured essay; a chapter intro is
+        # deliberately short — give each only as much room as it needs.
+        max_tokens=800 if chapter_intro else (2500 if is_literature_review(heading, tabular) else 1500),
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    draft = "".join(block.text for block in response.content if block.type == "text")
+
+    # Prose enforcement: if the model still dumped the data as bullets/labels,
+    # run one corrective rewrite. The literature review is excluded — its format
+    # instruction explicitly wants bulleted enumerations, not prose. On failure
+    # the original draft is kept rather than lost — the student can still edit
+    # it by hand.
+    if (
+        not tabular
+        and not is_literature_review(heading, tabular)
+        and _looks_like_data_dump(draft)
+    ):
+        try:
+            draft = _rewrite_as_prose(client, draft)
+        except Exception as exc:  # keep the original draft; never fail the request
+            print(f"[generate] prose rewrite failed, keeping original draft: {exc}", file=sys.stderr)
+
+    return DraftResult(draft=draft, references=references)
+
+
 if __name__ == "__main__":
+    # Windows consoles default to cp1252, which can't encode every Unicode
+    # character a model may output (e.g. non-breaking hyphens). Write UTF-8
+    # and replace anything still unencodable instead of crashing the draft.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--heading", required=True)
     parser.add_argument("--notes", help="Path to a text file with the student's patient notes")
     parser.add_argument("--stdin", action="store_true", help="Read patient notes from stdin instead of a file")
+    parser.add_argument("--tabular", action="store_true", help="Section is conventionally a table (drugs, care plan, outcomes)")
+    parser.add_argument("--chapter-intro", action="store_true", help="Draft a short chapter introduction instead of a full section")
     args = parser.parse_args()
 
     if args.stdin:
@@ -118,4 +538,11 @@ if __name__ == "__main__":
     else:
         parser.error("provide --notes FILE or --stdin")
 
-    print(draft_section(args.heading, notes))
+    print(
+        draft_section(
+            args.heading,
+            notes,
+            tabular=args.tabular,
+            chapter_intro=args.chapter_intro,
+        ).draft
+    )

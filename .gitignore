@@ -52,3 +52,19 @@ Thumbs.db
 .run-logs/
 __pycache__/
 *.pyc
+
+# Local environment variables (secrets)
+.env
+.env.*
+!.env.example
+
+# Uploaded clinical documents + per-study retrieval indexes
+/data/uploads/
+/data/studies/
+/data/library/
+
+# Local SQLite database
+carestudy.db
+carestudy.db-journal
+carestudy.db-shm
+carestudy.db-wal

@@ -12,7 +12,183 @@ tags:
     description: Health operations
   - name: drafting
     description: Care study section drafting
+  - name: studies
+    description: Saved care studies with version history
 paths:
+  /studies:
+    get:
+      operationId: listStudies
+      tags: [studies]
+      summary: List saved care studies, most recently updated first
+      responses:
+        "200":
+          description: Study summaries with per-study draft stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudySummary"
+        "503":
+          description: Database not configured
+    post:
+      operationId: createStudy
+      tags: [studies]
+      summary: Save a new care study
+      description: Creates the study and records the first snapshot as a version.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                name:
+                  type: string
+                  description: Display name (defaults to "Care study")
+                data:
+                  $ref: "#/components/schemas/StudyData"
+      responses:
+        "201":
+          description: Created study summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudySummary"
+        "422":
+          description: Missing chapters array
+        "503":
+          description: Database not configured
+  /studies/{id}:
+    get:
+      operationId: getStudy
+      tags: [studies]
+      summary: Open a saved study (latest snapshot)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The study summary plus its full snapshot data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/StudySummary"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/StudyData"
+        "404":
+          description: Study not found
+    put:
+      operationId: updateStudy
+      tags: [studies]
+      summary: Save the current workspace over an existing study
+      description: Updates the study and records a new version in its history.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                name:
+                  type: string
+                data:
+                  $ref: "#/components/schemas/StudyData"
+      responses:
+        "200":
+          description: Updated study summary
+        "404":
+          description: Study not found
+        "422":
+          description: Missing chapters array
+    delete:
+      operationId: deleteStudy
+      tags: [studies]
+      summary: Delete a study and all of its versions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Study not found
+  /studies/{id}/versions:
+    get:
+      operationId: listStudyVersions
+      tags: [studies]
+      summary: List the save history for a study
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Version summaries, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    createdAt:
+                      type: string
+                      format: date-time
+  /studies/{id}/versions/{versionId}:
+    get:
+      operationId: getStudyVersion
+      tags: [studies]
+      summary: Fetch a specific historical snapshot for restoring
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The snapshot data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  createdAt:
+                    type: string
+                    format: date-time
+                  data:
+                    $ref: "#/components/schemas/StudyData"
+        "404":
+          description: Version not found
   /sections/draft:
     post:
       operationId: draftSection
@@ -50,6 +226,59 @@ paths:
           description: Missing heading or notes
         "500":
           description: Drafting failed
+  /export/docx:
+    post:
+      operationId: exportStudyDocx
+      tags: [drafting]
+      summary: Export the whole study as a Word (.docx) document
+      description: >-
+        Converts the full study payload (title page, chapters, sections,
+        drafts, and tables) into a standard Nursing & Midwifery Council of
+        Ghana care study Word document via the local Python engine.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chapters]
+              properties:
+                title:
+                  type: object
+                  description: Title page metadata (patient, diagnosis, student, college, year)
+                chapters:
+                  type: array
+                  description: The study chapters with sections, drafts, fields, and rows
+                scope:
+                  type: object
+                  description: >-
+                    How much of the study to render. Omitted or {"type": "full"}
+                    renders the whole study (title page + TOC + all chapters);
+                    {"type": "chapter", "chapterIndex": N} renders one chapter
+                    (its heading and sections); {"type": "section",
+                    "chapterIndex": N, "sectionIndex": M} renders a single section.
+                  properties:
+                    type:
+                      type: string
+                      enum: [full, chapter, section]
+                    chapterIndex:
+                      type: integer
+                      description: Zero-based chapter index (required for chapter/section)
+                    sectionIndex:
+                      type: integer
+                      description: Zero-based section index within the chapter (required for section)
+      responses:
+        "200":
+          description: Binary .docx document
+          content:
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+        "422":
+          description: Missing chapters array
+        "500":
+          description: Export failed
   /healthz:
     get:
       operationId: healthCheck
@@ -72,4 +301,37 @@ components:
           type: string
       required:
         - status
+    StudySummary:
+      type: object
+      required: [id, name, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        stats:
+          type: object
+          description: Sections drafted vs total, computed from the snapshot
+          properties:
+            drafted:
+              type: integer
+            total:
+              type: integer
+    StudyData:
+      type: object
+      description: Full workspace snapshot (title page + every chapter/section)
+      required: [chapters]
+      properties:
+        title:
+          type: object
+          description: Title page metadata (patient, diagnosis, student, college, year)
+        chapters:
+          type: array
+          description: Chapters with collected fields, notes, drafts, and row data
 

@@ -176,6 +176,13 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
             type: "text",
           },
           {
+            id: "facility",
+            label: "Facility / hospital",
+            placeholder: "e.g. Bono Regional Hospital, Sunyani",
+            type: "text",
+            required: true,
+          },
+          {
             id: "admissionDateTime",
             label: "Date & time of admission",
             placeholder: "e.g. 21st August, 2023, 2:30 pm",

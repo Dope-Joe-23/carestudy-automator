@@ -1,0 +1,214 @@
+SOURCE: World Health Organization fact sheet
+TITLE: Sickle-cell disease
+URL: https://www.who.int/news-room/fact-sheets/detail/sickle-cell-disease
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-08-12
+
+
+Key facts
+
+Sickle-cell disease is a serious inherited blood disorder caused by a mutation in the HBB gene, leading to abnormal, sickle-shaped red blood cells that block blood flow and cause severe health complications.
+
+In 2021, an estimated 7.74 million people were living with sickle-cell disease globally, with 515 000 new births, primarily in sub-Saharan Africa, which accounts for nearly 80% of global cases.
+
+Sickle-cell disease causes substantial under-5 mortality: 81 100 deaths in 2021, making it the 12th leading cause of death in this age group when considering the total mortality burden.
+
+Traditional mortality recording underestimates sickle-cell disease impact – actual deaths are 11 times higher than cause-specific statistics suggest (376 000 vs 34 400 deaths in 2021).
+
+Common complications include acute pain crises, anaemia, stroke, infections, kidney failure, and pregnancy-related risks.
+
+Effective interventions exist, including disease modifying agents such as hydroxyurea and vaccinations to prevent infection.
+
+Urgent action is needed to integrate sickle-cell disease care into primary health systems and ensure access to essential medicines.
+
+Overview
+
+Sickle-cell disease (SCD) is a genetic disorder that affects haemoglobin, the molecule in red blood cells responsible for carrying oxygen. The disease causes red blood cells to become rigid and sickle-shaped, leading to blockages in blood flow and subsequent pain and organ damage. SCD is most common in individuals of African, Mediterranean, Middle Eastern, and Indian descent. The disease manifests in various forms, with sickle-cell anaemia being the most severe. Early diagnosis is crucial for managing the disease and preventing complications. Treatment focuses on alleviating symptoms and preventing crises, with advanced therapies like gene therapy offering hope for a cure.
+
+Causes and risk factors
+
+SCD is caused by a mutation in the HBB gene, which provides instructions for making haemoglobin. This mutation leads to the production of abnormal haemoglobin known as haemoglobin S. When a person inherits two copies of the haemoglobin S gene (one from each parent), they develop SCD. Individuals with one normal haemoglobin gene and one haemoglobin S gene have sickle-cell trait (SCT) and usually do not exhibit symptoms but can pass the gene to their offspring.
+
+Symptoms
+
+Pain episodes (crises): sudden, severe pain due to blocked blood flow. These episodes can last for hours to days and can be severe enough to require hospitalization.
+
+Anaemia: caused by the rapid breakdown of sickle-cells, leading to fatigue, weakness, and shortness of breath.
+
+Swelling: particularly in the hands and feet, known as dactylitis, which is often the first symptom in babies.
+
+Frequent infections: due to spleen damage, which makes patients more susceptible to infections such as pneumonia.
+
+Delayed growth: in children and adolescents, due to chronic anaemia and other complications.
+
+Vision problems: caused by blocked blood vessels in the eyes, which can lead to damage to the retina.
+
+Diagnosis
+
+Sickle-cell anemia is typically diagnosed through a blood test. These tests look for the abnormal hemoglobin (HbS) that characterizes the disease. Additional tests, such as haemoglobin electrophoresis, can confirm the diagnosis and determine the specific type of SCD. Early diagnosis, such as through newborn screening, is essential for managing the disease and preventing severe complications.
+
+Treatment
+
+While there is no universal cure for SCD, various treatments can help manage symptoms and reduce complications:
+
+Preventive care:
+
+routine vaccinations (pneumococcal, Haemophilus influenzae, hepatitis B)
+
+folic acid supplements.
+
+Disease-modifying therapy:
+
+hydroxyurea: a medication that reduces the frequency of pain crises and the need for blood transfusions by increasing the production of fetal haemoglobin, which prevents the sickling of red blood cells;
+
+pain management: using medications like acetaminophen, ibuprofen, and opioids to relieve pain during crises; and
+
+blood transfusions: to treat severe anaemia and prevent stroke by increasing the number of normal red blood cells in circulation.
+
+Curative options:
+
+bone marrow transplant: a potential cure for some patients, particularly children with severe SCD, by replacing the defective bone marrow with healthy marrow from a donor; and
+
+gene therapy: emerging treatments that aim to correct the genetic mutation causing SCD, offering hope for a long-term cure.
+
+Complications
+
+SCD can lead to numerous complications, including:
+
+early mortality especially in individuals without access to care;
+
+severe infections (e.g. pneumococcal, salmonella);
+
+stroke: due to blocked blood flow to the brain, which can cause long-term neurological damage;
+
+acute chest syndrome: a life-threatening condition caused by sickle-cells blocking blood flow in the lungs, leading to chest pain, fever, and difficulty breathing;
+
+organ damage: particularly to the spleen, liver, and kidneys, due to repeated blockages and lack of oxygen;
+
+leg ulcers: chronic, painful sores on the legs that are difficult to heal;
+
+priapism; and
+
+pregnancy complications (maternal and neonatal risks).
+
+Prevention and management
+
+Preventing complications and managing SCD involves regular medical care and lifestyle adjustments:
+
+regular check-ups: with a health-care provider specializing in SCD to monitor health and manage symptoms;
+
+vaccinations: to prevent infections, particularly pneumococcal and meningococcal infections;
+
+healthy lifestyle: including a balanced diet, adequate hydration, and avoiding extreme temperatures to reduce the risk of crises; and
+
+education and support: for patients and families to understand the disease and its management, including recognizing early signs of complications and knowing when to seek medical help.
+
+For people living with sickle-cell disease, part of good health and well-being includes consideration about sexual and reproductive health.
+
+Providers should talk to patients about sexual and reproductive health and their plans for pregnancy within the context of sickle-cell disease. Women living with sickle-cell disease need integrated care that informs them of the options for care in order to reduce any sickle-cell symptoms. Preventing complications can lead to better outcomes for women and their babies.
+
+When considering pregnancy
+
+Women with sickle-cell disease (SCD) should consider several important factors to ensure a healthy pregnancy and minimize risks. Here are some key considerations:
+
+counseling about genetic implications and the person’s health status;
+
+discussing continuing or discontinuing medication and supplements in alignment with the WHO guideline; and
+
+joining a local sickle-cell disease support group to be connected with others who are going through similar challenges and to access emotional support and practical advice.
+
+When planning pregnancy
+
+For women living with sickle-cell disease, planning for pregnancy will help to ensure good health for themselves and their babies.
+
+Consideration should be given to:
+
+timing: planning the timing of pregnancy to ensure it occurs when the woman is in the best possible health; and
+
+emergency planning: developing an emergency plan for managing sickle-cell crises during pregnancy.
+
+WHO response
+
+The World Health Organization (WHO) recognizes SCD as a significant public health issue and works to improve the lives of those affected through various initiatives. WHO's efforts include:
+
+raising awareness: about SCD and its impact on global health through campaigns and educational programmes;
+
+supporting research: to develop new treatments and potential cures, with attention to funding and facilitating clinical trials that include women of reproductive age and in pregnancy, in order to better understand the benefits and risks of treatments in and around the time of pregnancy;
+
+early diagnosis and intervention, which can significantly improve outcomes for affected individuals;
+
+collaborating with governments and organizations: to implement effective SCD management programmes and policies, ensuring access to care and treatment;
+
+providing guidelines and resources: for health-care providers to improve patient care, including best practices for managing SCD during pregnancy, childbirth, and the interpregnancy period; and
+
+PEN-Plus: a model that complements the WHO package of essential noncommunicable disease interventions and contributes to reducing premature mortality from severe noncommunicable disease by providing integrated care and services among Africa’s poorest children and young adults.
+
+By addressing the challenges of SCD through comprehensive strategies, WHO aims to reduce the disease's burden and enhance the quality of life for those affected.
+
+References
+
+Global, regional, and national prevalence and mortality burden of sickle-cell disease, 2000–2021: a systematic analysis from the Global Burden of Disease Study 2021. Thomson, Azalea M et al. The Lancet Haematology, Volume 10, Issue 8, e585 - e59
+
+Sickle-cell disease: a strategy for the WHO African region. arf/rc60/8
+
+WHO consolidated guidelines for the management of common childhood illness: management of sickle-cell disease in children and adolescents
+
+WHO recommendations on the management of sickle-cell disease during pregnancy, childbirth and the interpregnancy period
+
+Understanding the PEN-Plus approach to care: expanding access to care for severe noncommunicable diseases in the WHO African Region
+
+More on sickle-cell disease
+
+Regions
+
+Africa
+
+Americas
+
+Eastern Mediterranean
+
+Europe
+
+South-East Asia
+
+Western Pacific
+
+Policies
+
+Cybersecurity
+
+Ethics
+
+Information disclosure
+
+Permissions and licensing
+
+Preventing sexual exploitation
+
+Terms of use
+
+About us
+
+Careers
+
+Frequently asked questions
+
+Library
+
+Procurement
+
+Publications
+
+Contact us
+
+Newsletters
+
+Report misconduct
+
+Privacy policy
+
+©
+
+2026
+
+WHO

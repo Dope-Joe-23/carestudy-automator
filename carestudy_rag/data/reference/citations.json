@@ -1,0 +1,155 @@
+{
+  "_comment": "Citation metadata for the reference library. Add an entry here for every document you drop into data/reference/ (textbook chapters, formularies, handbooks) so drafts can cite them in-text and list them in the references section.",
+  "pneumonia.txt": {
+    "title": "Pneumonia",
+    "url": "https://en.wikipedia.org/wiki/Pneumonia"
+  },
+  "hypertension.txt": {
+    "title": "Hypertension",
+    "url": "https://en.wikipedia.org/wiki/Hypertension"
+  },
+  "diabetes_type_2.txt": {
+    "title": "Diabetes mellitus type 2",
+    "url": "https://en.wikipedia.org/wiki/Diabetes_mellitus_type_2"
+  },
+  "sickle_cell_disease.txt": {
+    "title": "Sickle cell disease",
+    "url": "https://en.wikipedia.org/wiki/Sickle_cell_disease"
+  },
+  "malaria.txt": {
+    "title": "Malaria",
+    "url": "https://en.wikipedia.org/wiki/Malaria"
+  },
+  "appendicitis.txt": {
+    "title": "Appendicitis",
+    "url": "https://en.wikipedia.org/wiki/Appendicitis"
+  },
+  "asthma.txt": {
+    "title": "Asthma",
+    "url": "https://en.wikipedia.org/wiki/Asthma"
+  },
+  "urinary_tract_infection.txt": {
+    "title": "Urinary tract infection",
+    "url": "https://en.wikipedia.org/wiki/Urinary_tract_infection"
+  },
+  "peptic_ulcer_disease.txt": {
+    "title": "Peptic ulcer disease",
+    "url": "https://en.wikipedia.org/wiki/Peptic_ulcer_disease"
+  },
+  "iron_deficiency_anemia.txt": {
+    "title": "Iron-deficiency anemia",
+    "url": "https://en.wikipedia.org/wiki/Iron-deficiency_anemia"
+  },
+  "tuberculosis.txt": {
+    "title": "Tuberculosis",
+    "url": "https://en.wikipedia.org/wiki/Tuberculosis"
+  },
+  "myocardial_infarction.txt": {
+    "title": "Myocardial infarction",
+    "url": "https://en.wikipedia.org/wiki/Myocardial_infarction"
+  },
+  "ceftriaxone.txt": {
+    "title": "Ceftriaxone",
+    "url": "https://en.wikipedia.org/wiki/Ceftriaxone"
+  },
+  "paracetamol.txt": {
+    "title": "Paracetamol",
+    "url": "https://en.wikipedia.org/wiki/Paracetamol"
+  },
+  "amoxicillin.txt": {
+    "title": "Amoxicillin",
+    "url": "https://en.wikipedia.org/wiki/Amoxicillin"
+  },
+  "metformin.txt": {
+    "title": "Metformin",
+    "url": "https://en.wikipedia.org/wiki/Metformin"
+  },
+  "furosemide.txt": {
+    "title": "Furosemide",
+    "url": "https://en.wikipedia.org/wiki/Furosemide"
+  },
+  "artemether_lumefantrine.txt": {
+    "title": "Artemether/lumefantrine",
+    "url": "https://en.wikipedia.org/wiki/Artemether/lumefantrine"
+  },
+  "folic_acid.txt": {
+    "title": "Folic acid",
+    "url": "https://en.wikipedia.org/wiki/Folic_acid"
+  },
+  "insulin_medication.txt": {
+    "title": "Insulin (medication)",
+    "url": "https://en.wikipedia.org/wiki/Insulin_(medication)"
+  },
+  "nursing_process.txt": {
+    "title": "Nursing process",
+    "url": "https://en.wikipedia.org/wiki/Nursing_process"
+  },
+  "nursing_diagnosis.txt": {
+    "title": "Nursing diagnosis",
+    "url": "https://en.wikipedia.org/wiki/Nursing_diagnosis"
+  },
+  "who_asthma.txt": {
+    "title": "Asthma",
+    "author": "World Health Organization",
+    "year": 2026,
+    "citeKey": "WHO",
+    "venue": "Fact sheet",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/asthma"
+  },
+  "who_diabetes.txt": {
+    "title": "Diabetes",
+    "author": "World Health Organization",
+    "year": 2024,
+    "citeKey": "WHO",
+    "venue": "Fact sheet",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/diabetes"
+  },
+  "who_hypertension.txt": {
+    "title": "Hypertension",
+    "author": "World Health Organization",
+    "year": 2025,
+    "citeKey": "WHO",
+    "venue": "Fact sheet",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/hypertension"
+  },
+  "who_malaria.txt": {
+    "title": "Malaria",
+    "author": "World Health Organization",
+    "year": 2025,
+    "citeKey": "WHO",
+    "venue": "Fact sheet",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/malaria"
+  },
+  "who_tuberculosis.txt": {
+    "title": "Tuberculosis",
+    "author": "World Health Organization",
+    "year": 2026,
+    "citeKey": "WHO",
+    "venue": "Fact sheet",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/tuberculosis"
+  },
+  "who_pneumonia.txt": {
+    "title": "Pneumonia in children",
+    "author": "World Health Organization",
+    "year": 2022,
+    "citeKey": "WHO",
+    "venue": "Fact sheet",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/pneumonia"
+  },
+  "who_sickle_cell_disease.txt": {
+    "title": "Sickle-cell disease",
+    "author": "World Health Organization",
+    "year": 2025,
+    "citeKey": "WHO",
+    "venue": "Fact sheet",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/sickle-cell-disease"
+  },
+  "who_anaemia.txt": {
+    "title": "Anaemia",
+    "author": "World Health Organization",
+    "year": 2025,
+    "citeKey": "WHO",
+    "venue": "Fact sheet",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/anaemia"
+  }
+}

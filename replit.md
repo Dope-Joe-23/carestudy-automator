@@ -8,14 +8,16 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm --filter @workspace/db run migrate` — (re)create the local SQLite database (dev only; the API server also auto-creates it on first use)
+- `pnpm --filter @workspace/db run push:pg` — push the schema to Postgres (deployment)
+- Storage backend: `DB_DRIVER=sqlite` (default, local file) or `DB_DRIVER=postgres` (requires `DATABASE_URL`)
+- Optional env: `SQLITE_PATH` — SQLite file location (default: `<root>/carestudy.db`)
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
+- DB: SQLite (`node:sqlite`) + Drizzle ORM — single local file, no provisioning
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)

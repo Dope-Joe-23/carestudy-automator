@@ -24,6 +24,9 @@ class RetrievedChunk:
     heading: str
     source: str
     score: float
+    # Optional pre-computed citation ({label, inText, url}) baked in at ingest
+    # time (e.g. personal-library sources whose metadata the user supplied).
+    citation: dict | None = None
 
 
 class SimpleIndex:
@@ -57,6 +60,7 @@ class SimpleIndex:
             results.append(RetrievedChunk(
                 text=r["text"], heading=r.get("heading", ""),
                 source=r.get("source", ""), score=float(score),
+                citation=r.get("citation"),
             ))
         return results
 
