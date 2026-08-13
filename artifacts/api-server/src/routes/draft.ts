@@ -13,6 +13,10 @@ router.post("/sections/draft", async (req, res) => {
   const rawStudyId = req.body?.studyId;
   const studyId =
     Number.isInteger(rawStudyId) && (rawStudyId as number) > 0 ? (rawStudyId as number) : null;
+  const rawColumns = req.body?.rowColumns;
+  const rowColumns = Array.isArray(rawColumns)
+    ? rawColumns.filter((column): column is string => typeof column === "string").slice(0, 12)
+    : [];
 
   if (!heading || !notes) {
     res
@@ -22,7 +26,7 @@ router.post("/sections/draft", async (req, res) => {
   }
 
   try {
-    const result = await draftWorker.draft(heading, notes, tabular, kind, studyId);
+    const result = await draftWorker.draft(heading, notes, tabular, kind, studyId, rowColumns);
     res.json(result);
   } catch (err) {
     req.log?.error?.({ err }, "draft generation failed");

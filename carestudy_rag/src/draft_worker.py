@@ -235,6 +235,7 @@ def main() -> None:
                 reference_index=reference_index,
                 study_chunks=study_chunks,
                 library_chunks=library_chunks,
+                row_columns=req.get("rowColumns") or None,
             )
             emit({"id": req.get("id"), "draft": result.draft, "references": result.references})
         except Exception as exc:

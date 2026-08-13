@@ -13,17 +13,6 @@ export type StudyRow = {
   updatedAt: Date;
 };
 
-export type StudyVersionRow = {
-  id: number;
-  data: unknown;
-  createdAt: Date;
-};
-
-export type StudyVersionSummaryRow = {
-  id: number;
-  createdAt: Date;
-};
-
 export type StudyFileRow = {
   id: number;
   studyId: number;
@@ -85,18 +74,14 @@ export type NewLibrarySource = {
 export interface StudyStore {
   /** All studies, most recently updated first. */
   list(): Promise<StudyRow[]>;
-  /** Create a study and record its first version atomically. */
+  /** Create a study. */
   create(name: string, data: unknown): Promise<StudyRow>;
   /** Latest snapshot of one study, or null when it doesn't exist. */
   get(id: number): Promise<StudyRow | null>;
-  /** Save a new snapshot + version atomically; null when the study is missing. */
+  /** Save the current snapshot; null when the study is missing. */
   update(id: number, name: string, data: unknown): Promise<StudyRow | null>;
-  /** Delete a study and all its versions; false when nothing was deleted. */
+  /** Delete a study; false when nothing was deleted. */
   remove(id: number): Promise<boolean>;
-  /** Save history for a study, newest first. */
-  listVersions(studyId: number): Promise<StudyVersionSummaryRow[]>;
-  /** A specific historical snapshot; null when missing. */
-  getVersion(studyId: number, versionId: number): Promise<StudyVersionRow | null>;
   /** Uploaded document rows for a study, oldest first. */
   listFiles(studyId: number): Promise<StudyFileRow[]>;
   /** Register a freshly-uploaded document. */

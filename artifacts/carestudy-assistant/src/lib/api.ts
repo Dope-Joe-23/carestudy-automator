@@ -25,6 +25,7 @@ export async function requestDraft(
   tabular = false,
   kind: "section" | "chapter_intro" = "section",
   studyId: number | null = null,
+  rowColumns: string[] = [],
 ): Promise<{ draft: string; references: DraftReference[] }> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -33,7 +34,7 @@ export async function requestDraft(
     const response = await fetch(`${API_URL}/sections/draft`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ heading, notes, tabular, kind, studyId }),
+      body: JSON.stringify({ heading, notes, tabular, kind, studyId, rowColumns }),
       signal: controller.signal,
     });
 
@@ -79,6 +80,8 @@ export type ExportSection = {
 export type ExportChapter = {
   name: string;
   sections: ExportSection[];
+  /** Unnumbered preliminary pages (preface/acknowledgement/introduction). */
+  isFrontMatter?: boolean;
   /** Optional chapter introduction, rendered under the chapter heading. */
   intro?: string;
   /** Sources cited by the chapter introduction. */
@@ -229,10 +232,6 @@ export type StudySummary = {
 
 export type StudyDetail = StudySummary & { data: StoredStudy };
 
-export type StudyVersionSummary = { id: number; createdAt: string };
-
-export type StudyVersionDetail = StudyVersionSummary & { data: StoredStudy };
-
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -278,14 +277,6 @@ export function updateStudy(
 
 export function deleteStudy(id: number): Promise<void> {
   return requestJson<void>(`/studies/${id}`, { method: "DELETE" });
-}
-
-export function listStudyVersions(id: number): Promise<StudyVersionSummary[]> {
-  return requestJson(`/studies/${id}/versions`);
-}
-
-export function getStudyVersion(id: number, versionId: number): Promise<StudyVersionDetail> {
-  return requestJson(`/studies/${id}/versions/${versionId}`);
 }
 
 // ---------------------------------------------------------------------------

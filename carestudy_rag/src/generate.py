@@ -266,6 +266,7 @@ def build_prompt(
     library_chunks=None,
     tabular: bool = False,
     chapter_intro: bool = False,
+    row_columns=None,
 ) -> str:
     examples_text = "\n\n---\n\n".join(
         f"[Example from {c.source}]\n{c.text}" for c in template_examples
@@ -306,6 +307,15 @@ def build_prompt(
         format_instruction = FORMAT_PROSE
     if not chapter_intro and is_literature_review(heading, tabular):
         format_instruction = LITERATURE_REVIEW_FORMAT
+    if tabular and row_columns:
+        # Anchor the drafted table to the section template's columns so the
+        # Word export matches the school's expected layout exactly.
+        format_instruction = (
+            format_instruction
+            + "\nUse EXACTLY these column headers, in this order: "
+            + " | ".join(row_columns)
+            + ". Keep every item from the notes as its own row and do not invent extra columns."
+        )
 
     study_block = ""
     if study_text:
@@ -423,6 +433,7 @@ def draft_section(
     reference_index=None,
     study_chunks=None,
     library_chunks=None,
+    row_columns=None,
 ) -> DraftResult:
     if not patient_notes.strip():
         return DraftResult(
@@ -449,6 +460,7 @@ def draft_section(
         library_chunks=library_chunks,
         tabular=tabular,
         chapter_intro=chapter_intro,
+        row_columns=row_columns,
     )
 
     api_key = os.environ.get("ANTHROPIC_API_KEY")

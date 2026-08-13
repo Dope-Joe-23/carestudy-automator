@@ -72,6 +72,7 @@ class DraftWorker {
     tabular = false,
     kind: "section" | "chapter_intro" = "section",
     studyId: number | null = null,
+    rowColumns: string[] = [],
   ): Promise<DraftResult> {
     const child = this.ensureWorker();
     const id = this.nextId++;
@@ -98,7 +99,9 @@ class DraftWorker {
         timer,
       });
       try {
-        child.stdin.write(JSON.stringify({ id, heading, notes, tabular, kind, studyId }) + "\n");
+        child.stdin.write(
+          JSON.stringify({ id, heading, notes, tabular, kind, studyId, rowColumns }) + "\n",
+        );
       } catch (writeErr) {
         // Stream destroyed (worker died a moment ago); fail fast instead of
         // leaving an entry that only self-cleans when the timer fires.

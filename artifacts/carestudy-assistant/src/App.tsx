@@ -33,6 +33,7 @@ import {
   HeartPulse,
   History,
   Info,
+  Library,
   LineChart,
   ListChecks,
   Moon,
@@ -42,6 +43,7 @@ import {
   Printer,
   RotateCcw,
   Save,
+  ScrollText,
   Search,
   ShieldCheck,
   Sparkles,
@@ -68,7 +70,6 @@ import {
   deleteStudyFile,
   exportStudyDocx,
   getStudy,
-  getStudyVersion,
   listLibrarySources,
   listStudyFiles,
   readFileAsBase64,
@@ -154,7 +155,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StudiesDialog } from '@/components/studies-dialog';
+import { StudiesPanel } from '@/components/studies-panel';
 
 type SectionStatus = 'empty' | 'noted' | 'drafted';
 
@@ -179,6 +180,8 @@ type Chapter = {
   name: string;
   shortLabel: string;
   blurb: string;
+  /** Unnumbered preliminary pages (preface/acknowledgement/introduction). */
+  isFrontMatter?: boolean;
   /** Introduction paragraph that opens this chapter in print and Word export. */
   intro: string;
   /** Sources cited by the drafted chapter introduction. */
@@ -194,6 +197,7 @@ type SectionVerification = {
 };
 
 const CHAPTER_ICONS: LucideIcon[] = [
+  ScrollText,
   Stethoscope,
   LineChart,
   Target,
@@ -210,6 +214,7 @@ function makeChapters(): Chapter[] {
     name: chapter.name,
     shortLabel: chapter.shortLabel,
     blurb: chapter.blurb,
+    isFrontMatter: chapter.isFrontMatter,
     sections: chapter.sections.map((section) => ({
       id: section.id,
       heading: section.heading,
@@ -273,6 +278,41 @@ function computeStatus(section: Section): SectionStatus {
   return hasContent ? 'noted' : 'empty';
 }
 
+/**
+ * Map a stored row's cells onto the template's current columns (positional).
+ * The nursing care plan columns were reordered to the RGN guideline order, so
+ * older saved care-plan rows — the 5-cell shape [diagnosis, goal,
+ * interventions, rationale, evaluation] or the 7-cell shape that appends
+ * [date/time, nursing orders] — are remapped by position instead.
+ */
+function mapStoredCells(
+  sectionId: string,
+  cells: (string | undefined)[] | undefined,
+  targetRows: TemplateRowDef | undefined,
+): string[] {
+  if (!targetRows) return [];
+  if (
+    sectionId === '3.2' &&
+    targetRows.id === 'carePlan' &&
+    Array.isArray(cells) &&
+    (cells.length === 5 || cells.length === 7)
+  ) {
+    // New order: [diagnosisDate, diagnosis, goal, nursingOrders,
+    //             interventions, evaluationDate, evaluation, rationale]
+    return [
+      cells[5] ?? '', // diagnosis date (legacy generic date/time)
+      cells[0] ?? '', // diagnosis
+      cells[1] ?? '', // objectives / outcome criteria
+      cells[6] ?? '', // nursing orders
+      cells[2] ?? '', // interventions
+      '', // evaluation date — no legacy equivalent
+      cells[4] ?? '', // evaluation
+      cells[3] ?? '', // rationale
+    ];
+  }
+  return targetRows.columns.map((_, columnIndex) => cells?.[columnIndex] ?? '');
+}
+
 /** Required fields that still need the student's input (soft — never blocks drafting). */
 function missingRequiredFields(section: Section): TemplateField[] {
   return section.fields.filter(
@@ -307,6 +347,172 @@ function composeSectionInput(section: Section): string {
 }
 
 // ---------------------------------------------------------------------------
+// Field prose — turns collected "label: value" data into professional flowing
+// text so a section without a draft still reads like a document. Section 1.1
+// (patient's particulars) is composed into a single natural biography;
+// other sections render long student-written values as their own paragraphs
+// and short facts with a bold-label lead-in. The Word export mirrors these
+// same rules in carestudy_rag/src/export_docx.py.
+// ---------------------------------------------------------------------------
+
+type FieldProse = { label?: string; text: string };
+
+/** "2026-08-13" → "13th August, 2026"; anything else passes through. */
+function formatProseDate(value: string): string {
+  const match = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return value;
+  const [, year, month, day] = match;
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+  const dayNumber = Number(day);
+  const suffix =
+    dayNumber % 100 >= 11 && dayNumber % 100 <= 13
+      ? 'th'
+      : { 1: 'st', 2: 'nd', 3: 'rd' }[dayNumber % 10] ?? 'th';
+  return `${dayNumber}${suffix} ${monthNames[Number(month) - 1]}, ${year}`;
+}
+
+function capitalizeFirst(text: string): string {
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+}
+
+function joinWithAnd(items: string[]): string {
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+const VITAL_LABEL_RE = /temperature|pulse|respiration|blood pressure|spo₂|spo2|weight/i;
+
+/** Vitals carry their unit in the label: "Temperature (°C)" → "38.7°C". */
+function vitalDetail(label: string, value: string): string {
+  const name = label.replace(/\(.*\)/, '').trim();
+  const unit = label.match(/\(([^)]*)\)/)?.[1].trim() ?? '';
+  let detail = value.trim();
+  if (unit && !detail.includes(unit)) {
+    detail = unit === '%' ? `${detail}${unit}` : `${detail} ${unit}`;
+  }
+  return `${name} ${detail}`;
+}
+/** Long student-written values are already prose — keep them as clean paragraphs. */
+const PROSE_LENGTH = 60;
+
+/** 1.1 Patient's Particulars → one flowing biography, not one sentence per field. */
+function particularsProse(parts: Array<{ label: string; value: string }>): FieldProse[] {
+  const by = (pattern: RegExp) => parts.find((part) => pattern.test(part.label))?.value ?? '';
+
+  const name = by(/name\s*\/\s*initials|initials/i);
+  const age = by(/^age$/i);
+  const dob = by(/date of birth/i);
+  const sex = by(/^sex$/i);
+  const ethnicity = by(/ethnicity|tribe/i);
+  const religion = by(/religion/i);
+  const marital = by(/marital status/i);
+  const occupation = by(/occupation/i);
+  const address = by(/address|residence/i);
+  const ward = by(/ward|unit/i);
+  // "Hospital number" must not be mistaken for the facility field.
+  const facility = by(/facility|hospital(?!\s*number)/i);
+  const admissionDate = by(/date.*admission|admission.*date/i);
+  const diagnosis = by(/diagnosis/i);
+  const informant = by(/informant/i);
+
+  const prose: FieldProse[] = [];
+
+  // Identity sentence — only the parts the student actually filled.
+  const identity: string[] = [];
+  if (sex) identity.push(sex.toLowerCase());
+  const ageNumber = age.trim().match(/^\d+/);
+  if (ageNumber) identity.push(`aged ${ageNumber[0]} years`);
+  else if (dob) identity.push(`born on ${formatProseDate(dob)}`);
+  if (ethnicity) identity.push(`of the ${ethnicity.trim()} tribe`);
+  if (religion) {
+    const rel = religion.trim();
+    identity.push(
+      /christian|muslim|hindu|buddhist/i.test(rel) ? `a ${rel}` : `of the ${rel} faith`,
+    );
+  }
+  if (marital) identity.push(marital.toLowerCase());
+  if (occupation) identity.push(`a ${occupation.trim().toLowerCase()} by occupation`);
+  if (identity.length > 0) {
+    const subject = name ? `The patient, ${name.trim()},` : 'The patient';
+    const residence = address ? `, residing at ${address.trim()}` : '';
+    prose.push({ text: `${subject} is ${joinWithAnd(identity)}${residence}.` });
+  }
+
+  // Admission sentence.
+  const admission: string[] = [];
+  if (ward) admission.push(`to the ${ward.trim().toLowerCase()}`);
+  if (facility) admission.push(`at ${facility.trim()}`);
+  if (admissionDate) admission.push(`on ${formatProseDate(admissionDate.trim())}`);
+  if (admission.length > 0) {
+    const pronoun = sex
+      ? sex.toLowerCase() === 'female'
+        ? 'she'
+        : 'he'
+      : 'the patient';
+    const diagnosisClause = diagnosis ? ` with a diagnosis of ${diagnosis.trim()}` : '';
+    prose.push({
+      text: `${capitalizeFirst(pronoun)} was admitted ${admission.join(', ')}${diagnosisClause}.`,
+    });
+  } else if (diagnosis) {
+    prose.push({ text: `The admission diagnosis was ${diagnosis.trim()}.` });
+  }
+
+  // Informant & reliability.
+  if (informant) {
+    const cleaned = informant.trim().replace(/\s*[-–—]\s*.*$/i, '').trim();
+    let phrase = cleaned;
+    if (/^him/i.test(cleaned)) phrase = 'the patient himself';
+    else if (/^her/i.test(cleaned)) phrase = 'the patient herself';
+    const reliability = /reliab/i.test(informant)
+      ? '; the information was deemed reliable'
+      : '';
+    prose.push({ text: `The informant was ${phrase}${reliability}.` });
+  }
+
+  // Anything not woven into the biography (e.g. hospital number) stays a fact.
+  const clusterRe =
+    /name\s*\/\s*initials|initials|^age$|^sex$|ethnicity|tribe|religion|marital status|occupation|address|residence|date of birth|ward|unit|facility|hospital(?!\s*number)|admission|diagnosis|informant/i;
+  for (const part of parts) {
+    if (!clusterRe.test(part.label)) prose.push({ label: part.label, text: part.value });
+  }
+  return prose;
+}
+
+/** All other sections: student prose as paragraphs, short facts with bold labels. */
+function genericProse(parts: Array<{ label: string; value: string }>): FieldProse[] {
+  const prose: FieldProse[] = [];
+
+  // Vitals read naturally as one factual list: "Temperature 38.7°C, pulse 125 bpm…"
+  const vitals = parts.filter((part) => VITAL_LABEL_RE.test(part.label));
+  if (vitals.length > 0) {
+    const details = vitals.map((part) => vitalDetail(part.label, part.value));
+    prose.push({ text: `${capitalizeFirst(details.join(', '))}.` });
+  }
+  const vitalLabels = new Set(vitals.map((part) => part.label));
+
+  for (const part of parts) {
+    if (vitalLabels.has(part.label)) continue;
+    if (part.value.length >= PROSE_LENGTH) {
+      prose.push({ text: part.value });
+    } else {
+      prose.push({ label: part.label, text: part.value });
+    }
+  }
+  return prose;
+}
+
+/** Compose a section's filled fields into prose paragraphs for print/export. */
+function fieldsToProse(section: Section): FieldProse[] {
+  const parts = section.fields
+    .map((field) => ({ label: field.label, value: (section.data[field.id] ?? '').trim() }))
+    .filter((part) => part.value);
+  return section.id === '1.1' ? particularsProse(parts) : genericProse(parts);
+}
+
+// ---------------------------------------------------------------------------
 // Field-level building blocks
 // ---------------------------------------------------------------------------
 
@@ -326,21 +532,21 @@ function FieldControl({
     <div className={cn('space-y-1.5', field.span === 2 && 'sm:col-span-2')}>
       <label
         htmlFor={inputId}
-        className="flex items-center gap-1.5 text-xs font-medium text-foreground"
+        className="flex items-center gap-1.5 text-xs font-medium text-sidebar-foreground/90"
       >
         <span
           className={cn(
             'grid size-4 shrink-0 place-items-center rounded-full border transition-colors',
             filled
               ? 'border-transparent bg-primary text-primary-foreground'
-              : 'border-input text-transparent',
+              : 'border-sidebar-foreground/30 text-transparent',
           )}
         >
           <Check className="size-2.5" strokeWidth={3.2} />
         </span>
         {field.label}
         {field.required && (
-          <span className="text-destructive" aria-hidden="true">
+          <span className="text-red-400" aria-hidden="true">
             *
           </span>
         )}
@@ -353,7 +559,7 @@ function FieldControl({
           onChange={(event) => onChange(event.target.value)}
           placeholder={field.placeholder}
           rows={3}
-          className="min-h-[76px] bg-card leading-relaxed"
+          className="min-h-[76px] border-white/15 bg-white/10 leading-relaxed text-sidebar-foreground placeholder:text-sidebar-foreground/40"
           aria-describedby={field.hint ? `hint-${field.id}` : undefined}
           aria-required={field.required || undefined}
         />
@@ -364,7 +570,10 @@ function FieldControl({
           value={value || '__none__'}
           onValueChange={(next) => onChange(next === '__none__' ? '' : next)}
         >
-          <SelectTrigger id={inputId} className="h-9 bg-card">
+          <SelectTrigger
+            id={inputId}
+            className="h-9 border-white/15 bg-white/10 text-sidebar-foreground data-[placeholder]:text-sidebar-foreground/40"
+          >
             <SelectValue placeholder="Select…" />
           </SelectTrigger>
           <SelectContent>
@@ -382,7 +591,7 @@ function FieldControl({
           type="date"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="h-9 bg-card"
+          className="h-9 border-white/15 bg-white/10 text-sidebar-foreground [color-scheme:dark]"
           aria-describedby={field.hint ? `hint-${field.id}` : undefined}
           aria-required={field.required || undefined}
         />
@@ -393,14 +602,17 @@ function FieldControl({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={field.placeholder}
-          className="h-9 bg-card"
+          className="h-9 border-white/15 bg-white/10 text-sidebar-foreground placeholder:text-sidebar-foreground/40"
           aria-describedby={field.hint ? `hint-${field.id}` : undefined}
           aria-required={field.required || undefined}
         />
       )}
 
       {field.hint && (
-        <p className="text-[11px] leading-relaxed text-muted-foreground" id={`hint-${field.id}`}>
+        <p
+          className="text-[11px] leading-relaxed text-sidebar-foreground/60"
+          id={`hint-${field.id}`}
+        >
           {field.hint}
         </p>
       )}
@@ -435,16 +647,21 @@ function RowEditor({
   const removeRow = (rowId: number) => onChange(rows.filter((row) => row.id !== rowId));
 
   return (
-    <div className="mt-4 border-t border-border/70 pt-4">
+    <div className="mt-4 border-t border-sidebar-border/60 pt-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="text-sm font-semibold">{rowDef.title}</span>
-        <Button variant="outline" size="sm" onClick={addRow} className="h-8 gap-1.5">
+        <span className="text-sm font-semibold text-sidebar-foreground">{rowDef.title}</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addRow}
+          className="h-8 gap-1.5 border-white/15 bg-white/10 text-sidebar-foreground hover:bg-white/15 hover:text-sidebar-foreground"
+        >
           <Plus className="size-3.5" /> {rowDef.addLabel}
         </Button>
       </div>
 
       {rows.length === 0 && (
-        <p className="mt-3 text-xs italic leading-relaxed text-muted-foreground">
+        <p className="mt-3 text-xs italic leading-relaxed text-sidebar-foreground/60">
           {rowDef.emptyHint}
         </p>
       )}
@@ -462,13 +679,13 @@ function RowEditor({
               className="flex items-center gap-2"
               style={{ minWidth: rowDef.columns.length * 132 + 56 }}
             >
-              <span className="w-5 shrink-0 text-center font-mono text-[11px] tabular text-muted-foreground">
+              <span className="w-5 shrink-0 text-center font-mono text-[11px] tabular text-sidebar-foreground/60">
                 {rowIndex + 1}
               </span>
               {rowDef.columns.map((column, columnIndex) => (
                 <Input
                   key={column.id}
-                  className="h-8 bg-card text-xs"
+                  className="h-8 border-white/15 bg-white/10 text-xs text-sidebar-foreground placeholder:text-sidebar-foreground/40"
                   placeholder={column.label}
                   value={row.cells[columnIndex] ?? ''}
                   onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
@@ -477,7 +694,7 @@ function RowEditor({
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
+                className="size-8 shrink-0 text-sidebar-foreground/50 hover:text-red-400"
                 onClick={() => removeRow(row.id)}
                 aria-label={`Remove ${rowDef.title} row ${rowIndex + 1}`}
               >
@@ -576,6 +793,35 @@ function splitPreviewBlocks(draft: string): PreviewBlock[] {
   return blocks;
 }
 
+/** Shared markdown-table renderer used by both the on-screen preview and the
+ *  print/export view, so their table markup never drifts apart. */
+function PreviewTable({ header, rows }: { header: string[]; rows: string[][] }) {
+  return (
+    <table className="w-full border-collapse text-[11px]">
+      <thead>
+        <tr>
+          {header.map((cell, cellIndex) => (
+            <th key={cellIndex} className="border bg-muted px-2 py-1 text-left font-semibold">
+              {cell}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, rowIndex) => (
+          <tr key={rowIndex}>
+            {row.map((cell, cellIndex) => (
+              <td key={cellIndex} className="border px-2 py-1 align-top">
+                {cell || '—'}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 function DraftPreview({ draft }: { draft: string }) {
   const blocks = useMemo(() => splitPreviewBlocks(draft), [draft]);
   return (
@@ -583,31 +829,7 @@ function DraftPreview({ draft }: { draft: string }) {
       {blocks.map((block, index) =>
         block.kind === 'table' ? (
           <div key={index} className="mb-2 overflow-x-auto">
-            <table className="w-full border-collapse text-[11px]">
-              <thead>
-                <tr>
-                  {block.header.map((cell, cellIndex) => (
-                    <th
-                      key={cellIndex}
-                      className="border bg-muted px-2 py-1 text-left font-semibold"
-                    >
-                      {cell}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {block.rows.map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {row.map((cell, cellIndex) => (
-                      <td key={cellIndex} className="border px-2 py-1 align-top">
-                        {cell || '—'}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <PreviewTable header={block.header} rows={block.rows} />
           </div>
         ) : (
           <p key={index} className="whitespace-pre-wrap font-mono leading-relaxed">
@@ -616,6 +838,44 @@ function DraftPreview({ draft }: { draft: string }) {
         ),
       )}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Print view draft renderer — converts drafted markdown pipe tables into real
+// HTML tables (matching the Word export), so raw "| ... |" never leaks into
+// the printed document. Reuses the same block parser as the on-screen preview.
+// ---------------------------------------------------------------------------
+
+function PrintDraft({ draft }: { draft: string }) {
+  const blocks = useMemo(() => splitPreviewBlocks(draft), [draft]);
+  return (
+    <div className="mt-1.5 space-y-2">
+      {blocks.map((block, index) =>
+        block.kind === 'table' ? (
+          <div key={index} className="overflow-x-auto">
+            <PreviewTable header={block.header} rows={block.rows} />
+          </div>
+        ) : (
+          <p key={index} className="whitespace-pre-wrap text-[13px] leading-relaxed">
+            {renderInlineMarkdown(block.text)}
+          </p>
+        ),
+      )}
+    </div>
+  );
+}
+
+/** True when a drafted section already contains a markdown table block. */
+function hasMarkdownTable(draft: string): boolean {
+  return splitPreviewBlocks(draft).some((block) => block.kind === 'table');
+}
+
+/** Number of data rows in the draft's markdown tables (0 when none). */
+function draftTableRowCount(draft: string): number {
+  return splitPreviewBlocks(draft).reduce(
+    (total, block) => (block.kind === 'table' ? total + block.rows.length : total),
+    0,
   );
 }
 
@@ -886,6 +1146,9 @@ function ReferenceLibraryPanel({
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 
+/** How long after the last edit before the workspace autosaves. */
+const AUTOSAVE_DELAY_MS = 1500;
+
 const ONBOARDING_STEPS = [
   {
     title: 'Pick a chapter & section',
@@ -912,6 +1175,9 @@ function Home() {
   const [sectionTab, setSectionTab] = useState<'collect' | 'draft'>('collect');
   const [collectOpen, setCollectOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Manual draft editing: toggle the rendered draft into an editable text box.
+  const [draftEditing, setDraftEditing] = useState(false);
+  const [draftWork, setDraftWork] = useState('');
   const [commandOpen, setCommandOpen] = useState(false);
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
@@ -927,7 +1193,6 @@ function Home() {
   const [currentStudyId, setCurrentStudyId] = useState<number | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [studiesOpen, setStudiesOpen] = useState(false);
   const [studyListKey, setStudyListKey] = useState(0);
   const [dirty, setDirty] = useState(false);
   // Save dialog: an editable, pre-derived study name so saved studies aren't
@@ -935,6 +1200,10 @@ function Home() {
   const [saveOpen, setSaveOpen] = useState(false);
   const [studyName, setStudyName] = useState('');
   const [currentStudyName, setCurrentStudyName] = useState<string | null>(null);
+  // New-study dialog: name the study up front so it shows in the navbar and is
+  // used as the default when the workspace is first saved.
+  const [newStudyOpen, setNewStudyOpen] = useState(false);
+  const [newStudyName, setNewStudyName] = useState('');
   // Uploaded patient documents (PDF/DOCX/TXT) that ground every draft.
   const [studyFiles, setStudyFiles] = useState<StudyFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -964,6 +1233,9 @@ function Home() {
   // Set before programmatic workspace changes (load/reset/new) so the dirty
   // tracker below doesn't mark freshly-loaded state as unsaved edits.
   const suppressDirty = useRef(false);
+  // Bumped whenever the workspace is replaced (open/reset/new) so a stale
+  // in-flight autosave can detect that its snapshot was discarded.
+  const workspaceGeneration = useRef(0);
   const [onboardingOpen, setOnboardingOpen] = useState(() => {
     try {
       return !window.localStorage.getItem('carestudy_onboarding');
@@ -983,6 +1255,13 @@ function Home() {
   const currentChapter = chapters[activeChapter];
   const currentSection = currentChapter.sections[activeSection];
   const allSections = useMemo(() => chapters.flatMap((chapter) => chapter.sections), [chapters]);
+
+  // The front-matter chapter (preface/acknowledgement/introduction) is
+  // unnumbered in the document; the real chapters keep their I–VI numbering.
+  const isFrontMatterChapter = (chapterIndex: number) =>
+    Boolean(chapters[chapterIndex]?.isFrontMatter);
+  const chapterOrdinal = (chapterIndex: number) =>
+    chapters.slice(0, chapterIndex).filter((chapter) => !chapter.isFrontMatter).length;
 
   /** Every distinct reference cited anywhere in the study (for the print view). */
   const allReferences = useMemo(() => {
@@ -1006,6 +1285,20 @@ function Home() {
     }
     return refs;
   }, [chapters]);
+
+  /** True when the student's Bibliography section (6.3) has entries — its
+   *  curated list then replaces the auto-generated references list. */
+  const hasBibliography = useMemo(
+    () =>
+      chapters.some((chapter) =>
+        chapter.sections.some(
+          (section) =>
+            section.id === '6.3' &&
+            section.rowData.some((row) => row.cells.some((cell) => cell.trim())),
+        ),
+      ),
+    [chapters],
+  );
 
   const draftedCount = allSections.filter((section) => section.status === 'drafted').length;
   const inProgressCount = allSections.filter((section) => section.status === 'noted').length;
@@ -1075,8 +1368,6 @@ function Home() {
     setActiveChapter(chapterIndex);
     setActiveSection(sectionIndex);
     setDraftError(null);
-    // Modal open/close is owned by the section-navigation effect below, so it
-    // never flickers (close-then-reopen) when moving between sections.
   };
 
   const selectChapter = (index: number) => jumpTo(index, 0);
@@ -1117,7 +1408,21 @@ function Home() {
       // Mixed sections like 5.1 (narrative fields + an outcomes grid) stay prose
       // — their grid still exports as a structured table.
       const tabular = Boolean(currentSection.rows) && currentSection.fields.length === 0;
-      const result = await requestDraft(heading, composed, tabular, 'section', currentStudyId);
+      // Pass the section template's column headers so the drafted table matches
+      // the expected layout (drug, dose, indication, ...) instead of making
+      // up its own columns.
+      const rowColumns =
+        tabular && currentSection.rows
+          ? currentSection.rows.columns.map((column) => column.label)
+          : [];
+      const result = await requestDraft(
+        heading,
+        composed,
+        tabular,
+        'section',
+        currentStudyId,
+        rowColumns,
+      );
       updateSection(targetChapter, targetSection, {
         draft: result.draft,
         references: result.references,
@@ -1157,6 +1462,7 @@ function Home() {
   const clearSection = () => {
     setSectionTab('collect');
     setCollectOpen(false);
+    setDraftEditing(false);
     updateCurrentSection({ notes: '', draft: '', references: [], data: {}, rowData: [] });
     setVerifyBySection((prev) => {
       const next = { ...prev };
@@ -1169,6 +1475,7 @@ function Home() {
   };
 
   const resetAll = () => {
+    workspaceGeneration.current += 1;
     setSectionTab('collect');
     setCollectOpen(false);
     setChapters(makeChapters());
@@ -1202,6 +1509,21 @@ function Home() {
     window.setTimeout(() => setCopied(false), 1800);
   };
 
+  /** Enter draft-edit mode with a working copy of the current draft. */
+  const startDraftEdit = () => {
+    setDraftWork(currentSection.draft);
+    setDraftEditing(true);
+  };
+
+  /** Write the edited text back into the section and leave edit mode. */
+  const saveDraftEdit = () => {
+    updateCurrentSection({ draft: draftWork });
+    setDraftEditing(false);
+    toast.success('Draft updated', {
+      description: 'Your edits are saved with this section.',
+    });
+  };
+
   /** Update the active chapter's introduction (and the sources it cites). */
   const updateChapterIntro = (
     chapterIndex: number,
@@ -1222,7 +1544,9 @@ function Home() {
     setIsIntroDrafting(true);
     try {
       const chapter = chapters[targetChapter];
-      const heading = `Chapter ${ROMAN[targetChapter]}: ${chapter.name}`;
+      const heading = isFrontMatterChapter(targetChapter)
+        ? chapter.name
+        : `Chapter ${ROMAN[chapterOrdinal(targetChapter)]}: ${chapter.name}`;
       // Ground the intro in the chapter's scope: its name, blurb, and the
       // headings of everything it covers.
       const notes = [
@@ -1359,6 +1683,7 @@ function Home() {
     scope,
     chapters: chapters.map((chapter) => ({
       name: chapter.name,
+      isFrontMatter: chapter.isFrontMatter,
       intro: chapter.intro,
       introReferences: chapter.introReferences,
       sections: chapter.sections.map((section) => {
@@ -1399,7 +1724,9 @@ function Home() {
         scope.type === 'section'
           ? `${currentSection.id} ${currentSection.heading}`
           : scope.type === 'chapter'
-            ? `Chapter ${ROMAN[activeChapter]} - ${currentChapter.name}`
+            ? isFrontMatterChapter(activeChapter)
+              ? currentChapter.name
+              : `Chapter ${ROMAN[chapterOrdinal(activeChapter)]} - ${currentChapter.name}`
             : 'Care Study';
       const safeScopeName = rawScopeName.replace(/[^a-z0-9\-_. ]/gi, '').trim() || 'Care Study';
       link.href = url;
@@ -1425,7 +1752,7 @@ function Home() {
   };
 
   // -------------------------------------------------------------------------
-  // Study storage — save, open, restore, and delete via the server database
+  // Study storage — autosave, open, and delete via the server database
   // -------------------------------------------------------------------------
 
   const LAST_STUDY_KEY = 'carestudy_last_study';
@@ -1458,6 +1785,7 @@ function Home() {
     studyId: number | null,
     announce = true,
   ) => {
+    workspaceGeneration.current += 1;
     const next = makeChapters();
     for (const chapter of stored.chapters) {
       const chapterIndex = CHAPTER_TEMPLATE.findIndex(
@@ -1480,12 +1808,35 @@ function Home() {
           saved.data && typeof saved.data === 'object'
             ? (saved.data as Record<string, string>)
             : {};
+        // Older templates stored problems, strengths and nursing diagnoses all
+        // under the single “2.3 Health Needs Identified” section. Old saves
+        // still hold those keys under 2.3 — move strengths and nursing
+        // diagnoses into their new sections so nothing is lost.
+        if (saved.id === '2.3' && saved.data && typeof saved.data === 'object') {
+          const legacy = saved.data as Record<string, string>;
+          const strengthsSection = next[chapterIndex].sections.find((s) => s.id === '2.4');
+          const diagnosesSection = next[chapterIndex].sections.find((s) => s.id === '2.5');
+          if (
+            strengthsSection &&
+            typeof legacy.strengths === 'string' &&
+            legacy.strengths.trim()
+          ) {
+            strengthsSection.data = { strengths: legacy.strengths };
+            strengthsSection.status = computeStatus(strengthsSection);
+          }
+          if (
+            diagnosesSection &&
+            typeof legacy.nursingDiagnoses === 'string' &&
+            legacy.nursingDiagnoses.trim()
+          ) {
+            diagnosesSection.data = { nursingDiagnoses: legacy.nursingDiagnoses };
+            diagnosesSection.status = computeStatus(diagnosesSection);
+          }
+        }
         target.rowData = Array.isArray(saved.rowData)
           ? saved.rowData.map((row) => ({
               id: nextRowId(),
-              cells: target.rows
-                ? target.rows.columns.map((_, columnIndex) => row.cells?.[columnIndex] ?? '')
-                : [],
+              cells: mapStoredCells(saved.id, row.cells, target.rows),
             }))
           : [];
         target.status = computeStatus(target);
@@ -1546,9 +1897,22 @@ function Home() {
   /** Open the save dialog with a sensible, editable default name. */
   const openSaveDialog = () => {
     // Re-saving keeps the name the study was last saved under; a fresh save
-    // derives one from the patient data.
-    setStudyName(currentStudyId ? currentStudyName ?? deriveStudyName() : deriveStudyName());
+    // derives one from the patient data (or uses the name chosen at creation).
+    setStudyName(currentStudyName ?? deriveStudyName());
     setSaveOpen(true);
+  };
+
+  /** Open the new-study dialog with a derived default name to edit. */
+  const openNewStudyDialog = () => {
+    setNewStudyName(deriveStudyName());
+    setNewStudyOpen(true);
+  };
+
+  /** Start a blank study under the name chosen in the dialog. */
+  const createNewStudy = () => {
+    const name = newStudyName.trim() || deriveStudyName();
+    setNewStudyOpen(false);
+    startNewStudy(name);
   };
 
   const saveStudy = async () => {
@@ -1573,7 +1937,7 @@ function Home() {
       setStudyListKey((key) => key + 1);
       toast.success('Study saved', {
         description: currentStudyId
-          ? 'A new version was added to this study’s history.'
+          ? 'Your latest work is saved.'
           : 'Saved to the server — reopen it anytime from “My studies”.',
       });
     } catch (error) {
@@ -1600,7 +1964,7 @@ function Home() {
           minute: '2-digit',
         }),
       );
-      setStudiesOpen(false);
+
     } catch (error) {
       toast.error('Could not open study', {
         description: error instanceof Error ? error.message : 'Storage is unreachable.',
@@ -1608,24 +1972,41 @@ function Home() {
     }
   };
 
-  const restoreVersion = async (studyId: number, versionId: number) => {
+  // Autosave — quietly persist the workspace 1.5s after the last edit. The
+  // first autosave creates the study (under the name chosen at creation, or a
+  // name derived from the patient data); later ones update it in place, so
+  // nothing is ever lost and there is nothing to restore.
+  const autosaveBusy = useRef(false);
+  const autosave = async () => {
+    if (autosaveBusy.current) return;
+    autosaveBusy.current = true;
+    const generation = workspaceGeneration.current;
     try {
-      const { data, createdAt } = await getStudyVersion(studyId, versionId);
-      loadStudyIntoWorkspace(data, studyId, false);
-      void refreshStudyFiles(studyId);
-      setLastSavedAt(
-        new Date(createdAt).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      );
-      toast.success('Version restored', {
-        description: 'An earlier snapshot is now loaded — save to keep it.',
-      });
+      const name = currentStudyName ?? deriveStudyName();
+      const data = buildStudyPayload();
+      const saved = currentStudyId
+        ? await updateStudy(currentStudyId, name, data)
+        : await createStudy(name, data);
+      // If the workspace was replaced while saving (study opened / reset / new
+      // study), drop the result — the snapshot we wrote belongs to the
+      // discarded workspace and must not repoint the UI at it.
+      if (generation !== workspaceGeneration.current) return;
+      setCurrentStudyId(saved.id);
+      setCurrentStudyName(name);
+      setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setDirty(false);
+      try {
+        window.localStorage.setItem(LAST_STUDY_KEY, String(saved.id));
+      } catch {
+        // ignore storage errors
+      }
+      setStudyListKey((key) => key + 1);
     } catch (error) {
-      toast.error('Could not restore version', {
-        description: error instanceof Error ? error.message : 'Storage is unreachable.',
-      });
+      // Keep dirty so the next edit retries; the header indicator already
+      // shows “Unsaved changes” while the storage service is unreachable.
+      console.error('Autosave failed', error);
+    } finally {
+      autosaveBusy.current = false;
     }
   };
 
@@ -1803,9 +2184,7 @@ function Home() {
   };
 
   const removeStudy = async (id: number) => {
-    if (!window.confirm('Delete this study and all of its versions? This cannot be undone.')) {
-      return;
-    }
+    // The confirmation happens in the ⋯ menu's Delete tab — never double-ask.
     try {
       await deleteStudy(id);
       if (currentStudyId === id) {
@@ -1826,7 +2205,31 @@ function Home() {
     }
   };
 
-  const startNewStudy = () => {
+  /** Rename a saved study (keeps its data) from the ⋯ menu. */
+  const renameStudy = async (id: number, name: string) => {
+    try {
+      // updateStudy stores a full snapshot — reuse the study's own data so the
+      // rename changes nothing but the name.
+      const detail = await getStudy(id);
+      await updateStudy(id, name, detail.data);
+      setStudyListKey((key) => key + 1);
+      if (currentStudyId === id) {
+        setCurrentStudyName(name);
+      }
+      toast.success('Study renamed', {
+        description: `Now saved as “${name}”.`,
+      });
+    } catch (error) {
+      toast.error('Rename failed', {
+        description: error instanceof Error ? error.message : 'Storage is unreachable.',
+      });
+      // Re-throw so the panel keeps the dialog open for a retry.
+      throw error;
+    }
+  };
+
+  const startNewStudy = (name: string | null = null) => {
+    workspaceGeneration.current += 1;
     suppressDirty.current = true;
     setChapters(makeChapters());
     setVerifyBySection({});
@@ -1842,6 +2245,7 @@ function Home() {
     });
     setCurrentStudyId(null);
     setLastSavedAt(null);
+    setCurrentStudyName(name);
     setStudyFiles([]);
     setUploadError(null);
     setActiveChapter(0);
@@ -1854,9 +2258,10 @@ function Home() {
     } catch {
       // ignore storage errors
     }
-    setStudiesOpen(false);
     toast.success('New study started', {
-      description: 'The workspace is blank. Save once you have collected something.',
+      description: name
+        ? `“${name}” is ready — the workspace is blank. Save once you have collected something.`
+        : 'The workspace is blank. Save once you have collected something.',
     });
   };
 
@@ -1923,34 +2328,15 @@ function Home() {
 
   // Section work area: land on the Draft tab when the section already has
   // output, otherwise on Collect — navigation never dumps you past a form.
-  // On an empty section, open the data modal so data entry starts immediately;
-  // navigating to a section with content closes it again.
+  // The data-collection modal never auto-opens on navigation; it is opened
+  // explicitly by clicking a section or the Collect data button.
   useEffect(() => {
     const hasDraft = currentSection.draft.trim().length > 0;
     setSectionTab(hasDraft ? 'draft' : 'collect');
-    // The first-run onboarding dialog is up — never stack two modals over it.
-    if (onboardingOpen) return;
-    if (sectionFilledCount(currentSection) === 0 && !hasDraft) {
-      setCollectOpen(true);
-    } else {
-      setCollectOpen(false);
-    }
+    // Draft editing is per-section: drop any half-finished edit when moving on.
+    setDraftEditing(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSection.id]);
-
-  // After the first-run onboarding is dismissed, hand off straight into the
-  // data modal if the section is still empty (covers a fresh blank workspace
-  // on later visits too, since onboardingOpen starts false then).
-  useEffect(() => {
-    if (
-      !onboardingOpen &&
-      sectionFilledCount(currentSection) === 0 &&
-      !currentSection.draft.trim()
-    ) {
-      setCollectOpen(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onboardingOpen]);
 
   // Track whether the workspace has changed since the last save, so the
   // header indicator never claims "Saved" over unsaved edits.
@@ -1961,6 +2347,19 @@ function Home() {
     }
     setDirty(true);
   }, [chapters, exportMeta]);
+
+  // Debounced autosave: the timer resets on every edit, so a save fires 1.5s
+  // after the last change. Programmatic loads/resets/new studies never set
+  // dirty, so they never trigger a save; nothing autosaves until there is
+  // content (canSave).
+  useEffect(() => {
+    if (!dirty || !canSave) return;
+    const timer = window.setTimeout(() => {
+      void autosave();
+    }, AUTOSAVE_DELAY_MS);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirty, canSave, chapters, exportMeta]);
 
   const draftAvailable = sectionFilledCount(currentSection) > 0;
   const filledCount = sectionFilledCount(currentSection);
@@ -2008,46 +2407,61 @@ function Home() {
               Chapters
             </SidebarGroupLabel>
             <SidebarMenu>
-              {chapters.map((chapter, index) => {
-                const Icon = CHAPTER_ICONS[index] ?? FileText;
-                const completion = chapterCompletion(index);
-                const missingRequired = chapterMissingRequired(index);
-                return (
-                  <SidebarMenuItem key={chapter.name}>
-                    <SidebarMenuButton
-                      isActive={index === activeChapter}
-                      onClick={() => selectChapter(index)}
-                      tooltip={chapter.name}
-                      className="h-auto flex-col items-stretch gap-1.5 py-2"
-                    >
-                      <span className="flex w-full items-center gap-2.5">
-                        <Icon className="size-4 shrink-0 text-sidebar-primary" />
-                        <span className="flex-1 truncate text-[13px] font-medium">
-                          {chapter.name}
-                        </span>
-                        <span className="tabular font-mono text-[10px] text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
-                          {completion}%
-                        </span>
-                        {missingRequired > 0 && (
-                          <span
-                            className="flex shrink-0 items-center gap-1 rounded-full bg-amber-400/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-amber-400 group-data-[collapsible=icon]:hidden"
-                            title={`${missingRequired} required field${missingRequired === 1 ? '' : 's'} missing`}
-                          >
-                            <CircleAlert className="size-3" />
-                            {missingRequired}
-                          </span>
-                        )}
-                      </span>
-                      <span className="flex h-1 w-full overflow-hidden rounded-full bg-sidebar-border/70 group-data-[collapsible=icon]:hidden">
-                        <span
-                          className="block h-full rounded-full bg-sidebar-primary transition-all"
-                          style={{ width: `${completion}%` }}
-                        />
-                      </span>
+              <Collapsible asChild defaultOpen={false} className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Chapters">
+                      <Library className="size-4 shrink-0 text-sidebar-primary" />
+                      <span className="flex-1 truncate text-left">Chapters</span>
+                      <ChevronRight className="ml-auto size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {chapters.map((chapter, index) => {
+                        const Icon = CHAPTER_ICONS[index] ?? FileText;
+                        const completion = chapterCompletion(index);
+                        const missingRequired = chapterMissingRequired(index);
+                        return (
+                          <SidebarMenuItem key={chapter.name}>
+                            <SidebarMenuButton
+                              isActive={index === activeChapter}
+                              onClick={() => selectChapter(index)}
+                              tooltip={chapter.name}
+                              className="h-auto flex-col items-stretch gap-1.5 py-2"
+                            >
+                              <span className="flex w-full items-center gap-2.5">
+                                <Icon className="size-4 shrink-0 text-sidebar-primary" />
+                                <span className="flex-1 truncate text-[13px] font-medium">
+                                  {chapter.name}
+                                </span>
+                                <span className="tabular font-mono text-[10px] text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
+                                  {completion}%
+                                </span>
+                                {missingRequired > 0 && (
+                                  <span
+                                    className="flex shrink-0 items-center gap-1 rounded-full bg-amber-400/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-amber-400 group-data-[collapsible=icon]:hidden"
+                                    title={`${missingRequired} required field${missingRequired === 1 ? '' : 's'} missing`}
+                                  >
+                                    <CircleAlert className="size-3" />
+                                    {missingRequired}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="flex h-1 w-full overflow-hidden rounded-full bg-sidebar-border/70 group-data-[collapsible=icon]:hidden">
+                                <span
+                                  className="block h-full rounded-full bg-sidebar-primary transition-all"
+                                  style={{ width: `${completion}%` }}
+                                />
+                              </span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroup>
 
@@ -2117,6 +2531,33 @@ function Home() {
                   </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
+
+              <Collapsible asChild defaultOpen={false} className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="My studies">
+                      <History className="size-4 shrink-0 text-sidebar-primary" />
+                      <span className="flex-1 truncate text-left">My studies</span>
+                      <ChevronRight className="ml-auto size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <StudiesPanel
+                        refreshKey={studyListKey}
+                        currentStudyId={currentStudyId}
+                        isSaving={isSaving}
+                        canSave={canSave}
+                        onOpenStudy={openStudy}
+                        onDeleteStudy={removeStudy}
+                        onRenameStudy={renameStudy}
+                        onSaveCurrent={openSaveDialog}
+                        onNewStudy={openNewStudyDialog}
+                      />
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
@@ -2155,9 +2596,6 @@ function Home() {
               <DropdownMenuItem onClick={() => setOverviewOpen(true)}>
                 <Info /> Study overview
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStudiesOpen(true)}>
-                <History /> My studies
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
@@ -2175,9 +2613,16 @@ function Home() {
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-md md:px-6">
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-5" />
-          <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-            Care study <span className="mx-1 opacity-50">/</span>{' '}
-            <span className="text-foreground">Chapter {activeChapter + 1}</span>
+          <div className="min-w-0 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+            <span className="inline-block max-w-[22rem] truncate align-bottom">
+              {currentStudyName ?? deriveStudyName()}
+            </span>{' '}
+            <span className="mx-1 opacity-50">/</span>{' '}
+            <span className="text-foreground">
+              {isFrontMatterChapter(activeChapter)
+                ? 'Preliminary pages'
+                : `Chapter ${chapterOrdinal(activeChapter) + 1}`}
+            </span>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <button
@@ -2214,9 +2659,10 @@ function Home() {
               variant="outline"
               size="sm"
               className="hidden h-9 gap-1.5 sm:inline-flex"
-              onClick={() => setStudiesOpen(true)}
+              onClick={openNewStudyDialog}
+              title="Start a fresh blank study"
             >
-              <History className="size-4" /> Studies
+              <Plus className="size-4" /> New study
             </Button>
             <Button
               variant="outline"
@@ -2245,7 +2691,9 @@ function Home() {
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
             <p className="min-w-0 truncate text-sm font-semibold leading-tight">
               <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-primary">
-                Chapter {ROMAN[activeChapter]}
+                {isFrontMatterChapter(activeChapter)
+                  ? 'Preliminary Pages'
+                  : `Chapter ${ROMAN[chapterOrdinal(activeChapter)]}`}
               </span>
               <span className="mx-2 text-muted-foreground/40">/</span>
               <span className="text-foreground">
@@ -2260,6 +2708,7 @@ function Home() {
             </div>
           </div>
 
+          {!isFrontMatterChapter(activeChapter) && (
           <Collapsible defaultOpen={false} className="group/collapsible">
             <Card className="overflow-hidden">
               <CollapsibleTrigger asChild>
@@ -2346,6 +2795,7 @@ function Home() {
               </CollapsibleContent>
             </Card>
           </Collapsible>
+          )}
 
           <Dialog
             open={editSource !== null}
@@ -2439,12 +2889,12 @@ function Home() {
           </Dialog>
 
           <Dialog open={collectOpen} onOpenChange={setCollectOpen}>
-            <DialogContent className="max-h-[85vh] w-full max-w-2xl overflow-y-auto">
+            <DialogContent className="max-h-[85vh] w-full max-w-2xl overflow-y-auto border-sidebar-border bg-sidebar-accent text-sidebar-foreground">
               <DialogHeader>
                 <DialogTitle>
                   {currentSection.id} · {currentSection.heading}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-sidebar-foreground/70">
                   Fill what you observed — drafts are built from exactly what you record here,
                   nothing is invented on your behalf.
                 </DialogDescription>
@@ -2471,10 +2921,10 @@ function Home() {
                 />
               )}
 
-              <div className="flex items-center justify-between gap-3 border-t pt-4">
+              <div className="flex items-center justify-between gap-3 border-t border-sidebar-border/60 pt-4">
                 <span
                   aria-live="polite"
-                  className="font-mono text-[11px] tabular text-muted-foreground"
+                  className="font-mono text-[11px] tabular text-sidebar-foreground/70"
                 >
                   {currentSection.rows
                     ? `${filledCount} filled`
@@ -2482,7 +2932,7 @@ function Home() {
                 </span>
                 <div className="flex items-center gap-2">
                   {currentRequiredMissing.length > 0 && (
-                    <span className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
+                    <span className="flex items-center gap-1 text-[11px] text-amber-300">
                       <CircleAlert className="size-3.5" />
                       {currentRequiredMissing.length} required missing
                     </span>
@@ -2499,7 +2949,11 @@ function Home() {
             <Card className="hidden lg:block">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">Chapter {activeChapter + 1}</CardTitle>
+                  <CardTitle className="text-sm">
+                    {isFrontMatterChapter(activeChapter)
+                      ? 'Preliminary pages'
+                      : `Chapter ${chapterOrdinal(activeChapter) + 1}`}
+                  </CardTitle>
                   <Badge variant="outline" className="tabular">
                     {activeSection + 1} / {currentChapter.sections.length}
                   </Badge>
@@ -2816,6 +3270,16 @@ function Home() {
                             </p>
                           </div>
                         </div>
+                        {currentSection.draft && !draftEditing && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5"
+                            onClick={startDraftEdit}
+                          >
+                            <Pencil className="size-3.5" /> Edit
+                          </Button>
+                        )}
                         {currentSection.draft && (
                           <Button
                             variant="outline"
@@ -2861,7 +3325,35 @@ function Home() {
                         </div>
                       )}
 
-                      {currentSection.draft ? (
+                      {currentSection.draft && draftEditing ? (
+                        <div className="mt-3 space-y-2.5">
+                          <Textarea
+                            value={draftWork}
+                            onChange={(event) => setDraftWork(event.target.value)}
+                            className="min-h-[300px] resize-y bg-card font-mono text-[13px] leading-relaxed"
+                            placeholder="Edit the drafted text…"
+                            autoFocus
+                          />
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-[11px] leading-relaxed text-muted-foreground">
+                              Markdown is supported — it renders in preview, print, and the Word
+                              export.
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setDraftEditing(false)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button size="sm" onClick={saveDraftEdit} disabled={!draftWork.trim()}>
+                                <Check className="size-4" /> Save
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : currentSection.draft ? (
                         <DraftPreview draft={currentSection.draft} />
                       ) : (
                         <div className="mt-4 space-y-3">
@@ -3010,7 +3502,11 @@ function Home() {
           {chapters.map((chapter, chapterIndex) => (
             <CommandGroup
               key={chapter.name}
-              heading={`Chapter ${chapterIndex + 1} · ${chapter.name}`}
+              heading={
+                isFrontMatterChapter(chapterIndex)
+                  ? chapter.name
+                  : `Chapter ${chapterOrdinal(chapterIndex) + 1} · ${chapter.name}`
+              }
             >
               {chapter.sections.map((section, sectionIndex) => (
                 <CommandItem
@@ -3094,19 +3590,40 @@ function Home() {
         </DialogContent>
       </Dialog>
 
-      <StudiesDialog
-        open={studiesOpen}
-        onOpenChange={setStudiesOpen}
-        refreshKey={studyListKey}
-        currentStudyId={currentStudyId}
-        isSaving={isSaving}
-        canSave={canSave}
-        onOpenStudy={openStudy}
-        onDeleteStudy={removeStudy}
-        onRestoreVersion={restoreVersion}
-        onSaveCurrent={openSaveDialog}
-        onNewStudy={startNewStudy}
-      />
+      <Dialog open={newStudyOpen} onOpenChange={setNewStudyOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New study</DialogTitle>
+            <DialogDescription>
+              Give the new study a name — the patient's name or initials work well. You
+              can change it later when you save.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              value={newStudyName}
+              onChange={(event) => setNewStudyName(event.target.value)}
+              placeholder="e.g. P.A. — Sickle cell disease"
+              maxLength={80}
+              autoFocus
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && newStudyName.trim()) {
+                  event.preventDefault();
+                  createNewStudy();
+                }
+              }}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setNewStudyOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={createNewStudy} disabled={!newStudyName.trim()} className="gap-2">
+                <Plus className="size-4" /> Start study
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={overviewOpen} onOpenChange={setOverviewOpen}>
         <DialogContent className="max-w-lg">
@@ -3313,8 +3830,12 @@ function Home() {
               {chapters.map((chapter, chapterIndex) => (
                 <section key={chapter.name} className="mt-8">
                   <h2 className="flex items-baseline gap-2 border-b pb-1.5 font-serif text-lg">
-                    <span className="font-mono text-xs text-primary">CHAPTER {ROMAN[chapterIndex]}</span>{' '}
-                    {chapter.name}
+                    <span className="font-mono text-xs text-primary">
+                      {isFrontMatterChapter(chapterIndex)
+                        ? chapter.name.toUpperCase()
+                        : `CHAPTER ${ROMAN[chapterOrdinal(chapterIndex)]}`}
+                    </span>{' '}
+                    {isFrontMatterChapter(chapterIndex) ? '' : chapter.name}
                   </h2>
                   {chapter.intro.trim() && (
                     <p className="mt-2.5 whitespace-pre-wrap text-[13px] leading-relaxed">
@@ -3326,6 +3847,15 @@ function Home() {
                       (section.data[field.id] ?? '').trim(),
                     );
                     const hasRows = section.rowData.length > 0;
+                    // When the draft already contains a table (row sections
+                    // like 2.2 drugs), that table replaces the structured rows
+                    // table — never show a duplicated sparse scaffold. The
+                    // scaffold is kept as a safety net only if the draft table
+                    // omits rows the student entered (mirrors the Word export).
+                    const draftHasTable =
+                      Boolean(section.draft) && hasMarkdownTable(section.draft);
+                    const draftCoversRows =
+                      draftTableRowCount(section.draft) >= section.rowData.length;
                     const hasAnything =
                       Boolean(section.draft) ||
                       filledFields.length > 0 ||
@@ -3338,21 +3868,22 @@ function Home() {
                         </h3>
 
                         {section.draft ? (
-                          <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-relaxed">
-                            {renderInlineMarkdown(section.draft)}
-                          </p>
+                          <PrintDraft draft={section.draft} />
                         ) : filledFields.length > 0 ? (
-                          <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 text-[13px] sm:grid-cols-2">
-                            {filledFields.map((field) => (
-                              <div key={field.id} className="flex gap-1.5">
-                                <dt className="shrink-0 font-medium">{field.label}:</dt>
-                                <dd className="text-muted-foreground">{section.data[field.id]}</dd>
-                              </div>
+                          <div className="mt-2 space-y-2">
+                            {fieldsToProse(section).map((para, index) => (
+                              <p
+                                key={index}
+                                className="whitespace-pre-wrap text-[13px] leading-relaxed"
+                              >
+                                {para.label && <strong>{para.label}: </strong>}
+                                {para.text}
+                              </p>
                             ))}
-                          </dl>
+                          </div>
                         ) : null}
 
-                        {hasRows && section.rows && (
+                        {hasRows && section.rows && (!draftHasTable || !draftCoversRows) && (
                           <div className="mt-2 overflow-x-auto">
                             <table className="w-full border-collapse text-[12px]">
                               <thead>
@@ -3397,7 +3928,7 @@ function Home() {
                 </section>
               ))}
 
-              {allReferences.length > 0 && (
+              {allReferences.length > 0 && !hasBibliography && (
                 <section className="mt-8 break-inside-avoid">
                   <h2 className="flex items-baseline gap-2 border-b pb-1.5 font-serif text-lg">
                     <span className="font-mono text-xs text-primary">REFERENCES</span>{' '}

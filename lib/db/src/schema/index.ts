@@ -2,8 +2,8 @@
 //
 // `studies` holds the latest snapshot of each saved care study (the full
 // workspace: title-page metadata plus every chapter/section's collected data,
-// notes, and drafts). `study_versions` keeps an append-only history of every
-// save, so earlier states can be restored.
+// notes, and drafts). The app autosaves this snapshot in place, so there is
+// no version history to restore.
 //
 // SQLite is the development storage: a single local file (carestudy.db) with
 // zero provisioning. See ddl.ts for the matching CREATE TABLE statements that

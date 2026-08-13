@@ -143,7 +143,7 @@ router.put(
   }),
 );
 
-// DELETE /api/studies/:id — remove a study and all its versions.
+// DELETE /api/studies/:id — remove a study (and its disk artifacts).
 router.delete(
   "/studies/:id",
   asyncRoute(async (req, res) => {
@@ -160,39 +160,6 @@ router.delete(
     // DB rows cascade; disk uploads + the study's retrieval index go too.
     await removeStudyArtifacts(id);
     res.status(204).end();
-  }),
-);
-
-// GET /api/studies/:id/versions — the save history for a study.
-router.get(
-  "/studies/:id/versions",
-  asyncRoute(async (req, res) => {
-    const id = parseId(req.params.id);
-    if (!id) {
-      res.status(400).json({ error: "Invalid study id" });
-      return;
-    }
-    const rows = await studyStore().listVersions(id);
-    res.json(rows.map((row) => ({ id: row.id, createdAt: row.createdAt.toISOString() })));
-  }),
-);
-
-// GET /api/studies/:id/versions/:versionId — a specific historical snapshot.
-router.get(
-  "/studies/:id/versions/:versionId",
-  asyncRoute(async (req, res) => {
-    const id = parseId(req.params.id);
-    const versionId = parseId(req.params.versionId);
-    if (!id || !versionId) {
-      res.status(400).json({ error: "Invalid study or version id" });
-      return;
-    }
-    const row = await studyStore().getVersion(id, versionId);
-    if (!row) {
-      res.status(404).json({ error: "Version not found" });
-      return;
-    }
-    res.json({ id: row.id, createdAt: row.createdAt.toISOString(), data: row.data });
   }),
 );
 

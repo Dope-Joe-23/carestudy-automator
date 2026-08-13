@@ -4,7 +4,7 @@ import {
   type AsyncRemoteCallback,
   type SqliteRemoteDatabase,
 } from "drizzle-orm/sqlite-proxy";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import * as schema from "./schema";
 import { SCHEMA_DDL } from "./ddl";
 import type {
@@ -14,8 +14,6 @@ import type {
   StudyFileRow,
   StudyRow,
   StudyStore,
-  StudyVersionRow,
-  StudyVersionSummaryRow,
 } from "./store";
 
 // SQLite for development: a single local file, no provisioning, no native
@@ -134,7 +132,6 @@ function toFileRow(row: typeof schema.studyFilesTable.$inferSelect): StudyFileRo
 export function createSqliteStore(): StudyStore {
   const db = getSqliteDb();
   const studies = schema.studiesTable;
-  const versions = schema.studyVersionsTable;
   const files = schema.studyFilesTable;
   const library = schema.librarySourcesTable;
 
@@ -148,14 +145,8 @@ export function createSqliteStore(): StudyStore {
     },
 
     async create(name, data) {
-      // Study + first version in one transaction so a failed version insert
-      // can never leave a study without its history entry.
-      const created = await db.transaction(async (tx) => {
-        const [row] = await tx.insert(studies).values({ name, data }).returning();
-        await tx.insert(versions).values({ studyId: row.id, data });
-        return row;
-      });
-      return toRow(created);
+      const [row] = await db.insert(studies).values({ name, data }).returning();
+      return toRow(row);
     },
 
     async get(id) {
@@ -164,18 +155,12 @@ export function createSqliteStore(): StudyStore {
     },
 
     async update(id, name, data) {
-      // Update + new version atomically so the history always matches.
-      const row = await db.transaction(async (tx) => {
-        const [updated] = await tx
-          .update(studies)
-          .set({ name, data, updatedAt: new Date() })
-          .where(eq(studies.id, id))
-          .returning();
-        if (!updated) return null;
-        await tx.insert(versions).values({ studyId: id, data });
-        return updated;
-      });
-      return row ? toRow(row) : null;
+      const [updated] = await db
+        .update(studies)
+        .set({ name, data, updatedAt: new Date() })
+        .where(eq(studies.id, id))
+        .returning();
+      return updated ? toRow(updated) : null;
     },
 
     async remove(id) {
@@ -183,27 +168,6 @@ export function createSqliteStore(): StudyStore {
       // reliable rowCount through the proxy driver).
       const deleted = await db.delete(studies).where(eq(studies.id, id)).returning().all();
       return deleted.length > 0;
-    },
-
-    async listVersions(studyId) {
-      const rows = await db
-        .select({ id: versions.id, createdAt: versions.createdAt })
-        .from(versions)
-        .where(eq(versions.studyId, studyId))
-        .orderBy(desc(versions.createdAt), desc(versions.id));
-      return rows.map(
-        (row): StudyVersionSummaryRow => ({ id: row.id, createdAt: row.createdAt }),
-      );
-    },
-
-    async getVersion(studyId, versionId) {
-      const [row] = await db
-        .select()
-        .from(versions)
-        .where(and(eq(versions.studyId, studyId), eq(versions.id, versionId)));
-      if (!row) return null;
-      const result: StudyVersionRow = { id: row.id, data: row.data, createdAt: row.createdAt };
-      return result;
     },
 
     async listFiles(studyId) {

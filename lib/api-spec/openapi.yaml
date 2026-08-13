@@ -118,7 +118,7 @@ paths:
     delete:
       operationId: deleteStudy
       tags: [studies]
-      summary: Delete a study and all of its versions
+      summary: Delete a study
       parameters:
         - name: id
           in: path
@@ -130,65 +130,6 @@ paths:
           description: Deleted
         "404":
           description: Study not found
-  /studies/{id}/versions:
-    get:
-      operationId: listStudyVersions
-      tags: [studies]
-      summary: List the save history for a study
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Version summaries, newest first
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    createdAt:
-                      type: string
-                      format: date-time
-  /studies/{id}/versions/{versionId}:
-    get:
-      operationId: getStudyVersion
-      tags: [studies]
-      summary: Fetch a specific historical snapshot for restoring
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: versionId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: The snapshot data
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                  createdAt:
-                    type: string
-                    format: date-time
-                  data:
-                    $ref: "#/components/schemas/StudyData"
-        "404":
-          description: Version not found
   /sections/draft:
     post:
       operationId: draftSection
