@@ -1,0 +1,69 @@
+# ============================================================================
+# Render Blueprint — Backend API Server
+# ============================================================================
+# This blueprint defines:
+#   1. A PostgreSQL database
+#   2. A Docker-based web service for the API server
+#
+# Deploy via Render Dashboard:
+#   1. Push this repo to GitHub/GitLab
+#   2. Go to render.com → New → Blueprint
+#   3. Connect your repo and select this render.yaml
+#   4. Set environment variables in the dashboard
+# ============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # API Server (Node.js + Python RAG engine)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: carestudy-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter  # 512 MB RAM, suitable for the RAG engine
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: DB_DRIVER
+        value: postgres
+      - key: DATABASE_URL
+        fromDatabase:
+          name: carestudy-db
+          property: connectionString
+      - key: PYTHON_BIN
+        value: python3
+      # ── API Keys (set these in Render Dashboard) ──
+      - key: ANTHROPIC_AUTH_TOKEN
+        sync: false  # Set manually — secret
+      - key: ANTHROPIC_BASE_URL
+        value: https://openrouter.ai/api
+      - key: ANTHROPIC_MODEL
+        value: openai/gpt-oss-20b:free
+      # ── Admin credentials (set these in Render Dashboard) ──
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false  # Set manually — secret
+      # ── Upload limits ──
+      - key: MAX_UPLOAD_MB
+        value: "250"
+      # ── Cloudflare R2 (optional — set in Render Dashboard) ──
+      - key: CLOUDFLARE_ACCOUNT_ID
+        sync: false
+      - key: CLOUDFLARE_R2_ACCESS_KEY_ID
+        sync: false
+      - key: CLOUDFLARE_R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+
+databases:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL database
+  # ---------------------------------------------------------------------------
+  - name: carestudy-db
+    plan: starter  # 1 GB storage, free tier available
+    databaseName: carestudy
+    user: carestudy

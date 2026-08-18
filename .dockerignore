@@ -1,0 +1,71 @@
+# ============================================================================
+# Docker ignore — exclude files that don't belong in the build context
+# ============================================================================
+
+# Dependencies (we install fresh in the builder)
+node_modules
+
+# Build artifacts (rebuilt in the builder)
+dist
+out-tsc
+*.tsbuildinfo
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Environment files (secrets passed via Docker/env)
+.env
+.env.*
+!.env.example
+
+# IDE and editor files
+.idea
+.vscode
+.cursor
+*.launch
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Replit config
+.replit
+.replitignore
+.replit-artifact
+.cache
+.local
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+
+# Testing and coverage
+coverage
+testem.log
+*.log
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Data directories (mounted as volumes)
+data/uploads
+data/studies
+data/library
+
+# Local uploads and studies
+attached_assets
+
+# Scripts (not needed in production)
+scripts
