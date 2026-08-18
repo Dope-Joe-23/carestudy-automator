@@ -45,14 +45,17 @@ RUN pnpm --filter @workspace/api-server run build
 # ---------------------------------------------------------------------------
 FROM node:22-alpine AS runtime
 
-# Install Python 3 and pip for the RAG engine
-RUN apk add --no-cache python3 py3-pip \
-    && python3 -m ensurepip --upgrade \
-    && pip3 install --break-system-packages --no-cache-dir \
+# Install Python 3 and pip for the RAG engine (use venv to avoid PEP 668)
+RUN apk add --no-cache python3 py3-pip py3-virtualenv \
+    && python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir \
         anthropic>=0.40 \
         pypdf>=4.0 \
         python-docx>=1.1 \
         scikit-learn>=1.3
+
+# Make the venv python the default
+ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
