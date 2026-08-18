@@ -68,4 +68,5 @@ data/library
 attached_assets
 
 # Scripts (not needed in production)
-scripts
+scripts/**
+!scripts/package.json

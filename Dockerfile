@@ -19,12 +19,14 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY tsconfig.base.json tsconfig.json ./
 
-# Copy package.json files for all workspace packages
+# Copy package.json files for all workspace packages (needed for pnpm install)
 COPY lib/db/package.json lib/db/
 COPY lib/api-spec/package.json lib/api-spec/
 COPY lib/api-zod/package.json lib/api-zod/
 COPY lib/api-client-react/package.json lib/api-client-react/
 COPY artifacts/api-server/package.json artifacts/api-server/
+COPY artifacts/carestudy-assistant/package.json artifacts/carestudy-assistant/
+COPY artifacts/mockup-sandbox/package.json artifacts/mockup-sandbox/
 COPY scripts/package.json scripts/
 
 # Install dependencies
