@@ -30,7 +30,7 @@ COPY artifacts/mockup-sandbox/package.json artifacts/mockup-sandbox/
 COPY scripts/package.json scripts/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --config.onlyBuiltDependencies='["esbuild","@swc/core","msw","unrs-resolver"]'
 
 # Copy source code
 COPY lib/ lib/
