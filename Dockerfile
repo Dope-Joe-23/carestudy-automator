@@ -30,7 +30,10 @@ COPY artifacts/mockup-sandbox/package.json artifacts/mockup-sandbox/
 COPY scripts/package.json scripts/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile --config.onlyBuiltDependencies='["esbuild","@swc/core","msw","unrs-resolver"]'
+# pnpm v10+ blocks build scripts (esbuild postinstall) by default.
+# Write the build approval to .npmrc so pnpm recognises it before install.
+RUN printf 'onlyBuiltDependencies[]=@swc/core\nonlyBuiltDependencies[]=esbuild\nonlyBuiltDependencies[]=msw\nonlyBuiltDependencies[]=unrs-resolver\n' > .npmrc
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY lib/ lib/
