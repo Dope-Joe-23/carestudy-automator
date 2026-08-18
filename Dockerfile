@@ -12,8 +12,8 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm v9 (matches lockfileVersion 9.0; v10+ requires interactive build approval)
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # Copy workspace root files first for better layer caching
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -30,9 +30,6 @@ COPY artifacts/mockup-sandbox/package.json artifacts/mockup-sandbox/
 COPY scripts/package.json scripts/
 
 # Install dependencies
-# pnpm v10+ blocks build scripts (esbuild postinstall) by default.
-# Write the build approval to .npmrc so pnpm recognises it before install.
-RUN printf 'onlyBuiltDependencies[]=@swc/core\nonlyBuiltDependencies[]=esbuild\nonlyBuiltDependencies[]=msw\nonlyBuiltDependencies[]=unrs-resolver\n' > .npmrc
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
