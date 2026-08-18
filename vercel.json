@@ -1,8 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "cd artifacts/carestudy-assistant && pnpm install && pnpm build",
-  "outputDirectory": "artifacts/carestudy-assistant/dist/public",
+  "root": "artifacts/carestudy-assistant",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist/public",
   "installCommand": "corepack enable && pnpm install --frozen-lockfile",
   "rewrites": [
     {
