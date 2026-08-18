@@ -1,12 +1,16 @@
 import {
+  Fragment,
   useEffect,
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
+  type SyntheticEvent,
 } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -14,7 +18,12 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
   ArrowRight,
+  Bold,
   BookOpen,
   Check,
   CheckCircle2,
@@ -26,21 +35,29 @@ import {
   ClipboardCheck,
   ClipboardList,
   Download,
+  Eye,
   FileCheck2,
   FileText,
   Gauge,
   Globe,
   HeartPulse,
+  Highlighter,
   History,
+  Inbox,
   Info,
+  Italic,
+  Layers,
   Library,
   LineChart,
+  LogOut,
+  List,
   ListChecks,
+  ListOrdered,
   Moon,
   NotebookPen,
+  Palette,
   Pencil,
   Plus,
-  Printer,
   RotateCcw,
   Save,
   ScrollText,
@@ -48,15 +65,22 @@ import {
   ShieldCheck,
   Sparkles,
   Stethoscope,
+  Strikethrough,
   Sun,
   Target,
   Trash2,
+  Underline,
   Upload,
   X,
   type LucideIcon,
 } from 'lucide-react';
 import { ThemeProvider, useTheme } from 'next-themes';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
+import { LandingPage } from '@/pages/landing';
+import { StudentPortal } from '@/pages/student-portal';
+import { StudioBin } from '@/pages/studio-bin';
+import { AdminGate } from '@/components/admin-gate';
+import { adminLogout } from '@/lib/adminAuth';
 import {
   CHAPTER_TEMPLATE,
   type TemplateField,
@@ -72,12 +96,12 @@ import {
   getStudy,
   listLibrarySources,
   listStudyFiles,
-  readFileAsBase64,
   requestDraft,
   updateLibrarySource,
   updateStudy,
   uploadStudyFile,
   verifyReferences,
+  type DocTheme,
   type DraftReference,
   type ExportPayload,
   type ExportScope,
@@ -256,18 +280,191 @@ function sectionInputCount(section: Section): number {
   return section.fields.length + rowCapacity + 1;
 }
 
+/** Template inputs actually collected — fields and row cells only. The
+ *  free-form Clinical notes box lives outside the data-collection modal, so
+ *  it must not inflate the "X / Y collected" counter. */
+function sectionCollectedCount(section: Section): number {
+  const fieldFilled = section.fields.filter((field) => (section.data[field.id] ?? '').trim()).length;
+  const cellFilled = section.rowData.reduce(
+    (total, row) => total + row.cells.filter((cell) => cell.trim()).length,
+    0,
+  );
+  return fieldFilled + cellFilled;
+}
+
+/** Total template inputs (fields + row cells) for the "X / Y collected" badge. */
+function sectionCollectedTotal(section: Section): number {
+  const rowCapacity = section.rows
+    ? section.rows.columns.length * Math.max(section.rowData.length, 1)
+    : 0;
+  return section.fields.length + rowCapacity;
+}
+
 function sectionCompletion(section: Section): number {
   const total = sectionInputCount(section);
   if (total <= 0) return 0;
   return Math.round((sectionFilledCount(section) / total) * 100);
 }
 
-const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+// The client-side fail-fast ceiling. Both the direct-to-R2 path and the
+// base64 fallback enforce the same 250 MB default server-side (configurable
+// via MAX_UPLOAD_MB); rejection messages for anything under this cap come
+// from the server.
+const MAX_UPLOAD_BYTES = 250 * 1024 * 1024;
 
 function formatFileSize(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
+
+// ---------------------------------------------------------------------------
+// Word export formatting (the preview/export sheet's format controls)
+// ---------------------------------------------------------------------------
+
+/** Defaults mirror the Python exporter's Theme (carestudy_rag/src/export_docx.py). */
+const DEFAULT_DOC_THEME: DocTheme = {
+  body_font: 'Times New Roman',
+  heading_font: 'Times New Roman',
+  body_size: 12,
+  heading1_size: 14,
+  heading2_size: 12,
+  table_size: 10,
+  table_title_size: 11,
+  title_size: 14,
+  body_color: '000000',
+  heading_color: '000000',
+  table_header_fill: 'D9D9D9',
+  table_header_color: '000000',
+  highlight_color: 'FFFF00',
+  line_spacing: 1.5,
+  space_after: 6,
+  heading1_space_before: 14,
+  heading1_space_after: 8,
+  heading2_space_before: 10,
+  heading2_space_after: 4,
+  body_alignment: 'justify',
+  first_line_indent: 0,
+};
+
+// Persisted locally so a student's formatting choices survive reloads — the
+// theme rides into the .docx payload, the panel-open flag restores the sheet.
+const DOC_THEME_KEY = 'carestudy_doc_theme';
+const FORMAT_OPEN_KEY = 'carestudy_format_open';
+
+/** Merge a partial theme onto the defaults so new keys never break old saves. */
+function mergeDocTheme(partial: Partial<DocTheme> | null | undefined): DocTheme {
+  const merged: DocTheme = { ...DEFAULT_DOC_THEME };
+  if (!partial) return merged;
+  for (const key of Object.keys(DEFAULT_DOC_THEME) as (keyof DocTheme)[]) {
+    const value = partial[key];
+    if (value !== undefined) (merged as Record<string, unknown>)[key] = value;
+  }
+  return merged;
+}
+
+/** Reload the saved theme (app-level default for new studies). */
+function loadSavedDocTheme(): DocTheme {
+  try {
+    const raw = window.localStorage.getItem(DOC_THEME_KEY);
+    if (!raw) return DEFAULT_DOC_THEME;
+    return mergeDocTheme(JSON.parse(raw) as Partial<DocTheme>);
+  } catch {
+    return DEFAULT_DOC_THEME;
+  }
+}
+
+/** Branded graphic icons for the export toolbar — the classic red PDF badge
+ *  and blue Word tile, so the PDF / Word actions are recognizable at a glance
+ *  (lucide only ships monochrome line icons). */
+function PdfIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="1.5" y="1.5" width="21" height="21" rx="4.5" fill="#EE3A24" />
+      <text
+        x="12"
+        y="15.8"
+        textAnchor="middle"
+        fontSize="8.5"
+        fontWeight="800"
+        fill="#ffffff"
+        fontFamily="Arial, Helvetica, sans-serif"
+      >
+        PDF
+      </text>
+    </svg>
+  );
+}
+
+function WordIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="1.5" y="1.5" width="21" height="21" rx="4.5" fill="#2B579A" />
+      <text
+        x="12"
+        y="16.8"
+        textAnchor="middle"
+        fontSize="12"
+        fontWeight="700"
+        fill="#ffffff"
+        fontFamily="Georgia, 'Times New Roman', serif"
+      >
+        W
+      </text>
+    </svg>
+  );
+}
+
+const FONT_OPTIONS = [
+  'Times New Roman',
+  'Arial',
+  'Calibri',
+  'Georgia',
+  'Garamond',
+  'Helvetica',
+  'Palatino',
+  'Courier New',
+];
+const BODY_SIZE_OPTIONS = [10, 11, 12, 13, 14];
+const LINE_SPACING_OPTIONS = [1, 1.15, 1.5, 2];
+const ALIGNMENT_OPTIONS = ['justify', 'left', 'center', 'right'] as const;
+const FIRST_LINE_INDENT_OPTIONS = [0, 0.25, 0.5];
+
+/** Theme hex (no '#') <-> <input type="color"> value (#RRGGBB). */
+const hexToInput = (hex: string) => `#${hex}`;
+const inputToHex = (value: string) => value.replace(/^#/, '').toUpperCase();
+
+/** Text tools applied to the selected text in the editable preview. */
+const TEXT_TOOLS: {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  command: 'bold' | 'italic' | 'underline' | 'strikeThrough' | 'highlight';
+}[] = [
+  { key: 'bold', label: 'Bold', icon: Bold, command: 'bold' },
+  { key: 'italic', label: 'Italic', icon: Italic, command: 'italic' },
+  { key: 'underline', label: 'Underline', icon: Underline, command: 'underline' },
+  { key: 'strike', label: 'Strikethrough', icon: Strikethrough, command: 'strikeThrough' },
+  { key: 'highlight', label: 'Highlight', icon: Highlighter, command: 'highlight' },
+];
+
+/** Paragraph alignment applied to the selected paragraph in the preview. */
+const PARAGRAPH_ALIGNMENTS: {
+  value: 'left' | 'center' | 'right' | 'justify';
+  label: string;
+  icon: LucideIcon;
+}[] = [
+  { value: 'left', label: 'Align left', icon: AlignLeft },
+  { value: 'center', label: 'Align center', icon: AlignCenter },
+  { value: 'right', label: 'Align right', icon: AlignRight },
+  { value: 'justify', label: 'Justify', icon: AlignJustify },
+];
+
+/** The paragraph-level formatting currently under the caret/selection. */
+type ParaState = {
+  list: 'ul' | 'ol' | null;
+  align: string | null;
+  spacing: number | null;
+};
 
 function computeStatus(section: Section): SectionStatus {
   if (section.draft.trim()) return 'drafted';
@@ -715,9 +912,12 @@ function RowEditor({
 
 const PREVIEW_TABLE_ROW = /^\s*\|/;
 const PREVIEW_SEPARATOR = /^:?-{2,}:?$/;
-const PREVIEW_INLINE = /(\*\*[^*]+\*\*|\*[^*]+\*|<sup>[^<]*<\/sup>)/g;
+const PREVIEW_INLINE =
+  /(\*\*[^*]+\*\*|\*[^*]+\*|<sup>[^<]*<\/sup>|==[^=]+?==|\+\+[^+]+?\+{2}|~~[^~]+?~~)/g;
 
-/** Render **bold**, *italic*, and <sup>superscript</sup> inline markdown. */
+/** Render **bold**, *italic*, <sup>superscript</sup>, ==highlight==,
+ * ++underline++ and ~~strikethrough~~ inline markdown — the same tokens the
+ * Word exporter understands. */
 function renderInlineMarkdown(text: string): ReactNode[] {
   const nodes: ReactNode[] = [];
   let key = 0;
@@ -725,6 +925,16 @@ function renderInlineMarkdown(text: string): ReactNode[] {
     if (!part) continue;
     if (part.startsWith('**') && part.endsWith('**')) {
       nodes.push(<strong key={key++}>{part.slice(2, -2)}</strong>);
+    } else if (part.startsWith('==') && part.endsWith('==')) {
+      nodes.push(
+        <mark key={key++} className="rounded-sm bg-yellow-200/80 px-0.5 dark:bg-yellow-500/40">
+          {part.slice(2, -2)}
+        </mark>,
+      );
+    } else if (part.startsWith('++') && part.endsWith('++')) {
+      nodes.push(<u key={key++}>{part.slice(2, -2)}</u>);
+    } else if (part.startsWith('~~') && part.endsWith('~~')) {
+      nodes.push(<s key={key++}>{part.slice(2, -2)}</s>);
     } else if (part.startsWith('<sup>') && part.endsWith('</sup>')) {
       nodes.push(
         <sup key={key++} className="text-[9px] leading-none">
@@ -738,6 +948,401 @@ function renderInlineMarkdown(text: string): ReactNode[] {
     }
   }
   return nodes;
+}
+
+// ---------------------------------------------------------------------------
+// Per-paragraph formatting — block directives
+// ---------------------------------------------------------------------------
+// The document theme styles the whole page; to restyle just one paragraph the
+// draft can carry a small directive line before it. Both the preview renderer
+// and the Word exporter (carestudy_rag/src/export_docx.py) understand:
+//
+//     <!-- align:center spacing:1.5 -->
+//
+// A directive styles the next paragraph (contiguous non-blank lines until a
+// blank line). Both keys are optional; spacing accepts LINE_SPACING_OPTIONS.
+
+type ParaStyle = {
+  align?: 'left' | 'center' | 'right' | 'justify';
+  spacing?: number;
+};
+
+const PARA_DIRECTIVE_RE =
+  /^<!--\s*(?:align:(left|center|right|justify))?\s*(?:spacing:(\d+(?:\.\d+)?))?\s*-->$/;
+const BULLET_LINE_RE = /^\s*[-•]\s+/;
+const NUMBER_LINE_RE = /^\s*\d+[.)]\s+/;
+
+/** Parse a directive line ("<!-- align:center spacing:1.5 -->") or null. */
+function parseParaDirective(line: string): ParaStyle | null {
+  const match = line.match(PARA_DIRECTIVE_RE);
+  if (!match || (!match[1] && !match[2])) return null;
+  const style: ParaStyle = {};
+  if (match[1]) style.align = match[1] as ParaStyle['align'];
+  if (match[2]) style.spacing = Math.min(Math.max(Number(match[2]), 1), 3);
+  return style;
+}
+
+/** Serialize a paragraph style to a directive line ("" when no styling). */
+function directiveLineFor(style: ParaStyle): string {
+  const parts: string[] = [];
+  if (style.align) parts.push(`align:${style.align}`);
+  if (style.spacing !== undefined) parts.push(`spacing:${style.spacing}`);
+  return parts.length ? `<!-- ${parts.join(' ')} -->` : '';
+}
+
+/** Split a text block into paragraphs, each tagged with its directive style. */
+function splitParaGroups(text: string): { style: ParaStyle | null; lines: string[] }[] {
+  const groups: { style: ParaStyle | null; lines: string[] }[] = [];
+  let pending: ParaStyle | null = null;
+  let current: { style: ParaStyle | null; lines: string[] } | null = null;
+  for (const raw of text.split('\n')) {
+    const line = raw.trimEnd();
+    if (!line.trim()) {
+      // A blank line ends the paragraph; a directive separated from its text
+      // by a blank line is orphaned and ignored.
+      if (current) {
+        groups.push(current);
+        current = null;
+      }
+      pending = null;
+      continue;
+    }
+    const directive = parseParaDirective(line);
+    if (directive) {
+      if (current) {
+        groups.push(current);
+        current = null;
+      }
+      pending = { ...(pending ?? {}), ...directive };
+      continue;
+    }
+    if (!current) {
+      current = { style: pending, lines: [] };
+      pending = null;
+    }
+    current.lines.push(line);
+  }
+  if (current) groups.push(current);
+  return groups;
+}
+
+/**
+ * Serialize a contenteditable paragraph back to draft markdown. Maps the HTML
+ * produced by renderInlineMarkdown / the text tools (strong/em/mark/u/s/sup,
+ * execCommand's span-with-background, styled paragraph divs and ul/ol lists)
+ * back to **bold**, *italic*, ==highlight==, ++underline++, ~~strikethrough~~,
+ * <sup> tokens, "- "/"1. " list lines and "<!-- align:... spacing:... -->"
+ * directive lines.
+ */
+function markdownFromHtml(html: string): string {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  const convert = (
+    node: Node,
+    list: { ordered: boolean; depth: number; index: { value: number } } | null = null,
+  ): string => {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+    const element = node as HTMLElement;
+    const tag = element.tagName.toLowerCase();
+    if (tag === 'br') return '\n';
+    if (tag === 'li') {
+      // A styled list item (aligned/spaced via the paragraph tools) carries a
+      // directive line before it, just like a styled paragraph.
+      const align = element.style.textAlign;
+      const liSpacing = Number.parseFloat(element.style.lineHeight);
+      const liStyle: ParaStyle = {};
+      if (align && ['left', 'center', 'right', 'justify'].includes(align)) {
+        liStyle.align = align as ParaStyle['align'];
+      }
+      if (Number.isFinite(liSpacing)) liStyle.spacing = liSpacing;
+      const directive = directiveLineFor(liStyle);
+      const indent = '  '.repeat(list?.depth ?? 0);
+      const marker = list?.ordered ? `${list.index.value}. ` : '- ';
+      if (list) list.index.value += 1;
+      // Nested lists emit their own (indented) lines; the marker prefixes only
+      // the item's own text so wrapped lines never swallow the child list.
+      let own = '';
+      let nested = '';
+      for (const child of Array.from(element.childNodes)) {
+        if (
+          child.nodeType === Node.ELEMENT_NODE &&
+          ['ul', 'ol'].includes((child as HTMLElement).tagName.toLowerCase())
+        ) {
+          nested += convert(child, list);
+        } else {
+          own += convert(child, list);
+        }
+      }
+      return `${directive ? `${directive}\n` : ''}${indent}${marker}${own.trim()}\n${nested}`;
+    }
+    if (tag === 'ul' || tag === 'ol') {
+      return Array.from(element.childNodes)
+        .map((child) =>
+          convert(child, {
+            ordered: tag === 'ol',
+            depth: (list?.depth ?? -1) + 1,
+            index: { value: 1 },
+          }),
+        )
+        .join('');
+    }
+    const inner = Array.from(element.childNodes).map((child) => convert(child, list)).join('');
+    if (tag === 'p' || tag === 'div') {
+      // A block carrying paragraph styling round-trips through a directive
+      // line so the preview and the Word export both honour it.
+      const align = element.style.textAlign;
+      const spacing = Number.parseFloat(element.style.lineHeight);
+      const style: ParaStyle = {};
+      if (align && ['left', 'center', 'right', 'justify'].includes(align)) {
+        style.align = align as ParaStyle['align'];
+      }
+      if (Number.isFinite(spacing)) style.spacing = spacing;
+      const directive = directiveLineFor(style);
+      return directive ? `${directive}\n${inner}\n` : `${inner}\n`;
+    }
+    if (tag === 'strong' || tag === 'b') return `**${inner}**`;
+    if (tag === 'em' || tag === 'i') return `*${inner}*`;
+    if (tag === 'mark') return `==${inner}==`;
+    if (tag === 'u') return `++${inner}++`;
+    if (tag === 's' || tag === 'strike' || tag === 'del') return `~~${inner}~~`;
+    if (tag === 'sup') return `<sup>${inner}</sup>`;
+    if (tag === 'span' && element.style.backgroundColor) return `==${inner}==`;
+    return inner;
+  };
+  // template.content is a DocumentFragment — convert() only understands text
+  // and element nodes, so iterate its children instead of passing the fragment
+  // itself (which would silently serialize to an empty string and wipe the
+  // draft on every blur).
+  return Array.from(template.content.childNodes)
+    .map((child) => convert(child))
+    .join('')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .trim();
+}
+
+// ---------------------------------------------------------------------------
+// Selection-based paragraph styling — the preview's paragraphs are lines of
+// flat markdown, so "the paragraph under the selection" is the run of text
+// between blank lines. Styling wraps that run in a <div> whose inline styles
+// serialize back to a directive line via markdownFromHtml. Lists are handled
+// by execCommand (insertUnorderedList / insertOrderedList) instead.
+// ---------------------------------------------------------------------------
+
+/** Global text offset of a (node, offset) caret position inside root. */
+function textOffsetIn(root: Node, target: Node, offset: number): number | null {
+  let found = -1;
+  let acc = 0;
+  const walk = (node: Node): boolean => {
+    if (node === target) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        found = acc + offset;
+      } else {
+        // Element caret: offset is a child index — resolve to the text at the
+        // start of that child (or the end of the element for the last slot).
+        const child = node.childNodes[offset];
+        const prefix = Array.from(node.childNodes)
+          .slice(0, child ? offset : node.childNodes.length)
+          .reduce((sum, c) => sum + (c.textContent ?? '').length, 0);
+        found = acc + prefix;
+      }
+      return true;
+    }
+    if (node.nodeType === Node.TEXT_NODE) {
+      acc += (node.textContent ?? '').length;
+      return false;
+    }
+    for (const child of Array.from(node.childNodes)) {
+      if (walk(child)) return true;
+    }
+    return false;
+  };
+  walk(root);
+  return found >= 0 ? found : null;
+}
+
+/** Text ranges of the paragraphs overlapping [selStart, selEnd), delimited by
+ *  blank lines ("\n\n") just as the flat markdown stores them. */
+function paragraphGroupOffsets(
+  text: string,
+  selStart: number,
+  selEnd: number,
+): [number, number][] {
+  const groups: [number, number][] = [];
+  let groupStart = 0;
+  for (let i = 0; i < text.length - 1; i += 1) {
+    if (text[i] === '\n' && text[i + 1] === '\n') {
+      if (i > groupStart && i >= selStart && groupStart <= selEnd) {
+        groups.push([groupStart, i]);
+      }
+      groupStart = i + 2;
+    }
+  }
+  if (text.length > groupStart && text.length >= selStart && groupStart <= selEnd) {
+    groups.push([groupStart, text.length]);
+  }
+  return groups;
+}
+
+/** Map a global text offset back to a text node + offset within it. */
+function locateOffset(root: Node, target: number): { node: Text; offset: number } | null {
+  if (root.nodeType === Node.TEXT_NODE) {
+    const length = (root.textContent ?? '').length;
+    if (target <= length) return { node: root as Text, offset: target };
+    return null;
+  }
+  let remaining = target;
+  for (const child of Array.from(root.childNodes)) {
+    const childLength = (child.textContent ?? '').length;
+    if (remaining <= childLength) {
+      const inside = locateOffset(child, remaining);
+      if (inside) return inside;
+    }
+    remaining -= childLength;
+  }
+  return null;
+}
+
+/** Styled paragraph <div>s (direct children of the editable) whose text
+ *  overlaps [start, end). */
+function paragraphDivsIn(editable: HTMLElement, start: number, end: number): HTMLElement[] {
+  const divs: HTMLElement[] = [];
+  let acc = 0;
+  for (const child of Array.from(editable.childNodes)) {
+    const length = (child.textContent ?? '').length;
+    if (child.nodeType === Node.ELEMENT_NODE && (child as HTMLElement).tagName === 'DIV') {
+      const childStart = acc;
+      if (childStart + length > start && childStart < end) {
+        divs.push(child as HTMLElement);
+      }
+    }
+    acc += length;
+  }
+  return divs;
+}
+
+/** Keep the user's caret/selection near where it was after DOM surgery. */
+function restoreSelection(
+  selection: Selection,
+  editable: HTMLElement,
+  selStart: number,
+  selEnd: number,
+): void {
+  const textLength = (editable.textContent ?? '').length;
+  const start = locateOffset(editable, Math.min(selStart, textLength));
+  if (!start) return;
+  const range = document.createRange();
+  if (selStart === selEnd) {
+    range.setStart(start.node, start.offset);
+    range.collapse(true);
+  } else {
+    const end = locateOffset(editable, Math.min(selEnd, textLength));
+    if (!end) return;
+    range.setStart(start.node, start.offset);
+    range.setEnd(end.node, end.offset);
+  }
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+/** Apply alignment / line spacing to the paragraph(s) under the selection by
+ *  wrapping each in a styled <div> (reusing ones already there). Returns the
+ *  elements touched so callers can re-select them. */
+function styleSelectionParagraphs(
+  editable: HTMLElement,
+  selection: Selection,
+  style: ParaStyle,
+): HTMLElement[] {
+  const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+  if (!range) return [];
+  const text = editable.textContent ?? '';
+  const start = textOffsetIn(editable, range.startContainer, range.startOffset);
+  const end = textOffsetIn(editable, range.endContainer, range.endOffset);
+  if (start === null || end === null) return [];
+  const selStart = Math.min(start, end);
+  const selEnd = Math.max(start, end);
+
+  // The paragraph the user is typing in is the one under the caret.
+  const touched: HTMLElement[] = [];
+  for (const [groupStart, groupEnd] of paragraphGroupOffsets(text, selStart, selEnd)) {
+    const existing = paragraphDivsIn(editable, groupStart, groupEnd);
+    if (existing.length > 0) {
+      for (const div of existing) {
+        applyParaStyle(div, style);
+        touched.push(div);
+      }
+      continue;
+    }
+    const startLoc = locateOffset(editable, groupStart);
+    const endLoc = locateOffset(editable, groupEnd);
+    if (!startLoc || !endLoc) continue;
+    // A group that is (part of) a list item: style the item in place rather
+    // than unwrapping the list structure into a plain <div>.
+    const startItem = startLoc.node.parentElement?.closest('li');
+    const endItem = endLoc.node.parentElement?.closest('li');
+    if (startItem || endItem) {
+      const items = new Set<HTMLElement>();
+      if (startItem) items.add(startItem);
+      if (endItem && endItem !== startItem) items.add(endItem);
+      for (const item of items) {
+        applyParaStyle(item, style);
+        touched.push(item);
+      }
+      continue;
+    }
+    const wrap = document.createRange();
+    wrap.setStart(startLoc.node, startLoc.offset);
+    wrap.setEnd(endLoc.node, endLoc.offset);
+    const content = wrap.extractContents();
+    const div = document.createElement('div');
+    div.className = 'whitespace-pre-wrap';
+    div.appendChild(content);
+    wrap.insertNode(div);
+    applyParaStyle(div, style);
+    touched.push(div);
+  }
+
+  // Preserve the caret/selection roughly where it was.
+  restoreSelection(selection, editable, selStart, selEnd);
+  return touched;
+}
+
+/** Set alignment / line spacing on a paragraph element (inline styles are what
+ *  markdownFromHtml reads back into directive lines). */
+function applyParaStyle(element: HTMLElement, style: ParaStyle): void {
+  if (style.align) element.style.textAlign = style.align;
+  if (style.spacing !== undefined) element.style.lineHeight = String(style.spacing);
+}
+
+/** The paragraph-level formatting under the caret, for the toolbar's state. */
+function readParagraphState(selection: Selection | null): ParaState {
+  const empty: ParaState = { list: null, align: null, spacing: null };
+  if (!selection || !selection.anchorNode) return empty;
+  const element =
+    selection.anchorNode.nodeType === Node.TEXT_NODE
+      ? selection.anchorNode.parentElement
+      : (selection.anchorNode as HTMLElement);
+  if (!element) return empty;
+  const list = element.closest('ul')
+    ? 'ul'
+    : element.closest('ol')
+      ? 'ol'
+      : null;
+  const editable = element.closest('[contenteditable="true"]');
+  // The paragraph element is a styled <div> directly under the editable, or
+  // the editable block itself when the paragraph carries no styling.
+  let paragraph: HTMLElement = element;
+  while (paragraph.parentElement && paragraph.parentElement !== editable) {
+    paragraph = paragraph.parentElement;
+  }
+  const computed = window.getComputedStyle(paragraph);
+  const inlineSpacing = Number.parseFloat(paragraph.style.lineHeight);
+  return {
+    list,
+    align: computed.textAlign || null,
+    spacing: Number.isFinite(inlineSpacing) ? inlineSpacing : null,
+  };
 }
 
 type PreviewBlock =
@@ -832,9 +1437,9 @@ function DraftPreview({ draft }: { draft: string }) {
             <PreviewTable header={block.header} rows={block.rows} />
           </div>
         ) : (
-          <p key={index} className="whitespace-pre-wrap font-mono leading-relaxed">
-            {renderInlineMarkdown(block.text)}
-          </p>
+          <div key={index} className="whitespace-pre-wrap font-mono leading-relaxed">
+            {renderParaGroups(block.text)}
+          </div>
         ),
       )}
     </div>
@@ -842,13 +1447,207 @@ function DraftPreview({ draft }: { draft: string }) {
 }
 
 // ---------------------------------------------------------------------------
-// Print view draft renderer — converts drafted markdown pipe tables into real
+// Paragraph-level rendering — turns "- " / "1. " lines into real lists (so the
+// preview matches the Word export, which already converts them to numbered
+// bullet styles) and honours "<!-- align:... spacing:... -->" directives.
+// ---------------------------------------------------------------------------
+
+type ListLineNode = { type: 'ul' | 'ol'; depth: number; text: string; children: ListLineNode[] };
+
+function renderListLines(lines: string[], keyBase: number): ReactNode {
+  // Build a tree of list items; a line indented by 2+ spaces becomes a child
+  // of the previous item (mirrors the exporter's level = indent // 2 rule).
+  const roots: ListLineNode[] = [];
+  const stack: ListLineNode[] = [];
+  for (const line of lines) {
+    const indent = line.match(/^\s*/)?.[0].length ?? 0;
+    const depth = Math.min(Math.floor(indent / 2), 3);
+    const type = BULLET_LINE_RE.test(line) ? 'ul' : 'ol';
+    const text = line.replace(BULLET_LINE_RE, '').replace(NUMBER_LINE_RE, '');
+    const node: ListLineNode = { type, depth, text, children: [] };
+    while (stack.length > 0 && stack[stack.length - 1].depth >= depth) stack.pop();
+    if (stack.length > 0) stack[stack.length - 1].children.push(node);
+    else roots.push(node);
+    stack.push(node);
+  }
+
+  let key = keyBase;
+  const bulletStyle = (depth: number) =>
+    depth === 1 ? 'list-[circle]' : depth >= 2 ? 'list-[square]' : 'list-disc';
+  const numberStyle = (depth: number) =>
+    depth === 1 ? 'list-[lower-alpha]' : 'list-decimal';
+
+  const renderItems = (items: ListLineNode[]): ReactNode => {
+    const groups: { type: 'ul' | 'ol'; items: ListLineNode[] }[] = [];
+    for (const node of items) {
+      const last = groups[groups.length - 1];
+      if (last && last.type === node.type) last.items.push(node);
+      else groups.push({ type: node.type, items: [node] });
+    }
+    return (
+      <>
+        {groups.map((group) => {
+          const Tag = group.type === 'ol' ? 'ol' : 'ul';
+          const style =
+            group.type === 'ol' ? numberStyle(group.items[0].depth) : bulletStyle(group.items[0].depth);
+          return (
+            <Tag key={`list-${key++}`} className={`ml-4 ${style}`}>
+              {group.items.map((node) => (
+                <li key={`item-${key++}`}>
+                  {renderInlineMarkdown(node.text)}
+                  {node.children.length > 0 && (
+                    <Fragment key={`nested-${key++}`}>{renderItems(node.children)}</Fragment>
+                  )}
+                </li>
+              ))}
+            </Tag>
+          );
+        })}
+      </>
+    );
+  };
+  return renderItems(roots);
+}
+
+/** Render one paragraph's lines: prose runs stay as text (soft breaks kept as
+ *  newlines), consecutive bullet/number lines become a real <ul>/<ol>. */
+function renderParaLines(lines: string[], keyBase: number): ReactNode {
+  const nodes: ReactNode[] = [];
+  let index = 0;
+  while (index < lines.length) {
+    const isList = BULLET_LINE_RE.test(lines[index]) || NUMBER_LINE_RE.test(lines[index]);
+    if (isList) {
+      const run: string[] = [];
+      while (
+        index < lines.length &&
+        (BULLET_LINE_RE.test(lines[index]) || NUMBER_LINE_RE.test(lines[index]))
+      ) {
+        run.push(lines[index]);
+        index += 1;
+      }
+      // Keyed wrapper: renderListLines returns a Fragment, and an unkeyed
+      // element inside an array trips React's duplicate-key warning.
+      nodes.push(
+        <Fragment key={`listblock-${keyBase + nodes.length}`}>
+          {renderListLines(run, keyBase + nodes.length)}
+        </Fragment>,
+      );
+    } else {
+      const run: string[] = [];
+      while (
+        index < lines.length &&
+        !BULLET_LINE_RE.test(lines[index]) &&
+        !NUMBER_LINE_RE.test(lines[index])
+      ) {
+        run.push(lines[index]);
+        index += 1;
+      }
+      // Inline markdown (**bold**, ==highlight==, …) still applies inside the
+      // paragraph; the keyed span keeps React's keys unique per run (keyBase
+      // scopes them per group so sibling groups can't collide).
+      nodes.push(
+        <span key={`run-${keyBase + nodes.length}`}>{renderInlineMarkdown(run.join('\n'))}</span>,
+      );
+    }
+  }
+  return <>{nodes}</>;
+}
+
+/** Render a text block's paragraphs — preserving the blank-line separators
+ *  exactly as the flat markdown stores them. Styled paragraphs become <div>s
+ *  whose inline styles round-trip to directives, and bullet/numbered lines
+ *  become real <ul>/<ol> lists. */
+function renderParaGroups(text: string): ReactNode {
+  const groups = splitParaGroups(text);
+  const nodes: ReactNode[] = [];
+  for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
+    const group = groups[groupIndex];
+    if (nodes.length > 0) nodes.push('\n\n');
+    // Each group gets its own key range (a group can emit arbitrarily many
+    // keyed list items / runs), so sibling groups can never collide.
+    const keyBase = groupIndex * 1000;
+    const content = renderParaLines(group.lines, keyBase);
+    if (group.style) {
+      const css: CSSProperties = {};
+      if (group.style.align) css.textAlign = group.style.align;
+      if (group.style.spacing !== undefined) css.lineHeight = String(group.style.spacing);
+      nodes.push(
+        <div key={`para-${groupIndex}`} style={css} className="whitespace-pre-wrap">
+          {content}
+        </div>,
+      );
+    } else {
+      // Keyed wrapper — see renderParaLines: fragments in arrays need keys.
+      nodes.push(<Fragment key={`group-${groupIndex}`}>{content}</Fragment>);
+    }
+  }
+  return <>{nodes}</>;
+}
+
+// ---------------------------------------------------------------------------
+// Preview view draft renderer — converts drafted markdown pipe tables into real
 // HTML tables (matching the Word export), so raw "| ... |" never leaks into
 // the printed document. Reuses the same block parser as the on-screen preview.
 // ---------------------------------------------------------------------------
 
-function PrintDraft({ draft }: { draft: string }) {
+/** Editable chapter intro — static HTML inside a contenteditable <div> (see
+ *  PrintDraft). The { __html } object is memoized on `intro` so its identity
+ *  only changes when the intro's markdown changes; an inline literal would
+ *  make React rewrite innerHTML on every parent re-render, wiping edits. */
+function EditableIntro({
+  intro,
+  onBlur,
+}: {
+  intro: string;
+  onBlur: (markdown: string) => void;
+}) {
+  const html = useMemo(
+    () => ({ __html: renderToStaticMarkup(renderParaGroups(intro)) }),
+    [intro],
+  );
+  return (
+    <div
+      contentEditable
+      suppressContentEditableWarning
+      spellCheck={false}
+      onBlur={(event) => onBlur(markdownFromHtml(event.currentTarget.innerHTML))}
+      className="mt-2.5 whitespace-pre-wrap rounded-sm outline-none focus:ring-1 focus:ring-primary/40"
+      dangerouslySetInnerHTML={html}
+    />
+  );
+}
+
+function PrintDraft({
+  draft,
+  onEdit,
+}: {
+  draft: string;
+  /** When provided, prose paragraphs become editable and call back with the
+   *  updated markdown on blur (the preview doubles as a text editor). */
+  onEdit?: (markdown: string) => void;
+}) {
   const blocks = useMemo(() => splitPreviewBlocks(draft), [draft]);
+  // Editable blocks are rendered as static HTML, never as React children.
+  // While editing, the browser owns the DOM inside a contenteditable (typing,
+  // Enter, execCommand all restructure it), so React must not try to reconcile
+  // individual nodes there — that mismatch is what produced the
+  // "removeChild/insertBefore: node is not a child" crashes. React only
+  // rewrites innerHTML wholesale, and only when the draft actually changes
+  // (on blur); otherwise it leaves the edited DOM alone.
+  // One { __html } object per text block, memoized on `blocks` so the object
+  // identity is stable across re-renders. React compares dangerouslySetInnerHTML
+  // props by reference, so an inline { __html } literal would make it rewrite
+  // innerHTML on EVERY commit — wiping whatever the user is editing. The object
+  // only changes when the block's markdown actually changes (on blur).
+  const blockHtml = useMemo(
+    () =>
+      blocks.map((block) =>
+        block.kind === 'table'
+          ? null
+          : { __html: renderToStaticMarkup(renderParaGroups(block.text)) },
+      ),
+    [blocks],
+  );
   return (
     <div className="mt-1.5 space-y-2">
       {blocks.map((block, index) =>
@@ -857,9 +1656,17 @@ function PrintDraft({ draft }: { draft: string }) {
             <PreviewTable header={block.header} rows={block.rows} />
           </div>
         ) : (
-          <p key={index} className="whitespace-pre-wrap text-[13px] leading-relaxed">
-            {renderInlineMarkdown(block.text)}
-          </p>
+          // A <div> (not <p>): styled paragraphs and lists are legal children,
+          // while a <p> would be auto-closed by the browser and crash React.
+          <div
+            key={index}
+            contentEditable={Boolean(onEdit)}
+            suppressContentEditableWarning
+            spellCheck={false}
+            onBlur={(event) => onEdit?.(markdownFromHtml(event.currentTarget.innerHTML))}
+            className="whitespace-pre-wrap rounded-sm outline-none focus:ring-1 focus:ring-primary/40"
+            dangerouslySetInnerHTML={blockHtml[index] ?? undefined}
+          />
         ),
       )}
     </div>
@@ -1171,6 +1978,14 @@ function Home() {
   const [activeSection, setActiveSection] = useState(0);
   const [isDrafting, setIsDrafting] = useState(false);
   const [isIntroDrafting, setIsIntroDrafting] = useState(false);
+  // Whole-chapter drafting: one click generates the chapter introduction (if
+  // missing) plus every section that has collected data but no draft yet.
+  const [isChapterDrafting, setIsChapterDrafting] = useState(false);
+  const [chapterDraftProgress, setChapterDraftProgress] = useState<{
+    done: number;
+    total: number;
+    current: string | null;
+  } | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [sectionTab, setSectionTab] = useState<'collect' | 'draft'>('collect');
   const [collectOpen, setCollectOpen] = useState(false);
@@ -1180,7 +1995,10 @@ function Home() {
   const [draftWork, setDraftWork] = useState('');
   const [commandOpen, setCommandOpen] = useState(false);
   const [overviewOpen, setOverviewOpen] = useState(false);
-  const [printOpen, setPrintOpen] = useState(false);
+  // Chapter dialog: the intro editor + whole-chapter drafting, reached from
+  // the compact Intro / Draft all actions in the content header row.
+  const [chapterOpen, setChapterOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [exportMeta, setExportMeta] = useState({
     patientName: '',
     diagnosis: '',
@@ -1190,9 +2008,130 @@ function Home() {
     collegeLocation: '',
     year: String(new Date().getFullYear()),
   });
+  // Word export formatting — the export sheet's controls write into the .docx
+  // theme payload and preview live via CSS variables on the sheet. Loaded from
+  // localStorage (merged onto defaults) so choices survive reloads.
+  const [docTheme, setDocTheme] = useState<DocTheme>(loadSavedDocTheme);
+
+  const updateDocTheme = (patch: Partial<DocTheme>) =>
+    setDocTheme((previous) => ({ ...previous, ...patch }));
+
+  const resetDocTheme = () => setDocTheme({ ...DEFAULT_DOC_THEME });
+
+  const isDefaultDocTheme = (Object.keys(DEFAULT_DOC_THEME) as (keyof DocTheme)[]).every(
+    (key) => docTheme[key] === DEFAULT_DOC_THEME[key],
+  );
+
+  // Preview sheet: title-page details live in a modal (toolbar button), the
+  // document formatting panel opens expanded by default, and the text tools
+  // act on whatever text is selected in the editable preview.
+  const [titlePageOpen, setTitlePageOpen] = useState(false);
+  const [formatOpen, setFormatOpen] = useState(
+    () => window.localStorage.getItem(FORMAT_OPEN_KEY) !== 'closed',
+  );
+  const [previewTextSelected, setPreviewTextSelected] = useState(false);
+  // True when the caret/selection is inside an editable paragraph — enough for
+  // the paragraph tools (bullets, alignment, line spacing) to act on.
+  const [previewEditingActive, setPreviewEditingActive] = useState(false);
+  // The paragraph formatting under the caret, for the tools' active states.
+  const [previewParaState, setPreviewParaState] = useState<ParaState>({
+    list: null,
+    align: null,
+    spacing: null,
+  });
+
+  // Persist the document theme and panel-open state so reloads restore them.
+  useEffect(() => {
+    window.localStorage.setItem(DOC_THEME_KEY, JSON.stringify(docTheme));
+  }, [docTheme]);
+  useEffect(() => {
+    window.localStorage.setItem(FORMAT_OPEN_KEY, formatOpen ? 'open' : 'closed');
+  }, [formatOpen]);
+
+  /** Apply a text tool to the current selection inside the editable preview. */
+  const applyTextFormat = (tool: (typeof TEXT_TOOLS)[number]) => {
+    const selection = window.getSelection();
+    const container = document.querySelector('.print-doc');
+    if (!selection || selection.isCollapsed || !container || !selection.anchorNode) return;
+    if (!container.contains(selection.anchorNode)) return;
+    const anchorElement =
+      selection.anchorNode.nodeType === Node.TEXT_NODE
+        ? selection.anchorNode.parentElement
+        : (selection.anchorNode as HTMLElement);
+    if (!anchorElement?.closest('[contenteditable="true"]')) return;
+    if (tool.command === 'highlight') {
+      document.execCommand('hiliteColor', false, 'yellow');
+    } else {
+      document.execCommand(tool.command, false);
+    }
+  };
+
+  /** Paragraph-style the paragraph(s) under the caret/selection. */
+  const applyParagraphStyle = (style: ParaStyle) => {
+    const selection = window.getSelection();
+    const container = document.querySelector('.print-doc');
+    if (!selection || !container || !selection.anchorNode) return;
+    if (!container.contains(selection.anchorNode)) return;
+    const anchorElement =
+      selection.anchorNode.nodeType === Node.TEXT_NODE
+        ? selection.anchorNode.parentElement
+        : (selection.anchorNode as HTMLElement);
+    const editable = anchorElement?.closest('[contenteditable="true"]');
+    if (!editable) return;
+    // Lists are their own paragraphs; style the item rather than unwrapping.
+    if (anchorElement?.closest('ul, ol')) {
+      const item = anchorElement.closest('li');
+      if (item) applyParaStyle(item, style);
+      return;
+    }
+    styleSelectionParagraphs(editable as HTMLElement, selection, style);
+    setPreviewParaState(readParagraphState(window.getSelection()));
+  };
+
+  /** Toggle bullet / numbered list on the selected lines. */
+  const applyListFormat = (type: 'ul' | 'ol') => {
+    const selection = window.getSelection();
+    const container = document.querySelector('.print-doc');
+    if (!selection || !container || !selection.anchorNode) return;
+    if (!container.contains(selection.anchorNode)) return;
+    const anchorElement =
+      selection.anchorNode.nodeType === Node.TEXT_NODE
+        ? selection.anchorNode.parentElement
+        : (selection.anchorNode as HTMLElement);
+    if (!anchorElement?.closest('[contenteditable="true"]')) return;
+    document.execCommand(type === 'ul' ? 'insertUnorderedList' : 'insertOrderedList', false);
+    setPreviewParaState(readParagraphState(window.getSelection()));
+  };
+
+  /** Track what the user has selected inside an editable paragraph. */
+  const handlePreviewSelect = (event: SyntheticEvent<HTMLDivElement>) => {
+    const selection = window.getSelection();
+    const container = event.currentTarget;
+    if (!selection || !selection.anchorNode || !selection.focusNode) {
+      setPreviewTextSelected(false);
+      setPreviewEditingActive(false);
+      setPreviewParaState({ list: null, align: null, spacing: null });
+      return;
+    }
+    const editableOf = (node: Node | null) =>
+      (node?.nodeType === Node.TEXT_NODE
+        ? node.parentElement
+        : (node as HTMLElement | null))?.closest('[contenteditable="true"]');
+    const insideEditable = Boolean(
+      container.contains(selection.anchorNode) &&
+        editableOf(selection.anchorNode) &&
+        editableOf(selection.focusNode),
+    );
+    setPreviewEditingActive(insideEditable);
+    setPreviewTextSelected(insideEditable && !selection.isCollapsed);
+    setPreviewParaState(insideEditable ? readParagraphState(selection) : { list: null, align: null, spacing: null });
+  };
   const [currentStudyId, setCurrentStudyId] = useState<number | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  // True while a debounced autosave request is in flight — drives the
+  // “Saving…” status shown next to the Preview/Export toolbar and in the header.
+  const [isAutosaving, setIsAutosaving] = useState(false);
   const [studyListKey, setStudyListKey] = useState(0);
   const [dirty, setDirty] = useState(false);
   // Save dialog: an editable, pre-derived study name so saved studies aren't
@@ -1355,6 +2294,12 @@ function Home() {
 
   const updateCurrentSection = (updates: Partial<Section>) =>
     updateSection(activeChapter, activeSection, updates);
+
+  const updateChapterName = (chapterIndex: number, name: string) => {
+    setChapters((previous) =>
+      previous.map((chapter, ci) => (ci === chapterIndex ? { ...chapter, name } : chapter)),
+    );
+  };
 
   const setFieldValue = (fieldId: string, value: string) => {
     updateCurrentSection({ data: { ...currentSection.data, [fieldId]: value } });
@@ -1556,6 +2501,8 @@ function Home() {
       ].join('\n');
       const result = await requestDraft(heading, notes, false, 'chapter_intro', currentStudyId);
       updateChapterIntro(targetChapter, result.draft, result.references);
+      // The intro's citations feed the whole-study verification — it's stale now.
+      setVerifyAll(null);
       toast.success(`Introduction drafted — ${chapter.name}`, {
         description: 'A short opening paragraph for this chapter. Review and refine the wording before submission.',
       });
@@ -1573,6 +2520,133 @@ function Home() {
 
   const clearChapterIntro = () => {
     updateChapterIntro(activeChapter, '', []);
+    // Removing the intro invalidates any whole-study source verification.
+    setVerifyAll(null);
+  };
+
+  /**
+   * Draft the whole chapter in one pass: the introduction (if missing) and
+   * every section that has collected data but no draft yet. Sections with no
+   * data, and sections already drafted (possibly hand-edited), are skipped.
+   * Requests run sequentially through the same engine the section button uses,
+   * with per-item progress surfaced in the chapter-draft card.
+   */
+  const draftChapter = async () => {
+    if (isChapterDrafting || isDrafting || isIntroDrafting) return;
+    // Capture the target chapter now: the run takes a while, and the user may
+    // navigate to another chapter before it resolves.
+    const targetChapterIndex = activeChapter;
+    const chapter = chapters[targetChapterIndex];
+    const readySections = chapter.sections
+      .map((section, sectionIndex) => ({ section, sectionIndex }))
+      .filter(({ section }) => sectionFilledCount(section) > 0 && !section.draft.trim());
+    const needsIntro = !isFrontMatterChapter(targetChapterIndex) && !chapter.intro.trim();
+    if (readySections.length === 0 && !needsIntro) {
+      toast('Nothing to draft in this chapter', {
+        description:
+          'Collect data in at least one section that has no draft yet, then try again.',
+      });
+      return;
+    }
+
+    const total = readySections.length + (needsIntro ? 1 : 0);
+    let done = 0;
+    let introFailed = false;
+    const failedSections: string[] = [];
+    setIsChapterDrafting(true);
+    setChapterDraftProgress({
+      done,
+      total,
+      current: needsIntro ? 'Chapter introduction' : null,
+    });
+    try {
+      if (needsIntro) {
+        try {
+          const heading = `Chapter ${ROMAN[chapterOrdinal(targetChapterIndex)]}: ${chapter.name}`;
+          // Ground the intro in the chapter's scope: its name, blurb, and the
+          // headings of everything it covers.
+          const notes = [
+            chapter.name,
+            chapter.blurb,
+            ...chapter.sections.map(
+              (section) => `${section.id} ${section.heading} — ${section.blurb}`,
+            ),
+          ].join('\n');
+          const result = await requestDraft(
+            heading,
+            notes,
+            false,
+            'chapter_intro',
+            currentStudyId,
+          );
+          updateChapterIntro(targetChapterIndex, result.draft, result.references);
+          // The intro's citations feed the whole-study verification — it's stale now.
+          setVerifyAll(null);
+        } catch {
+          introFailed = true;
+        }
+        done += 1;
+        setChapterDraftProgress({
+          done,
+          total,
+          current: readySections[0]?.section.heading ?? null,
+        });
+      }
+
+      for (const { section, sectionIndex } of readySections) {
+        setChapterDraftProgress({ done, total, current: `${section.id} ${section.heading}` });
+        try {
+          const composed = composeSectionInput(section);
+          // Pure row-data sections (2.2 drugs, 3.2 care plan) are drafted as
+          // tables; mixed sections stay prose.
+          const tabular = Boolean(section.rows) && section.fields.length === 0;
+          const rowColumns =
+            tabular && section.rows ? section.rows.columns.map((column) => column.label) : [];
+          const result = await requestDraft(
+            section.heading,
+            composed,
+            tabular,
+            'section',
+            currentStudyId,
+            rowColumns,
+          );
+          updateSection(targetChapterIndex, sectionIndex, {
+            draft: result.draft,
+            references: result.references,
+          });
+          // The draft changed — any earlier verification of this section (and
+          // of the whole study) is stale.
+          setVerifyBySection((prev) => {
+            if (!(section.id in prev)) return prev;
+            const next = { ...prev };
+            delete next[section.id];
+            return next;
+          });
+          setVerifyAll(null);
+        } catch {
+          failedSections.push(`${section.id} ${section.heading}`);
+        }
+        done += 1;
+        setChapterDraftProgress({ done, total, current: null });
+      }
+
+      const succeededSections = readySections.length - failedSections.length;
+      if (!introFailed && failedSections.length === 0) {
+        toast.success(`Chapter drafted — ${chapter.name}`, {
+          description: `Introduction and ${readySections.length} section${readySections.length === 1 ? '' : 's'} generated from your collected data.`
+        });
+      } else {
+        toast('Chapter draft finished with issues', {
+          description:
+            `${succeededSections} of ${readySections.length} sections drafted` +
+            `${introFailed ? '; the chapter introduction failed' : ''}` +
+            `${failedSections.length ? ` — retry: ${failedSections.join(', ')}` : ''}.`
+        });
+      }
+    } finally {
+      setIsChapterDrafting(false);
+      setChapterDraftProgress(null);
+    }
   };
 
   // -------------------------------------------------------------------------
@@ -1681,6 +2755,7 @@ function Home() {
   const buildExportPayload = (scope: ExportScope = { type: 'full' }): ExportPayload => ({
     title: exportMeta,
     scope,
+    theme: docTheme,
     chapters: chapters.map((chapter) => ({
       name: chapter.name,
       isFrontMatter: chapter.isFrontMatter,
@@ -1760,6 +2835,7 @@ function Home() {
   /** Serialize the workspace into the server-side snapshot shape. */
   const buildStudyPayload = (): StoredStudy => ({
     title: exportMeta,
+    theme: docTheme,
     chapters: chapters.map((chapter) => ({
       name: chapter.name,
       intro: chapter.intro,
@@ -1856,6 +2932,9 @@ function Home() {
         typeof stored.title?.collegeLocation === 'string' ? stored.title.collegeLocation : '',
       year: stored.title?.year || String(new Date().getFullYear()),
     });
+    // The study's own formatting wins when it carries one; older saves (and
+    // brand-new workspaces) fall back to the app-level default theme.
+    setDocTheme(stored.theme ? mergeDocTheme(stored.theme) : loadSavedDocTheme());
     setCurrentStudyId(studyId);
     // The loaded study may have a different name — forget any cached one so
     // the next save dialog derives a fresh default.
@@ -1980,6 +3059,7 @@ function Home() {
   const autosave = async () => {
     if (autosaveBusy.current) return;
     autosaveBusy.current = true;
+    setIsAutosaving(true);
     const generation = workspaceGeneration.current;
     try {
       const name = currentStudyName ?? deriveStudyName();
@@ -2007,6 +3087,7 @@ function Home() {
       console.error('Autosave failed', error);
     } finally {
       autosaveBusy.current = false;
+      setIsAutosaving(false);
     }
   };
 
@@ -2025,7 +3106,7 @@ function Home() {
 
   const uploadFile = async (file: File) => {
     if (!currentStudyId || isUploading) return;
-    // Fail fast before reading 20 MB of base64 for something the server would reject.
+    // Fail fast before uploading something the server would reject.
     if (file.size > MAX_UPLOAD_BYTES) {
       const message = `File is too large (max ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB).`;
       setUploadError(message);
@@ -2100,8 +3181,9 @@ function Home() {
         : lower.endsWith('.md') || lower.endsWith('.markdown') || lower.endsWith('.txt')
           ? 'notes'
           : 'article';
-      const content = await readFileAsBase64(file);
-      await addLibrarySource({ kind, filename: file.name, content });
+      // Pass the File itself: with R2 storage it uploads directly to the
+      // bucket (no size cap); the client falls back to base64 when needed.
+      await addLibrarySource({ kind, filename: file.name, file });
       await refreshLibrary();
       toast.success('Source added to your library', {
         description: 'It will be cited in future drafts whenever it is relevant.',
@@ -2339,19 +3421,20 @@ function Home() {
   }, [currentSection.id]);
 
   // Track whether the workspace has changed since the last save, so the
-  // header indicator never claims "Saved" over unsaved edits.
+  // header indicator never claims "Saved" over unsaved edits. Formatting
+  // (docTheme) counts as an edit too — it rides in the same saved snapshot.
   useEffect(() => {
     if (suppressDirty.current) {
       suppressDirty.current = false;
       return;
     }
     setDirty(true);
-  }, [chapters, exportMeta]);
+  }, [chapters, exportMeta, docTheme]);
 
-  // Debounced autosave: the timer resets on every edit, so a save fires 1.5s
-  // after the last change. Programmatic loads/resets/new studies never set
-  // dirty, so they never trigger a save; nothing autosaves until there is
-  // content (canSave).
+  // Debounced autosave: the timer resets on every edit (content, title page,
+  // or formatting), so a save fires 1.5s after the last change. Programmatic
+  // loads/resets/new studies never set dirty, so they never trigger a save;
+  // nothing autosaves until there is content (canSave).
   useEffect(() => {
     if (!dirty || !canSave) return;
     const timer = window.setTimeout(() => {
@@ -2359,17 +3442,37 @@ function Home() {
     }, AUTOSAVE_DELAY_MS);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dirty, canSave, chapters, exportMeta]);
+  }, [dirty, canSave, chapters, exportMeta, docTheme]);
 
   const draftAvailable = sectionFilledCount(currentSection) > 0;
   const filledCount = sectionFilledCount(currentSection);
-  const totalCount = sectionInputCount(currentSection);
+  const collectedCount = sectionCollectedCount(currentSection);
+  const collectedTotal = sectionCollectedTotal(currentSection);
   const rowCount = currentSection.rowData.length;
+  // Whole-chapter drafting: enabled when there is at least one section with
+  // collected data that has no draft yet (or a missing chapter introduction
+  // that can be generated).
+  const chapterReadyCount = currentChapter.sections.filter(
+    (section) => sectionFilledCount(section) > 0 && !section.draft.trim(),
+  ).length;
+  const chapterIntroPending =
+    !isFrontMatterChapter(activeChapter) && !currentChapter.intro.trim();
+  const canDraftChapter = chapterReadyCount > 0 || chapterIntroPending;
   const currentRequiredMissing = missingRequiredFields(currentSection);
   const atFirst = activeChapter === 0 && activeSection === 0;
   const atLast =
     activeChapter === chapters.length - 1 &&
     activeSection === currentChapter.sections.length - 1;
+
+  // Live save status — shared by the main header and the Preview/Export
+  // toolbar so edits and formatting show their autosave state where they happen.
+  const saveStatus = isAutosaving
+    ? { label: 'Saving…', tone: 'text-primary' }
+    : lastSavedAt
+      ? dirty
+        ? { label: 'Unsaved changes', tone: 'text-amber-600 dark:text-amber-400' }
+        : { label: `Saved · ${lastSavedAt}`, tone: 'text-muted-foreground' }
+      : { label: 'Not saved', tone: 'text-muted-foreground' };
 
   const kpi = [
     { label: 'Sections drafted', value: draftedCount, icon: FileCheck2, accent: 'text-primary' },
@@ -2558,6 +3661,15 @@ function Home() {
                   </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Orders">
+                  <a href="/studio/bin">
+                    <Inbox className="size-4 shrink-0 text-sidebar-primary" />
+                    <span className="flex-1 truncate text-left">Orders</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
@@ -2603,6 +3715,18 @@ function Home() {
               >
                 <RotateCcw /> Reset all progress
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => {
+                  void adminLogout().finally(() => {
+                    // Back to the studio URL — the gate shows the sign-in screen.
+                    window.location.href = "/studio";
+                  });
+                }}
+              >
+                <LogOut /> Sign out of the studio
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarFooter>
@@ -2636,13 +3760,8 @@ function Home() {
                 ⌘K
               </kbd>
             </button>
-            <span
-              className={cn(
-                'hidden font-mono text-[10px] tabular lg:inline',
-                dirty && lastSavedAt ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground',
-              )}
-            >
-              {lastSavedAt ? (dirty ? 'Unsaved changes' : `Saved · ${lastSavedAt}`) : 'Not saved'}
+            <span className={cn('hidden font-mono text-[10px] tabular lg:inline', saveStatus.tone)}>
+              {saveStatus.label}
             </span>
             <Button
               variant="outline"
@@ -2668,9 +3787,9 @@ function Home() {
               variant="outline"
               size="sm"
               className="hidden h-9 gap-1.5 sm:inline-flex"
-              onClick={() => setPrintOpen(true)}
+              onClick={() => setPreviewOpen(true)}
             >
-              <Printer className="size-4" /> Print
+              <Eye className="size-4" /> Preview
             </Button>
             <Button
               variant="outline"
@@ -2705,97 +3824,195 @@ function Home() {
               <span className="tabular text-xs font-semibold text-primary">
                 {overallCompletion}%
               </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5"
+                onClick={() => setChapterOpen(true)}
+                aria-label="Chapter introduction"
+                title={
+                  currentChapter.intro.trim()
+                    ? `Chapter introduction — drafted (${currentChapter.intro.trim().split(/\s+/).length} words)`
+                    : 'Chapter introduction — optional'
+                }
+              >
+                <BookOpen className="size-3.5 text-primary" />
+                Intro
+                <span
+                  className={`size-1.5 rounded-full ${currentChapter.intro.trim() ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`}
+                  aria-hidden="true"
+                />
+              </Button>
+              <Button
+                size="sm"
+                className="h-8 gap-1.5"
+                onClick={draftChapter}
+                disabled={!canDraftChapter || isChapterDrafting || isDrafting || isIntroDrafting}
+              >
+                {isChapterDrafting ? (
+                  <>
+                    <RotateCcw className="size-3.5 animate-spin" /> Drafting…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="size-3.5" /> Draft all
+                  </>
+                )}
+              </Button>
             </div>
           </div>
-
-          {!isFrontMatterChapter(activeChapter) && (
-          <Collapsible defaultOpen={false} className="group/collapsible">
-            <Card className="overflow-hidden">
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left transition-colors hover:bg-muted/40"
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-                      <BookOpen className="size-3.5" />
-                    </span>
-                    <span className="truncate text-[13px] font-medium">
-                      Chapter introduction — {currentChapter.name}
-                    </span>
-                  </span>
-                  <span className="flex shrink-0 items-center gap-2">
-                    {currentChapter.intro.trim() ? (
-                      <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                        <Check className="size-3" /> Drafted
-                      </span>
-                    ) : (
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
-                        Optional
-                      </span>
-                    )}
-                    <ChevronRight className="size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </span>
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-2 border-t pt-3">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5"
-                      onClick={draftChapterIntro}
-                      disabled={isIntroDrafting}
-                    >
-                      {isIntroDrafting ? (
-                        <>
-                          <RotateCcw className="size-3.5 animate-spin" /> Drafting…
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="size-3.5" /> Draft intro
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 gap-1.5 text-muted-foreground"
-                      onClick={clearChapterIntro}
-                      disabled={!currentChapter.intro.trim()}
-                    >
-                      <RotateCcw className="size-3.5" /> Clear
-                    </Button>
-                  </div>
-              <Textarea
-                value={currentChapter.intro}
-                onChange={(event) =>
-                  updateChapterIntro(activeChapter, event.target.value, currentChapter.introReferences)
-                }
-                rows={3}
-                placeholder={`Write a short introduction to ${currentChapter.name} — or let the AI draft one. It appears under the chapter heading when you print or export.`}
-                className="min-h-[72px] bg-card leading-relaxed"
+          {isChapterDrafting && chapterDraftProgress && !chapterOpen && (
+            <div className="flex items-center gap-3 rounded-lg border border-primary/15 bg-card px-3.5 py-2">
+              <span className="min-w-0 truncate text-[11px] text-muted-foreground">
+                {chapterDraftProgress.current ?? 'Wrapping up…'}
+              </span>
+              <span className="shrink-0 tabular text-[11px] text-muted-foreground">
+                {chapterDraftProgress.done} / {chapterDraftProgress.total}
+              </span>
+              <Progress
+                value={(chapterDraftProgress.done / Math.max(chapterDraftProgress.total, 1)) * 100}
+                className="h-1.5 flex-1"
               />
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>
-                  {currentChapter.intro.trim()
-                    ? `${currentChapter.intro.trim().split(/\s+/).length} words`
-                    : 'Optional — but every chapter in the sample studies opens with one.'}
-                </span>
-                {currentChapter.introReferences.length > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="size-3.5 text-primary" />
-                    {currentChapter.introReferences.length} cited source
-                    {currentChapter.introReferences.length === 1 ? '' : 's'} added to the reference list
+            </div>
+          )}
+
+          <Dialog open={chapterOpen} onOpenChange={setChapterOpen}>
+            <DialogContent className="max-h-[85vh] w-full max-w-2xl overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Layers className="size-4 shrink-0 text-primary" />
+                  <span className="truncate">
+                    {isFrontMatterChapter(activeChapter)
+                      ? currentChapter.name
+                      : `Chapter ${ROMAN[chapterOrdinal(activeChapter)]}: ${currentChapter.name}`}
                   </span>
+                </DialogTitle>
+                <DialogDescription>
+                  Draft the chapter introduction and every section that has collected data but no draft yet.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                {!isFrontMatterChapter(activeChapter) && (
+                  <div className="space-y-2.5 rounded-lg border p-3.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium">
+                        <BookOpen className="size-3.5 shrink-0 text-primary" />
+                        Chapter introduction
+                        {currentChapter.intro.trim() ? (
+                          <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                            <Check className="size-3" /> Drafted
+                          </span>
+                        ) : (
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                            Optional
+                          </span>
+                        )}
+                      </span>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5"
+                          onClick={draftChapterIntro}
+                          disabled={isIntroDrafting}
+                        >
+                          {isIntroDrafting ? (
+                            <>
+                              <RotateCcw className="size-3.5 animate-spin" /> Drafting…
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="size-3.5" /> Draft intro
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 gap-1.5 text-muted-foreground"
+                          onClick={clearChapterIntro}
+                          disabled={!currentChapter.intro.trim()}
+                        >
+                          <RotateCcw className="size-3.5" /> Clear
+                        </Button>
+                      </div>
+                    </div>
+                    <Textarea
+                      value={currentChapter.intro}
+                      onChange={(event) =>
+                        updateChapterIntro(
+                          activeChapter,
+                          event.target.value,
+                          currentChapter.introReferences,
+                        )
+                      }
+                      rows={3}
+                      placeholder={`Write a short introduction to ${currentChapter.name} — or let the AI draft one. It appears under the chapter heading when you print or export.`}
+                      className="min-h-[72px] bg-card leading-relaxed"
+                    />
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                      <span>
+                        {currentChapter.intro.trim()
+                          ? `${currentChapter.intro.trim().split(/\s+/).length} words`
+                          : 'Optional — but every chapter in the sample studies opens with one.'}
+                      </span>
+                      {currentChapter.introReferences.length > 0 && (
+                        <span className="flex items-center gap-1.5">
+                          <ShieldCheck className="size-3.5 text-primary" />
+                          {currentChapter.introReferences.length} cited source
+                          {currentChapter.introReferences.length === 1 ? '' : 's'} added to the reference list
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/15 p-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium">Draft entire chapter</p>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                      {canDraftChapter
+                        ? `Generates the introduction and every section that has collected data but no draft yet — ${chapterReadyCount} section${chapterReadyCount === 1 ? '' : 's'} ready. Already-drafted and empty sections are skipped.`
+                        : 'Collect data in at least one section of this chapter to unlock.'}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={draftChapter}
+                    disabled={!canDraftChapter || isChapterDrafting || isDrafting || isIntroDrafting}
+                    className="h-9 shrink-0 gap-1.5"
+                  >
+                    {isChapterDrafting ? (
+                      <>
+                        <RotateCcw className="size-3.5 animate-spin" /> Drafting…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="size-3.5" /> Draft chapter
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {isChapterDrafting && chapterDraftProgress && (
+                  <div className="space-y-1.5 rounded-lg bg-muted/50 px-3.5 py-2.5">
+                    <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+                      <span className="truncate">
+                        {chapterDraftProgress.current ?? 'Wrapping up…'}
+                      </span>
+                      <span className="shrink-0 tabular">
+                        {chapterDraftProgress.done} / {chapterDraftProgress.total}
+                      </span>
+                    </div>
+                    <Progress
+                      value={(chapterDraftProgress.done / Math.max(chapterDraftProgress.total, 1)) * 100}
+                      className="h-1.5"
+                    />
+                  </div>
                 )}
               </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-          )}
+            </DialogContent>
+          </Dialog>
 
           <Dialog
             open={editSource !== null}
@@ -2927,8 +4144,8 @@ function Home() {
                   className="font-mono text-[11px] tabular text-sidebar-foreground/70"
                 >
                   {currentSection.rows
-                    ? `${filledCount} filled`
-                    : `${filledCount} / ${totalCount} collected`}
+                    ? `${collectedCount} filled`
+                    : `${collectedCount} / ${collectedTotal} collected`}
                 </span>
                 <div className="flex items-center gap-2">
                   {currentRequiredMissing.length > 0 && (
@@ -3038,8 +4255,8 @@ function Home() {
                         )}
                       />
                       {currentSection.rows
-                        ? `${filledCount} collected · ${rowCount} ${rowCount === 1 ? 'row' : 'rows'}`
-                        : `${filledCount} / ${totalCount} collected`}
+                        ? `${collectedCount} collected · ${rowCount} ${rowCount === 1 ? 'row' : 'rows'}`
+                        : `${collectedCount} / ${collectedTotal} collected`}
                     </Badge>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -3153,8 +4370,8 @@ function Home() {
                             <span className="block text-sm font-semibold">Section data</span>
                             <span className="mt-0.5 block text-[11px] text-muted-foreground">
                               {currentSection.rows
-                                ? `${filledCount} filled · ${rowCount} ${rowCount === 1 ? 'row' : 'rows'}`
-                                : `${filledCount} / ${totalCount} collected`}
+                                ? `${collectedCount} filled · ${rowCount} ${rowCount === 1 ? 'row' : 'rows'}`
+                                : `${collectedCount} / ${collectedTotal} collected`}
                             </span>
                           </div>
                         </div>
@@ -3676,143 +4893,494 @@ function Home() {
         </DialogContent>
       </Dialog>
 
-      {printOpen && (
-        <div className="print-sheet fixed inset-0 z-50 overflow-auto bg-background">
-          <div className="mx-auto max-w-[820px] px-6 py-8 md:px-10">
-            <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
+      {previewOpen && (
+        <div
+          className="print-sheet fixed inset-0 z-50 flex flex-col bg-background"
+          style={
+            {
+              '--doc-body-font': docTheme.body_font ?? 'Times New Roman',
+              '--doc-heading-font': docTheme.heading_font ?? 'Times New Roman',
+              '--doc-body-size': `${docTheme.body_size ?? 12}pt`,
+              '--doc-line-height': String(docTheme.line_spacing ?? 1.5),
+              '--doc-align':
+                docTheme.body_alignment === 'left'
+                  ? 'left'
+                  : docTheme.body_alignment === 'center'
+                    ? 'center'
+                    : docTheme.body_alignment === 'right'
+                      ? 'right'
+                      : 'justify',
+              '--doc-h1-size': `${docTheme.heading1_size ?? 14}pt`,
+              '--doc-h2-size': `${docTheme.heading2_size ?? 12}pt`,
+              '--doc-table-size': `${docTheme.table_size ?? 10}pt`,
+              // Word's defaults (black headings, grey table headers) are left
+              // to the app's own colors so the preview stays readable in dark
+              // mode; custom colors are applied verbatim.
+              '--doc-heading-color':
+                docTheme.heading_color && docTheme.heading_color !== '000000'
+                  ? `#${docTheme.heading_color}`
+                  : undefined,
+              '--doc-table-fill':
+                docTheme.table_header_fill && docTheme.table_header_fill !== 'D9D9D9'
+                  ? `#${docTheme.table_header_fill}`
+                  : undefined,
+            } as CSSProperties
+          }
+        >
+          <div className="no-print shrink-0 border-b bg-background">
+            <div className="mx-auto w-full max-w-[820px] px-6 pt-4 md:px-10">
+              <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-primary">
-                  Print / Export
+                  Preview / Export
                 </p>
                 <h2 className="mt-0.5 text-xl font-semibold">Your care study</h2>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={openSaveDialog}
-                  disabled={!canSave}
-                  title={canSave ? undefined : 'Add at least one piece of data before saving'}
-                  className="gap-2"
-                >
-                  {isSaving ? (
-                    <RotateCcw className="size-4 animate-spin" />
-                  ) : (
-                    <Save className="size-4" />
-                  )}
-                  Save study
-                </Button>
-                <Button
-                  onClick={() => window.print()}
-                  className="gap-2"
-                  disabled={!canExport}
-                  title={canExport ? undefined : 'Draft at least one section before exporting'}
-                >
-                  <Printer className="size-4" /> Print / Save as PDF
-                </Button>
-                <Button
-                  onClick={() => downloadDocx()}
-                  className="gap-2"
-                  disabled={!canExport}
-                  title={canExport ? undefined : 'Draft at least one section before exporting'}
-                >
-                  <Download className="size-4" /> Download Word (.docx)
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={verifyAllSources}
-                  disabled={verifyAllPending || allReferences.length === 0}
-                  className="gap-2"
-                  title={
-                    allReferences.length === 0
-                      ? 'No sources to verify yet — draft a section first'
-                      : 'Check every source cited anywhere in the study'
-                  }
-                >
-                  {verifyAllPending ? (
-                    <RotateCcw className="size-4 animate-spin" />
-                  ) : (
-                    <ShieldCheck className="size-4" />
-                  )}
-                  {verifyAllPending ? 'Checking…' : 'Verify all sources'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-9"
-                  onClick={() => setPrintOpen(false)}
-                  aria-label="Close print view"
-                >
-                  <X className="size-4" />
-                </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-9"
+                onClick={() => {
+                  setPreviewOpen(false);
+                  setTitlePageOpen(false);
+                }}
+                aria-label="Close preview"
+              >
+                <X className="size-4" />
+              </Button>
               </div>
             </div>
 
-            {verifyAll && (
-              <div className="no-print mb-6 rounded-xl border bg-card p-4">
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <ShieldCheck className="size-3.5 text-primary" />
-                  Reference verification — {allReferences.length}{' '}
-                  {allReferences.length === 1 ? 'source' : 'sources'} across the study
-                </p>
-                <SourceCheckList
-                  warnings={verifyAll.warnings}
-                  checks={verifyAll.checks}
-                  checkedAt={verifyAll.checkedAt}
-                />
-              </div>
-            )}
+            <Dialog open={titlePageOpen} onOpenChange={setTitlePageOpen}>
+              <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Title page details</DialogTitle>
+                  <DialogDescription>
+                    Used on the title page of the Word export — the patient, diagnosis, and your
+                    details.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    value={exportMeta.studentName}
+                    onChange={(e) => setExportMeta({ ...exportMeta, studentName: e.target.value })}
+                    placeholder="Student name"
+                    className="col-span-2 h-8 text-xs"
+                  />
+                  <Input
+                    value={exportMeta.indexNumber}
+                    onChange={(e) => setExportMeta({ ...exportMeta, indexNumber: e.target.value })}
+                    placeholder="Index number"
+                    className="h-8 text-xs"
+                  />
+                  <Input
+                    value={exportMeta.year}
+                    onChange={(e) => setExportMeta({ ...exportMeta, year: e.target.value })}
+                    placeholder="Year"
+                    className="h-8 text-xs"
+                  />
+                  <Input
+                    value={exportMeta.patientName}
+                    onChange={(e) => setExportMeta({ ...exportMeta, patientName: e.target.value })}
+                    placeholder="Patient name / initials"
+                    className="col-span-2 h-8 text-xs"
+                  />
+                  <Input
+                    value={exportMeta.diagnosis}
+                    onChange={(e) => setExportMeta({ ...exportMeta, diagnosis: e.target.value })}
+                    placeholder="Diagnosis"
+                    className="col-span-2 h-8 text-xs"
+                  />
+                  <Input
+                    value={exportMeta.collegeName}
+                    onChange={(e) => setExportMeta({ ...exportMeta, collegeName: e.target.value })}
+                    placeholder="College name"
+                    className="col-span-2 h-8 text-xs"
+                  />
+                  <Input
+                    value={exportMeta.collegeLocation}
+                    onChange={(e) => setExportMeta({ ...exportMeta, collegeLocation: e.target.value })}
+                    placeholder="College location"
+                    className="col-span-2 h-8 text-xs"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={() => setTitlePageOpen(false)}>Done</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <div className="w-full px-6 pb-4 md:px-10">
+              <div className="rounded-xl border bg-card p-3">
+                <Collapsible open={formatOpen} onOpenChange={setFormatOpen} className="group/collapsible">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground">
+                    <Palette className="size-3.5 shrink-0 text-primary" />
+                    <span className="truncate">Document formatting</span>
+                    <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-medium text-primary">
+                      {isDefaultDocTheme ? 'Default' : 'Customized'}
+                    </span>
+                  </span>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <span
+                      className={cn('font-mono text-[10px] tabular', saveStatus.tone)}
+                      title="Edits and formatting are saved automatically, about a second after you stop typing."
+                    >
+                      {saveStatus.label}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-8"
+                      onClick={openSaveDialog}
+                      disabled={!canSave}
+                      title={canSave ? 'Save study' : 'Add at least one piece of data before saving'}
+                      aria-label="Save study"
+                    >
+                      {isSaving ? (
+                        <RotateCcw className="size-3.5 animate-spin" />
+                      ) : (
+                        <Save className="size-3.5" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-8"
+                      onClick={() => setTitlePageOpen(true)}
+                      title="Edit title page details (student, patient, college, year)"
+                      aria-label="Title page details"
+                    >
+                      <BookOpen className="size-3.5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-8"
+                      onClick={() => window.print()}
+                      disabled={!canExport}
+                      title={canExport ? 'Print / Save as PDF' : 'Draft at least one section before exporting'}
+                      aria-label="Print / Save as PDF"
+                    >
+                      <PdfIcon className="size-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-8"
+                      onClick={() => downloadDocx()}
+                      disabled={!canExport}
+                      title={canExport ? 'Download Word (.docx)' : 'Draft at least one section before exporting'}
+                      aria-label="Download Word document"
+                    >
+                      <WordIcon className="size-4" />
+                    </Button>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        aria-label={
+                          formatOpen ? 'Hide formatting options' : 'Show formatting options'
+                        }
+                      >
+                        <ChevronRight className="size-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                </div>
+                <CollapsibleContent className="max-h-[32vh] overflow-y-auto">
+                  <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-4 xl:grid-cols-8">
+                    <label className="space-y-1">
+                      <span className="block text-[10px] font-medium text-muted-foreground">
+                        Body font
+                      </span>
+                      <Select
+                        value={docTheme.body_font ?? 'Times New Roman'}
+                        onValueChange={(value) => updateDocTheme({ body_font: value })}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FONT_OPTIONS.map((font) => (
+                            <SelectItem key={font} value={font}>
+                              {font}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </label>
 
-            <div className="no-print mb-6 rounded-xl border bg-card p-4">
-              <p className="mb-3 text-xs font-semibold text-muted-foreground">
-                Title page details
-              </p>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <Input
-                  value={exportMeta.studentName}
-                  onChange={(e) => setExportMeta({ ...exportMeta, studentName: e.target.value })}
-                  placeholder="Student name"
-                  className="h-8 text-xs"
-                />
-                <Input
-                  value={exportMeta.indexNumber}
-                  onChange={(e) => setExportMeta({ ...exportMeta, indexNumber: e.target.value })}
-                  placeholder="Index number"
-                  className="h-8 text-xs"
-                />
-                <Input
-                  value={exportMeta.patientName}
-                  onChange={(e) => setExportMeta({ ...exportMeta, patientName: e.target.value })}
-                  placeholder="Patient name / initials"
-                  className="h-8 text-xs"
-                />
-                <Input
-                  value={exportMeta.diagnosis}
-                  onChange={(e) => setExportMeta({ ...exportMeta, diagnosis: e.target.value })}
-                  placeholder="Diagnosis"
-                  className="h-8 text-xs"
-                />
-                <Input
-                  value={exportMeta.collegeName}
-                  onChange={(e) => setExportMeta({ ...exportMeta, collegeName: e.target.value })}
-                  placeholder="College name"
-                  className="h-8 text-xs"
-                />
-                <Input
-                  value={exportMeta.collegeLocation}
-                  onChange={(e) => setExportMeta({ ...exportMeta, collegeLocation: e.target.value })}
-                  placeholder="College location"
-                  className="h-8 text-xs"
-                />
-                <Input
-                  value={exportMeta.year}
-                  onChange={(e) => setExportMeta({ ...exportMeta, year: e.target.value })}
-                  placeholder="Year"
-                  className="h-8 text-xs"
-                />
+                    <label className="space-y-1">
+                      <span className="block text-[10px] font-medium text-muted-foreground">
+                        Heading font
+                      </span>
+                      <Select
+                        value={docTheme.heading_font ?? 'Times New Roman'}
+                        onValueChange={(value) => updateDocTheme({ heading_font: value })}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FONT_OPTIONS.map((font) => (
+                            <SelectItem key={font} value={font}>
+                              {font}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </label>
+
+                    <label className="space-y-1">
+                      <span className="block text-[10px] font-medium text-muted-foreground">
+                        Body size
+                      </span>
+                      <Select
+                        value={String(docTheme.body_size ?? 12)}
+                        onValueChange={(value) => updateDocTheme({ body_size: Number(value) })}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {BODY_SIZE_OPTIONS.map((size) => (
+                            <SelectItem key={size} value={String(size)}>
+                              {size} pt
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </label>
+
+                    <label className="space-y-1">
+                      <span className="block text-[10px] font-medium text-muted-foreground">
+                        Line spacing
+                      </span>
+                      <Select
+                        value={String(docTheme.line_spacing ?? 1.5)}
+                        onValueChange={(value) => updateDocTheme({ line_spacing: Number(value) })}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LINE_SPACING_OPTIONS.map((spacing) => (
+                            <SelectItem key={spacing} value={String(spacing)}>
+                              {spacing}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </label>
+
+                    <label className="space-y-1">
+                      <span className="block text-[10px] font-medium text-muted-foreground">
+                        Alignment
+                      </span>
+                      <Select
+                        value={docTheme.body_alignment ?? 'justify'}
+                        onValueChange={(value) =>
+                          updateDocTheme({ body_alignment: value as DocTheme['body_alignment'] })
+                        }
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ALIGNMENT_OPTIONS.map((alignment) => (
+                            <SelectItem key={alignment} value={alignment}>
+                              {alignment.charAt(0).toUpperCase() + alignment.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </label>
+
+                    <label className="space-y-1">
+                      <span className="block text-[10px] font-medium text-muted-foreground">
+                        First-line indent
+                      </span>
+                      <Select
+                        value={String(docTheme.first_line_indent ?? 0)}
+                        onValueChange={(value) =>
+                          updateDocTheme({ first_line_indent: Number(value) })
+                        }
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FIRST_LINE_INDENT_OPTIONS.map((indent) => (
+                            <SelectItem key={indent} value={String(indent)}>
+                              {indent === 0 ? 'None' : `${indent}"`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </label>
+
+                    <label className="space-y-1">
+                      <span className="block text-[10px] font-medium text-muted-foreground">
+                        Heading color
+                      </span>
+                      <div className="flex h-7 items-center gap-2 rounded-md border border-input bg-transparent px-2">
+                        <input
+                          type="color"
+                          value={hexToInput(docTheme.heading_color ?? '000000')}
+                          onChange={(event) =>
+                            updateDocTheme({ heading_color: inputToHex(event.target.value) })
+                          }
+                          className="h-5 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
+                          aria-label="Heading color"
+                        />
+                        <span className="font-mono text-[10px] text-muted-foreground">
+                          {docTheme.heading_color ?? '000000'}
+                        </span>
+                      </div>
+                    </label>
+
+                    <label className="space-y-1">
+                      <span className="block text-[10px] font-medium text-muted-foreground">
+                        Table header fill
+                      </span>
+                      <div className="flex h-7 items-center gap-2 rounded-md border border-input bg-transparent px-2">
+                        <input
+                          type="color"
+                          value={hexToInput(docTheme.table_header_fill ?? 'D9D9D9')}
+                          onChange={(event) =>
+                            updateDocTheme({ table_header_fill: inputToHex(event.target.value) })
+                          }
+                          className="h-5 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
+                          aria-label="Table header fill"
+                        />
+                        <span className="font-mono text-[10px] text-muted-foreground">
+                          {docTheme.table_header_fill ?? 'D9D9D9'}
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-1">
+                    <span className="mr-1 text-[10px] font-medium text-muted-foreground">
+                      Text tools
+                    </span>
+                    {TEXT_TOOLS.map((tool) => (
+                      <Button
+                        key={tool.key}
+                        variant="outline"
+                        size="icon"
+                        className="size-7"
+                        title={`${tool.label} — select text in the preview first`}
+                        aria-label={tool.label}
+                        disabled={!previewTextSelected}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => applyTextFormat(tool)}
+                      >
+                        <tool.icon className="size-3.5" />
+                      </Button>
+                    ))}
+                    <span className="ml-1 text-[10px] text-muted-foreground">
+                      Select text in the preview below, then apply.
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-1 border-t pt-2">
+                    <span className="mr-1 text-[10px] font-medium text-muted-foreground">
+                      Paragraph
+                    </span>
+                    <Button
+                      variant={previewParaState.list === 'ul' ? 'secondary' : 'outline'}
+                      size="icon"
+                      className="size-7"
+                      title="Bullet list — select the lines in the preview first"
+                      aria-label="Bullet list"
+                      disabled={!previewEditingActive}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => applyListFormat('ul')}
+                    >
+                      <List className="size-3.5" />
+                    </Button>
+                    <Button
+                      variant={previewParaState.list === 'ol' ? 'secondary' : 'outline'}
+                      size="icon"
+                      className="size-7"
+                      title="Numbered list — select the lines in the preview first"
+                      aria-label="Numbered list"
+                      disabled={!previewEditingActive}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => applyListFormat('ol')}
+                    >
+                      <ListOrdered className="size-3.5" />
+                    </Button>
+                    <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
+                    {PARAGRAPH_ALIGNMENTS.map((alignment) => (
+                      <Button
+                        key={alignment.value}
+                        variant={previewParaState.align === alignment.value ? 'secondary' : 'outline'}
+                        size="icon"
+                        className="size-7"
+                        title={`${alignment.label} — select the paragraph in the preview first`}
+                        aria-label={alignment.label}
+                        disabled={!previewEditingActive}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => applyParagraphStyle({ align: alignment.value })}
+                      >
+                        <alignment.icon className="size-3.5" />
+                      </Button>
+                    ))}
+                    <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
+                    <label className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        Line spacing
+                      </span>
+                      <Select
+                        value={String(previewParaState.spacing ?? docTheme.line_spacing ?? 1.5)}
+                        onValueChange={(value) => applyParagraphStyle({ spacing: Number(value) })}
+                        disabled={!previewEditingActive}
+                      >
+                        <SelectTrigger className="h-7 w-[68px] text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LINE_SPACING_OPTIONS.map((spacing) => (
+                            <SelectItem key={spacing} value={String(spacing)}>
+                              {spacing}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </label>
+                    <span className="ml-1 text-[10px] text-muted-foreground">
+                      Select a line or lines in the preview below, then apply.
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
+                    <p className="text-[10px] leading-relaxed text-muted-foreground">
+                      Applied to the Word download — and previewed below. Full restyling is always
+                      available in Word itself via the Care Study styles.
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 shrink-0 gap-1.5 text-muted-foreground"
+                      onClick={resetDocTheme}
+                      disabled={isDefaultDocTheme}
+                    >
+                      <RotateCcw className="size-3.5" /> Reset
+                    </Button>
+                  </div>                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </div>
+          </div>
 
-            <div className="print-doc rounded-xl border bg-card p-8 shadow-sm md:p-12">
+          <div className="print-scroll flex-1 overflow-y-auto">
+            <div className="mx-auto w-full max-w-[820px] px-6 py-8 md:px-10">
+            <div
+              className="print-doc rounded-xl border bg-card p-8 shadow-sm md:p-12"
+              onSelect={handlePreviewSelect}
+            >
               <header className="border-b pb-6 text-center">
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                   Patient / Family Care Study
@@ -3829,20 +5397,48 @@ function Home() {
 
               {chapters.map((chapter, chapterIndex) => (
                 <section key={chapter.name} className="mt-8">
-                  <h2 className="flex items-baseline gap-2 border-b pb-1.5 font-serif text-lg">
+                  <h2 className="flex items-baseline gap-2 border-b pb-1.5">
                     <span className="font-mono text-xs text-primary">
                       {isFrontMatterChapter(chapterIndex)
-                        ? chapter.name.toUpperCase()
+                        ? ''
                         : `CHAPTER ${ROMAN[chapterOrdinal(chapterIndex)]}`}
                     </span>{' '}
-                    {isFrontMatterChapter(chapterIndex) ? '' : chapter.name}
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      spellCheck={false}
+                      onBlur={(event) =>
+                        updateChapterName(
+                          chapterIndex,
+                          (event.currentTarget.textContent ?? '').trim(),
+                        )
+                      }
+                      className="rounded-sm outline-none focus:ring-1 focus:ring-primary/40"
+                    >
+                      {isFrontMatterChapter(chapterIndex)
+                        ? chapter.name.toUpperCase()
+                        : chapter.name}
+                    </span>
                   </h2>
                   {chapter.intro.trim() && (
-                    <p className="mt-2.5 whitespace-pre-wrap text-[13px] leading-relaxed">
-                      {renderInlineMarkdown(chapter.intro)}
-                    </p>
+                    /* A <div> (not <p>) — the intro can contain styled paragraph
+                       <div>s and <ul>/<ol> lists, which are illegal inside <p>.
+                       The content is static HTML (see PrintDraft) so React never
+                       reconciles children inside the editable region. The { __html }
+                       object is memoized inside EditableIntro so React doesn't
+                       rewrite innerHTML on every re-render while editing. */
+                    <EditableIntro
+                      intro={chapter.intro}
+                      onBlur={(markdown) =>
+                        updateChapterIntro(
+                          chapterIndex,
+                          markdown,
+                          chapter.introReferences,
+                        )
+                      }
+                    />
                   )}
-                  {chapter.sections.map((section) => {
+                  {chapter.sections.map((section, sectionIndex) => {
                     const filledFields = section.fields.filter((field) =>
                       (section.data[field.id] ?? '').trim(),
                     );
@@ -3863,19 +5459,43 @@ function Home() {
                       section.notes.trim().length > 0;
                     return (
                       <div key={section.id} className="mt-4 break-inside-avoid">
-                        <h3 className="text-sm font-semibold">
-                          {section.id} {section.heading}
+                        <h3 className="font-semibold">
+                          {section.id}{' '}
+                          <span
+                            contentEditable
+                            suppressContentEditableWarning
+                            spellCheck={false}
+                            onBlur={(event) =>
+                              updateSection(chapterIndex, sectionIndex, {
+                                heading: (event.currentTarget.textContent ?? '').trim(),
+                              })
+                            }
+                            className="rounded-sm outline-none focus:ring-1 focus:ring-primary/40"
+                          >
+                            {section.heading}
+                          </span>
                         </h3>
 
                         {section.draft ? (
-                          <PrintDraft draft={section.draft} />
+                          <PrintDraft
+                            draft={section.draft}
+                            onEdit={(markdown) => {
+                              updateSection(chapterIndex, sectionIndex, { draft: markdown });
+                              // The draft changed — any earlier verification of
+                              // this section (and of the whole study) is stale.
+                              setVerifyBySection((prev) => {
+                                if (!(section.id in prev)) return prev;
+                                const next = { ...prev };
+                                delete next[section.id];
+                                return next;
+                              });
+                              setVerifyAll(null);
+                            }}
+                          />
                         ) : filledFields.length > 0 ? (
                           <div className="mt-2 space-y-2">
                             {fieldsToProse(section).map((para, index) => (
-                              <p
-                                key={index}
-                                className="whitespace-pre-wrap text-[13px] leading-relaxed"
-                              >
+                              <p key={index} className="whitespace-pre-wrap">
                                 {para.label && <strong>{para.label}: </strong>}
                                 {para.text}
                               </p>
@@ -3885,7 +5505,7 @@ function Home() {
 
                         {hasRows && section.rows && (!draftHasTable || !draftCoversRows) && (
                           <div className="mt-2 overflow-x-auto">
-                            <table className="w-full border-collapse text-[12px]">
+                            <table className="w-full border-collapse">
                               <thead>
                                 <tr>
                                   {section.rows.columns.map((column) => (
@@ -3911,14 +5531,14 @@ function Home() {
                         )}
 
                         {section.notes.trim().length > 0 && (
-                          <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+                          <p className="mt-1.5 text-muted-foreground">
                             <span className="font-medium text-foreground">Notes: </span>
                             {section.notes}
                           </p>
                         )}
 
                         {!hasAnything && (
-                          <p className="mt-1.5 text-[12px] italic text-muted-foreground">
+                          <p className="mt-1.5 italic text-muted-foreground">
                             Not completed.
                           </p>
                         )}
@@ -3930,11 +5550,11 @@ function Home() {
 
               {allReferences.length > 0 && !hasBibliography && (
                 <section className="mt-8 break-inside-avoid">
-                  <h2 className="flex items-baseline gap-2 border-b pb-1.5 font-serif text-lg">
+                  <h2 className="flex items-baseline gap-2 border-b pb-1.5">
                     <span className="font-mono text-xs text-primary">REFERENCES</span>{' '}
                     Reference List
                   </h2>
-                  <ol className="mt-2 list-decimal space-y-1 pl-5 text-[12px] leading-relaxed text-muted-foreground">
+                  <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
                     {allReferences.map((ref, index) => (
                       <li key={index} className="break-words">
                         {ref.url ? (
@@ -3954,6 +5574,42 @@ function Home() {
                   </ol>
                 </section>
               )}
+            </div>
+
+            {verifyAll && (
+              <div className="no-print mt-6 rounded-xl border bg-card p-4">
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  <ShieldCheck className="size-3.5 text-primary" />
+                  Reference verification — {allReferences.length}{' '}
+                  {allReferences.length === 1 ? 'source' : 'sources'} across the study
+                </p>
+                <SourceCheckList
+                  warnings={verifyAll.warnings}
+                  checks={verifyAll.checks}
+                  checkedAt={verifyAll.checkedAt}
+                />
+              </div>
+            )}
+            <div className="no-print mt-4 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={verifyAllSources}
+                disabled={verifyAllPending || allReferences.length === 0}
+                className="gap-2"
+                title={
+                  allReferences.length === 0
+                    ? 'No sources to verify yet — draft a section first'
+                    : 'Check every source cited anywhere in the study'
+                }
+              >
+                {verifyAllPending ? (
+                  <RotateCcw className="size-4 animate-spin" />
+                ) : (
+                  <ShieldCheck className="size-4" />
+                )}
+                {verifyAllPending ? 'Checking…' : 'Verify all sources'}
+              </Button>
+            </div>
             </div>
           </div>
         </div>
@@ -3998,13 +5654,29 @@ function Home() {
 }
 
 function Router() {
+  const [location] = useLocation();
+
   return (
-    <ErrorBoundary resetKey={useLocation()[0]}>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route component={NotFound} />
-      </Switch>
-    </ErrorBoundary>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -5 }}
+        transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+        className="min-h-screen"
+      >
+        <ErrorBoundary resetKey={location}>
+          <Switch>
+            <Route path="/" component={LandingPage} />
+            <Route path="/studio">{() => <AdminGate><Home /></AdminGate>}</Route>
+            <Route path="/studio/bin">{() => <AdminGate><StudioBin /></AdminGate>}</Route>
+            <Route path="/student" nest component={StudentPortal} />
+            <Route component={NotFound} />
+          </Switch>
+        </ErrorBoundary>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 

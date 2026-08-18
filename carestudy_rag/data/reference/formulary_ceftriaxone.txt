@@ -1,0 +1,122 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Ceftriaxone
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-08-14
+
+
+Ceftriaxone
+
+Powder for injection: 250 mg; 1 g (as sodium salt) in vial.
+
+Ceftriaxone is a representative third generation cefalosporin antibiotic. Various
+
+medicines can serve as alternatives.
+
+Ceftriaxone is a complementary list medicine for use only when there is significant
+
+resistance to other antibacterial medicines on the WHO Model List.
+
+Uses:  serious infections due to sensitive bacteria, including septicaemia,
+
+pneumonia, and meningitis; osteomyelitis, septic arthritis; Haemophilus
+
+influenzae epiglottis; surgical prophylaxis; prophylaxis of meningococcal
+
+meningitis; shigellosis, invasive salmonellosis; endocarditis; gonococcal
+
+conjunctivitis; gonorrhoea; pelvic inflammatory disease; Lyme disease.
+
+Contraindications: hypersensitivity to cefalosporins; porphyria; neonates with
+
+jaundice, hypoalbuminaemia, acidosis or impaired bilirubin binding.
+
+Precautions:  sensitivity to Beta Lactam antibacterials (avoid if history of
+
+immediate  hypersensitivity reactions; see introductory note above); severe
+
+renal impairment (Appendix 4); hepatic impairment if accompanied by renal
+
+impairment (Appendix 5); premature neonates (may displace bilirubin from
+
+serum albumin); treatment longer than 14 days, renal failure, dehydration,
+
+or concomitant total parenteral nutrition (risk of ceftriaxone precipitation in
+
+gallbladder); pregnancy and breastfeeding (but appropriate to use, see
+
+Appendices 2 and 3); false positive urinary glucose (if tested for reducing
+
+substances) and false positive Coombs’ test; interactions : Appendix 1.
+
+Dose:
+
+Infections due to susceptible organisms,  by deep intramuscular injection , by
+
+intravenous injection  (over at least 2–4 minutes), or by intravenous infusion , ADULT,
+
+1 g daily; up to 2–4 g daily in severe infections; INFANT  and CHILD  under
+
+50 kg, 20–50 mg/kg daily should  be given, up to 80 mg/kg daily in severe
+
+infections (doses of 50 mg/kg and over by intravenous infusion only); by
+
+intravenous infusion  (over 60 minutes), NEONATE, 20–50 mg/kg daily
+
+(maximum, 50 mg/kg daily).
+
+Uncomplicated gonorrhoea and gonococcal conjunctivitis, by deep intramuscular
+
+injection , ADULT, 125 mg as a single dose (also used with doxycycline and
+
+metronidazole to treat pelvic inflammatory disease).
+
+Neonatal gonococcal conjunctivitis, by intramuscular injection , NEONATE,
+
+50 mg/kg as a single dose (maximum, 125 mg).
+
+Disseminated gonococcal infection, by deep intramuscular injection  or by intravenous
+
+injection , ADULT, 1 g daily for 7 days.
+
+Surgical prophylaxis, by deep intramuscular injection  or by intravenous injection  (over
+
+at least 2–4 minutes), ADULT, 1 g at induction.
+
+Colorectal surgery (with an antibacterial active against anaerobes), by deep
+
+intramuscular injection, by intravenous injection  (over at least 2–4 minutes), or by
+
+intravenous infusion , ADULT,  2 g as a single dose.
+
+RECONSTITUTION AND ADMINISTRATION. According to manufacturer’s
+
+directions. Intramuscular doses over 1 g should be divided between more than one site.
+
+Administer by intravenous infusion over 60 minutes in neonates (see also
+
+Contraindications).
+
+Adverse effects: diarrhoea, nausea and vomiting, abdominal discomfort,
+
+headache; rarely antibiotic-associated colitis (particularly with higher doses);
+
+allergic reactions including rash, pruritus, urticaria, serum sickness-like
+
+reactions, fever and arthralgia, and anaphylaxis; erythema multiforme and
+
+toxic epidermal necrolysis reported; transient hepatitis, cholestatic jaundice;
+
+eosinophilia and blood disorders (including thrombocytopenia, leukopenia,
+
+agranulocytosis, aplastic anaemia, and haemolytic anaemia); reversible
+
+interstitial nephritis, hyperactivity, nervousness, sleep disturbances,
+
+hallucinations, confusion, hypertonia and dizziness; calcium ceftriaxone
+
+precipitates in the urine (particularly in the very young, the dehydrated, or in
+
+those who are immobilized) or in the gallbladder (consider discontinuation
+
+if symptomatic); rarely prolongation of prothrombin time and pancreatitis.

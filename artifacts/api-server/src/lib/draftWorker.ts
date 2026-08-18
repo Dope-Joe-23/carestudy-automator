@@ -36,8 +36,19 @@ export type IngestResult = {
   chunks: number;
 };
 
-/** A worker response is either a draft or an ingest result. */
-type WorkerResult = DraftResult | IngestResult;
+export type VivaQuestion = {
+  category: string;
+  question: string;
+  guidance: string;
+  tip: string;
+};
+
+export type VivaBankResult = {
+  questions: VivaQuestion[];
+};
+
+/** A worker response is a draft, an ingest result, or a viva bank. */
+type WorkerResult = DraftResult | IngestResult | VivaBankResult;
 
 interface PendingRequest {
   /** The worker instance this request was written to. */
@@ -136,6 +147,38 @@ class DraftWorker {
       });
       try {
         child.stdin.write(JSON.stringify({ id, op: "ingest", studyId, paths }) + "\n");
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /**
+   * Ask the worker to generate a viva question bank from a completed study's
+   * snapshot ({ title, chapters } as stored in the studies table). One model
+   * call; the result is cached on the order by the caller.
+   */
+  async vivaBank(title: Record<string, unknown>, chapters: unknown[]): Promise<VivaBankResult> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+
+    return new Promise<VivaBankResult>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("The viva question bank timed out — please try again."));
+      }, REQUEST_TIMEOUT_MS);
+
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as VivaBankResult),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(JSON.stringify({ id, op: "viva_bank", title, chapters }) + "\n");
       } catch (writeErr) {
         this.pending.delete(id);
         clearTimeout(timer);
@@ -245,6 +288,7 @@ class DraftWorker {
       references?: DraftReference[];
       files?: IngestFileResult[];
       chunks?: number;
+      bank?: VivaBankResult;
       error?: string;
     };
     try {
@@ -266,8 +310,8 @@ class DraftWorker {
         draft: msg.draft,
         references: Array.isArray(msg.references) ? msg.references : [],
       });
-    } else if (Array.isArray(msg.files)) {
-      pending.resolve({ files: msg.files, chunks: Number(msg.chunks) || 0 });
+    } else if (msg.bank && Array.isArray(msg.bank.questions)) {
+      pending.resolve({ questions: msg.bank.questions });
     } else {
       pending.reject(new Error("The drafting engine returned an unexpected response."));
     }

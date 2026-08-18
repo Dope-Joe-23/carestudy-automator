@@ -71,15 +71,23 @@ models (no payment method needed):
   `data/reference/`.
 
   A starter library is already bundled there — see `data/reference/SOURCES.txt`
-  for full attribution:
-  - **22 open-licensed Wikipedia articles** (pneumonia, hypertension, sickle
-    cell disease, malaria, ceftriaxone, paracetamol, metformin, nursing
-    process/diagnosis, etc.), CC BY-SA 4.0. `scripts_fetch_reference.py` adds
-    more topics — edit its `TOPICS` dict and re-run.
+  for full attribution. It contains only authoritative, openly licensed
+  sources (Wikipedia was replaced by these in August 2026):
   - **8 WHO fact sheets** (asthma, diabetes, hypertension, malaria,
     tuberculosis, pneumonia, sickle-cell disease, anaemia), CC BY-NC-SA 3.0
     IGO — cited in-text as `(WHO, 2026)` exactly like the sample care
     studies. `scripts_fetch_who.py` refreshes them or picks up newer editions.
+  - **8 drug monographs** (ceftriaxone, paracetamol, amoxicillin, metformin,
+    furosemide, artemether/lumefantrine, folic acid, insulin) extracted from
+    the WHO Model Formulary 2008 (CC BY-NC-SA 3.0 IGO) — cited as
+    `(WHO Model Formulary, 2008)`. `scripts_fetch_who_formulary.py` re-extracts
+    them from the formulary PDF.
+  - **4 MedlinePlus health topics** (appendicitis, UTI, peptic ulcer, heart
+    attack) from the U.S. National Library of Medicine — public domain, cited
+    as `(MedlinePlus, 2026)`. `scripts_fetch_medlineplus.py` refreshes them.
+  - **2 Open RN nursing chapters** (nursing process, nursing diagnosis) from
+    Nursing Fundamentals 2e (CC BY 4.0) — cited as `(Open RN, 2024)`.
+    `scripts_fetch_openrn.py` refreshes them.
 
   **Citations:** every file in `data/reference/` should have an entry in
   `data/reference/citations.json` mapping it to a citable title and URL.

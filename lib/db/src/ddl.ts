@@ -50,4 +50,72 @@ CREATE TABLE IF NOT EXISTS "library_sources" (
   "created_at" integer NOT NULL,
   "updated_at" integer NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS "admins" (
+  "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  "username" text NOT NULL UNIQUE,
+  "password_hash" text NOT NULL,
+  "name" text,
+  "created_at" integer NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "admin_sessions" (
+  "token" text PRIMARY KEY NOT NULL,
+  "admin_id" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+  "created_at" integer NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "students" (
+  "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  "name" text NOT NULL,
+  "email" text NOT NULL UNIQUE,
+  "password_hash" text NOT NULL,
+  "college" text NOT NULL,
+  "program" text NOT NULL,
+  "year" text,
+  "created_at" integer NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "student_sessions" (
+  "token" text PRIMARY KEY NOT NULL,
+  "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,
+  "created_at" integer NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "student_orders" (
+  "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,
+  "title" text NOT NULL,
+  "diagnosis" text,
+  "college" text NOT NULL,
+  "program" text NOT NULL,
+  "notes" text,
+  "status" text NOT NULL DEFAULT 'submitted',
+  "note" text,
+  "produced_study_id" integer,
+  "delivery_filename" text,
+  "delivery_path" text,
+  "delivery_size" integer,
+  "viva_bank" text,
+  "viva_status" text NOT NULL DEFAULT 'none',
+  "viva_error" text,
+  "viva_updated_at" integer,
+  "created_at" integer NOT NULL,
+  "updated_at" integer NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS "student_orders_student_id_idx" ON "student_orders" ("student_id");
+
+CREATE TABLE IF NOT EXISTS "student_order_files" (
+  "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  "order_id" integer NOT NULL REFERENCES "student_orders"("id") ON DELETE CASCADE,
+  "kind" text NOT NULL,
+  "filename" text NOT NULL,
+  "stored_path" text NOT NULL,
+  "mime" text NOT NULL,
+  "size" integer NOT NULL,
+  "created_at" integer NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS "student_order_files_order_id_idx" ON "student_order_files" ("order_id");
 `;

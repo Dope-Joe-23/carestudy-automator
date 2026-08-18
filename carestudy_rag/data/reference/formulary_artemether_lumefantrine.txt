@@ -1,0 +1,76 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Artemether + lumefantrine
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-08-14
+
+
+Artemether + lumefantrine
+
+Tablet: 20 mg + 120 mg.
+
+Uses:  treatment of uncomplicated malaria caused by P. falciparum  alone or with
+
+other Plasmodium  spp. in areas with significant drug resistance (see also
+
+introductory note above).
+
+Contraindications: breastfeeding (Appendix 3); history of arrhythmias,
+
+clinically relevant bradycardia, or congestive heart failure accompanied by
+
+reduced left ventricular ejection fraction; family history of sudden death or
+
+congenital prolongation of QT interval (see also Precautions).
+
+Precautions:  first trimester of pregnancy (Appendix 2); electrolyte disturbances;
+
+concomitant administration of drugs that prolong the QT interval; monitor
+
+patients unable to take food (greater risk of recrudescence); severe renal
+
+impairment (Appendix 4); hepatic impairment (Appendix 5); interactions:
+
+Appendix 1.
+
+SKILLED TASKS. Dizziness may impair ability to perform skilled tasks, for example,
+
+operating machinery or driving.
+
+Dose:
+
+Treatment of uncomplicated falciparum  malaria:
+
+by mouth , ADULT  and CHILD  over 12 years/body weight over 35 kg, initially
+
+4 tablets followed by 5 further doses of 4 tablets each at 8, 24, 36, 48, and
+
+60 hours (total, 24 tablets over 60 hours);
+
+CHILD
+
+body weight 5–14 kg, initially 1 tablet followed by 5 further doses of 1
+
+tablet each at 8, 24, 36, 48, and 60 hours (total, 6 tablets over 60 hours);
+
+body weight 15–24 kg, initially 2 tablets followed by 5 further doses of
+
+2 tablets each at 8, 24, 36, 48, and 60 hours (total, 12 tablets over
+
+60 hours);
+
+body weight 25–34 kg, initially 3 tablets followed by 5 further doses of
+
+3 tablets each at 8, 24, 36, 48, and 60 hours (total, 18 tablets over
+
+60 hours).
+
+PATIENT ADVICE. Take tablets with food; repeat dose if vomiting occurs within
+
+1 hour of administration.
+
+Adverse effects: abdominal pain, anorexia, diarrhoea, nausea and vomiting;
+
+headache, dizziness, sleep disorders; palpitation; arthralgia, myalgia; cough;
+
+asthenia, fatigue; pruritus, rash.

@@ -1,0 +1,86 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Furosemide
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-08-14
+
+
+Furosemide
+
+Injection: 10 mg/ml in 2-ml ampoule.
+
+Tablet: 40 mg.
+
+Furosemide is a representative loop diuretic. Various medicines can serve as alternatives.
+
+Uses:  oedema; oliguria due to renal failure; heart failure (section 12.4).
+
+Contraindications:  renal failure with anuria; precomatose states associated with
+
+liver cirrhosis.
+
+Precautions: monitor electrolytes, particularly potassium and sodium;
+
+hypotension; the elderly (reduce dose); pregnancy (Appendix 2); in oliguria,
+
+correct hypovolaemia before administration; renal impairment (Appendix 4),
+
+hepatic impairment (Appendix 5); prostatic enlargement; interactions:
+
+Appendix 1.
+
+Dose:
+
+Oedema, by mouth , ADULT, initially 40 mg daily on rising; usual maintenance
+
+dose, 20–40 mg daily; may be increased to 80 mg daily or more in resistant
+
+oedema; CHILD, 1–3 mg/kg daily (maximum, 40 mg daily).
+
+Acute pulmonary oedema, by slow intravenous injection , ADULT, 20–50 mg,
+
+increased incrementally in 20-mg steps every 2 hours, if necessary; if the
+
+effective single dose is more than 50 mg, consider using slow intravenous
+
+infusion  at a rate not exceeding 4 mg/minute; CHILD, 0.5–1.5 mg/kg daily
+
+(maximum, 20 mg daily)
+
+Oliguria (glomerular filtration rate less than 20 ml/minute), by slow intravenous
+
+infusion  at a rate not exceeding 4 mg/minute, ADULT, initially 250 mg over
+
+1 hour; if urine output is not satisfactory during the hour after the first dose,
+
+infuse 500 mg over 2 hours then, if there is no satisfactory response during
+
+the hour after the second dose, infuse 1 g over 4 hours; if there is no
+
+response after the third dose, dialysis is probably necessary; the effective
+
+dose (up to 1 g) can be repeated every 24 hours.
+
+NOTE. Dose to be diluted in a suitable amount of infusion fluid, according to the
+
+hydration of the patient.
+
+Adverse effects:  hypokalaemia, hypomagnesaemia, hyponatraemia,
+
+hypochloraemic alkalosis (for symptoms of fluid and electrolyte imbalance,
+
+see introductory notes), increased calcium excretion, hypovolaemia,
+
+hyperglycaemia (but less often than with thiazide diuretics); temporary
+
+increase in plasma cholesterol and triglyceride concentration; less
+
+commonly hyperuricaemia and gout; rarely rash, photosensitivity, bone
+
+marrow depression (withdraw treatment), pancreatitis (with large parenteral
+
+doses), tinnitus and deafness (with rapid administration of large parenteral
+
+doses and in renal impairment; deafness may be permanent if other ototoxic
+
+drugs taken).

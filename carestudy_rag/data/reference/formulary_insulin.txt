@@ -1,0 +1,404 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Insulin (medication)
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-08-14
+
+
+18.5 Insulins and other antidiabetic agents
+
+Diabetes mellitus is characterized by hyperglycaemia and disturbances of
+
+carbohydrate, fat, and protein metabolism. There are two principal types of
+
+diabetes.
+
+Type 1 diabetes or insulin-dependent diabetes mellitus is due to a deficiency of
+
+insulin caused by autoimmune destruction of pancreatic beta cells. Patients
+
+require administration of insulin.
+
+Type 2 diabetes or non-insulin dependent diabetes mellitus is due to reduced
+
+secretion of insulin  from the pancreas or to peripheral resistance to the action
+
+of insulin. Type 2 diabetes may be controlled by diet alone, but often those
+
+with this form of the disease require administration of oral antidiabetic drugs
+
+or insulin. The energy and carbohydrate intake must be adequate but obesity
+
+should be avoided. In type 2 diabetes, obesity is one of the factors associated
+
+with insulin resistance. Diets high in complex carbohydrate and fibre and low
+
+in fat are beneficial. Emphasis should be placed on exercise and increased
+
+activity.
+
+The aim of treatment is to achieve the best possible control of blood glucose
+
+concentration and prevent or minimize complications including microvascular
+
+complications such as retinopathy, albuminuria, and neuropathy. Diabetes
+
+mellitus is a strong risk factor for cardiovascular disease; other risk factors for
+
+cardiovascular disease, such as smoking, hypertension, obesity and
+
+hyperlipidaemia, should also be addressed.
+
+Insulin
+
+Appropriate insulin regimens should be worked out for each patient. Insulin
+
+requirements may be affected by variations in lifestyle (diet and exercise).
+
+Concomitant use of drugs such as corticosteroids, presence of infections,
+
+stress, accidental or surgical trauma, puberty and pregnancy (second and third
+
+trimesters) tend to increase insulin requirements; renal or hepatic impairment
+
+and some endocrine disorders (for example, Addison disease and
+
+hypopituitarism) or coeliac disease, usually reduce requirements. In pregnancy,
+
+insulin requirements should be monitored frequently.
+
+Insulin must be given by injection because it is inactivated by gastrointestinal
+
+enzymes. Generally, insulin is given by subcutaneous injection into the upper
+
+arms, thighs, buttocks, or abdomen. There may be increased absorption from a
+
+limb site, if the limb is used in strenuous exercise following the injection. It is
+
+essential to use only syringes calibrated for the particular concentration of
+
+insulin administered.
+
+Insulin preparations can be classified according to duration of action after
+
+subcutaneous injection as follows:
+
+- those of short duration which have a relatively rapid onset of action, for
+
+example, soluble or neutral insulin;
+
+- those with an intermediate action, for example, isophane insulin;
+
+- those with a relatively slow onset and long duration of action, for example
+
+protamine zinc insulin.
+
+Soluble insulin , when injected subcutaneously, has a rapid onset of action
+
+(after 30–60 minutes), a peak action between 2 and 4 hours, and a duration of
+
+action of up to 8 hours. Soluble insulin by the intravenous route is reserved for
+
+urgent treatment and fine control in serious illness and perioperatively. When
+
+injected intravenously, soluble insulin has a very short half-life of only about
+
+5 minutes and its effect disappears within 30 minutes.
+
+When injected subcutaneously, intermediate-acting insulins  take effect within
+
+approximately 1–2 hours, within a maximal effect at 4–12 hours and a duration
+
+of action of 16–24 hours. They can be given twice daily (together with short-
+
+acting insulin) or once daily, particularly in elderly patients. Most can be mixed
+
+with soluble insulin in the syringe, administered together while retaining the
+
+properties of each component.
+
+Long-acting insulins [not included on the 15th WHO Model List] have an
+
+onset of action approximately 4 hours after subcutaneous injection; peak
+
+activity is between 10 and 20 hours, and duration of action is up to 36 hours.
+
+Mixed insulin zinc suspension can be classified as either intermediate or long-
+
+acting.
+
+The duration of action of different insulin preparations varies considerably
+
+from one patient to another and this needs to be assessed for every individual.
+
+The type of insulin used, and also its dose and frequency of administration,
+
+depend on the precise requirements of each patient. For patients with acute
+
+onset diabetes mellitus, treatment should be started with soluble insulin given
+
+3 times daily with medium-acting insulin at bedtime. For those less seriously ill,
+
+treatment is usually started with a mixture of pre-mixed short- and medium-
+
+acting insulins (for example, 30% soluble insulin and 70% isophane insulin)
+
+given twice daily. The proportions of soluble insulin can be increased in
+
+patients with excessive post-prandial hyperglycaemia.
+
+Regimens should be developed by each country.
+
+Monitoring
+
+If possible, patients should monitor their own blood glucose concentration
+
+using blood glucose strips. Blood glucose concentration varies throughout the
+
+day; diabetics should aim to maintain their blood glucose concentration
+
+between 4 and 9 mmol/litre for most of the time (ideally, 4–7 mmol/litre
+
+before meals and less than 9 mmol/litre after meals) while accepting that on
+
+occasions it will be higher; strenuous efforts should be made to prevent blood-
+
+glucose concentration falling below 4 mmol/litre because of the risk of
+
+hypoglycaemia. Patients should be advised on how to look for troughs and
+
+peaks in their own blood glucose and to adjust their insulin dosage accordingly,
+
+but preferably only once or twice a week. Insulin doses are determined on an
+
+individual basis, by gradually increasing the dose to optimize blood glucose
+
+concentration while avoiding hypoglycaemia.
+
+In the absence of blood glucose monitoring strips, urine glucose monitoring
+
+strips can be used; in fact this is the method of personal choice for many
+
+patients with Type 2 diabetes mellitus. It is less reliable than blood glucose but
+
+is easier and costs much less. All patients should monitor either blood or urine
+
+glucose concentration daily.
+
+Hypoglycaemia
+
+Hypoglycaemia is a potential complication in all patients treated with insulin or
+
+less frequently with sulfonylureas. The consequences of hypoglycaemia include
+
+confusion, seizures, coma, and cerebral infarction.
+
+Loss of warning of hypoglycaemia is common among insulin-treated patients
+
+and can be a serious hazard, especially for drivers and those in dangerous
+
+occupations. It is vital that patients maintain a very tight control on their blood
+
+glucose in order to manage their condition; not only does tight control lower
+
+the blood glucose concentration needed to trigger hypoglycaemic symptoms;
+
+but any increase in the frequency of hypoglycaemic episodes reduces the
+
+warning symptoms experienced by patients. Beta-blockers can also blunt
+
+hypoglycaemic awareness (and delay recovery). Some patients report loss of
+
+hypoglycaemic warning after transfer to human insulin. Although clinical
+
+studies do not confirm that human insulin decreases hypoglycaemic awareness,
+
+if a patient believes that human insulin is responsible for loss of warning, it is
+
+reasonable to revert to animal insulin. To restore warning signs, episodes of
+
+hypoglycaemia must be reduced to a minimum; this involves appropriate
+
+adjustment of insulin dose and frequency, and careful attention to the timing
+
+and quantity of meals and snacks.
+
+For sporadic physical activity, extra carbohydrate may need to be taken to
+
+avert hypoglycaemia. Blood glucose should be monitored before, during, and
+
+after exercise.
+
+Initial treatment of “mild to moderate” hypoglycaemia involves glucose, 10–
+
+20 g, given by mouth either in liquid form or as granulated sugar (2 teaspoons)
+
+or sugar lumps (3 lumps). If necessary, this may be repeated after 10–15
+
+minutes.
+
+Hypoglycaemia which causes unconsciousness is medical emergency.
+
+Glucagon [not included on the 15th WHO Model List], a polypeptide
+
+hormone produced by the alpha cells of the islets of Langerhans, increases
+
+plasma glucose concentration by mobilizing glycogen stored in the liver. In
+
+severe hypoglycaemia, if sugar cannot be given by mouth, glucagon can be
+
+given by injection. Carbohydrates should be given as soon as possible to
+
+restore liver glycogen. If injection of glucagon is not effective in 10 minutes,
+
+intravenous glucose should be given. Note that glucagon is not appropriate for
+
+the treatment of chronic hypoglycaemia.
+
+Alternatively, 50 ml of glucose solution, 20% [not included on the 15th WHO
+
+Model List] may be given intravenously into a large vein through a large gauge
+
+needle; care is required since at this concentration glucose solution is irritant,
+
+especially if extravasation occurs. Alternatively, 25 ml of glucose solution, 50%
+
+(section 26.2) may be given, but this higher concentration solution is even
+
+more irritant and viscous, which makes administration difficult. Glucose
+
+solution, 10% (section 26.2) may also be used but a larger volume is needed. In
+
+the case of hypoglycaemia caused by an overdose with a long-acting insulin,
+
+close monitoring is necessary because further administration may be required.
+
+Patients whose hypoglycaemia is caused by a sulfonylurea should be
+
+transferred to hospital because the hypoglycaemic effects of these drugs may
+
+persist for many hours.
+
+Driving
+
+Drivers need to be particularly careful to avoid hypoglycaemia. Insulin-
+
+dependent diabetics should normally check their blood glucose concentration
+
+before driving and, on long journeys, at intervals of approximately two hours;
+
+they should ensure that a supply of sugar is always readily available and avoid
+
+driving if their meal has been delayed. If hypoglycaemia occurs or warning
+
+signs appear, the driver should stop the vehicle in a safe place, ingest a suitable
+
+sugar supply and wait until recovery is complete (may be 15 minutes or longer).
+
+Driving is particularly hazardous when hypoglycaemic awareness is impaired.
+
+Diabetic ketoacidosis
+
+Diabetic ketoacidosis is a potentially lethal condition caused by an absolute or
+
+relative lack of insulin; it commonly occurs when adjustments to insulin dosage
+
+fail to compensate for increases in insulin requirements, for example, during
+
+severe infection or a major intercurrent illness. Diabetics ketoacidosis occurs
+
+mostly in patients with Type 1 diabetes mellitus. It also occurs in Type 2
+
+diabetics who have a temporary need for insulin. Diabetic ketoacidosis is
+
+characterized by hyperglycaemia, hyperketonaemia, and acidaemia, leading to
+
+dehydration and electrolyte disturbances. It is essential that soluble insulin and
+
+intravenous fluids are readily available for the treatment of this condition.
+
+Infections
+
+Infections are more likely to develop in patients with poorly controlled
+
+diabetes mellitus. These should be treated promptly and effectively to avoid
+
+diabetic ketoacidosis.
+
+Surgery
+
+Particular attention should be paid to insulin requirements when a patient with
+
+diabetes undergoes surgery, especially when surgery is likely to need an
+
+intravenous infusion of insulin for longer than 12 hours. Soluble insulin should
+
+be given in an intravenous infusion of glucose and potassium chloride
+
+(provided the patient is not hyperkalaemic), and the amount adjusted to
+
+provide a blood glucose concentration of between 7 and 12 mmol/litre. The
+
+duration of action of intravenous insulin is only a few minutes, and therefore
+
+the infusion must not be stopped unless the patient becomes severely
+
+hypoglycaemic. In non-insulin dependent diabetics, insulin treatment is also
+
+almost always required during surgery (oral hypoglycaemic drugs having been
+
+omitted).
+
+Insulin injection (soluble)
+
+Injection: 40 IU/ml in 10-ml vial; 100 IU/ml in 10-ml vial.
+
+Uses: diabetes mellitus; diabetic emergencies and during surgery; diabetic
+
+ketoacidosis or coma.
+
+Precautions: see note above; renal impairment (reduce dose; Appendix 4);
+
+pregnancy (Appendix 2); and breastfeeding (Appendix 3); interactions:
+
+Appendix 1.
+
+Dose:
+
+Diabetes mellitus, by subcutaneous injection , by intramuscular injection , by intravenous
+
+injection  or by intravenous infusion , ADULT  and CHILD, according to individual
+
+requirements (see also introductory notes above).
+
+Adverse effects:  transient oedema; hypoglycaemia in overdose; rarely
+
+hypersensitivity reactions including urticaria and rash; local reactions and
+
+lipoatrophy at injection site.
+
+Intermediate-acting insulin
+
+Injection: 40 IU/ml in 10-ml vial; 100 IU/ml in 10-ml vial (as compound
+
+insulin zinc suspension or isophane insulin).
+
+Uses: diabetes mellitus.
+
+Contraindications:  intravenous administration.
+
+Precautions:  see note above; renal impairment (reduce dose; Appendix 4);
+
+pregnancy  (Appendix 2); and breastfeeding (Appendix 3); interactions:
+
+Appendix 1.
+
+Dose:
+
+Diabetes mellitus, by subcutaneous injection , ADULT  and CHILD, according to
+
+individual requirements (see also introductory note above).
+
+Adverse effects: hypoglycaemia in overdose; rarely hypersensitivity reactions,
+
+including urticaria and rash; local reactions and lipoatrophy at injection site.

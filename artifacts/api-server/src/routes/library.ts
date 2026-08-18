@@ -1,14 +1,23 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import path from "node:path";
 import { getStudyStore, type LibrarySourceRow, type StudyStore } from "@workspace/db";
 import { draftWorker } from "../lib/draftWorker";
 import {
+  detectUploadType,
   LIBRARY_DIR,
-  removeUploadFile,
+  libraryObjectKey,
+  materializeStored,
+  MAX_R2_UPLOAD_BYTES,
+  readFileHead,
+  removeStoredFile,
+  r2UploadMode,
+  sanitizeFilename,
   storeLibraryHtml,
   storeLibraryPdf,
   storeLibraryUpload,
   UploadError,
 } from "../lib/uploads";
+import { createPresignedPutUrl, headObject, R2_KEY_PREFIX } from "../lib/r2";
 import { hostIsBlocked } from "./verify";
 
 const router: IRouter = Router();
@@ -113,29 +122,34 @@ export function buildCitation(
   return { label, inText, url: url || null };
 }
 
-/** The ingest payload for every library source (skip rows with no file). */
+/** The ingest payload for every library source (skip rows with no file).
+ *  R2-backed sources are materialized to the local cache first so the Python
+ *  extraction engine (which reads from disk) can open them. */
 async function ingestAllSources() {
   const rows = await studyStore().listLibrary();
-  const sources = rows
-    .filter((row) => row.storedPath)
-    .map((row) => ({
-      path: row.storedPath,
-      citation: buildCitation(
-        {
-          title: row.title,
-          author: row.author,
-          year: row.year,
-          venue: row.venue,
-          citeKey: row.citeKey,
-          url: row.url,
-        },
-        row.filename,
-      ),
-    }));
+  const materialized = await Promise.all(
+    rows
+      .filter((row) => row.storedPath)
+      .map(async (row) => ({ row, local: await materializeStored(row.storedPath) })),
+  );
+  const sources = materialized.map(({ row, local }) => ({
+    path: local,
+    citation: buildCitation(
+      {
+        title: row.title,
+        author: row.author,
+        year: row.year,
+        venue: row.venue,
+        citeKey: row.citeKey,
+        url: row.url,
+      },
+      row.filename,
+    ),
+  }));
   const { files: results } = await draftWorker.libraryIngest(sources);
   const byPath = new Map(results.map((r) => [r.path, r]));
-  for (const row of rows) {
-    const result = row.storedPath ? byPath.get(row.storedPath) : null;
+  for (const { row, local } of materialized) {
+    const result = byPath.get(local);
     if (!result) continue;
     const status = result.error ? "error" : "ready";
     await studyStore().setLibrarySourceStatus(row.id, status, result.error ?? null);
@@ -190,6 +204,12 @@ async function fetchExternal(url: string): Promise<{ storedPath: string }> {
   return { storedPath: await storeLibraryHtml(text) };
 }
 
+/** A safe object-key extension derived from the display filename. */
+function extFromFilename(filename: string): string {
+  const ext = path.extname(filename).toLowerCase().replace(/^\./, "");
+  return /^[a-z0-9]{1,8}$/.test(ext) ? ext : "bin";
+}
+
 function publicSource(row: LibrarySourceRow) {
   return {
     id: row.id,
@@ -207,6 +227,111 @@ function publicSource(row: LibrarySourceRow) {
     updatedAt: row.updatedAt.toISOString(),
   };
 }
+
+// POST /api/library/sources/presign — hand the client a direct-to-bucket
+// upload URL for a library file (ebook / notes / article), so large files
+// never pass through the API server's request body.
+router.post(
+  "/library/sources/presign",
+  asyncRoute(async (req, res) => {
+    if (r2UploadMode() !== "r2") {
+      res.status(501).json({
+        error: "Direct uploads are not enabled on this server — R2 storage is not configured.",
+      });
+      return;
+    }
+    const filename = sanitizeFilename(req.body?.filename);
+    const size = Number(req.body?.size);
+    if (!Number.isFinite(size) || size <= 0) {
+      res.status(400).json({ error: "A valid file size is required" });
+      return;
+    }
+    if (size > MAX_R2_UPLOAD_BYTES) {
+      res.status(413).json({
+        error: `File is too large (max ${Math.round(MAX_R2_UPLOAD_BYTES / 1024 / 1024)} MB).`,
+      });
+      return;
+    }
+    const contentType =
+      typeof req.body?.contentType === "string" && req.body.contentType
+        ? req.body.contentType
+        : "application/octet-stream";
+    const objectKey = libraryObjectKey(extFromFilename(filename));
+    const uploadUrl = await createPresignedPutUrl(objectKey, contentType);
+    res.json({ uploadUrl, objectKey, expiresIn: 15 * 60, mode: "r2" });
+  }),
+);
+
+// POST /api/library/sources/complete — the browser has PUT the bytes to the
+// bucket; verify, register, and index the library source.
+router.post(
+  "/library/sources/complete",
+  asyncRoute(async (req, res) => {
+    const objectKey = typeof req.body?.objectKey === "string" ? req.body.objectKey : "";
+    if (!objectKey || !objectKey.startsWith("library/")) {
+      res.status(400).json({ error: "Invalid upload reference" });
+      return;
+    }
+    const filename = sanitizeFilename(req.body?.filename);
+    const storedPath = R2_KEY_PREFIX + objectKey;
+    const { exists, size } = await headObject(objectKey);
+    if (!exists) {
+      res.status(404).json({
+        error: "The file was not found in storage — please upload it again.",
+      });
+      return;
+    }
+    if (size !== null && size > MAX_R2_UPLOAD_BYTES) {
+      await removeStoredFile(storedPath);
+      res.status(413).json({
+        error: `File is too large (max ${Math.round(MAX_R2_UPLOAD_BYTES / 1024 / 1024)} MB).`,
+      });
+      return;
+    }
+
+    // Validate by magic bytes (not extension) before registering the source.
+    const local = await materializeStored(storedPath);
+    const head = await readFileHead(local);
+    const detected = detectUploadType(head, filename);
+    if (!detected) {
+      await removeStoredFile(storedPath);
+      throw new UploadError(
+        415,
+        "Unsupported file type — upload a PDF, Word (.docx), EPUB ebook, Markdown, or plain text document only.",
+      );
+    }
+
+    const kindRaw = str(req.body?.kind);
+    const kind = kindRaw && LIBRARY_KINDS.has(kindRaw) ? kindRaw : null;
+    const effectiveKind = kind ?? inferKind(filename, "article");
+    const row = await studyStore().addLibrarySource({
+      kind: effectiveKind,
+      title: str(req.body?.title) ?? humanizeFilename(filename),
+      filename,
+      storedPath,
+      status: "indexing",
+      url: str(req.body?.url),
+      author: str(req.body?.author),
+      year: str(req.body?.year),
+      venue: str(req.body?.venue),
+      citeKey: str(req.body?.citeKey),
+    });
+
+    try {
+      await ingestAllSources();
+    } catch (err) {
+      req.log?.error?.({ err }, "library indexing failed");
+      await studyStore().setLibrarySourceStatus(
+        row.id,
+        "error",
+        "Indexing failed — the source was saved but could not be processed.",
+      );
+    }
+
+    const updated = await studyStore().getLibrarySource(row.id);
+    res.status(201).json({ source: updated ? publicSource(updated) : publicSource(row) });
+  }),
+);
 
 // POST /api/library/sources — add an ebook/notes/article (base64 file) or an
 // external resource (url). Citation metadata is optional; it can be edited
@@ -369,7 +494,7 @@ router.delete(
       res.status(404).json({ error: "Source not found" });
       return;
     }
-    if (row.storedPath) await removeUploadFile(row.storedPath);
+    if (row.storedPath) await removeStoredFile(row.storedPath);
     await db.removeLibrarySource(id);
     try {
       await ingestAllSources();

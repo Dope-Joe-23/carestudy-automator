@@ -12,6 +12,8 @@ Protocol (JSON lines, one object per line):
     draft response ->  {"id": <int>, "draft": "...", "references": [{...}, ...]}
     ingest request ->  {"id": <int>, "op": "ingest", "studyId": <int>, "paths": [<abs file paths>]}
     ingest response -> {"id": <int>, "files": [{"path": ..., "textLength": <int|None>, "error": <str|None>}], "chunks": <int>}
+    viva_bank request ->  {"id": <int>, "op": "viva_bank", "title": {..}, "chapters": [..]}
+    viva_bank response -> {"id": <int>, "bank": {"questions": [{category, question, guidance, tip}, ...]}}
     error response ->  {"id": <int>, "error": "..."}   (request failed, worker stays alive)
     error response ->  {"error": "..."}                  (unparseable line, no id to echo)
 
@@ -27,6 +29,7 @@ from typing import Dict, List, Optional
 sys.path.insert(0, os.path.dirname(__file__))
 from generate import draft_section, load_indexes  # noqa: E402
 from loaders import load_as_text  # noqa: E402
+from viva import generate_viva_bank  # noqa: E402
 from reference_chunker import chunk_reference_text, ref_chunks_to_dicts  # noqa: E402
 from retrieval import SimpleIndex  # noqa: E402
 
@@ -218,6 +221,15 @@ def main() -> None:
                     emit({"id": req.get("id"), "error": "library_ingest requires a sources list"})
                     continue
                 emit({"id": req.get("id"), **ingest_library_sources(sources)})
+                continue
+            if op == "viva_bank":
+                title = req.get("title") or {}
+                chapters = req.get("chapters") or []
+                if not isinstance(title, dict) or not isinstance(chapters, list):
+                    emit({"id": req.get("id"), "error": "viva_bank requires a title object and chapters list"})
+                    continue
+                bank = generate_viva_bank(title, chapters)
+                emit({"id": req.get("id"), "bank": bank})
                 continue
 
             study_id = req.get("studyId")

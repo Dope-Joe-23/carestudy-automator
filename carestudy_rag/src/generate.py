@@ -54,7 +54,7 @@ introduction.
 "(Jarvis, 2020)", "(WHO, 2023)"). Whenever you state a general clinical fact \
 (definition, pathophysiology, drug class, normal range, standard intervention) \
 that comes from a reference chunk, attach that chunk's citation in EXACTLY the \
-format shown in the REFERENCE MATERIAL block, e.g. "(Wikipedia: Pneumonia, 2026)".
+format shown in the REFERENCE MATERIAL block, e.g. "(WHO, 2024)", "(MedlinePlus, 2026)".
 - NEVER fabricate a citation. Cite only sources that appear in the REFERENCE \
 MATERIAL block. Do not invent author names, years, or sources, and do not put \
 a citation on patient-specific facts from the student's notes. If a general \
@@ -121,17 +121,48 @@ CHAPTER_INTRO_FORMAT = (
 )
 
 LITERATURE_REVIEW_FORMAT = (
-    "FORMAT (Literature Review): Structure this review with bold subheadings, "
-    "each followed by a short paragraph or a bulleted list. Use these "
-    "subheadings in this order: **Definition**, **Anatomy and Physiology**, "
-    "**Incidence and Prevalence**, **Causes and Risk Factors**, "
-    "**Pathophysiology**, **Clinical Features**, **Diagnostic Investigations**, "
-    "**Treatment and Management**, **Complications**, **Nursing "
-    "Considerations**. Support key claims with in-text citations from the "
-    "REFERENCE MATERIAL, and prefer bullet lists for enumerations (causes, risk "
-    "factors, complications, nursing considerations). Skip any subheading the "
+    "FORMAT (Literature Review): Write a COMPREHENSIVE, detailed review of the "
+    "disease or condition this chapter is about, matching the depth of the "
+    "sample care studies. Structure it with bold subheadings in this order: "
+    "**Definition**, **Anatomy and Physiology**, **Incidence and Prevalence**, "
+    "**Causes and Risk Factors**, **Pathophysiology**, **Clinical Features**, "
+    "**Diagnostic Investigations**, **Treatment and Management**, "
+    "**Complications**, **Nursing Considerations**. Skip any subheading the "
     "reference material and patient notes do not cover rather than padding."
+    "\n\nSubheadings fall into two styles:"
+    "\n- Narrative subheadings — **Definition**, **Anatomy and Physiology**, "
+    "**Pathophysiology** — are written as substantial paragraphs of at least "
+    "3-5 sentences each: never a single sentence and never a list."
+    "\n- Enumeration subheadings — **Incidence and Prevalence**, **Causes and "
+    "Risk Factors**, **Clinical Features**, **Diagnostic Investigations**, "
+    "**Treatment and Management**, **Complications**, **Nursing "
+    "Considerations** — are written as BULLET LISTS. Present every point as "
+    "its own \"- \" bullet (one bullet per cause, per incidence figure, per "
+    "investigation, per drug class or treatment step, per complication, per "
+    "nursing action) even when the point needs a full explanation. Each bullet "
+    "must be a complete clause or sentence of one to three lines that explains "
+    "the point — never a bare word or short label — and the whole subsection "
+    "stays a bullet list rather than dissolving back into prose paragraphs."
+    "\n\nDepth: every bullet must carry real substance — state the mechanism, "
+    "the normal range, the drug class with examples, the specific investigation, "
+    "the figure — at the level of detail a nursing textbook would provide, and "
+    "spell out the implications for nursing care. The narrative subheadings "
+    "keep the substantial-paragraph depth described above."
+    "\n\nCitations: CITE the reference material aggressively. Attach an in-text "
+    "citation from the REFERENCE MATERIAL to every general clinical statement, "
+    "statistic, definition, drug class, mechanism, or normal range you state "
+    "— e.g. \"(WHO, 2024)\", \"(MedlinePlus, 2026)\". Bullets are statements "
+    "too: cite each bullet exactly as you would a sentence. Aim for at least "
+    "one citation in every subsection and several in the longer ones; a deep "
+    "review reads as an interplay of statement and source. Use the EXACT "
+    "citation formats given in the REFERENCE MATERIAL block, never fabricate a "
+    "citation, and never cite a source that is not in the block."
 )
+
+# A literature review has ten subsections and must be citation-dense, so it
+# retrieves far more reference chunks than a single-section draft — enough
+# material to ground every subheading with citable facts.
+LITERATURE_REVIEW_REFERENCE_K = 12
 
 # Citation metadata loaded from data/reference/citations.json.
 CITATION_MAP: Dict[str, dict] = {}
@@ -448,7 +479,12 @@ def draft_section(
 
     # SimpleIndex.query already returns [] when its matrix is not loaded.
     template_examples = template_index.query(heading, k=k_template)
-    reference_chunks = reference_index.query(patient_notes, k=k_reference)
+    # A literature review covers ten subsections, so it needs far more
+    # reference material than a single-section draft.
+    is_lit = is_literature_review(heading, tabular)
+    reference_chunks = reference_index.query(
+        patient_notes, k=(LITERATURE_REVIEW_REFERENCE_K if is_lit else k_reference)
+    )
     references = build_references(list(library_chunks or []) + reference_chunks)
 
     prompt = build_prompt(
@@ -499,28 +535,48 @@ def draft_section(
         client_kwargs["api_key"] = api_key
 
     client = anthropic.Anthropic(**client_kwargs)
-    response = client.messages.create(
-        model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
-        # The literature review is a long structured essay; a chapter intro is
-        # deliberately short — give each only as much room as it needs.
-        max_tokens=800 if chapter_intro else (2500 if is_literature_review(heading, tabular) else 1500),
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    draft = "".join(block.text for block in response.content if block.type == "text")
+    model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+    # The literature review is a long structured essay; a chapter intro is
+    # deliberately short — give each only as much room as it needs.
+    max_tokens = 800 if chapter_intro else (4500 if is_lit else 1500)
+
+    def call_model() -> str:
+        """One model call; returns the concatenated text blocks ('' when empty)."""
+        response = client.messages.create(
+            model=model,
+            max_tokens=max_tokens,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return "".join(block.text for block in response.content if block.type == "text")
+
+    draft = call_model()
+
+    # Free-tier models occasionally return an empty completion (no text blocks)
+    # on data-heavy sections. Retry once before surfacing an error — a silent
+    # empty draft would otherwise be stored as if it were a real one and the
+    # export would fall back to raw collected fields.
+    if not draft.strip():
+        draft = call_model()
+    if not draft.strip():
+        raise RuntimeError(
+            "The AI model returned an empty response for this section. Please try again."
+        )
 
     # Prose enforcement: if the model still dumped the data as bullets/labels,
     # run one corrective rewrite. The literature review is excluded — its format
     # instruction explicitly wants bulleted enumerations, not prose. On failure
     # the original draft is kept rather than lost — the student can still edit
-    # it by hand.
+    # it by hand — and an empty rewrite never clobbers a real draft.
     if (
         not tabular
-        and not is_literature_review(heading, tabular)
+        and not is_lit
         and _looks_like_data_dump(draft)
     ):
         try:
-            draft = _rewrite_as_prose(client, draft)
+            rewritten = _rewrite_as_prose(client, draft)
+            if rewritten.strip():
+                draft = rewritten
         except Exception as exc:  # keep the original draft; never fail the request
             print(f"[generate] prose rewrite failed, keeping original draft: {exc}", file=sys.stderr)
 

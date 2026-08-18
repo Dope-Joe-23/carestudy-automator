@@ -69,6 +69,98 @@ export const librarySourcesTable = pgTable("library_sources", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ---------------------------------------------------------------------------
+// Studio admins — the only people who can open the studio / order bin
+// (mirrors the SQLite schema in ./index.ts).
+// ---------------------------------------------------------------------------
+
+export const adminsTable = pgTable("admins", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  name: text("name"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const adminSessionsTable = pgTable("admin_sessions", {
+  token: text("token").primaryKey(),
+  adminId: integer("admin_id")
+    .notNull()
+    .references(() => adminsTable.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// Student portal — accounts, sessions, and care-study orders (mirrors the
+// SQLite schema in ./index.ts).
+// ---------------------------------------------------------------------------
+
+export const studentsTable = pgTable("students", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  college: text("college").notNull(),
+  program: text("program").notNull(),
+  year: text("year"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const studentSessionsTable = pgTable("student_sessions", {
+  token: text("token").primaryKey(),
+  studentId: integer("student_id")
+    .notNull()
+    .references(() => studentsTable.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const studentOrdersTable = pgTable(
+  "student_orders",
+  {
+    id: serial("id").primaryKey(),
+    studentId: integer("student_id")
+      .notNull()
+      .references(() => studentsTable.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    diagnosis: text("diagnosis"),
+    college: text("college").notNull(),
+    program: text("program").notNull(),
+    notes: text("notes"),
+    status: text("status").notNull().default("submitted"),
+    note: text("note"),
+    producedStudyId: integer("produced_study_id"),
+    deliveryFilename: text("delivery_filename"),
+    deliveryPath: text("delivery_path"),
+    deliverySize: integer("delivery_size"),
+    /** Generated viva question bank (JSON) — cached on the order once produced. */
+    vivaBank: text("viva_bank"),
+    /** "none" | "pending" | "ready" | "error". */
+    vivaStatus: text("viva_status").notNull().default("none"),
+    vivaError: text("viva_error"),
+    vivaUpdatedAt: timestamp("viva_updated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("student_orders_student_id_idx").on(table.studentId)],
+);
+
+export const studentOrderFilesTable = pgTable(
+  "student_order_files",
+  {
+    id: serial("id").primaryKey(),
+    orderId: integer("order_id")
+      .notNull()
+      .references(() => studentOrdersTable.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    filename: text("filename").notNull(),
+    storedPath: text("stored_path").notNull(),
+    mime: text("mime").notNull(),
+    size: integer("size").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("student_order_files_order_id_idx").on(table.orderId)],
+);
+
 export type Study = typeof studiesTable.$inferSelect;
 export type InsertStudy = typeof studiesTable.$inferInsert;
 export type StudyVersion = typeof studyVersionsTable.$inferSelect;
@@ -77,3 +169,10 @@ export type StudyFile = typeof studyFilesTable.$inferSelect;
 export type InsertStudyFile = typeof studyFilesTable.$inferInsert;
 export type LibrarySource = typeof librarySourcesTable.$inferSelect;
 export type InsertLibrarySource = typeof librarySourcesTable.$inferInsert;
+export type Student = typeof studentsTable.$inferSelect;
+export type InsertStudent = typeof studentsTable.$inferInsert;
+export type StudentSession = typeof studentSessionsTable.$inferSelect;
+export type StudentOrder = typeof studentOrdersTable.$inferSelect;
+export type InsertStudentOrder = typeof studentOrdersTable.$inferInsert;
+export type StudentOrderFile = typeof studentOrderFilesTable.$inferSelect;
+export type InsertStudentOrderFile = typeof studentOrderFilesTable.$inferInsert;

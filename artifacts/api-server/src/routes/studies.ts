@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { getStudyStore, type StudyRow, type StudyStore } from "@workspace/db";
-import { removeStudyArtifacts } from "../lib/uploads";
+import { removeStoredFile, removeStudyArtifacts } from "../lib/uploads";
 
 const router: IRouter = Router();
 
@@ -152,12 +152,17 @@ router.delete(
       res.status(400).json({ error: "Invalid study id" });
       return;
     }
-    const removed = await studyStore().remove(id);
+    const db = studyStore();
+    // Grab the upload references before the rows cascade away.
+    const files = await db.listFiles(id);
+    const removed = await db.remove(id);
     if (!removed) {
       res.status(404).json({ error: "Study not found" });
       return;
     }
-    // DB rows cascade; disk uploads + the study's retrieval index go too.
+    // DB rows cascade; bucket objects + disk uploads + the study's retrieval
+    // index go too.
+    for (const file of files) await removeStoredFile(file.storedPath);
     await removeStudyArtifacts(id);
     res.status(204).end();
   }),

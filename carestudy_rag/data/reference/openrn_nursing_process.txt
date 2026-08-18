@@ -1,0 +1,468 @@
+SOURCE: Open RN Nursing Fundamentals, chapter 4 — Nursing Process
+TITLE: Nursing process
+URL: https://wtcs.pressbooks.pub/nursingfundamentals/
+LICENSE: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+RETRIEVED: 2026-08-14
+
+
+4.1 Nursing Process Introduction
+Learning Objectives
+Use the nursing process to provide client care
+Describe components of a client-centered plan of care
+Differentiate priorities of client care
+Describe the roles of the RN, LPN/VN, and UAP in providing client care
+Have you ever wondered how a nurse can receive a quick handoff report from another nurse and immediately begin providing care for a client they previously knew nothing about? How do they know what to do? How do they prioritize and make a plan?
+Nurses know how to analyze pertinent information and use the nursing process as a critical thinking model to guide client care. The nursing process becomes a road map for the actions and interventions that nurses implement to optimize their clients’ well-being and health. This chapter will explain how to use the nursing process as standards of professional nursing practice to provide safe, client-centered care.
+definition
+
+4.2 Basic Concepts
+Before learning how to use the nursing process, it is important to understand basic concepts concerning how critical thinking relates to nursing practice. Let’s take a deeper look at how nurses think.
+Critical Thinking and Clinical Reasoning
+Nurses make decisions while providing client care by using critical thinking and clinical reasoning. Critical thinking is a broad term used in nursing that includes “reasoning about clinical issues such as teamwork, collaboration, and streamlining workflow.” Using critical thinking means that nurses take extra steps to maintain client safety and don’t just “follow orders.” It also means the accuracy of client information is validated and plans for caring for clients are based on their needs, current clinical practice, and research.
+“Critical thinkers” possess certain attitudes that foster rational thinking. These attitudes are as follows:
+Independence of thought: Thinking on your own
+Fair-mindedness: Treating every viewpoint in an unbiased, unprejudiced way
+Insight into egocentricity and sociocentricity: Thinking of the greater good and not just thinking of yourself. Knowing when you are thinking of yourself (egocentricity) and when you are thinking or acting for the greater good (sociocentricity)
+Intellectual humility: Recognizing your intellectual limitations and abilities
+Nonjudgmental: Using professional ethical standards and not basing your judgments on your own personal or moral standards
+Integrity: Being honest and demonstrating strong moral principles
+Perseverance: Persisting in doing something despite it being difficult
+Confidence: Believing in yourself to complete a task or activity
+Interest in exploring thoughts and feelings: Wanting to explore different ways of knowing
+Curiosity: Asking “why” and wanting to know more
+Clinical reasoning is defined as, “A complex cognitive process that uses formal and informal thinking strategies to gather and analyze client information, evaluate the significance of this information, and weigh alternative actions.” To make sound judgments about client care, nurses must generate alternatives, weigh them against the evidence, and choose the best course of action. The ability to clinically reason develops over time and is based on knowledge and experience.
+Inductive and Deductive Reasoning and Clinical Judgment
+Inductive and deductive reasoning are important critical thinking skills. They help the nurse use clinical judgment when implementing the nursing process.
+Inductive reasoning involves noticing cues, making generalizations, and creating hypotheses based on specific information or incidents. Cues are data that fall outside of expected findings that give the nurse a hint or indication of a client’s potential problem or condition. The nurse organizes these cues into patterns and creates a generalization. A generalization is a judgment formed from a set of facts, cues, and observations and is similar to gathering pieces of a jigsaw puzzle into patterns until the whole picture becomes more clear. Based on generalizations created from patterns of data, the nurse creates a hypothesis regarding a client problem. A hypothesis is a proposed explanation for a situation. It attempts to explain the “why” behind the problem that is occurring. If a “why” is identified, then a solution can begin to be explored.
+No one can draw conclusions without first noticing cues. Paying close attention to a client, the environment, and interactions with family members is critical for inductive reasoning. As you work to improve your inductive reasoning, begin by first noticing details about the things around you. A nurse is similar to the detective looking for cues in Figure 4.1. Be mindful of your five primary senses: the things that you hear, feel, smell, taste, and see. Nurses need strong inductive reasoning patterns and be able to take action quickly, especially in emergency situations. They can see how certain objects or events form a pattern (i.e., generalization) that indicates a common problem (i.e., hypothesis).
+Example: A nurse assesses a client and finds the surgical incision site is red, warm, and tender to the touch. The nurse recognizes these cues form a pattern of signs of infection and creates a hypothesis that the incision has become infected. The provider is notified of the client’s change in condition, and a new prescription is received for an antibiotic. This is an example of the use of inductive reasoning in nursing practice.
+Figure 4.1 Inductive Reasoning Includes Looking for Cues
+Deductive reasoning is another type of critical thinking that is referred to as “top-down thinking.” Deductive reasoning relies on using a general standard or rule to create a strategy. Deductive reasoning relies on a general statement or hypothesis – sometimes called a premise or standard – that is held to be true. The premise is used to reach a specific, logical conclusion. Nurses use standards set by their state’s Nurse Practice Act, federal regulations, the American Nursing Association, professional organizations, and their employer to make decisions about client care and solve problems.
+Example: Based on research findings, hospital leaders determine clients recover more quickly if they receive adequate rest. The hospital creates a policy for quiet zones at night by initiating no overhead paging, promoting low-speaking voices by staff, and reducing lighting in the hallways. (See Figure 4.2). The nurse further implements this policy by organizing care for clients that promotes periods of uninterrupted rest at night. This is an example of deductive thinking because the intervention is applied to all clients regardless if they have difficulty sleeping or not.
+Figure 4.2 Deductive Reasoning Example: Implementing Interventions for a Quiet Zone Policy
+Clinical judgment is the result of critical thinking and clinical reasoning using inductive and deductive reasoning. Clinical judgment is defined by the National Council of State Boards of Nursing (NCSBN) as, “The observed outcome of critical thinking and decision-making. It uses nursing knowledge to observe and assess presenting situations, identify a prioritized client concern, and generate the best possible evidence-based solutions in order to deliver safe client care.” The NCSBN administers the national licensure exam (NCLEX) that evaluates the decision-making ability of nursing graduates and sets a minimum standard for safe, competent nursing care by entry-level licensed nurses. The NCLEX uses the NCSBN Clinical Judgment Measurement Model (NCJMM) to measure clinical judgment.
+Evidence-based practice (EBP) is defined by the American Nurses Association (ANA) as, “A lifelong problem-solving approach that integrates the best evidence from well-designed research studies and evidence-based theories; clinical expertise and evidence from assessment of the health care consumer’s history and condition, as well as health care resources; and client, family, group, community, and population preferences and values.”
+Nursing Process
+The nursing process is a critical thinking model based on a systematic approach to client-centered care. Nurses use the nursing process to perform clinical reasoning and make clinical judgments when providing client care. The nursing process is based on the Standards of Professional Nursing Practice established by the American Nurses Association (ANA). These standards are authoritative statements of the actions and behaviors that all registered nurses (RNs), regardless of role, population, specialty, and setting, are expected to perform competently. The mnemonic ADOPIE is an easy way to remember the ANA Standards and the nursing process. Each letter refers to the six components of the nursing process: Assessment, Diagnosis, Outcomes Identification, Planning, Implementation, and Evaluation.
+The nursing process is a continuous, cyclical process that is constantly adapting to the client’s current health status. See Figure 4.3a for an illustration of the nursing process.
+Figure 4.3a The Nursing Process
+The ANA’s Standards of Professional Nursing Practice associated with each component of the nursing process are described below.
+Assessment
+The “Assessment” Standard of Practice is defined as, “The registered nurse collects pertinent data and information relative to the health care consumer’s health or the situation.” A registered nurse uses a systematic method to collect and analyze client data. Assessment includes physiological data, as well as psychological, sociocultural, spiritual, economic, and lifestyle data. For example, a nurse’s assessment of a hospitalized client in pain includes recognizing cues such as the client’s response to pain, such as the inability to get out of bed, refusal to eat, withdrawal from family members, or anger directed at hospital staff.
+Licensed practical/vocational nurses (LPN/VNs) assist with gathering data according to their state’s scope of practice, but do not analyze data because this is outside their scope of practice. The “Assessment” component of the nursing process is further described in the “Assessment” section of this chapter.
+Diagnosis
+The “Diagnosis” Standard of Practice is defined as, “The registered nurse analyzes the assessment data to determine actual or potential diagnoses, problems, and issues.” A nursing diagnosis is the nurse’s clinical judgment about the response from the client to actual or potential health conditions or needs. Nursing diagnoses are the bases for the nurse’s care plan and are different than medical diagnoses.
+Analyzing assessment data and formulating a nursing diagnosis is outside the scope of practice for LPN/VNs, and as such, they do not assist with this phase of the nursing process. The “Diagnosis” component of the nursing process is further described in the “Diagnosis” section of this chapter.
+Outcome Identification
+The “Outcome Identification” Standard of Practice is defined as, “The registered nurse identifies expected outcomes for a plan individualized to the health care consumer or the situation.” The nurse sets measurable and achievable short- and long-term goals and specific outcomes in collaboration with the client based on their assessment data and nursing diagnoses.
+Outcome identification is outside the scope of practice of LPN/VNs, and as such, they do not assist with this phase of the nursing process. The “Outcome Identification” component of the nursing process is further described in the “Outcome Identification” section of this chapter.
+Planning
+The “Planning” Standard of Practice is defined as, “The registered nurse develops a collaborative plan encompassing strategies to achieve expected outcomes.” Assessment data, diagnoses, and goals are used to select evidence-based nursing interventions customized to each client’s needs in order to achieve their previously established goals and outcomes. Nursing interventions are planned and documented by RNs in the client’s nursing care plan so that nurses, as well as other health professionals, can refer to it for continuity of care.
+The “Planning” component of the nursing process is further described in the “Planning” section of this chapter.
+Nursing Care Plans
+Creating nursing care plans is a part of the “Planning” step of the nursing process. A nursing care plan is a type of documentation that demonstrates the individualized planning and delivery of nursing care for each specific client using the nursing process. RNs create nursing care plans so that the care provided to the client across shifts is consistent among health care personnel. Some interventions can be delegated to LPN/VNs or trained Unlicensed Assistive Personnel (UAPs) with RN supervision.
+Creating the nursing care plan is outside the scope of practice, and as such, the LPN/VNs do not perform this task, although they may contribute to it. Developing nursing care plans and implementing appropriate delegation are further discussed under the “Planning” and “Implementation of Interventions” sections of this chapter.
+Implementation
+The “Implementation” Standard of Practice is defined as, “The nurse implements the identified plan.” Nursing interventions are implemented or delegated with supervision according to the care plan to assure continuity of care across multiple nurses and health professionals caring for the client. Interventions are documented in the client’s electronic medical record as they are completed. LPN/VNs implement interventions contained in the nursing care plan, provided they are within their scope of practice. The LPN/VN is responsible for documenting the interventions they perform in the client’s medical record.
+The “Implementation” Standard of Professional Practice also includes the subcategories “Coordination of Care” and “Health Teaching and Health Promotion” to promote health and a safe environment.
+The “Implementation” component of the nursing process is further described in the “Implementation of Interventions” section of this chapter.
+Evaluation
+The “Evaluation” Standard of Practice is defined as, “The registered nurse evaluates progress toward attainment of goals and outcomes.” During evaluation, nurses reassess the client and compare the findings against established outcomes to determine the effectiveness of the interventions and overall nursing care plan. During this phase, RNs ask, “Were outcomes met? Are any modifications required for the nursing care plan?” Both the client’s status and the effectiveness of the nursing care plan are continuously evaluated and modified as needed.
+Evaluating and modifying the nursing care plan is outside the scope of practice of LPN/VNs, although they can assist in gathering assessment data to assist the RN in performing this step of the nursing process. The “Evaluation” component of the nursing process is further described in the “Evaluation” section of this chapter.
+Benefits of Using the Nursing Process
+Using the nursing process has many benefits for nurses, clients, and other members of the health care team. The benefits of using the nursing process include the following:
+Promotes quality client care
+Decreases omissions and duplications
+Provides a guide for all staff involved to provide consistent and responsive care
+Encourages collaborative management of a client’s health care problems
+Improves client safety
+Improves client satisfaction
+Identifies a client’s goals and strategies to attain them
+Increases the likelihood of achieving positive client outcomes
+Saves time, energy, and frustration by creating a care plan that is accessible to all staff caring for a client
+By using these components of the nursing process as a critical thinking model, nurses plan outcomes and interventions that are customized to the client’s specific needs, ensure the interventions are evidence-based, and evaluate the effectiveness of interventions in meeting the client’s needs.
+NCSBN Clinical Judgment Measurement Model
+The NCSBN Clinical Judgment Measurement Model (NCJMM) complements the nursing process, but it is a model that assesses an NCLEX candidate’s clinical judgment. Terminology used by this model includes recognize cues, analyze cues, prioritize hypotheses, generate solutions, take action, and evaluate outcomes. See Figure 4.3b and Table 4.2 for comparisons of NCJMM terms and the nursing process. , ,
+Figure 4.3b Comparison of the Steps of the NCJMM to the Nursing Process
+Table 4.2 Comparison of the NCJMM to the Nursing Process
+NCSBN Clinical Judgment Skill
+Description
+Corresponding Step of the Nursing Process
+Recognize Cues
+What data is clinically significant?
+Determining what client findings are significant, most important, and of immediate concern to the nurse (i.e., identifying “relevant cues”).
+Assessment
+Analyze Cues
+What does the data mean?
+Analyzing data to determine if it is “expected” or “unexpected” or “normal” or “abnormal” for this client at this time according to their age, development, and clinical status.
+Making a clinical judgment concerning the client’s “human response to health conditions/life processes, or a vulnerability for that response”; also referred to as “forming a hypothesis.”
+Diagnosis
+(Analysis of Data)
+Prioritize Hypotheses
+What hypotheses should receive priority attention?
+Ranking client conditions and problems according to urgency, complexity, and time.
+Planning
+Generate Solutions
+What should be done?
+Planning individualized interventions that meet the desired outcomes for the client; may include gathering additional assessment data.
+Planning
+Take Action
+What will I do now?
+Implementing interventions that are safe and most appropriate for the client’s current priority conditions and problems.
+Implementation
+Evaluate Outcomes
+Did the interventions work?
+Comparing actual client outcomes with desired client outcomes to determine effectiveness of care and making appropriate revisions to the nursing care plan.
+Evaluation
+Learning activities are incorporated throughout this book to help students practice answering NCLEX Next Generation-style test questions.
+Review Scenario A in the following box for an example of a nurse using the nursing process and NCJMM skills while providing client care.
+Client Scenario A: Using the Nursing Process
+A nurse is caring for a hospitalized client with a medical diagnosis of heart failure who has a prescription to receive furosemide 80mg IV every morning. The nurse uses critical thinking according to the nursing process and the NCJMM before administering the prescribed medication:
+Assessment/Recognize Cues: During the morning assessment, the nurse notes that the client has a blood pressure of 98/60, heart rate of 100, respirations of 18, and a temperature of 98.7F.
+Diagnosis/Analyze Cues: The nurse reviews the medical record for the client’s vital signs baseline and observes the blood pressure trend is around 110/70 and the heart rate in the 80s.
+Planning/Prioritize Hypothesis: The nurse recognizes cues (assessment data) that form a pattern related to fluid imbalance and hypothesizes that the client may be dehydrated.
+Planning/Generate Solutions: The nurse gathers additional information and notes the client’s weight has decreased four pounds since yesterday. The nurse talks with the client and validates the hypothesis when the client reports that their mouth feels like cotton, and they feel light-headed. By using critical thinking and clinical judgment, the nurse diagnoses the client with the nursing diagnosis Fluid Volume Deficit and plans interventions for reestablishing fluid balance.
+Implementation/Take Action: The nurse withholds the administration of IV furosemide and contacts the health care provider to discuss the client’s current fluid status. After contacting the provider, the nurse initiates additional nursing interventions to promote oral intake and closely monitors hydration status.
+Evaluation/Evaluate Outcomes: By the end of the shift, the nurse evaluates the client status and determines that fluid balance has been restored.
+In Scenario A, the nurse is using clinical judgment and not just “following orders” to administer the Lasix as scheduled. The nurse assesses the client, recognizes and analyzes cues, creates a hypothesis regarding the fluid status, plans and implements nursing interventions, and evaluates outcomes. While performing these steps, the nurse promotes client safety by contacting the provider before administering a medication that could cause harm to the client at this time.
+Holistic Nursing Care
+Using the nursing process and clinical judgment while implementing evidence-based practices is referred to as the “science of nursing.” Before getting deeper into the science of nursing in the remainder of this chapter, it is important to discuss the “art of nursing” that relies on holistic care provided in a compassionate and caring manner using the nursing process.
+The American Nurses Association (ANA) defines nursing as, “Nursing integrates the art and science of caring and focuses on the protection, promotion, and optimization of health and human functioning; prevention of illness and injury; facilitation of healing; and alleviation of suffering through compassionate presence. Nursing is the diagnosis and treatment of human responses and advocacy in the care of individuals, families, groups, communities, and populations in the recognition of the connection of all humanity.”
+The ANA further describes nursing as a learned profession built on a core body of knowledge that integrates both the art and science of nursing. The art of nursing is defined as, “Unconditionally accepting the humanity of others, respecting their need for dignity and worth, while providing compassionate, comforting care.”
+Nurses care for individuals holistically, including their emotional, spiritual, psychosocial, cultural, and physical needs. They consider problems, issues, and needs that the person experiences as a part of a family and a community as they use the nursing process. Review a scenario illustrating holistic nursing care provided to a client and their family in the following box.
+Holistic Nursing Care Scenario
+A single mother brings her child to the emergency room for ear pain and a fever. The physician diagnoses the child with an ear infection and prescribes an antibiotic. The mother is advised to make a follow-up appointment with their primary provider in two weeks. While providing discharge teaching, the nurse discovers that the family is unable to afford the expensive antibiotic prescribed and cannot find a primary care provider in their community they can reach by a bus route. The nurse asks a social worker to speak with the mother about affordable health insurance options and available providers in her community and follows up with the prescribing physician to obtain a prescription for a less expensive generic antibiotic. In this manner, the nurse provides holistic care and advocates for improved health for the child and their family.
+Review how to provide culturally responsive care and reduce health disparities in the “Diverse Patients” chapter.
+Caring and the Nursing Process
+The American Nurses Association (ANA) states, “The act of caring is foundational to the practice of nursing.” Successful use of the nursing process requires the development of a care relationship with the client. A care relationship is a mutual relationship that requires the development of trust between both parties. This trust is often referred to as the development of rapport and underlies the art of nursing. While establishing a caring relationship, the whole person is assessed, including the individual’s beliefs, values, and attitudes, while also acknowledging the vulnerability and dignity of the client and family. Assessing and caring for the whole person takes into account the physical, mental, emotional, and spiritual aspects of being a human being. Caring interventions can be demonstrated in simple gestures such as active listening, making eye contact, using therapeutic touch, and providing emotional support while respecting their cultural beliefs associated with caring behaviors. See Figure 4.4 for an image of a nurse using touch as a therapeutic communication technique to communicate caring.
+Review more about the caring relationship and how to communicate with clients using therapeutic communication techniques like active listening in the “Communication” chapter.
+Dr. Jean Watson is a nurse theorist who has published many works on the art and science of caring in the nursing profession. Her theory of human caring sought to balance the cure orientation of medicine, giving nursing its unique disciplinary, scientific, and professional standing with itself and the public. Dr. Watson’s caring philosophy encourages nurses to be authentically present with their clients while creating a healing environment.
+Read more about Dr. Watson’s Caring Science and Human Caring Theory.
+Figure 4.4 Touch as a Therapeutic Communication Technique
+Now that we have discussed basic concepts related to the nursing process, as well as the science and art of nursing, let’s look more deeply at each component of the nursing process in the following sections.
+Klenke-Borgmann, L., Cantrell, M. A., & Mariani, B. (2020). Nurse educator’s guide to clinical judgment: A review of conceptualization, measurement, and development. Nursing Education Perspectives, 41(4), 215-221. doi: 10.1097/01.NEP.0000000000000669. PMID: 32569111. https://pubmed.ncbi.nlm.nih.gov/32569111/ ↵
+Klenke-Borgmann, L., Cantrell, M. A., & Mariani, B. (2020). Nurse educator’s guide to clinical judgment: A review of conceptualization, measurement, and development. Nursing Education Perspectives, 41(4), 215-221. ↵
+Powers, L., Pagel, J., & Herron, E. (2020). Nurse preceptors and new graduate success. American Nurse Journal, 15(7), 37-39. https://www.myamericannurse.com/nurse-preceptors-and-new-graduate-success/ ↵
+“The Detective” by paurian is licensed under CC BY 2.0 ↵
+“In the Quiet Zone…” by C.O.D. Library is licensed under CC BY-NC-SA 2.0 ↵
+NCSBN. (n.d.). NCSBN clinical judgment measurement model. https://www.ncsbn.org/14798.htm ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+“The Nursing Process” by Kim Ernstmeyer at Chippewa Valley Technical College is licensed under CC BY 4.0 ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (n.d.). The nursing process. https://www.nursingworld.org/practice-policy/workforce/what-is-nursing/the-nursing-process/ ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (n.d.). The nursing process. https://www.nursingworld.org/practice-policy/workforce/what-is-nursing/the-nursing-process/ ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (n.d.). The nursing process. https://www.nursingworld.org/practice-policy/workforce/what-is-nursing/the-nursing-process/ ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (3rd ed.). American Nurses Association. ↵
+American Nurses Association. (n.d.) The nursing process. https://www.nursingworld.org/practice-policy/workforce/what-is-nursing/the-nursing-process/ ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (n.d.). The nursing process. https://www.nursingworld.org/practice-policy/workforce/what-is-nursing/the-nursing-process/ ↵
+“Nursing Process and NCJMM” by Tami Davis is licensed under CC BY 4.0 ↵
+NCSBN (n.d.) NCSBN Clinical Judgment Measurement Model. https://www.ncsbn.org/14798.htm ↵
+Ignativicius, V., & Silvestri, L. (2022). Preparing for the Next-Generation NCLEX (NGN): A “how-to” step-by-step faculty resource manual. Elsevier. https://evolve.elsevier.com/education/wp-content/uploads/sites/2/NGN_FacultyGuide_Final.pdf ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+“Patient Image in LTC.JPG” by ARISE project is licensed under CC BY 4.0 ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+Walivaara, B., Savenstedt, S., & Axelsson, K. (2013). Caring relationships in home-based nursing care - registered nurses’ experiences. The Open Journal of Nursing, 7, 89-95. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3722540/pdf/TONURSJ-7-89.pdf ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+“hospice-1793998_1280.jpg” by truthseeker08 is licensed under CC0 ↵
+Watson Caring Science Institute. (n.d.). Watson Caring Science Institute. Jean Watson, PHD, RN, AHN-BC, FAAN, (LL-AAN). https://www.watsoncaringscience.org/jean-bio/ ↵
+definition
+
+4.3 Assessment
+Assessment is the first step of the nursing process (and the first Standard of Practice by the American Nurses Association). This standard is defined as, “The registered nurse collects pertinent data and information relative to the health care consumer’s health or the situation.” This includes collecting “pertinent data related to the health and quality of life in a systematic, ongoing manner, with compassion and respect for the wholeness, inherent dignity, worth, and unique attributes of every person, including, but not limited to, demographics, environmental and occupational exposures, social determinants of health, health disparities, physical, functional, psychosocial, emotional, cognitive, spiritual/transpersonal, sexual, sociocultural, age-related, environmental, and lifestyle/economic assessments.” See Figure 4.5a for an illustration of how the Assessment phase of the nursing process corresponds to the NCSBN Clinical Judgment Measurement Model (NCJMM).
+Figure 4.5a Comparison of the Assessment Phase of the Nursing Process to the NCJMM
+Nurses assess clients to gather information, then use critical thinking to analyze the data and recognized cues. Data is considered subjective or objective and can be collected from multiple sources.
+Subjective Assessment Data
+Subjective data is information obtained from the client and/or family members and offers important cues from their perspectives. When documenting subjective data stated by a client, it should be in quotation marks and start with verbiage such as, “The client reports…” It is vital for the nurse to establish rapport with a client to obtain accurate, valuable subjective data regarding the mental, emotional, and spiritual aspects of their condition.
+There are two types of subjective information, primary and secondary. Primary data is information provided directly by the client. Clients are the best source of information about their bodies and feelings, and the nurse who actively listens to a client will often learn valuable information while also promoting a sense of well-being. Information collected from a family member, chart, or other sources is known as secondary data. Family members can provide important information, especially for individuals with memory impairments, infants, children, or when clients are unable to speak for themselves.
+See Figure 4.5b for an illustration of a nurse obtaining subjective data and establishing rapport after obtaining permission from the client to sit on the bed.
+Example of Subjective Data
+An example of how to document subjective data obtained during a client assessment is, “The client reports, ‘My pain is a level 2 on a 1-10 scale.’”
+Figure 4.5b Obtaining Subjective Data in a Care Relationship
+Objective Assessment Data
+Objective data is anything that you can observe through your sense of hearing, sight, smell, and touch while assessing the client. Objective data is reproducible, meaning another person can easily obtain the same data. Examples of objective data are vital signs, physical examination findings, and laboratory results. See Figure 4.6 for an image of a nurse performing a physical examination.
+Example of Objective Data
+An example of documented objective data obtained during a client assessment is, “The client’s radial pulse is 58 and regular, and their skin feels warm and dry.”
+Figure 4.6 Physical Examination
+Sources of Assessment Data
+There are three sources of assessment data: interview, physical examination, and review of laboratory or diagnostic test results.
+Interviewing
+Interviewing includes asking the client and their family members questions, listening, and observing verbal and nonverbal communication. Reviewing the chart prior to interviewing the client may eliminate redundancy in the interview process and allows the nurse to hone in on the most significant areas of concern or need for clarification. However, if information in the chart does not make sense or is incomplete, the nurse should use the interview process to verify data with the client.
+After performing client identification, the best way to initiate a caring relationship is to introduce yourself to the client and explain your role. Share the purpose of your interview and the approximate time it will take. When beginning an interview, it may be helpful to start with questions related to the client’s medical diagnoses. Medical diagnoses are diseases, disorders, or injuries diagnosed by a physician or advanced health care provider, such as a nurse practitioner or physician’s assistant. Reviewing the medical diagnoses allows the nurse to gather information about how they have affected the client’s functioning, relationships, and lifestyle. Listen carefully and ask for clarification when something isn’t clear to you. Clients may not volunteer important information because they don’t realize it is important for their care. By using critical thinking and active listening, you may discover valuable cues that are important to provide safe, quality nursing care. Sometimes nursing students can feel uncomfortable having difficult conversations or asking personal questions due to generational or other cultural differences. Don’t shy away from asking about information that is important to know for safe client care. Most clients will be grateful that you cared enough to ask and listen.
+Be alert and attentive to how the client answers questions, as well as when they do not answer a question. Nonverbal communication and body language can be cues to important information that requires further investigation. A keen sense of observation is important. To avoid making inappropriate inferences, the nurse should validate cues for accuracy. For example, a nurse may make an inference that a client appears depressed when the client avoids making eye contact during an interview. However, upon further questioning, the nurse may discover that the client’s cultural background believes direct eye contact to be disrespectful and this is why they are avoiding eye contact. To read more information about communicating with clients, review the “Communication” chapter of this book.
+Physical Examination
+A physical examination is a systematic data collection method of the body that uses the techniques of inspection, auscultation, palpation, and percussion. Inspection is the observation of a client’s anatomical structures. Auscultation is listening to sounds, such as heart, lung, and bowel sounds, created by organs using a stethoscope. Palpation is the use of touch to evaluate organs for size, location, or tenderness. Percussion is an advanced physical examination technique typically performed by providers where body parts are tapped with fingers to determine their size and if fluid or air are present. Detailed physical examination procedures of various body systems can be found in the Open RN Nursing Skills, 2e textbook with a head-to-toe checklist in Appendix C. Physical examination also includes the collection and analysis of vital signs.
+Registered nurses (RNs) complete the initial physical examination and analyze the findings as part of the nursing process. Collection of follow-up physical examination data can be delegated to licensed practical nurses/licensed vocational nurses (LPNs/LVNs), or measurements such as vital signs and weight may be delegated to trained unlicensed assistive personnel (UAP) when appropriate to do so. However, the RN remains responsible for supervising these tasks, analyzing the findings, and ensuring they are documented.
+A physical examination can be performed as a comprehensive head-to-toe assessment or as a focused assessment related to a particular condition or problem. Assessment data is documented in the client’s medical record, either in their electronic medical record (EMR) or their paper chart, depending upon agency policies and procedures.
+Reviewing Laboratory and Diagnostic Test Results
+Reviewing laboratory and diagnostic test results provides relevant and useful information related to the needs of the client. Understanding how normal and abnormal results affect client care is important when implementing the nursing care plan and administering provider prescriptions. If results cause concern, it is the nurse’s responsibility to notify the provider and verify the appropriateness of prescriptions based on the client’s current status before implementing them.
+Types of Assessments
+Several types of nursing assessment are used in clinical practice:
+Primary Survey: Used during every client encounter to briefly evaluate level of consciousness, airway, breathing, and circulation and implement emergency care if needed.
+Admission Assessment: A comprehensive assessment completed when a client is admitted to a facility that involves assessing a large amount of information using an organized approach.
+Ongoing Assessment: In acute care agencies such as hospitals, a head-to-toe assessment is completed and documented at least once every shift. Any changes in client condition are reported to the health care provider.
+Focused Assessment: Focused assessments are used to reevaluate the status of a previously diagnosed problem.
+Time-lapsed Reassessment: Time-lapsed reassessments are used in long-term care facilities when three or more months have elapsed since the previous assessment to evaluate progress on previously identified outcomes.
+Putting It Together
+Review Scenario C in the following box to apply concepts of assessment to a client scenario.
+Scenario C
+Ms. J. is a 74-year-old woman who is admitted directly to the medical unit after visiting her physician because of shortness of breath, increased swelling in her ankles and calves, and fatigue. Her medical history includes hypertension (30 years), coronary artery disease (18 years), heart failure (2 years), and type 2 diabetes (14 years). She takes 81 mg of aspirin every day, metoprolol 50 mg twice a day, furosemide 40 mg every day, and metformin 2,000 mg every day.
+Ms. J.’s vital sign values on admission were as follows:
+Blood Pressure: 162/96 mm Hg
+Heart Rate: 88 beats/min
+Oxygen Saturation: 91% on room air
+Respiratory Rate: 28 breaths/minute
+Temperature: 97.8 degrees F orally
+Her weight is up 10 pounds since the last office visit three weeks prior. The client states, “I am so short of breath” and “My ankles are so swollen I have to wear my house slippers.” Ms. J. also shares, “I am so tired and weak that I can’t get out of the house to shop for groceries,” and “Sometimes I’m afraid to get out of bed because I get so dizzy.” She confides, “I would like to learn more about my health so I can take better care of myself.”
+The physical assessment findings of Ms. J. are bilateral basilar crackles in the lungs and bilateral 2+ pitting edema of the ankles and feet. Laboratory results indicate a decreased serum potassium level of 3.4 mEq/L.
+As the nurse completes the physical assessment, the client’s daughter enters the room. She confides, “We are so worried about mom living at home by herself when she is so tired all the time!”
+Critical Thinking Questions
+Identify relevant subjective data.
+Identify relevant objective data.
+Provide an example of secondary data.
+Answers are located in the Answer Key at the end of the book.
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+“Assessment in the Nursing Process Compared to the NCJMM” by Tami Davis is licensed under CC BY 4.0 ↵
+“361341143-huge.jpg” by Monkey Business Images is used under license from Shutterstock.com ↵
+“13394660711603.jpg” by CDC/Amanda Mills is in the Public Domain ↵
+Gordon, M. (2008). Assess notes: Nursing assessment and diagnostic reasoning. F.A. Davis Company. ↵
+“grandmother-1546855_960_720.jpg” by vendie4u is licensed under CC0 ↵
+definition
+
+4.5 Outcome Identification
+Outcome Identification is the third step of the nursing process (and the third Standard of Practice by the American Nurses Association). This standard is defined as, “The registered nurse identifies expected outcomes for a plan individualized to the health care consumer or the situation.” The RN collaborates with the health care consumer, interprofessional team, and others to identify expected outcomes integrating the health care consumer’s culture, values, and ethical considerations. Expected outcomes are documented as measurable goals with a time frame for attainment. Outcome identification is performed by RNs and is outside the scope of practice for LPN/VNs, but LPN/VNs must be aware of expected outcomes for clients in their nursing care plan.
+An outcome is a measurable behavior demonstrated response to nursing interventions. Outcomes should be identified before nursing interventions are planned. After nursing interventions are implemented, the nurse will evaluate if the outcomes were met in the time frame indicated for that client.
+Outcome identification includes setting short- and long-term goals and then creating specific expected outcome statements for each nursing diagnosis. See Figure 4.9a for an illustration of how the Outcome Identification phase of the nursing process correlates to the NCSBN Clinical Judgment Model.
+Figure 4.9a Comparison of Outcome Identification to the NCJMM
+Short-Term and Long-Term Goals
+Nursing care should always be individualized and client centered. No two people are the same, and neither should nursing care plans be the same for two people. Goals and outcomes should be tailored specifically to each client’s needs, values, and cultural beliefs. Clients and family members should be included in the goal-setting process when feasible. Involving clients and family members promotes awareness of identified needs, ensures realistic goals, and motivates their participation in the treatment plan to achieve the mutually agreed upon goals and live life to the fullest with their current condition.
+The nursing care plan is a road map used to guide client care so that all health care providers are moving toward the same client goals. Goals are broad statements of purpose that describe the overall aim of care. Goals can be short- or long-term. The time frame for short- and long-term goals is dependent on the setting in which the care is provided. For example, in a critical care area, a short-term goal might be set to be achieved within an 8-hour nursing shift, and a long-term goal might be in 24 hours. In contrast, in an outpatient setting, a short-term goal might be set to be achieved within one month and a long-term goal might be within six months.
+A nursing goal is the overall direction in which the client must progress to improve the problem/nursing diagnosis and is often the opposite of the problem.
+Example of a Broad Goal
+Refer to Scenario C in the “Assessment” section of this chapter. Ms. J. had a priority nursing diagnosis of Excess Fluid Volume. A broad goal would be, “Ms. J. will achieve a state of fluid balance.”
+Expected Outcomes
+Goals are broad, general statements, but outcomes are specific and measurable. Expected outcomes are statements of measurable action for the client within a specific time frame that are responsive to nursing interventions. Nurses may create expected outcomes independently or refer to classification systems for assistance.
+Client-Centered
+Outcome statements are always client-centered. They should be developed in collaboration with the client and individualized to meet a client’s unique needs, values, and cultural beliefs. They should start with the phrase “The client will…” Outcome statements should be directed at resolving the defining characteristics the client is exhibiting for the nursing diagnosis. Additionally, the outcome must be something the client would like to achieve.
+Outcome statements should contain five components easily remembered using the “SMART” mnemonic:
+Specific
+Measurable
+Attainable/Action oriented
+Relevant/Realistic
+Timeframe
+See Figure 4.9b for an image of the SMART components of outcome statements. Each of these components is further described in the following subsections.
+Figure 4.9b SMART Components of Outcome Statements
+Specific
+Outcome statements should state precisely what is to be accomplished. See examples of a not specific and a specific outcome in the following box.
+Example
+Not specific outcome: “The client will increase the amount of exercise.”
+Revised as a specific outcome: “The client will participate in a bicycling exercise session daily for 30 minutes.”
+Additionally, only one action should be included in each expected outcome. See examples in the following box.
+Example
+More than one action: “The client will walk 50 feet three times a day with standby assistance of one and will shower in the morning until discharge” is actually two goals written as one. The outcome of ambulation should be separate from showering for precise evaluation. For instance, the client could shower but not ambulate, which would make this outcome statement very difficult to effectively evaluate.
+Revised to create two outcome statements so each can be measured: The client will walk 50 feet three times a day with standby assistance of one until discharge. The client will shower every morning until discharge.
+Measurable
+Measurable outcomes have numeric parameters or other concrete methods of judging whether the outcome was met. It is important to use objective data to measure outcomes. If terms like “acceptable” or “normal” are used in an outcome statement, it is difficult to determine whether the outcome is attained. Refer to Figure 4.10 for examples of verbs that are measurable and not measurable in outcome statements.
+Figure 4.10 Measurable Outcomes
+Examples of a non-measurable outcome revised to a measurable outcome is described in the following box.
+Example
+Not measurable outcome: “The client will drink adequate fluid amounts every shift.”
+Revised into a measurable outcome: “The client will drink 24 ounces of fluids during every day shift (0600-1400).”
+Action-Oriented and Attainable
+Outcome statements should be written so that there is a clear action to be taken by the client or significant others. This means that the outcome statement should include a verb. Refer to Figure 4.11 for examples of action verbs.
+Figure 4.11 Action Verbs
+An example of a non-action-oriented outcome revised to an action-oriented outcome is provided in the following box.
+Example
+Not action-oriented outcome: “The client will get increased physical activity.”
+Revised into an action-oriented outcome: “The client will list three types of aerobic activity that he would enjoy completing every week.”
+Realistic and Relevant
+Realistic outcomes consider the client’s physical and mental condition; their cultural and spiritual values, beliefs, and preferences; and their socioeconomic status in terms of their ability to attain these outcomes. Consideration should be also given to disease processes and the effects of conditions such as pain and decreased mobility on the client’s ability to reach expected outcomes. Other barriers to outcome attainment may be related to health literacy or lack of available resources. Outcomes should always be reevaluated and revised for attainability as needed. If an outcome is not attained, it is commonly because the original time frame was too ambitious, or the outcome was not realistic for the client.
+See an example of how to revise an outcome that is not realistic into a realistic outcome in the following box.
+Example
+Not realistic outcome: “The client will jog one mile every day when starting the exercise program.”
+Revised into a realistic outcome: “The client will walk ½ mile three times a week for two weeks.”
+Time Limited
+Outcome statements should include a time frame for evaluation. The time frame depends on the intervention and the client’s current condition. Some outcomes may need to be evaluated every shift, whereas other outcomes may be evaluated daily, weekly, or monthly. During the evaluation phase of the nursing process, the outcomes will be assessed according to the time frame specified for evaluation. If it has not been met, the nursing care plan should be revised.
+See an example an outcome that is not time limited revised into a time limited outcome in the following box.
+Example
+Not time limited: “The client will stop smoking cigarettes.”
+Time limited: “The client will complete the smoking cessation plan by December 12, 2025.“
+Putting It Together
+An example of a SMART outcome for Scenario C is provided in the following box.
+Example of a SMART Expected Outcome
+Refer to Scenario C in the “Assessment” section of this chapter. Ms. J.’s priority nursing diagnosis statement was Excess Fluid Volume related to excess fluid intake as manifested by bilateral basilar crackles in the lungs, bilateral 2+ pitting edema of the ankles and feet, an increase weight of ten pounds, and the client reports, “My ankles are so swollen.”
+The broad goal was, “Ms. J. will achieve a state of fluid balance.”
+An example of a SMART expected outcome to achieve this broad goal is, “The client will have clear bilateral lung sounds within the next 24 hours.”
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021-2023, Twelfth Edition. Thieme Publishers New York. ↵
+“Outcome Identification in the Nursing Process Compared to the NCJMM” by Tami Davis is licensed by CC BY 4.0 ↵
+Campbell, J. (2020). SMART criteria. Salem Press Encyclopedia. ↵
+“SMART-goals.png” by Dungdm93 is licensed under CC BY-SA 4.0 ↵
+“Measurable Outcomes” by Valerie Palarski for Chippewa Valley Technical College is licensed under CC BY 4.0 ↵
+“Action Verbs” by Valerie Palarski for Chippewa Valley Technical College is licensed under CC BY 4.0 ↵
+definition
+
+4.6 Planning
+Planning is the fourth step of the nursing process (and the fourth Standard of Practice by the American Nurses Association). This standard is defined as, “The registered nurse develops a collaborative plan encompassing strategies to achieve expected outcomes.” The RN develops an individualized, holistic, evidence-based plan in partnership with the health care consumer, family, significant others, and interprofessional team. Elements of the plan are prioritized for client safety and optimal client outcomes. The plan is modified according to the ongoing assessment of the health care consumer’s response and other indicators. The plan is documented using standardized language or terminology.
+After expected outcomes are identified, the nurse begins planning nursing interventions to implement. Nursing interventions are evidence-based actions that the nurse performs to achieve client outcomes. Just as a provider makes medical diagnoses and writes prescriptions to improve the client’s medical condition, a nurse formulates nursing diagnoses and plans nursing interventions to resolve client problems. Nursing interventions should focus on eliminating or reducing the related factors (etiology) of the nursing diagnoses when possible. Nursing interventions, goals, and expected outcomes are written in the nursing care plan for continuity of care across shifts, nurses, and health professionals. Planning is outside the scope of practice for LPN/VNs, although they may assist in performing planned interventions during the Implementation phase according to their scope of practice. Refer to Figure 4.9a in the “Outcome Identification” section for a illustration of how the Planning phase of the nursing process correlates to NCSBN’s Clinical Judgment Measurement Model.
+Planning Nursing Interventions
+You might be asking yourself, “How do I know what evidence-based nursing interventions to include in the nursing care plan?” There are several sources that nurses and nursing students can use to select nursing interventions. Many agencies have care planning tools and references included in the electronic health record that are easily documented in the client chart. Nurses can also refer to other care planning books or sources such as the Nursing Interventions Classification (NIC) system. Based on research and input from the nursing profession, NIC categorizes and describes nursing interventions that are regularly evaluated and updated. Interventions included in NIC are considered evidence-based nursing practices. The RN is responsible for using clinical judgment to make decisions about which interventions are best suited to meet an individualized client’s needs.
+Direct and Indirect Care
+Nursing interventions are considered direct care or indirect care. Direct care refers to interventions that are carried out by having personal contact with clients. Examples of direct care interventions are wound care, repositioning, and ambulation. Indirect care interventions are performed when the nurse provides assistance in a setting other than with the client. Examples of indirect care interventions are attending care conferences, documenting, and communicating about client care with other providers.
+Classification of Nursing Interventions
+There are three types of nursing interventions: independent, dependent, and collaborative. (See Figure 4.12 for an image of a nurse collaborating with the health care team when planning interventions.)
+Figure 4.12 Collaborative Nursing Interventions
+Independent Nursing Interventions
+Any intervention that the nurse can independently provide without obtaining a prescription or consulting another member of the health care team is considered an independent nursing intervention. An example of an independent nursing intervention is when the nurse monitors the client’s 24-hour intake/output record for trends because of a risk for imbalanced fluid volume. Another example of independent nursing interventions is the therapeutic communication that a nurse uses to assist clients to cope with a new medical diagnosis.
+Example of an Independent Nursing Intervention
+Refer to Scenario C in the “Assessment” section of this chapter. Ms. J. was diagnosed with Excess Fluid Volume. An example of an evidence-based independent nursing intervention is, “The nurse will reposition the client with dependent edema frequently, as appropriate.” The nurse would individualize this evidence-based intervention to the client and include agency policy by stating, “The nurse will reposition the client every two hours.”
+Dependent Nursing Interventions
+Dependent nursing interventions require a prescription or order before they can be performed. Prescriptions are interventions specifically related to medication as directed by an authorized primary health care provider. An order is an intervention, remedy, or treatment as directed by an authorized primary health care provider. A primary health care provider is a member of the health care team (usually a physician, advanced practice nurse, or physician’s assistant) who is licensed and authorized to formulate prescriptions on behalf of the client. For example, administering medication is a dependent nursing intervention. The nurse incorporates dependent interventions into the client’s overall care plan by associating each intervention with the appropriate nursing diagnosis.
+Example of a Dependent Nursing Intervention
+Refer to Scenario C in the “Assessment” section of this chapter. Ms. J. was diagnosed with Excess Fluid Volume. An example of a dependent nursing intervention is, “The nurse will administer scheduled diuretics as prescribed.”
+Collaborative Nursing Interventions
+Collaborative nursing interventions are actions that the nurse carries out in collaboration with other health team members, such as physicians, social workers, respiratory therapists, physical therapists, and occupational therapists. These actions are developed in consultation with other health care professionals and incorporate their professional viewpoint.
+Example of a Collaborative Nursing Intervention
+Refer to Scenario C in the “Assessment” section of this chapter. Ms. J. was diagnosed with Excess Fluid Volume. An example of a collaborative nursing intervention is the nurse consulting with a respiratory therapist when the client has deteriorating oxygen saturation levels. The respiratory therapist plans oxygen therapy and obtains a prescription from the provider. The nurse would document “The nurse will manage oxygen therapy in collaboration with the respiratory therapist” in the care plan.
+Individualization of Interventions
+It is vital for the planned interventions to be individualized to the client to be successful. For example, adding prune juice to the breakfast meal of a client with constipation will only work if the client likes to drink the prune juice. If the client does not like prune juice, then this intervention should not be included in the care plan. Collaboration with the client, family members, significant others, and the interprofessional team is essential for selecting effective interventions. There is not a set number of interventions required to be included in a nursing care plan, but instead, the number of quality individualized interventions is based on what is required to meet the specific, identified outcomes established for that client.
+Creating Nursing Care Plans
+Nursing care plans are created by registered nurses (RNs). Documentation of individualized nursing care plans are legally required in long-term care facilities by the Centers for Medicare and Medicaid Services (CMS) and in hospitals by The Joint Commission. CMS guidelines state, “Residents and their representative(s) must be afforded the opportunity to participate in their care planning process and to be included in decisions and changes in care, treatment, and/or interventions. This applies both to initial decisions about care and treatment, as well as the refusal of care or treatment. Facility staff must support and encourage participation in the care planning process. This may include ensuring that residents, families, or representatives understand the comprehensive care planning process, holding care planning meetings at the time of day when a resident is functioning at their best and client representatives can be present, providing sufficient notice in advance of the meeting, scheduling these meetings to accommodate a resident’s representative (such as conducting the meeting in-person, via a conference call, or video conferencing), and planning enough time for information exchange and decision-making. A resident has the right to select or refuse specific treatment options before the care plan is instituted.” The Joint Commission conceptualizes the care planning process as the structuring framework for coordinating communication that will result in safe and effective care.
+Many facilities have established standardized nursing care plans with lists of possible interventions that can be customized for each specific client. Other facilities require the nurse to develop each care plan independently. Whatever the format, nursing care plans should be individualized to meet the specific and unique needs of each client. See Figure 4.13 for an image of a standardized care plan.
+Figure 4.13 Standardized Care Plan
+Nursing care plans created in nursing school can also be in various formats such as concept maps or tables. Some are fun and creative, while others are more formal. Appendix B contains a template that can be used for creating nursing care plans.
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021-2023, Twelfth Edition. Thieme Publishers New York. ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+“400845937-huge.jpg” by Flamingo Images is used under license from Shutterstock.com ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+NCSBN. (2024). Test plans. https://www.nclex.com/test-plans.page ↵
+Vera, M. (2020). Nursing care plan (NCP): Ultimate guide and database. https://nurseslabs.com/nursing-care-plans/#:~:text=Collaborative%20interventions%20are%20actions%20that,to%20gain%20their%20professional%20viewpoint ↵
+Centers for Medicare and Medicaid Services. (2017). State operations manual: Appendix PP - Guidance to surveyors for long term care facilities. https://www.cms.gov/Regulations-and-Guidance/Guidance/Manuals/downloads/som107ap_pp_guidelines_ltcf.pdf ↵
+The Joint Commission (n.d.). Standards and guides pertinent to nursing practice. https://www.jointcommission.org/resources/for-nurses/nursing-resources/ ↵
+“Figure 3-3. An example of a nursing care plan in an Australian residential aged care home..png” by NurseRecord is licensed under CC BY-SA 4.0 ↵
+definition
+
+4.7 Implementation of Interventions
+Implementation is the fifth step of the nursing process (and the fifth Standard of Practice by the American Nurses Association). This standard is defined as, “The registered nurse implements the identified plan.” The RN may delegate planned interventions after considering the circumstance, person, task, communication, supervision, and evaluation, as well as the state Nurse Practice Act, federal regulation, and agency policy.
+Implementation of interventions requires the RN to use critical thinking and clinical judgment. After the initial plan of care is developed, continual reassessment of the client is necessary to detect any changes in the client’s condition requiring modification of the plan. The need for continual client reassessment underscores the dynamic nature of the nursing process and is crucial to providing safe care.
+During the implementation phase of the nursing process, the nurse prioritizes planned interventions, assesses client safety while implementing interventions, delegates interventions as appropriate, and documents interventions performed. LPN/VNs have an active role in the Implementation phase, provided the interventions falls within the LPN/VN scope of practice. See Figure 4.14 for an illustration of how the Implementation phase of the nursing process correlates to NCSBN’s Clinical Judgment Measurement Model.
+Figure 4.14 Implementation Phase of the Nursing Process Compared to the NCSBN Clinical Judgment Measurement Model
+Prioritizing Implementation of Interventions
+Prioritizing implementation of interventions follows a similar method as to prioritizing nursing diagnoses. Maslow’s Hierarchy of Needs and the ABCs of airway, breathing, and circulation are used to establish top priority interventions. When possible, least invasive actions are usually preferred due to the risk of injury from invasive options. Read more about methods for prioritization under the “Diagnosis” section of this chapter.
+The potential impact on future events, especially if a task is not completed at a certain time, is also included when prioritizing nursing interventions. For example, if a client is scheduled to undergo a surgical procedure later in the day, the nurse prioritizes initiating a NPO (nothing by mouth) prescription prior to completing pre-op client education about the procedure. The rationale for this decision is that if the client eats food or drinks water, the surgery time will be delayed. Knowing and understanding the client’s purpose for care, current situation, and expected outcomes are necessary to accurately prioritize interventions.
+Client Safety
+It is essential to consider client safety when implementing interventions. At times, clients may experience a change in condition that makes a planned nursing intervention or provider prescription no longer safe to implement. For example, an established nursing care plan for a client states, “The nurse will ambulate the client 100 feet three times daily.” However, during assessment this morning, the client reports feeling dizzy today, and their blood pressure is 90/60. Using critical thinking and clinical judgment, the nurse decides to not implement the planned intervention of ambulating the client. This decision and supporting assessment findings should be documented in the client’s chart and also communicated during the shift handoff report, along with appropriate notification of the provider of the client’s change in condition.
+Implementing interventions goes far beyond implementing provider prescriptions and completing tasks identified on the nursing care plan and must focus on client safety. As frontline providers, nurses are in the position to stop errors before they reach the client.
+In 2000 the Institute of Medicine (IOM) issued the historic, groundbreaking report titled To Err Is Human: Building a Safer Health System. The report stated that as many as 98,000 people die in U.S. hospitals each year as a result of preventable medical errors. To Err Is Human broke the silence that previously surrounded the consequences of medical errors and set a national agenda for reducing medical errors and improving client safety through the design of a safer health system. In 2007 the IOM published a follow-up report titled Preventing Medication Errors and reported that more than 1.5 million Americans are injured every year in American hospitals, and the average hospitalized client experiences at least one medication error each day. This report emphasized actions that health care systems could take to improve medication safety.
+Read additional information about specific actions that nurses can take to prevent medication errors; go to the “Preventing Medication Errors” section of the “Legal/Ethical” chapter of the Open RN Nursing Pharmacology, 2e textbook.
+The Quality and Safety Education for Nurses (QSEN) project began in 2005 to assist in preparing future nurses to continuously improve the quality and safety of the health care systems in which they work. The vision of the QSEN project is to “inspire health care professionals to put quality and safety as core values to guide their work.” Nurses and nursing students are expected to participate in quality improvement (QI) initiatives by identifying gaps where change is needed and assisting in implementing initiatives to resolve these gaps. Quality improvement is defined as, “The combined and unceasing efforts of everyone – health care professionals, clients and their families, researchers, payers, planners and educators – to make the changes that will lead to better client outcomes (health), better system performance (care), and better professional development (learning).”
+Delegation of Interventions
+While implementing interventions, RNs may elect to delegate nursing tasks. Delegation is defined by the American Nurses Association as, “The assignment of the performance of activities or tasks related to client care to unlicensed assistive personnel or licensed practical nurses (LPNs) while retaining accountability for the outcome.” RNs are accountable for determining the appropriateness of the delegated task according to the condition of the client and the circumstance; the communication provided to an appropriately trained LPN or UAP; the level of supervision provided; and the evaluation and documentation of the task completed. The RN must also be aware of the state Nurse Practice Act, federal regulations, and agency policy before delegating. The RN cannot delegate responsibilities requiring clinical judgment. See the following box for information regarding legal requirements associated with delegation according to the Nurse Practice Act.
+Delegation According to the Wisconsin Nurse Practice Act
+“During the supervision and direction of delegated acts a Registered Nurse shall do all of the following:
+(a) Delegate tasks commensurate with educational preparation and demonstrated abilities of the person supervised.
+(b) Provide direction and assistance to those supervised.
+(c) Observe and monitor the activities of those supervised.
+(d) Evaluate the effectiveness of acts performed under supervision.
+The standard of practice for Licensed Practical Nurses in Wisconsin states, “In the performance of acts in basic patient situations, the LPN shall, under the general supervision of an RN or the direction of a provider:
+(a) Accept only patient care assignments which the LPN is competent to perform.
+(b) Provide basic nursing care. Basic nursing care is defined as care that can be performed following a defined nursing procedure with minimal modification in which the responses of the patient to the nursing care are predictable.
+(c) Record nursing care given and report to the appropriate person changes in the condition of a patient.
+(d) Consult with a provider in cases where an LPN knows or should know a delegated act may harm a patient.
+(e) Perform the following other acts when applicable:
+Assist with the collection of data.
+Assist with the development and revision of a nursing care plan.
+Reinforce the teaching provided by an RN provider and provide basic health care instruction.
+Participate with other health team members in meeting basic patient needs.”
+Read additional details about the scope of practice of registered nurses (RNs) and licensed practical nurses (LPNs) in Wisconsin’s Nurse Practice Act in Chapter N 6 Standards of Practice.
+Read more about the American Nurses Association’s Principles for Delegation.
+Table 4.7 outlines general guidelines for delegating nursing tasks in the state of Wisconsin according to the role of the health care team member.
+Table 4.7 General Guidelines for Delegating Nursing Tasks
+RN
+LPN
+CNA
+Assessment
+Complete client assessment
+Assist with the collection of data for stable clients
+Collect measurements such as weight, input/output, and vital signs in stable clients
+Diagnosis
+Analyze assessment data and create nursing diagnoses
+Not applicable
+Not applicable
+Outcome Identification
+Identify SMART client outcomes
+Not applicable
+Not applicable
+Planning
+Plan nursing interventions
+Assist with the development of a nursing care plan
+Not applicable
+Implementation of Interventions
+Implement independent, dependent, and collaborative nursing interventions; delegate interventions as appropriate, with supervision; document interventions performed
+Participate with other health team members in meeting basic client needs and document interventions provided
+Reinforce the teaching provided by an RN provider and provide basic health care instruction
+Implement and document delegated interventions associated with basic nursing care such as providing assistance in ambulating or tasks within their scope of practice
+Evaluation
+Evaluate the attainment of outcomes and revise the nursing care plan as needed
+Contribute data regarding the achievement of client outcomes; assist in the revision of a nursing care plan
+Not applicable
+Documentation of Interventions
+As interventions are performed, they must be documented in the client’s record in a timely manner. As previously discussed in the “Ethical and Legal Issues” subsection of the “Basic Concepts” section, lack of documentation is considered a failure to communicate and a basis for legal action. A basic rule of thumb is if an intervention is not documented, it is considered not done in a court of law. It is also important to document administration of medication and other interventions in a timely manner to prevent errors that can occur due to delayed documentation time.
+Coordination of Care and Health Teaching/Health Promotion
+ANA’s Standard of Professional Practice for Implementation also includes the standards 5A Coordination of Care and 5B Health Teaching and Health Promotion. Coordination of Care includes competencies such as organizing the components of the plan, engaging the client in self-care to achieve goals, and advocating for the delivery of dignified and holistic care by the interprofessional team. Health Teaching and Health Promotion is defined as, “Employing strategies to teach and promote health and wellness.” Client education is an important component of nursing care and should be included during every client encounter. For example, client education may include teaching about side effects while administering medications or teaching clients how to self-manage their conditions at home.
+Putting It Together
+See an example of implementation in the following box.
+Example of Implementation
+Refer to Scenario C in the “Assessment” section of this chapter. The nurse implemented the nursing care plan documented in Appendix C. Interventions related to breathing were prioritized. Administration of the diuretic medication was completed first, and lung sounds were monitored frequently for the remainder of the shift. Weighing the client before breakfast was delegated to the CNA. The client was educated about her medications and methods to use to reduce peripheral edema at home. All interventions were documented in the electronic medical record (EMR).
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+“Implementation Phase of the Nursing Process Compared to the NCSBN Clinical Judgment Model” by Tami Davis is licensed by CC BY 4.0. ↵
+Institute of Medicine (US) Committee on Quality of Health Care in America, Kohn, L. T., Corrigan, J. M., & Donaldson, M. S. (Eds.). (2000). To err is human: Building a safer health system. National Academies Press. https://pubmed.ncbi.nlm.nih.gov/25077248/ ↵
+Institute of Medicine. (2007). Preventing medication errors. National Academies Press. https://doi.org/10.17226/11623. ↵
+QSEN Institute. (n.d.). Project overview: The evolution of the quality and safety education for nurses (QSEN) initiative. http://qsen.org/about-qsen/project-overview/ ↵
+Batalden, P. B., & Davidoff, F. (2007). What is "quality improvement" and how can it transform healthcare?. BMJ Quality & Safety, 16(1), 2–3. https://doi.org/10.1136/qshc.2006.022046 ↵
+American Nurses Association. (2013). ANA’s principles for delegation by registered nurses to unlicensed assistive personnel (UAP). American Nurses Association. https://www.nursingworld.org/~4af4f2/globalassets/docs/ana/ethics/principlesofdelegation.pdf ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+Wisconsin Administrative Code. (2024). Chapter N 6 standards of practice for registered nurses and licensed practical nurses. https://docs.legis.wisconsin.gov/code/admin_code/n/6.pdf ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+definition
+
+4.8 Evaluation
+Evaluation is the sixth step of the nursing process (and the sixth Standard of Practice by the American Nurses Association). This standard is defined as, “The registered nurse evaluates progress toward attainment of goals and outcomes.” Both the client status and the effectiveness of the nursing care must be continuously evaluated, and the care plan modified as needed.
+Evaluation focuses on the effectiveness of the nursing interventions by reviewing the expected outcomes to determine if they were met by the time frames indicated. During the evaluation phase, nurses use critical thinking to analyze reassessment data and determine if a client’s expected outcomes have been met, partially met, or not met by the time frames established. If outcomes are not met or only partially met by the time frame indicated, the care plan should be revised. Reassessment should occur every time the nurse interacts with a client, discusses the care plan with others on the interprofessional team, or reviews updated laboratory or diagnostic test results. Nursing care plans should be updated as higher priority goals emerge. The results of the evaluation must be documented in the client’s medical record. Evaluation is outside the scope of practice for LPN/VNs, but they may assist in collecting reassessment data for the RN to evaluate.
+Ideally, when the planned interventions are implemented, the client will respond positively, and the expected outcomes are achieved. However, when interventions do not assist in progressing the client toward the expected outcomes, the nursing care plan must be revised to more effectively address the needs of the client These questions can be used as a guide when revising the nursing care plan:
+Did anything unanticipated occur?
+Has the client’s condition changed?
+Were the expected outcomes and their time frames realistic?
+Are the nursing diagnoses accurate for this client at this time?
+Are the planned interventions appropriately focused on supporting outcome attainment?
+What barriers were experienced as interventions were implemented?
+Does ongoing assessment data indicate the need to revise diagnoses, outcome criteria, planned interventions, or implementation strategies?
+Are different interventions required?
+See Figure 4.15 for a comparison of the Evaluation phase of the nursing process to the NCSBN Clinical Judgment Model.
+4.15 Comparison of the Evaluation Phase of the Nursing Process to the NCSBN Clinical Judgment Model
+Putting It Together
+See an example of the Evaluation phase in the following box.
+Example of Evaluation
+Refer to Scenario C in the “Assessment” section of this chapter and Appendix C. The nurse evaluates the client’s progress toward achieving the expected outcomes.
+For the nursing diagnosis Excess Fluid Volume, the nurse evaluated four expected outcomes to determine if they were met during the time frames indicated:
+The client will report decreased dyspnea within the next 8 hours.
+The client will have clear lung sounds within the next 24 hours.
+The client will have decreased edema within the next 24 hours.
+The client’s weight will return to baseline by discharge.
+Evaluation of the client condition on Day 1 included the following data: “The client reported decreased shortness of breath, and there were no longer crackles in the lower bases of the lungs. Weight decreased by 1 kg, but 2+ edema continued in ankles and calves.” Based on this data, the nurse evaluated the expected outcomes as “Partially Met” and revised the care plan with two new interventions:
+Request prescription for TED hose from provider.
+Elevate client’s legs when sitting in chair.
+For the second nursing diagnosis, Risk for Falls, the nurse evaluated the outcome criteria as “Met” based on the evaluation, “The client verbalizes understanding and is appropriately calling for assistance when getting out of bed. No falls have occurred.”
+The nurse will continue to reassess the client’s progress according to the care plan during hospitalization and make revisions to the care plan as needed. Evaluation of the care plan is documented in the client’s medical record.
+American Nurses Association. (2021). Nursing: Scope and standards of practice (4th ed.). American Nurses Association. ↵
+American Nurses Association. (n.d.) The nursing process. https://www.nursingworld.org/practice-policy/workforce/what-is-nursing/the-nursing-process/ ↵
+“Evaluation Phase of the Nursing Process Compared to the NCSBN Clinical Judgment Model” by Tami Davis is licensed by CC BY 4.0. ↵

@@ -1,59 +1,16 @@
 Reference library sources
 ========================================
-Retrieved: 2026-08-09
-License: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
-Source: Wikipedia (https://www.wikipedia.org/)
-
-- Pneumonia (7249 words) -> pneumonia.txt
-  https://en.wikipedia.org/wiki/Pneumonia
-- Hypertension (5927 words) -> hypertension.txt
-  https://en.wikipedia.org/wiki/Hypertension
-- Diabetes mellitus type 2 (4628 words) -> diabetes_type_2.txt
-  https://en.wikipedia.org/wiki/Diabetes_mellitus_type_2
-- Sickle cell disease (8206 words) -> sickle_cell_disease.txt
-  https://en.wikipedia.org/wiki/Sickle_cell_disease
-- Malaria (10688 words) -> malaria.txt
-  https://en.wikipedia.org/wiki/Malaria
-- Appendicitis (4893 words) -> appendicitis.txt
-  https://en.wikipedia.org/wiki/Appendicitis
-- Asthma (6221 words) -> asthma.txt
-  https://en.wikipedia.org/wiki/Asthma
-- Urinary tract infection (4066 words) -> urinary_tract_infection.txt
-  https://en.wikipedia.org/wiki/Urinary_tract_infection
-- Peptic ulcer disease (4166 words) -> peptic_ulcer_disease.txt
-  https://en.wikipedia.org/wiki/Peptic_ulcer_disease
-- Iron-deficiency anemia (4329 words) -> iron_deficiency_anemia.txt
-  https://en.wikipedia.org/wiki/Iron-deficiency_anemia
-- Tuberculosis (8615 words) -> tuberculosis.txt
-  https://en.wikipedia.org/wiki/Tuberculosis
-- Myocardial infarction (7202 words) -> myocardial_infarction.txt
-  https://en.wikipedia.org/wiki/Myocardial_infarction
-- Ceftriaxone (1776 words) -> ceftriaxone.txt
-  https://en.wikipedia.org/wiki/Ceftriaxone
-- Paracetamol (4973 words) -> paracetamol.txt
-  https://en.wikipedia.org/wiki/Paracetamol
-- Amoxicillin (2123 words) -> amoxicillin.txt
-  https://en.wikipedia.org/wiki/Amoxicillin
-- Metformin (5135 words) -> metformin.txt
-  https://en.wikipedia.org/wiki/Metformin
-- Furosemide (1851 words) -> furosemide.txt
-  https://en.wikipedia.org/wiki/Furosemide
-- Artemether/lumefantrine (902 words) -> artemether_lumefantrine.txt
-  https://en.wikipedia.org/wiki/Artemether/lumefantrine
-- Folic acid (6104 words) -> folic_acid.txt
-  https://en.wikipedia.org/wiki/Folic_acid
-- Insulin (medication) (7057 words) -> insulin_medication.txt
-  https://en.wikipedia.org/wiki/Insulin_(medication)
-- Nursing process (1170 words) -> nursing_process.txt
-  https://en.wikipedia.org/wiki/Nursing_process
-- Nursing diagnosis (1826 words) -> nursing_diagnosis.txt
-  https://en.wikipedia.org/wiki/Nursing_diagnosis
+The bundled library contains only authoritative, openly licensed medical
+references — WHO fact sheets and the WHO Model Formulary, MedlinePlus health
+topics (public domain), and the Open RN nursing textbook. Wikipedia articles
+were removed in August 2026 in favour of these sources.
 
 WHO fact sheets
 ========================================
 Retrieved: 2026-08-12
 License: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
 Source: World Health Organization (https://www.who.int/news-room/fact-sheets)
+Refresh: python scripts_fetch_who.py
 
 - Asthma (2026) -> who_asthma.txt
   https://www.who.int/news-room/fact-sheets/detail/asthma
@@ -72,5 +29,56 @@ Source: World Health Organization (https://www.who.int/news-room/fact-sheets)
 - Anaemia (2025) -> who_anaemia.txt
   https://www.who.int/news-room/fact-sheets/detail/anaemia
 
-Note: WHO fact sheets are CC BY-NC-SA 3.0 IGO. Re-run
-`python scripts_fetch_who.py` to refresh them or pick up newer editions.
+WHO Model Formulary monographs
+========================================
+Retrieved: 2026-08-14
+License: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+Source: WHO Model Formulary 2008 (https://www.who.int/publications/i/item/9789241547659)
+Refresh: python scripts_fetch_who_formulary.py
+Note: each file is one monograph (uses, contraindications, precautions,
+dosage, adverse effects) extracted from the 634-page formulary PDF hosted on
+IRIS (https://iris.who.int/handle/10665/44053). All eight drugs are on the WHO
+Model List of Essential Medicines. The 2008 edition is the latest published.
+
+- Ceftriaxone -> formulary_ceftriaxone.txt
+- Paracetamol -> formulary_paracetamol.txt
+- Amoxicillin -> formulary_amoxicillin.txt
+- Metformin -> formulary_metformin.txt
+- Furosemide -> formulary_furosemide.txt
+- Artemether + lumefantrine -> formulary_artemether_lumefantrine.txt
+- Folic acid -> formulary_folic_acid.txt
+- Insulin (soluble + intermediate, with section 18.5 introduction) -> formulary_insulin.txt
+
+MedlinePlus health topics
+========================================
+Retrieved: 2026-08-14
+License: Public domain — U.S. federal government work
+  (https://medlineplus.gov/about/using/usingcontent/)
+Source: U.S. National Library of Medicine (https://medlineplus.gov/)
+Refresh: python scripts_fetch_medlineplus.py
+Note: only the NLM-authored "Summary" section of each page is bundled; the
+link-list sections (Start Here, Diagnosis and Tests, ...) point at third-party
+organizations and are intentionally excluded.
+
+- Appendicitis -> medlineplus_appendicitis.txt
+  https://medlineplus.gov/appendicitis.html
+- Urinary tract infections -> medlineplus_urinary_tract_infection.txt
+  https://medlineplus.gov/urinarytractinfections.html
+- Peptic ulcer (stomach ulcer) -> medlineplus_peptic_ulcer.txt
+  https://medlineplus.gov/pepticulcer.html
+- Heart attack (myocardial infarction) -> medlineplus_myocardial_infarction.txt
+  https://medlineplus.gov/heartattack.html
+
+Open RN — Nursing Fundamentals
+========================================
+Retrieved: 2026-08-14
+License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+Source: Open RN, Nursing Fundamentals 2e, WisTech Open
+  (https://wtcs.pressbooks.pub/nursingfundamentals/)
+Refresh: python scripts_fetch_openrn.py
+Note: chapter 4 "Nursing Process". NANDA-I handbooks remain copyrighted and
+must still be excerpted by the student; these chapters cover the process and
+the diagnosis step in an openly licensed nursing textbook.
+
+- Nursing process (sections 4.1-4.3, 4.5-4.8) -> openrn_nursing_process.txt
+- Nursing diagnosis (section 4.4) -> openrn_nursing_diagnosis.txt

@@ -1,0 +1,84 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Amoxicillin
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-08-14
+
+
+Amoxicillin
+
+Capsule or tablet: 250 mg; 500 mg (anhydrous).
+
+Powder for oral liquid: 125 mg (anhydrous)/5 ml.
+
+Uses: urinary tract infections, upper respiratory tract infections, bronchitis;
+
+pneumonia; otitis media; dental abscess and other oral infections;
+
+osteomyelitis; Lyme disease; endocarditis prophylaxis; post-splenectomy
+
+prophylaxis; gynaecological infections; gonorrhoea; anthrax; Helicobacter
+
+pylori  eradication (section 17.1).
+
+Contraindications:  hypersensitivity to penicillins (see introductory note above).
+
+Precautions:  history of allergy to penicillins (see introductory note above);
+
+renal impairment (Appendix 4); erythematous rash common in glandular
+
+fever, cytomegalovirus infection, chronic lymphatic leukaemia, and
+
+sometimes in HIV infection; maintain adequate hydration with high doses
+
+(risk of crystalluria); pregnancy (Appendix 2) and breastfeeding
+
+(Appendix 3); interactions : Appendix 1.
+
+Dose:
+
+Infections due to sensitive organisms, by mouth , ADULT  and CHILD  over
+
+10 years, 250 mg every 8 hours, doubled in severe infections; CHILD  up to
+
+10 years, 125 mg every 8 hours, doubled in severe infections.
+
+Severe or recurrent purulent respiratory tract infections, by mouth , ADULT, 3 g
+
+every 12 hours.
+
+Pneumonia, by mouth , ADULT, 0.5–1 g every 8 hours
+
+Dental abscess (short course), by mouth , ADULT, 3 g repeated once after 8 hours.
+
+Urinary tract infections (short course),  by mouth , ADULT, 3 g repeated once after
+
+10–12 hours.
+
+Uncomplicated genital chlamydial infection, non-gonococcal urethritis, by
+
+mouth,  ADULT, 500 mg every 8 hours for 7 days.
+
+Gonorrhoea (short course), by mouth , ADULT, 3 g as a single dose (with
+
+probenecid, 1 g).
+
+Otitis media, by mouth , ADULT, 1 g every 8 hours; CHILD, 40 mg/kg daily in
+
+3 divided doses (maximum, 3 g daily).
+
+Adverse effects: nausea and vomiting, diarrhoea; rash (hypersensitivity or toxic
+
+response; may be indicative of a serious reaction – discontinue treatment);
+
+hypersensitivity reactions including urticaria, angioedema, anaphylaxis,
+
+serum sickness-like reactions, haemolytic anaemia, and interstitial nephritis
+
+(see also introductory note above); rarely antibiotic-associated colitis;
+
+neutropenia, thrombocytopenia, coagulation disorders; rarely central
+
+nervous system disorders including convulsions (associated with high doses
+
+or impaired renal function).

@@ -1,0 +1,56 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Metformin
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-08-14
+
+
+Metformin
+
+Tablet: 500 mg (hydrochloride).
+
+Uses:  diabetes mellitus.
+
+Contraindications:  renal impairment (Appendix 4); ketoacidosis; risk of tissue
+
+hypoxia, caused by, for example, sepsis, respiratory failure, recent
+
+myocardial infarction, or hepatic impairment (withdraw treatment); use of
+
+iodine-containing X-ray contrast media (do not restart metformin until renal
+
+function returns to normal); use of general anaesthesia (suspend metformin
+
+on the morning of surgery and restart when renal function returns to
+
+normal); alcohol dependence; pregnancy (Appendix 2).
+
+Precautions: monitor renal function before treatment and once or twice
+
+annually (more frequently in the elderly or if deterioration suspected);
+
+substitute insulin during severe infection, trauma, surgery and pregnancy
+
+(see also introductory note above); breastfeeding (Appendix 3); interactions:
+
+Appendix 1.
+
+Dose:
+
+Diabetes mellitus, by mouth , ADULT  and CHILD  over 10 years, initially 500 mg
+
+with breakfast for at least 1 week then 500 mg with breakfast and evening
+
+meal for at least 1 week, then 500 mg with breakfast, lunch, and evening
+
+meal or  850 mg every 12 hours with or after food; usual maximum, 2 g daily
+
+in divided doses.
+
+Adverse effects: anorexia, nausea and vomiting, diarrhoea (usually transient),
+
+abdominal pain, metallic taste; rarely lactic acidosis (most likely in patients
+
+with renal impairment; discontinue); decreased vitamin B 12  absorption,
+
+erythema, pruritus and urticaria; hepatitis also reported.

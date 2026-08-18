@@ -31,7 +31,14 @@ class RetrievedChunk:
 
 class SimpleIndex:
     def __init__(self):
-        self.vectorizer = TfidfVectorizer(stop_words="english", max_features=20000)
+        # Character 3-5 grams instead of whole words: students' notes are full
+        # of typos ("hypertention"), abbreviations, and fragmentary phrases that
+        # word-level TF-IDF cannot match at all. Char n-grams make the index
+        # tolerant of misspellings while still matching section headings and
+        # topic phrases well.
+        self.vectorizer = TfidfVectorizer(
+            analyzer="char_wb", ngram_range=(3, 5), max_features=20000
+        )
         self.matrix = None
         self.records = []  # list of dicts: text, heading, source, (chapter optional)
 

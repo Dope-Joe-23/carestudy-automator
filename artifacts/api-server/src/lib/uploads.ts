@@ -1,13 +1,39 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, rm, unlink, writeFile } from "node:fs/promises";
+import { mkdir, open, rm, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  deleteObject,
+  downloadObjectToFile,
+  isR2Configured,
+  R2_KEY_PREFIX,
+} from "./r2";
 
 // Uploaded clinical documents (PDF / DOCX / TXT) become each study's own
 // grounding knowledge base. Files are stored on disk under data/uploads/
 // with random names — the client's filename is display-only and never used
 // as a path. Every format is validated by magic bytes, not by extension.
+//
+// When R2 is configured, the durable copy lives in the R2 bucket instead and
+// the DB's storedPath holds an "r2://<objectKey>" reference; the local disk
+// is then only a transient cache for the extraction engine.
 
-export const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+// Base64-in-JSON uploads buffer the whole file on the server, so this cap
+// is a memory concern, not a disk one. Configurable via MAX_UPLOAD_MB;
+// defaults to 250 MB (matching the direct-to-R2 ceiling) so large ebooks
+// work out of the box in development. Set it lower on memory-constrained
+// deployments.
+export const MAX_UPLOAD_BYTES =
+  (Number(process.env.MAX_UPLOAD_MB) || 250) * 1024 * 1024;
+
+// Direct-to-R2 uploads bypass the request body entirely, so the ceiling is
+// the bucket's single-PUT limit (5 GB on R2). 250 MB comfortably covers any
+// ebook or scanned textbook while still catching accidental megafiles.
+export const MAX_R2_UPLOAD_BYTES = 250 * 1024 * 1024;
+
+/** Which storage backend the app is running on right now. */
+export function r2UploadMode(): "r2" | "local" {
+  return isR2Configured() ? "r2" : "local";
+}
 
 export type UploadType = "pdf" | "docx" | "txt" | "epub" | "md";
 
@@ -26,6 +52,14 @@ const RAG_DIR = path.resolve(__dirname, "../../../carestudy_rag");
 export const UPLOADS_DIR = path.resolve(RAG_DIR, "..", "data", "uploads");
 export const STUDY_INDEX_DIR = path.resolve(RAG_DIR, "..", "data", "studies");
 export const LIBRARY_DIR = path.resolve(RAG_DIR, "..", "data", "library");
+
+// Student-portal orders: one folder per order for the student's uploaded
+// materials, plus a delivery/ subfolder for the completed study.
+export const ORDERS_DIR = path.resolve(RAG_DIR, "..", "data", "orders");
+export const ORDER_DELIVERY_DIR = path.resolve(RAG_DIR, "..", "data", "orders");
+
+/** Local cache for bucket objects handed to the extraction engine. */
+export const R2_CACHE_DIR = path.resolve(RAG_DIR, "..", "data", "r2-cache");
 
 const CONTROL_OK = new Set([9, 10, 12, 13]); // \t \n \f \r
 
@@ -96,6 +130,19 @@ export function detectUploadType(
   return { type: "txt", mime: "text/plain", ext: "txt" };
 }
 
+/** Read only the first `bytes` of a file — enough for magic-byte checks
+ *  without loading a whole multi-hundred-MB document into memory. */
+export async function readFileHead(filePath: string, bytes = 64 * 1024): Promise<Buffer> {
+  const handle = await open(filePath, "r");
+  try {
+    const buffer = Buffer.alloc(bytes);
+    const { bytesRead } = await handle.read(buffer, 0, bytes, 0);
+    return bytesRead < bytes ? buffer.subarray(0, bytesRead) : buffer;
+  } finally {
+    await handle.close();
+  }
+}
+
 /** Keep only a safe display name — never a path, never control characters. */
 export function sanitizeFilename(raw: unknown): string {
   const base = path
@@ -112,6 +159,76 @@ export type StoredUpload = {
   mime: string;
   size: number;
 };
+
+// ---------------------------------------------------------------------------
+// R2 object references — storedPath values that point at a bucket object.
+// ---------------------------------------------------------------------------
+
+/** An object key for a study's uploaded document. */
+export function studyObjectKey(studyId: number, ext: string): string {
+  return `uploads/${studyId}/${randomUUID()}.${ext}`;
+}
+
+/** An object key for a personal-library source (ebook / notes / article). */
+export function libraryObjectKey(ext: string): string {
+  return `library/${randomUUID()}.${ext}`;
+}
+
+export function isRemoteStored(storedPath: string): boolean {
+  return storedPath.startsWith(R2_KEY_PREFIX);
+}
+
+export function objectKeyOf(storedPath: string): string {
+  return storedPath.slice(R2_KEY_PREFIX.length);
+}
+
+/** Where a bucket object's extraction cache lives on local disk. */
+function cachePathForKey(key: string): string {
+  return path.join(R2_CACHE_DIR, key.replace(/[/\\]/g, "__"));
+}
+
+/**
+ * Resolve a stored reference to a local path the Python engine can read.
+ * R2 objects are downloaded into a cache keyed by their object key, so
+ * repeated ingests (every library edit re-ingests all sources) reuse the
+ * copy instead of re-downloading from the bucket.
+ */
+export async function materializeStored(storedPath: string): Promise<string> {
+  if (!isRemoteStored(storedPath)) return storedPath;
+  const key = objectKeyOf(storedPath);
+  const dest = cachePathForKey(key);
+  try {
+    await stat(dest);
+    return dest; // cache hit
+  } catch {
+    // cache miss — download below
+  }
+  await mkdir(path.dirname(dest), { recursive: true });
+  await downloadObjectToFile(key, dest);
+  return dest;
+}
+
+/**
+ * Remove a stored file wherever it lives — the R2 object (and its local
+ * cache copy) or a plain local-disk file. Best-effort: never throws.
+ */
+export async function removeStoredFile(storedPath: string): Promise<void> {
+  if (isRemoteStored(storedPath)) {
+    const key = objectKeyOf(storedPath);
+    try {
+      await deleteObject(key);
+    } catch {
+      // best-effort cleanup — object may already be gone
+    }
+    try {
+      await unlink(cachePathForKey(key));
+    } catch {
+      // cache copy may be absent
+    }
+    return;
+  }
+  await removeUploadFile(storedPath);
+}
 
 /**
  * Validate and persist an upload for a study. Throws UploadError (with an
@@ -162,6 +279,33 @@ export async function storeLibraryUpload(
   rawFilename: unknown,
 ): Promise<StoredUpload> {
   return storeBytes(LIBRARY_DIR, buffer, rawFilename);
+}
+
+/** Validate and persist a document attached to a student's care-study order. */
+export async function storeOrderUpload(
+  orderId: number,
+  buffer: Buffer,
+  rawFilename: unknown,
+): Promise<StoredUpload> {
+  return storeBytes(path.join(ORDERS_DIR, String(orderId)), buffer, rawFilename);
+}
+
+/** Validate and persist the completed study delivered for an order. */
+export async function storeOrderDelivery(
+  orderId: number,
+  buffer: Buffer,
+  rawFilename: unknown,
+): Promise<StoredUpload> {
+  return storeBytes(path.join(ORDER_DELIVERY_DIR, String(orderId), "delivery"), buffer, rawFilename);
+}
+
+/** Remove an order's on-disk files (materials + delivery) — best-effort. */
+export async function removeOrderArtifacts(orderId: number): Promise<void> {
+  try {
+    await rm(path.join(ORDERS_DIR, String(orderId)), { recursive: true, force: true });
+  } catch {
+    // best-effort cleanup
+  }
 }
 
 /**

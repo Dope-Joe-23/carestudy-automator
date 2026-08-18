@@ -327,6 +327,45 @@ kbd {
    Print / export layout
    --------------------------------------------------------------------------- */
 
+/* The export sheet's on-screen preview mirrors the .docx theme (set as CSS
+   custom properties on .print-sheet by the Document formatting controls). */
+.print-doc {
+  font-family: var(--doc-body-font, "Times New Roman");
+  font-size: var(--doc-body-size, 12pt);
+  line-height: var(--doc-line-height, 1.5);
+  text-align: var(--doc-align, justify);
+}
+
+.print-doc h1,
+.print-doc h2,
+.print-doc h3 {
+  font-family: var(--doc-heading-font, "Times New Roman");
+  /* Custom heading color from the theme; when the theme still uses Word's
+     black default the property is left unset, so the app's own colors apply
+     and dark mode stays readable. */
+  color: var(--doc-heading-color);
+}
+
+.print-doc h2 {
+  font-size: var(--doc-h1-size, 14pt);
+}
+
+.print-doc h3 {
+  font-size: var(--doc-h2-size, 12pt);
+}
+
+.print-doc table {
+  font-size: var(--doc-table-size, 10pt);
+}
+
+.print-doc table th {
+  background: var(--doc-table-fill, #d9d9d9);
+}
+
+.dark .print-doc table th {
+  background: var(--doc-table-fill, #1e293b);
+}
+
 @media print {
   @page {
     margin: 1.4cm;
@@ -345,7 +384,14 @@ kbd {
     inset: auto !important;
     z-index: auto !important;
     overflow: visible !important;
+    display: block !important;
+    height: auto !important;
     background: #fff !important;
+  }
+
+  .print-scroll {
+    overflow: visible !important;
+    height: auto !important;
   }
 
   .print-doc {

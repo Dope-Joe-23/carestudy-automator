@@ -1,0 +1,58 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Paracetamol
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-08-14
+
+
+Paracetamol
+
+Oral liquid: 125 mg/5 ml.
+
+Suppository: 100 mg.
+
+Tablet: 100–500 mg.
+
+Uses:  mild to moderate pain including dysmenorrhoea and headache; pain
+
+relief in osteoarthritis and soft tissue lesions; pyrexia including post-
+
+immunization pyrexia; acute migraine attack (section 7.1).
+
+Precautions: hepatic impairment (Appendix 5); renal impairment (Appendix 4);
+
+alcohol dependence; breastfeeding (Appendix 3); overdosage: section 4.2;
+
+interactions : Appendix 1.
+
+Dose:
+
+Post-immunization pyrexia, by mouth , INFANT  2–3 months, 60 mg followed by
+
+a second dose, if necessary, 4–6 hours later; warn parents to seek medical
+
+advice if pyrexia persists after the second dose.
+
+Mild to moderate pain, pyrexia, by mouth , ADULT , 0.5–1 g every 4–6 hours,
+
+maximum 4 g daily; CHILD  under 3 months, see note below; CHILD
+
+3 months–1 year, 60–125 mg; CHILD  1–5 years, 120–250 mg; CHILD
+
+6–12 years, 250–500 mg (in children doses may be repeated every 4–6 hours
+
+if necessary; maximum, 4 doses in 24 hours).
+
+Mild to moderate pain, pyrexia, by rectum , ADULT , 0.5–1g; CHILD  1–5 years,
+
+125–250 mg; CHILD  6–12 years, 250–500 mg (doses may be inserted every
+
+4–6 hours if necessary; maximum, 4 doses in 24 hours).
+
+NOTE. Infants under 3 months should not be given paracetamol unless advised by a
+
+doctor; a dose of 10 mg/kg (5 mg/kg if jaundiced) is suitable.
+
+Adverse effects:  rare but rash and blood disorders reported; important : liver
+
+damage (and less frequently renal damage) following overdosage.

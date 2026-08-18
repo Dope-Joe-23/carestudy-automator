@@ -23,14 +23,14 @@ Reads a JSON object on stdin with the shape:
         {
           "name": "Assessment",
           "intro": "This chapter opens with... (optional, rendered under the heading)",
-          "introReferences": [{"label": "...", "inText": "(Wikipedia: X, 2026)", "url": "..."}],
+          "introReferences": [{"label": "...", "inText": "(WHO, 2024)", "url": "..."}],
           "sections": [
             {
               "id": "1.1",
               "heading": "Patient's Particulars",
               "draft": "**1.1 Patient's Particulars**  The patient ...",
               "references": [
-                {"label": "Wikipedia contributors. (2026). Pneumonia. ...", "inText": "(Wikipedia: Pneumonia, 2026)", "url": "https://en.wikipedia.org/wiki/Pneumonia"}
+                {"label": "World Health Organization. (2024). Pneumonia in children. Fact sheet.", "inText": "(WHO, 2024)", "url": "https://www.who.int/news-room/fact-sheets/detail/pneumonia"}
               ],
               "fields": [{"label": "Age", "value": "10 years"}],
               "rows": {
@@ -44,8 +44,14 @@ Reads a JSON object on stdin with the shape:
       ]
     }
 
-Draft text may contain light markdown (**bold**, *italic*, "- " bullets and
-"1. " numbered lines), which is converted to proper Word formatting.
+Draft text may contain light markdown (**bold**, *italic*, <sup>superscript</sup>,
+~~strikethrough~~, ==highlight==, ++underline++, "- " bullets and "1. " numbered
+lines — list lines indented by 2+ spaces become nested levels), which is
+converted to proper Word formatting.
+
+A paragraph may also carry a "<!-- align:center spacing:1.5 -->" directive line
+before it (as emitted by the preview editor's paragraph tools) to override the
+document theme's alignment / line spacing for just that paragraph.
 
 The optional "scope" key controls how much of the study is rendered:
     {"type": "full"}                            (default) title page + TOC + all chapters
@@ -58,26 +64,98 @@ import io
 import json
 import re
 import sys
+from dataclasses import dataclass, fields
 
 from docx import Document
+from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.shared import Inches, Pt
+from docx.shared import Inches, Pt, RGBColor
 
-BODY_FONT = "Times New Roman"
-BODY_SIZE = Pt(12)
 ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
 
+# ---------------------------------------------------------------------------
+# Document theme — every formatting decision flows through this one object so
+# the exporter can be restyled without touching render code. The defaults
+# reproduce the classic NMC Ghana care-study look exactly. The client may pass
+# a {"theme": {...}} block in the payload to override individual knobs.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Theme:
+    body_font: str = "Times New Roman"
+    heading_font: str = "Times New Roman"
+    body_size: int = 12
+    heading1_size: int = 14  # chapter headings, TABLE OF CONTENTS, REFERENCES
+    heading2_size: int = 12  # section headings ("1.1 Patient's Particulars")
+    table_size: int = 10
+    table_title_size: int = 11
+    title_size: int = 14  # patient name / diagnosis on the title page
+    body_color: str = "000000"
+    heading_color: str = "000000"
+    table_header_fill: str = "D9D9D9"
+    table_header_color: str = "000000"
+    highlight_color: str = "FFFF00"  # ==highlight== runs
+    first_line_indent: float = 0.0  # inches; e.g. 0.5 gives the classic essay look
+    line_spacing: float = 1.5
+    space_after: int = 6
+    heading1_space_before: int = 14
+    heading1_space_after: int = 8
+    heading2_space_before: int = 10
+    heading2_space_after: int = 4
+    body_alignment: str = "justify"  # justify | left | center | right
+
+    @classmethod
+    def from_dict(cls, data):
+        """Build a Theme from an optional payload dict; unknown keys are ignored."""
+        if not data:
+            return cls()
+        known = {f.name for f in fields(cls)}
+        return cls(**{k: v for k, v in data.items() if k in known})
+
+
+# Named styles the document is rendered through. Students can restyle the whole
+# document from Word's style pane (or by tweaking the theme above).
+STYLE_BODY = "Care Study Body"
+STYLE_HEADING_1 = "Care Study Heading 1"
+STYLE_HEADING_2 = "Care Study Heading 2"
+STYLE_TABLE_HEADER = "Care Study Table Header"
+STYLE_TABLE_CELL = "Care Study Table Cell"
+STYLE_TOC_TITLE = "Care Study TOC Title"
+
+
+def _alignment_enum(value):
+    """Map an alignment name ("left" / "center" / "right" / "justify") to the
+    Word paragraph-alignment enum; anything unknown falls back to justify."""
+    return {
+        "left": WD_ALIGN_PARAGRAPH.LEFT,
+        "center": WD_ALIGN_PARAGRAPH.CENTER,
+        "right": WD_ALIGN_PARAGRAPH.RIGHT,
+        "justify": WD_ALIGN_PARAGRAPH.JUSTIFY,
+    }.get((value or "justify").lower(), WD_ALIGN_PARAGRAPH.JUSTIFY)
+
+
+def _theme_alignment(theme):
+    return _alignment_enum(theme.body_alignment)
+
 # Inline markdown tokens we translate into Word runs.
-INLINE_RE = re.compile(r"(<sup>[^<]*</sup>|\*\*[^*]+\*\*|\*[^*]+\*)")
+INLINE_RE = re.compile(
+    r"(<sup>[^<]*</sup>|==[^=]+?==|\+\+[^+]+?\+{2}|~~[^~]+?~~|\*\*[^*]+\*\*|\*[^*]+\*)"
+)
 BULLET_RE = re.compile(r"^\s*[-•]\s+")
 NUMBER_RE = re.compile(r"^\s*\d+[.)]\s+")
+# Paragraph-style directives the preview editor emits: a "<!-- ... -->" line
+# before a paragraph overrides the document theme's alignment / line spacing
+# for just that paragraph ("<!-- align:center spacing:1.5 -->").
+PARA_DIRECTIVE_RE = re.compile(
+    r"^<!--\s*(?:align:(left|center|right|justify))?\s*(?:spacing:(\d+(?:\.\d+)?))?\s*-->\s*$"
+)
 # Markdown pipe tables that can sneak into drafts (e.g. "| Item | Detail |").
 TABLE_ROW_RE = re.compile(r"^\s*\|")
 SEPARATOR_RE = re.compile(r"^:?-{2,}:?$")
-EMPHASIS_RE = re.compile(r"<sup>(.+?)</sup>|\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`")
 # Bare day + month (e.g. "1 August") and ISO ("2012-06-11") -> ordinal with superscript.
 MONTHS = (
     r"January|February|March|April|May|June|July|August|"
@@ -91,32 +169,129 @@ MONTH_NAMES = {
 }
 
 
-def _set_style_font(doc):
-    """Normal style -> Times New Roman 12pt, 1.5 line spacing, justified."""
-    normal = doc.styles["Normal"]
-    normal.font.name = BODY_FONT
-    normal.font.size = BODY_SIZE
-    normal.paragraph_format.line_spacing = 1.5
-    normal.paragraph_format.space_after = Pt(6)
-    rpr = normal.element.get_or_add_rPr()
+def _apply_font(style, font_name, size_pt, bold=None, color=None):
+    """Font a style (name, size, optional bold + color) including the complex-
+    script font slots so Word never falls back to its default theme font."""
+    style.font.name = font_name
+    style.font.size = Pt(size_pt)
+    if bold is not None:
+        style.font.bold = bold
+    if color:
+        style.font.color.rgb = RGBColor.from_string(color)
+    rpr = style.element.get_or_add_rPr()
     rfonts = rpr.find(qn("w:rFonts"))
     if rfonts is None:
         rfonts = OxmlElement("w:rFonts")
         rpr.append(rfonts)
-    rfonts.set(qn("w:ascii"), BODY_FONT)
-    rfonts.set(qn("w:hAnsi"), BODY_FONT)
-    rfonts.set(qn("w:cs"), BODY_FONT)
+    rfonts.set(qn("w:ascii"), font_name)
+    rfonts.set(qn("w:hAnsi"), font_name)
+    rfonts.set(qn("w:cs"), font_name)
 
 
-def _add_run(paragraph, text, bold=False, italic=False, size=None, superscript=False):
+def _set_outline_level(style, level):
+    """Give a style an outline level so Word's Navigation pane and TOC fields
+    pick its paragraphs up (0 = Heading 1, 1 = Heading 2, ...)."""
+    ppr = style.element.get_or_add_pPr()
+    outline = OxmlElement("w:outlineLvl")
+    outline.set(qn("w:val"), str(level))
+    ppr.append(outline)
+
+
+def _setup_styles(doc, theme):
+    """Build the named Care Study styles from the theme. Every paragraph and
+    table cell renders through one of these styles, so formatting lives in
+    Word's style pane (editable there) rather than on individual runs."""
+    normal = doc.styles["Normal"]
+    _apply_font(normal, theme.body_font, theme.body_size, color=theme.body_color)
+    normal.paragraph_format.line_spacing = theme.line_spacing
+    normal.paragraph_format.space_after = Pt(theme.space_after)
+
+    body = doc.styles.add_style(STYLE_BODY, WD_STYLE_TYPE.PARAGRAPH)
+    body.base_style = normal
+    body.paragraph_format.line_spacing = theme.line_spacing
+    body.paragraph_format.space_after = Pt(theme.space_after)
+    body.paragraph_format.alignment = _theme_alignment(theme)
+    if theme.first_line_indent:
+        body.paragraph_format.first_line_indent = Inches(theme.first_line_indent)
+
+    heading1 = doc.styles.add_style(STYLE_HEADING_1, WD_STYLE_TYPE.PARAGRAPH)
+    heading1.base_style = normal
+    _apply_font(
+        heading1, theme.heading_font, theme.heading1_size,
+        bold=True, color=theme.heading_color,
+    )
+    heading1.paragraph_format.space_before = Pt(theme.heading1_space_before)
+    heading1.paragraph_format.space_after = Pt(theme.heading1_space_after)
+    heading1.paragraph_format.keep_with_next = True
+
+    heading2 = doc.styles.add_style(STYLE_HEADING_2, WD_STYLE_TYPE.PARAGRAPH)
+    heading2.base_style = normal
+    _apply_font(
+        heading2, theme.heading_font, theme.heading2_size,
+        bold=True, color=theme.heading_color,
+    )
+    heading2.paragraph_format.space_before = Pt(theme.heading2_space_before)
+    heading2.paragraph_format.space_after = Pt(theme.heading2_space_after)
+    heading2.paragraph_format.keep_with_next = True
+
+    # Outline levels put chapters/sections in Word's Navigation pane and feed
+    # the auto-updating TOC field (TOC \o "1-3").
+    _set_outline_level(heading1, 0)
+    _set_outline_level(heading2, 1)
+
+    table_header = doc.styles.add_style(STYLE_TABLE_HEADER, WD_STYLE_TYPE.PARAGRAPH)
+    table_header.base_style = normal
+    _apply_font(
+        table_header, theme.body_font, theme.table_size,
+        bold=True, color=theme.table_header_color,
+    )
+
+    table_cell = doc.styles.add_style(STYLE_TABLE_CELL, WD_STYLE_TYPE.PARAGRAPH)
+    table_cell.base_style = normal
+    _apply_font(table_cell, theme.body_font, theme.table_size)
+
+    # Centered page-title style (TABLE OF CONTENTS / REFERENCES) — deliberately
+    # no outline level so it never shows in the Navigation pane or TOC field.
+    toc_title = doc.styles.add_style(STYLE_TOC_TITLE, WD_STYLE_TYPE.PARAGRAPH)
+    toc_title.base_style = normal
+    _apply_font(
+        toc_title, theme.heading_font, theme.heading1_size,
+        bold=True, color=theme.heading_color,
+    )
+    toc_title.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    # Built-in list styles sometimes fall back to the default theme font;
+    # pin them to the body font so bullets match the rest of the document.
+    for name in ("List Bullet", "List Number"):
+        try:
+            _apply_font(doc.styles[name], theme.body_font, theme.body_size)
+        except KeyError:
+            pass
+
+
+def _add_run(paragraph, text, theme, bold=False, italic=False, size=None, superscript=False,
+             underline=False, strike=False, highlight=None, color=None):
     run = paragraph.add_run(text)
     run.bold = bold
     run.italic = italic
+    run.underline = underline
+    if strike:
+        run.font.strike = True
     if superscript:
         run.font.superscript = True
     if size is not None:
-        run.font.size = size
-    run.font.name = BODY_FONT
+        run.font.size = Pt(size)
+    if highlight:
+        # True hex highlight via run shading (w:highlight only knows 16 names).
+        rpr = run._r.get_or_add_rPr()
+        shd = OxmlElement("w:shd")
+        shd.set(qn("w:val"), "clear")
+        shd.set(qn("w:color"), "auto")
+        shd.set(qn("w:fill"), highlight)
+        rpr.append(shd)
+    if color:
+        run.font.color.rgb = RGBColor.from_string(color)
+    run.font.name = theme.body_font
     return run
 
 
@@ -150,34 +325,49 @@ def _format_ordinal_dates(text):
     return ISO_DATE_RE.sub(iso_repl, BARE_DATE_RE.sub(repl, text))
 
 
-def _add_inline_text(paragraph, text):
-    """Split **bold** / *italic* / <sup>superscript</sup> into styled runs."""
+def _add_inline_text(paragraph, text, theme):
+    """Split **bold**, *italic*, <sup>superscript</sup>, ~~strikethrough~~,
+    ==highlight== and ++underline++ into styled runs."""
     for part in INLINE_RE.split(text):
         if not part:
             continue
         if part.startswith("<sup>") and part.endswith("</sup>"):
-            _add_run(paragraph, part[5:-6], superscript=True)
+            _add_run(paragraph, part[5:-6], theme, superscript=True)
+        elif part.startswith("==") and part.endswith("=="):
+            _add_run(paragraph, part[2:-2], theme, highlight=theme.highlight_color)
+        elif part.startswith("++") and part.endswith("++"):
+            _add_run(paragraph, part[2:-2], theme, underline=True)
+        elif part.startswith("~~") and part.endswith("~~"):
+            _add_run(paragraph, part[2:-2], theme, strike=True)
         elif part.startswith("**") and part.endswith("**"):
-            _add_run(paragraph, part[2:-2], bold=True)
+            _add_run(paragraph, part[2:-2], theme, bold=True)
         elif part.startswith("*") and part.endswith("*"):
-            _add_run(paragraph, part[1:-1], italic=True)
+            _add_run(paragraph, part[1:-1], theme, italic=True)
         else:
-            _add_run(paragraph, part)
+            _add_run(paragraph, part, theme)
 
 
-def _add_markdown_paragraph(doc, text, style=None, alignment=WD_ALIGN_PARAGRAPH.JUSTIFY):
-    """Add a paragraph, honouring **bold**, *italic* and <sup>superscript</sup>."""
-    paragraph = doc.add_paragraph(style=style)
-    paragraph.alignment = alignment
-    _add_inline_text(paragraph, _format_ordinal_dates(text))
+def _add_markdown_paragraph(doc, text, theme, style=None, alignment=None, spacing=None):
+    """Add a paragraph, honouring **bold**, *italic* and <sup>superscript</sup>.
+    Style defaults to Care Study Body; alignment and line spacing default to
+    the theme's, unless a paragraph directive overrides them."""
+    paragraph = doc.add_paragraph(style=style or STYLE_BODY)
+    # alignment may be a WD_PARAGRAPH_ALIGNMENT enum (from callers like the
+    # title page) or an "align:..." directive string — accept both.
+    if alignment is None:
+        paragraph.alignment = _theme_alignment(theme)
+    elif isinstance(alignment, str):
+        paragraph.alignment = _alignment_enum(alignment)
+    else:
+        paragraph.alignment = alignment
+    paragraph.paragraph_format.line_spacing = (
+        spacing if spacing is not None else theme.line_spacing
+    )
+    _add_inline_text(paragraph, _format_ordinal_dates(text), theme)
     return paragraph
 
 
-def _strip_inline_markdown(text):
-    """Remove bold/italic/code/superscript markers, keeping the inner text."""
-    return EMPHASIS_RE.sub(
-        lambda m: m.group(1) or m.group(2) or m.group(3) or m.group(4), text
-    )
+
 
 
 def _split_table_row(line):
@@ -185,7 +375,7 @@ def _split_table_row(line):
     return [cell.strip() for cell in line.strip().strip("|").split("|")]
 
 
-def _add_markdown_table(doc, table_lines):
+def _add_markdown_table(doc, table_lines, theme):
     """Convert a markdown pipe table (header, separator, data rows) to a Word table."""
     rows = []
     for line in table_lines:
@@ -200,7 +390,7 @@ def _add_markdown_table(doc, table_lines):
     width = max(len(row) for row in rows)
     header = rows[0] + [""] * (width - len(rows[0]))
     data = [row + [""] * (width - len(row)) for row in rows[1:]]
-    _add_data_table(doc, header, data)
+    _add_data_table(doc, header, data, theme)
 
 
 def _draft_table_row_count(draft: str) -> int:
@@ -227,30 +417,180 @@ def _draft_table_row_count(draft: str) -> int:
     return 0
 
 
-def _add_draft(doc, draft):
+# ---------------------------------------------------------------------------
+# Multi-level list numbering — real Word numPr (numId + ilvl) so bullets and
+# numbered lists indent properly and wrapped lines align under the text rather
+# than under the marker, instead of flat single-level list styles.
+# ---------------------------------------------------------------------------
+
+
+def _list_level_xml(ilvl, fmt, text, left_twips, rfonts=None):
+    """One <w:lvl> entry for the abstract numbering definition."""
+    lvl = OxmlElement("w:lvl")
+    lvl.set(qn("w:ilvl"), str(ilvl))
+    start = OxmlElement("w:start")
+    start.set(qn("w:val"), "1")
+    numfmt = OxmlElement("w:numFmt")
+    numfmt.set(qn("w:val"), fmt)
+    lvltext = OxmlElement("w:lvlText")
+    lvltext.set(qn("w:val"), text)
+    lvljc = OxmlElement("w:lvlJc")
+    lvljc.set(qn("w:val"), "left")
+    ppr = OxmlElement("w:pPr")
+    ind = OxmlElement("w:ind")
+    ind.set(qn("w:left"), str(left_twips))
+    ind.set(qn("w:hanging"), "360")
+    ppr.append(ind)
+    lvl.append(start)
+    lvl.append(numfmt)
+    lvl.append(lvltext)
+    lvl.append(lvljc)
+    lvl.append(ppr)
+    if rfonts:
+        rpr = OxmlElement("w:rPr")
+        rf = OxmlElement("w:rFonts")
+        rf.set(qn("w:ascii"), rfonts)
+        rf.set(qn("w:hAnsi"), rfonts)
+        rf.set(qn("w:hint"), "default")
+        rpr.append(rf)
+        lvl.append(rpr)
+    return lvl
+
+
+def _add_abstract_num(numbering, abstract_id, levels):
+    an = OxmlElement("w:abstractNum")
+    an.set(qn("w:abstractNumId"), str(abstract_id))
+    mlt = OxmlElement("w:multiLevelType")
+    mlt.set(qn("w:val"), "hybridMultilevel")
+    an.append(mlt)
+    for level in levels:
+        an.append(level)
+    return an
+
+
+def _add_num(numbering, num_id, abstract_id):
+    num = OxmlElement("w:num")
+    num.set(qn("w:numId"), str(num_id))
+    abstract_ref = OxmlElement("w:abstractNumId")
+    abstract_ref.set(qn("w:val"), str(abstract_id))
+    num.append(abstract_ref)
+    return num
+
+
+def _setup_lists(doc, theme):
+    """Create bullet + decimal multi-level numbering definitions (three visual
+    levels each) and remember their numIds on the doc for _add_draft."""
+    numbering = doc.part.numbering_part.element
+    next_abstract = (
+        max(
+            (int(a.get(qn("w:abstractNumId"))) for a in numbering.findall(qn("w:abstractNum"))),
+            default=-1,
+        )
+        + 1
+    )
+    next_num = (
+        max((int(n.get(qn("w:numId"))) for n in numbering.findall(qn("w:num"))), default=0) + 1
+    )
+
+    bullet_abstract = _add_abstract_num(
+        numbering, next_abstract,
+        [
+            _list_level_xml(0, "bullet", "\u2022", 720, rfonts="Symbol"),
+            _list_level_xml(1, "bullet", "o", 1440, rfonts="Courier New"),
+            _list_level_xml(2, "bullet", "\u25aa", 2160),
+        ],
+    )
+    decimal_abstract = _add_abstract_num(
+        numbering, next_abstract + 1,
+        [
+            _list_level_xml(0, "decimal", "%1.", 720),
+            _list_level_xml(1, "lowerLetter", "%2.", 1440),
+            _list_level_xml(2, "decimal", "%3.", 2160),
+        ],
+    )
+    # Schema: all abstractNum elements precede all num elements.
+    first_num = numbering.find(qn("w:num"))
+    if first_num is not None:
+        first_num.addprevious(bullet_abstract)
+        first_num.addprevious(decimal_abstract)
+    else:
+        numbering.append(bullet_abstract)
+        numbering.append(decimal_abstract)
+    numbering.append(_add_num(numbering, next_num, next_abstract))
+    numbering.append(_add_num(numbering, next_num + 1, next_abstract + 1))
+
+    doc._carestudy_lists = {"bullet": next_num, "decimal": next_num + 1}
+    return doc._carestudy_lists
+
+
+def _apply_list_numbering(paragraph, num_id, level):
+    """Point a paragraph at a numbering level (numPr) and match its indent so
+    wrapped lines align under the text, not the marker."""
+    ppr = paragraph._p.get_or_add_pPr()
+    numpr = ppr.get_or_add_numPr()
+    numpr.get_or_add_ilvl().set(qn("w:val"), str(level))
+    numpr.get_or_add_numId().set(qn("w:val"), str(num_id))
+    paragraph.paragraph_format.left_indent = Inches(0.5 * (level + 1))
+    paragraph.paragraph_format.first_line_indent = Inches(-0.25)
+
+
+def _add_draft(doc, draft, theme):
     """Render a drafted section: prose paragraphs, bullets/lists, and any stray
-    markdown pipe tables are converted into proper Word tables."""
+    markdown pipe tables are converted into proper Word tables. "<!-- ... -->"
+    directive lines style just the paragraph that follows them."""
     lines = draft.split("\n")
     index = 0
+    pending = {}
     while index < len(lines):
         raw = lines[index].rstrip()
         if not raw.strip():
+            # A directive separated from its paragraph by a blank line is an
+            # orphan; drop it so it never leaks into the document.
+            pending = {}
+            index += 1
+            continue
+        directive = PARA_DIRECTIVE_RE.match(raw)
+        if directive:
+            style = {}
+            if directive.group(1):
+                style["alignment"] = directive.group(1)
+            if directive.group(2):
+                style["spacing"] = min(max(float(directive.group(2)), 1.0), 3.0)
+            pending = {**pending, **style}  # adjacent directives combine
             index += 1
             continue
         if TABLE_ROW_RE.match(raw):
             # Consume the whole contiguous table block.
+            pending = {}
             table_lines = []
             while index < len(lines) and TABLE_ROW_RE.match(lines[index]):
                 table_lines.append(lines[index])
                 index += 1
-            _add_markdown_table(doc, table_lines)
+            _add_markdown_table(doc, table_lines, theme)
             continue
-        if BULLET_RE.match(raw):
-            _add_markdown_paragraph(doc, BULLET_RE.sub("", raw), style="List Bullet")
-        elif NUMBER_RE.match(raw):
-            _add_markdown_paragraph(doc, NUMBER_RE.sub("", raw), style="List Number")
+        bullet = BULLET_RE.match(raw)
+        number = NUMBER_RE.match(raw)
+        if bullet or number:
+            lists = getattr(doc, "_carestudy_lists", None)
+            level = min(len(re.match(r"^\s*", raw).group(0)) // 2, 2)
+            text = BULLET_RE.sub("", raw) if bullet else NUMBER_RE.sub("", raw)
+            paragraph = _add_markdown_paragraph(
+                doc, text, theme, style="List Bullet" if bullet else "List Number",
+                alignment=pending.pop("alignment", None),
+                spacing=pending.pop("spacing", None),
+            )
+            if lists is not None:
+                _apply_list_numbering(
+                    paragraph,
+                    lists["bullet"] if bullet else lists["decimal"],
+                    level,
+                )
         else:
-            _add_markdown_paragraph(doc, raw)
+            _add_markdown_paragraph(
+                doc, raw, theme,
+                alignment=pending.pop("alignment", None),
+                spacing=pending.pop("spacing", None),
+            )
         index += 1
 
 
@@ -263,8 +603,9 @@ def _shade_cell(cell, fill="D9D9D9"):
     tc_pr.append(shd)
 
 
-def _add_data_table(doc, header, data):
-    """Build a bordered Word table from a header row and data rows."""
+def _add_data_table(doc, header, data, theme):
+    """Build a bordered Word table from a header row and data rows, rendered
+    through the Care Study styles (bold shaded header via the theme)."""
     if not header:
         return
     width = len(header)
@@ -275,33 +616,30 @@ def _add_data_table(doc, header, data):
     for col_index, column in enumerate(header):
         cell = table.rows[0].cells[col_index]
         cell.text = ""
-        _add_run(
-            cell.paragraphs[0],
-            _strip_inline_markdown(_format_ordinal_dates(column)),
-            bold=True,
-            size=Pt(10),
-        )
-        _shade_cell(cell)
+        cell.paragraphs[0].style = STYLE_TABLE_HEADER
+        _add_inline_text(cell.paragraphs[0], _format_ordinal_dates(column), theme)
+        _shade_cell(cell, theme.table_header_fill)
 
     for row_index, row in enumerate(data, start=1):
         for col_index in range(width):
             cell_value = row[col_index] if col_index < len(row) else ""
             cell = table.rows[row_index].cells[col_index]
             cell.text = ""
-            _add_run(
+            cell.paragraphs[0].style = STYLE_TABLE_CELL
+            _add_inline_text(
                 cell.paragraphs[0],
-                _strip_inline_markdown(_format_ordinal_dates(cell_value)) or "—",
-                size=Pt(10),
+                _format_ordinal_dates(cell_value) or "—",
+                theme,
             )
 
 
-def _add_rows_table(doc, rows):
+def _add_rows_table(doc, rows, theme):
     """Render a repeatable rows section (drugs, care plan, outcomes) as a table."""
-    header = doc.add_paragraph()
+    header = doc.add_paragraph(style=STYLE_BODY)
     header.paragraph_format.space_before = Pt(6)
     header.paragraph_format.space_after = Pt(4)
-    _add_run(header, rows.get("title", ""), bold=True, size=Pt(11))
-    _add_data_table(doc, rows.get("columns") or [], rows.get("data") or [])
+    _add_run(header, rows.get("title", ""), theme, bold=True, size=theme.table_title_size)
+    _add_data_table(doc, rows.get("columns") or [], rows.get("data") or [], theme)
 
 
 def _add_page_number(doc):
@@ -321,47 +659,98 @@ def _add_page_number(doc):
     run._r.append(fld_end)
 
 
-def _add_title_page(doc, title):
+def _add_content_control(paragraph, text, alias, tag, theme, bold=False, size=None):
+    """Wrap text in a Word content control (fillable field). The alias shows in
+    Word's controls UI; the tag is a stable identifier. Formatting (font, bold,
+    size) is applied to the run inside the control."""
+    sdt = OxmlElement("w:sdt")
+    sdt_pr = OxmlElement("w:sdtPr")
+    for name, value in (("w:alias", alias), ("w:tag", tag)):
+        element = OxmlElement(name)
+        element.set(qn("w:val"), value)
+        sdt_pr.append(element)
+    sdt_content = OxmlElement("w:sdtContent")
+    run = OxmlElement("w:r")
+    rpr = OxmlElement("w:rPr")
+    rfonts = OxmlElement("w:rFonts")
+    rfonts.set(qn("w:ascii"), theme.body_font)
+    rfonts.set(qn("w:hAnsi"), theme.body_font)
+    rfonts.set(qn("w:cs"), theme.body_font)
+    rpr.append(rfonts)
+    if bold:
+        rpr.append(OxmlElement("w:b"))
+    if size is not None:
+        half = str(int(round(size * 2)))
+        sz = OxmlElement("w:sz")
+        sz.set(qn("w:val"), half)
+        sz_cs = OxmlElement("w:szCs")
+        sz_cs.set(qn("w:val"), half)
+        rpr.append(sz)
+        rpr.append(sz_cs)
+    run.append(rpr)
+    text_el = OxmlElement("w:t")
+    text_el.set(qn("xml:space"), "preserve")
+    text_el.text = text
+    run.append(text_el)
+    sdt_content.append(run)
+    sdt.append(sdt_pr)
+    sdt.append(sdt_content)
+    paragraph._p.append(sdt)
+    return paragraph
+
+
+def _add_cc_paragraph(doc, text, alias, tag, theme, bold=False, size=None):
+    """A centered body paragraph whose text lives in a Word content control."""
+    paragraph = doc.add_paragraph(style=STYLE_BODY)
+    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _add_content_control(paragraph, text, alias, tag, theme, bold=bold, size=size)
+    return paragraph
+
+
+def _add_title_page(doc, title, theme):
     """Centered title page in the style of the sample care studies."""
     center = WD_ALIGN_PARAGRAPH.CENTER
-    _add_markdown_paragraph(doc, "PATIENT/FAMILY CARE STUDY", alignment=center).runs[0].bold = True
-    _add_markdown_paragraph(doc, "ON", alignment=center)
+    _add_markdown_paragraph(doc, "PATIENT/FAMILY CARE STUDY", theme, alignment=center).runs[0].bold = True
+    _add_markdown_paragraph(doc, "ON", theme, alignment=center)
     patient = (title.get("patientName") or "").strip()
     if patient:
-        p = _add_markdown_paragraph(doc, patient.upper(), alignment=center)
-        for run in p.runs:
-            run.bold = True
-            run.font.size = Pt(14)
-    _add_markdown_paragraph(doc, "WITH", alignment=center)
+        _add_cc_paragraph(
+            doc, patient.upper(), "Patient Name", "PatientName",
+            theme, bold=True, size=theme.title_size,
+        )
+    _add_markdown_paragraph(doc, "WITH", theme, alignment=center)
     diagnosis = (title.get("diagnosis") or "").strip()
     if diagnosis:
-        p = _add_markdown_paragraph(doc, diagnosis.upper(), alignment=center)
-        for run in p.runs:
-            run.bold = True
-            run.font.size = Pt(14)
-    _add_markdown_paragraph(doc, "PRESENTED BY", alignment=center)
+        _add_cc_paragraph(
+            doc, diagnosis.upper(), "Diagnosis", "Diagnosis",
+            theme, bold=True, size=theme.title_size,
+        )
+    _add_markdown_paragraph(doc, "PRESENTED BY", theme, alignment=center)
     student = (title.get("studentName") or "").strip()
     if student:
         index = (title.get("indexNumber") or "").strip()
-        _add_markdown_paragraph(doc, student.upper() + (f" ({index})" if index else ""), alignment=center)
-    _add_markdown_paragraph(doc, "A FINAL YEAR STUDENT OF", alignment=center)
+        _add_cc_paragraph(
+            doc, student.upper() + (f" ({index})" if index else ""),
+            "Student Name", "StudentName", theme,
+        )
+    _add_markdown_paragraph(doc, "A FINAL YEAR STUDENT OF", theme, alignment=center)
     college = (title.get("collegeName") or "").strip()
     location = (title.get("collegeLocation") or "").strip()
     if college:
-        _add_markdown_paragraph(
-            doc,
-            college.upper() + (f", {location.upper()}" if location else ""),
-            alignment=center,
+        _add_cc_paragraph(
+            doc, college.upper() + (f", {location.upper()}" if location else ""),
+            "College", "CollegeName", theme,
         )
     _add_markdown_paragraph(
         doc,
         "A PATIENT AND FAMILY CARE STUDY SUBMITTED TO NURSING AND MIDWIFERY COUNCIL OF GHANA "
         "IN PARTIAL FULFILLMENT OF THE REQUIREMENT FOR THE AWARD OF LICENSE IN GENERAL NURSING",
+        theme,
         alignment=center,
     )
     year = (title.get("year") or "").strip()
     if year:
-        p = _add_markdown_paragraph(doc, year, alignment=center)
+        p = _add_cc_paragraph(doc, year, "Year", "Year", theme)
         p.paragraph_format.space_before = Pt(24)
 
     doc.add_page_break()
@@ -380,26 +769,76 @@ def _chapter_heading(chapters, chapter_index, chapter):
     return f"CHAPTER {ROMAN[ordinal]}: {chapter.get('name', '').upper()}"
 
 
-def _add_toc(doc, chapters):
-    """Static table of contents (simple and robust — no field update needed)."""
-    heading = doc.add_paragraph()
-    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _add_run(heading, "TABLE OF CONTENTS", bold=True, size=Pt(14))
+def _add_toc(doc, chapters, theme):
+    """'TABLE OF CONTENTS' followed by a live Word TOC field.
 
+    The field refreshes itself when Word opens the document (or on F9), pulling
+    the chapter/section headings through their outline levels. The static
+    entries are cached inside the field, so a table of contents is visible even
+    before Word recalculates it."""
+    heading = doc.add_paragraph(style=STYLE_TOC_TITLE)
+    _add_run(heading, "TABLE OF CONTENTS", theme)
+
+    entries = []
     for chapter_index, chapter in enumerate(chapters):
-        p = doc.add_paragraph()
+        p = doc.add_paragraph(style=STYLE_BODY)
         p.paragraph_format.space_before = Pt(8)
-        _add_run(p, _chapter_heading(chapters, chapter_index, chapter), bold=True)
+        _add_run(p, _chapter_heading(chapters, chapter_index, chapter), theme, bold=True)
+        entries.append(p)
         for section in chapter.get("sections", []):
-            sp = doc.add_paragraph()
+            sp = doc.add_paragraph(style=STYLE_BODY)
             sp.paragraph_format.left_indent = Inches(0.4)
             sp.paragraph_format.space_after = Pt(2)
-            _add_run(sp, f"{section.get('id', '')} {section.get('heading', '')}")
+            _add_run(sp, f"{section.get('id', '')} {section.get('heading', '')}", theme)
+            entries.append(sp)
+
+    # Field begin/instruction/separate runs lead the first entry paragraph so
+    # the cached list shows without a stray blank line above it.
+    if entries:
+        first, last = entries[0], entries[-1]
+    else:
+        first = doc.add_paragraph(style=STYLE_BODY)
+        last = first
+
+    anchor = first._p.find(qn("w:pPr"))
+    field_runs = []
+    begin = OxmlElement("w:r")
+    fld_begin = OxmlElement("w:fldChar")
+    fld_begin.set(qn("w:fldCharType"), "begin")
+    fld_begin.set(qn("w:dirty"), "true")
+    begin.append(fld_begin)
+    field_runs.append(begin)
+
+    instr = OxmlElement("w:r")
+    instr_text = OxmlElement("w:instrText")
+    instr_text.set(qn("xml:space"), "preserve")
+    instr_text.text = ' TOC \\o "1-3" \\h \\z \\u '
+    instr.append(instr_text)
+    field_runs.append(instr)
+
+    separate = OxmlElement("w:r")
+    fld_separate = OxmlElement("w:fldChar")
+    fld_separate.set(qn("w:fldCharType"), "separate")
+    separate.append(fld_separate)
+    field_runs.append(separate)
+
+    for run in field_runs:
+        if anchor is not None:
+            anchor.addnext(run)
+        else:
+            first._p.insert(0, run)
+        anchor = run
+
+    end = OxmlElement("w:r")
+    fld_end = OxmlElement("w:fldChar")
+    fld_end.set(qn("w:fldCharType"), "end")
+    end.append(fld_end)
+    last._p.append(end)
 
     if not _has_bibliography(chapters):
-        references = doc.add_paragraph()
+        references = doc.add_paragraph(style=STYLE_TOC_TITLE)
         references.paragraph_format.space_before = Pt(8)
-        _add_run(references, "REFERENCES", bold=True)
+        _add_run(references, "REFERENCES", theme)
 
     doc.add_page_break()
 
@@ -613,17 +1052,9 @@ def _field_prose(fields, section_id=""):
     return _generic_prose(parts)
 
 
-def _render_section(doc, section):
-    section_heading = doc.add_paragraph()
-    section_heading.paragraph_format.space_before = Pt(10)
-    section_heading.paragraph_format.space_after = Pt(4)
-    section_heading.paragraph_format.keep_with_next = True
-    _add_run(
-        section_heading,
-        f"{section.get('id', '')} {section.get('heading', '')}".strip(),
-        bold=True,
-        size=Pt(12),
-    )
+def _render_section(doc, section, theme):
+    section_heading = doc.add_paragraph(style=STYLE_HEADING_2)
+    _add_run(section_heading, f"{section.get('id', '')} {section.get('heading', '')}".strip(), theme)
 
     draft = _strip_duplicate_heading((section.get("draft") or "").strip(), section)
     fields = [f for f in section.get("fields") or [] if (f.get("value") or "").strip()]
@@ -644,41 +1075,32 @@ def _render_section(doc, section):
         # dumped underneath it (the draft already narrates that data). This
         # also applies to mixed sections like 5.1: the draft paragraph
         # replaces the field list, while any structured rows still render.
-        _add_draft(doc, draft)
+        _add_draft(doc, draft, theme)
     elif fields:
         for label, text in _field_prose(fields, section.get("id", "")):
-            p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            p = doc.add_paragraph(style=STYLE_BODY)
             if label:
-                _add_run(p, f"{label}: ", bold=True)
-            _add_inline_text(p, _format_ordinal_dates(text))
+                _add_run(p, f"{label}: ", theme, bold=True)
+            _add_inline_text(p, _format_ordinal_dates(text), theme)
     if row_data and (not draft_has_table or not draft_covers_rows):
-        _add_rows_table(doc, rows)
+        _add_rows_table(doc, rows, theme)
     if not draft and not fields and not row_data:
-        p = doc.add_paragraph()
-        _add_run(p, "Not completed.", italic=True)
+        p = doc.add_paragraph(style=STYLE_BODY)
+        _add_run(p, "Not completed.", theme, italic=True)
 
 
-def _add_chapter(doc, chapters, chapter_index, chapter, include_intro=True):
-    chapter_heading = doc.add_paragraph()
-    chapter_heading.paragraph_format.space_before = Pt(14)
-    chapter_heading.paragraph_format.space_after = Pt(8)
-    chapter_heading.paragraph_format.keep_with_next = True
-    _add_run(
-        chapter_heading,
-        _chapter_heading(chapters, chapter_index, chapter),
-        bold=True,
-        size=Pt(14),
-    )
+def _add_chapter(doc, chapters, chapter_index, chapter, theme, include_intro=True):
+    chapter_heading = doc.add_paragraph(style=STYLE_HEADING_1)
+    _add_run(chapter_heading, _chapter_heading(chapters, chapter_index, chapter), theme)
 
     intro = (chapter.get("intro") or "").strip()
     if include_intro and intro:
         # Match the sample care studies: a short opening paragraph right under
         # the chapter heading, rendered like a drafted section's prose.
-        _add_draft(doc, intro)
+        _add_draft(doc, intro, theme)
 
     for section in chapter.get("sections", []):
-        _render_section(doc, section)
+        _render_section(doc, section, theme)
 
 
 def _collect_references(chapters):
@@ -717,28 +1139,32 @@ def _has_bibliography(chapters):
     return False
 
 
-def _add_references(doc, chapters, page_break_before=False):
+def _add_references(doc, chapters, theme, page_break_before=False):
     """End-of-document REFERENCES list, matching the sample care studies."""
     refs = _collect_references(chapters)
     if not refs:
         return
     if page_break_before:
         doc.add_page_break()
-    heading = doc.add_paragraph()
-    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _add_run(heading, "REFERENCES", bold=True, size=Pt(14))
+    heading = doc.add_paragraph(style=STYLE_TOC_TITLE)
+    # Keep the original (non-heading) spacing of this centered heading.
+    heading.paragraph_format.space_before = Pt(0)
+    heading.paragraph_format.space_after = Pt(6)
+    _add_run(heading, "REFERENCES", theme)
     for index, label in enumerate(refs, start=1):
-        p = doc.add_paragraph()
+        p = doc.add_paragraph(style=STYLE_BODY)
         p.paragraph_format.space_after = Pt(4)
         p.paragraph_format.left_indent = Inches(0.3)
         p.paragraph_format.first_line_indent = Inches(-0.3)  # hanging indent
-        _add_run(p, f"{index}. ")
-        _add_inline_text(p, _format_ordinal_dates(label))
+        _add_run(p, f"{index}. ", theme)
+        _add_inline_text(p, _format_ordinal_dates(label), theme)
 
 
 def build_docx(payload):
+    theme = Theme.from_dict(payload.get("theme"))
     doc = Document()
-    _set_style_font(doc)
+    _setup_styles(doc, theme)
+    _setup_lists(doc, theme)
     _add_page_number(doc)
 
     title = payload.get("title") or {}
@@ -766,18 +1192,18 @@ def build_docx(payload):
                 scope_type = "full"
 
     if scope_type == "full":
-        _add_title_page(doc, title)
-        _add_toc(doc, chapters)
+        _add_title_page(doc, title, theme)
+        _add_toc(doc, chapters, theme)
         for chapter_index, chapter in enumerate(chapters):
-            _add_chapter(doc, chapters, chapter_index, chapter)
+            _add_chapter(doc, chapters, chapter_index, chapter, theme)
         if not _has_bibliography(chapters):
-            _add_references(doc, chapters, page_break_before=True)
+            _add_references(doc, chapters, theme, page_break_before=True)
     else:
         # Chapter/section exports begin directly with the chapter heading — no
         # title page, TOC, or header block; the full study alone carries those.
-        _add_chapter(doc, chapters, chapter_index, chapter)
+        _add_chapter(doc, chapters, chapter_index, chapter, theme)
         if not _has_bibliography([chapter]):
-            _add_references(doc, [chapter])
+            _add_references(doc, [chapter], theme)
 
     buffer = io.BytesIO()
     doc.save(buffer)

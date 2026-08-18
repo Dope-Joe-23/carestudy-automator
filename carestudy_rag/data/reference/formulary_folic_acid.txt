@@ -1,0 +1,46 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Folic acid
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-08-14
+
+
+Folic acid
+
+Tablet: 1 mg; 5 mg.
+
+Uses:  treatment of folate-deficiency megaloblastic anaemia; prevention of
+
+neural tube defects in pregnancy.
+
+Contraindications: should never be given without vitamin B 12 in undiagnosed
+
+megaloblastic anaemia or other vitamin B 12  deficiency states because of the
+
+risk of precipitating subacute combined degeneration of the spinal cord;
+
+folate-dependent malignant disease.
+
+Precautions: women receiving antiepileptic therapy (need counselling before
+
+starting folic acid, see also note above); interactions: Appendix 1.
+
+Dose:
+
+Treatment of folate-deficiency, megaloblastic anaemia, by mouth , ADULT, 5 mg
+
+daily for 4 months (in pregnancy continued to term); up to 15 mg daily may
+
+be necessary in malabsorption states.
+
+Prevention of first occurrence of neural tube defects, by mouth , ADULT,
+
+400–500 micrograms daily before conception and during the first 12 weeks
+
+of pregnancy.
+
+Prevention of recurrence of neural tube defects, by mouth , ADULT, 5 mg daily
+
+(reduced to 4 mg daily, if suitable preparation available) from at least
+
+4 weeks before conception until 12 th  week of pregnancy.

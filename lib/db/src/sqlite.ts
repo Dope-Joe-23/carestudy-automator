@@ -8,12 +8,22 @@ import { desc, eq } from "drizzle-orm";
 import * as schema from "./schema";
 import { SCHEMA_DDL } from "./ddl";
 import type {
+  AdminRow,
   LibrarySourceRow,
+  NewAdmin,
   NewLibrarySource,
+  NewOrder,
+  NewOrderFile,
+  NewStudent,
   NewStudyFile,
+  OrderFileRow,
+  OrderRow,
+  OrderStatus,
+  StudentRow,
   StudyFileRow,
   StudyRow,
   StudyStore,
+  VivaStatus,
 } from "./store";
 
 // SQLite for development: a single local file, no provisioning, no native
@@ -129,11 +139,77 @@ function toFileRow(row: typeof schema.studyFilesTable.$inferSelect): StudyFileRo
   };
 }
 
+function toAdminRow(row: typeof schema.adminsTable.$inferSelect): AdminRow {
+  return {
+    id: row.id,
+    username: row.username,
+    passwordHash: row.passwordHash,
+    name: row.name,
+    createdAt: row.createdAt,
+  };
+}
+
+function toStudentRow(row: typeof schema.studentsTable.$inferSelect): StudentRow {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    passwordHash: row.passwordHash,
+    college: row.college,
+    program: row.program,
+    year: row.year,
+    createdAt: row.createdAt,
+  };
+}
+
+function toOrderRow(row: typeof schema.studentOrdersTable.$inferSelect): OrderRow {
+  return {
+    id: row.id,
+    studentId: row.studentId,
+    title: row.title,
+    diagnosis: row.diagnosis,
+    college: row.college,
+    program: row.program,
+    notes: row.notes,
+    status: row.status as OrderStatus,
+    note: row.note,
+    producedStudyId: row.producedStudyId,
+    deliveryFilename: row.deliveryFilename,
+    deliveryPath: row.deliveryPath,
+    deliverySize: row.deliverySize,
+    vivaBank: row.vivaBank,
+    vivaStatus: row.vivaStatus as VivaStatus,
+    vivaError: row.vivaError,
+    vivaUpdatedAt: row.vivaUpdatedAt,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function toOrderFileRow(row: typeof schema.studentOrderFilesTable.$inferSelect): OrderFileRow {
+  return {
+    id: row.id,
+    orderId: row.orderId,
+    kind: row.kind as OrderFileRow["kind"],
+    filename: row.filename,
+    storedPath: row.storedPath,
+    mime: row.mime,
+    size: row.size,
+    createdAt: row.createdAt,
+  };
+}
+
 export function createSqliteStore(): StudyStore {
   const db = getSqliteDb();
   const studies = schema.studiesTable;
   const files = schema.studyFilesTable;
   const library = schema.librarySourcesTable;
+  const admins = schema.adminsTable;
+  const adminSessions = schema.adminSessionsTable;
+  const students = schema.studentsTable;
+  const sessions = schema.studentSessionsTable;
+  const orders = schema.studentOrdersTable;
+  const orderFiles = schema.studentOrderFilesTable;
 
   return {
     async list() {
@@ -239,6 +315,183 @@ export function createSqliteStore(): StudyStore {
     async removeLibrarySource(id) {
       const deleted = await db.delete(library).where(eq(library.id, id)).returning().all();
       return deleted.length > 0;
+    },
+
+    // --- Studio admins -----------------------------------------------------
+
+    async addAdmin(admin) {
+      const [row] = await db.insert(admins).values(admin).returning();
+      return toAdminRow(row);
+    },
+
+    async getAdminByUsername(username) {
+      const [row] = await db.select().from(admins).where(eq(admins.username, username));
+      return row ? toAdminRow(row) : null;
+    },
+
+    async getAdmin(id) {
+      const [row] = await db.select().from(admins).where(eq(admins.id, id));
+      return row ? toAdminRow(row) : null;
+    },
+
+    async createAdminSession(adminId, token) {
+      await db.insert(adminSessions).values({ token, adminId });
+    },
+
+    async getAdminByToken(token) {
+      const [session] = await db
+        .select()
+        .from(adminSessions)
+        .where(eq(adminSessions.token, token));
+      if (!session) return null;
+      const [row] = await db.select().from(admins).where(eq(admins.id, session.adminId));
+      return row ? toAdminRow(row) : null;
+    },
+
+    async removeAdminSession(token) {
+      const deleted = await db
+        .delete(adminSessions)
+        .where(eq(adminSessions.token, token))
+        .returning()
+        .all();
+      return deleted.length > 0;
+    },
+
+    // --- Student portal ----------------------------------------------------
+
+    async addStudent(student) {
+      const [row] = await db.insert(students).values(student).returning();
+      return toStudentRow(row);
+    },
+
+    async getStudentByEmail(email) {
+      const [row] = await db.select().from(students).where(eq(students.email, email));
+      return row ? toStudentRow(row) : null;
+    },
+
+    async getStudent(id) {
+      const [row] = await db.select().from(students).where(eq(students.id, id));
+      return row ? toStudentRow(row) : null;
+    },
+
+    async createSession(studentId, token) {
+      await db.insert(sessions).values({ token, studentId });
+    },
+
+    async getStudentByToken(token) {
+      const [session] = await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.token, token));
+      if (!session) return null;
+      const [row] = await db.select().from(students).where(eq(students.id, session.studentId));
+      return row ? toStudentRow(row) : null;
+    },
+
+    async removeSession(token) {
+      const deleted = await db.delete(sessions).where(eq(sessions.token, token)).returning().all();
+      return deleted.length > 0;
+    },
+
+    async addOrder(order) {
+      const [row] = await db.insert(orders).values(order).returning();
+      return toOrderRow(row);
+    },
+
+    async listOrders(studentId) {
+      const rows = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.studentId, studentId))
+        .orderBy(desc(orders.id));
+      return rows.map(toOrderRow);
+    },
+
+    async listAllOrders() {
+      const rows = await db.select().from(orders).orderBy(desc(orders.id));
+      return rows.map(toOrderRow);
+    },
+
+    async getOrder(id) {
+      const [row] = await db.select().from(orders).where(eq(orders.id, id));
+      return row ? toOrderRow(row) : null;
+    },
+
+    async updateOrderStatus(id, status, note = null) {
+      const [row] = await db
+        .update(orders)
+        .set({ status, note, updatedAt: new Date() })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async setOrderDelivery(id, delivery) {
+      const [row] = await db
+        .update(orders)
+        .set({
+          status: "ready",
+          deliveryFilename: delivery.filename,
+          deliveryPath: delivery.storedPath,
+          deliverySize: delivery.size,
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async setOrderProduced(id, studyId, note = null) {
+      const [row] = await db
+        .update(orders)
+        .set({
+          status: "in_production",
+          producedStudyId: studyId,
+          note,
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async setOrderViva(id, viva) {
+      const [row] = await db
+        .update(orders)
+        .set(
+          viva.status === "ready"
+            ? {
+                vivaBank: viva.bankJson,
+                vivaStatus: "ready",
+                vivaError: null,
+                vivaUpdatedAt: new Date(),
+                updatedAt: new Date(),
+              }
+            : {
+                vivaBank: null,
+                vivaStatus: "error",
+                vivaError: viva.error,
+                vivaUpdatedAt: new Date(),
+                updatedAt: new Date(),
+              },
+        )
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async addOrderFile(file) {
+      const [row] = await db.insert(orderFiles).values(file).returning();
+      return toOrderFileRow(row);
+    },
+
+    async listOrderFiles(orderId) {
+      const rows = await db
+        .select()
+        .from(orderFiles)
+        .where(eq(orderFiles.orderId, orderId))
+        .orderBy(orderFiles.id);
+      return rows.map(toOrderFileRow);
     },
   };
 }
