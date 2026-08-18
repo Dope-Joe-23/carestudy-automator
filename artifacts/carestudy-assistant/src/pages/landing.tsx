@@ -174,22 +174,18 @@ function Hero() {
       <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-16 sm:px-6 sm:pb-20 sm:pt-24">
         <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="max-w-3xl">
-          <Eyebrow onDark>Nursing academic support agency — Accra · Nationwide</Eyebrow>
-          <h1 className="hero-title text-4xl font-semibold leading-[1.1] text-[hsl(43_30%_94%)] sm:text-5xl lg:text-[3.2rem]">
-            Professional academic support for nursing students
-            <span className="mt-3 block text-[hsl(166_58%_68%)]">
-              — from clinical placement to professional registration.
+          <Eyebrow onDark>Nursing support • Accra • Nationwide</Eyebrow>
+          <h1 className="hero-title text-[2.3rem] font-semibold leading-[1.1] text-[hsl(43_30%_94%)] sm:text-[2.8rem] lg:text-[3.5rem]">
+            Support for nursing students
+            <span className="mt-3 block text-[hsl(166_58%_68%)] text-[0.9em]">
+              practical guidance for learning and practice.
             </span>
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-[hsl(43_30%_94%/0.75)] sm:text-lg">
-            carestudy provides structured guidance through every stage of nursing education —
-            clinical documentation, care study preparation, and viva defense coaching.
-            Our flagship is the{' '}
-            <span className="font-medium text-[hsl(43_30%_94%)]">
-              Care Study Support Programme
-            </span>{' '}
-            : a complete, well-cited Patient/Family Care Study built from your materials,
-            with the preparation you need to defend it.
+            carestudy supports nursing students with academic guidance, clinical learning, and
+            professional preparation. We help with care study preparation, nursing research,
+            internal and licensing exam review, and the clear, practical support students need to
+            stay prepared and confident.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link href="/student/register" className={cn(buttonVariants({ size: 'lg' }))}>
