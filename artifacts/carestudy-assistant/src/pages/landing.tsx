@@ -38,6 +38,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
+import { HeroDashboard } from "@/components/hero-dashboard";
 
 // ---------------------------------------------------------------------------
 // Shared bits
@@ -171,7 +172,8 @@ function Hero() {
       />
 
       <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-16 sm:px-6 sm:pb-20 sm:pt-24">
-        <div className="max-w-3xl">
+        <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="max-w-3xl">
           <Eyebrow onDark>Nursing academic support agency — Accra · Nationwide</Eyebrow>
           <h1 className="hero-title text-4xl font-semibold leading-[1.1] text-[hsl(43_30%_94%)] sm:text-5xl lg:text-[3.2rem]">
             Professional academic support for nursing students
@@ -202,6 +204,8 @@ function Hero() {
               <a href="#programme">See how it works</a>
             </Button>
           </div>
+        </div>
+          <HeroDashboard />
         </div>
 
         {/* Trust strip */}
