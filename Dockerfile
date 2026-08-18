@@ -47,8 +47,9 @@ RUN pnpm --filter @workspace/api-server run build
 # ---------------------------------------------------------------------------
 FROM node:22-alpine AS runtime
 
-# Install Python 3 and pip for the RAG engine (use venv to avoid PEP 668)
-RUN apk add --no-cache python3 py3-pip py3-virtualenv \
+# Install Python 3 and the toolchain needed to build scikit-learn from source
+# Alpine does not ship a C compiler by default, and scikit-learn needs one.
+RUN apk add --no-cache build-base python3 python3-dev py3-pip py3-virtualenv \
     && python3 -m venv /opt/venv \
     && /opt/venv/bin/pip install --no-cache-dir \
         anthropic>=0.40 \
