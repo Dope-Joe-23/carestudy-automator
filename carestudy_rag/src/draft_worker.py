@@ -215,6 +215,13 @@ def main() -> None:
                     continue
                 emit({"id": req.get("id"), **ingest_study_files(study_id, paths)})
                 continue
+            if op == "extract":
+                file_path = req.get("path", "")
+                if not isinstance(file_path, str) or not file_path:
+                    emit({"id": req.get("id"), "error": "extract requires a file path"})
+                    continue
+                emit({"id": req.get("id"), "text": load_as_text(file_path)})
+                continue
             if op == "library_ingest":
                 sources = req.get("sources", []) or []
                 if not isinstance(sources, list):

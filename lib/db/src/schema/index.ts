@@ -150,6 +150,9 @@ export const studentOrdersTable = sqliteTable(
     program: text("program").notNull(),
     /** Free-form project information: patient data, requirements, instructions. */
     notes: text("notes"),
+    /** Correction request scope and exact extracted source text, when applicable. */
+    correctionScope: text("correction_scope"),
+    correctionText: text("correction_text"),
     /** "submitted" | "in_production" | "ready" | "cancelled". */
     status: text("status").notNull().$defaultFn(() => "submitted"),
     /** Studio note to the student (status context / feedback). */

@@ -131,6 +131,8 @@ export type OrderRow = {
   college: string;
   program: string;
   notes: string | null;
+  correctionScope: "chapter" | "full" | null;
+  correctionText: string | null;
   status: OrderStatus;
   /** Studio note to the student (status context / feedback). */
   note: string | null;
@@ -159,13 +161,15 @@ export type NewOrder = {
   college: string;
   program: string;
   notes?: string | null;
+  correctionScope?: "chapter" | "full" | null;
+  correctionText?: string | null;
 };
 
 /** An order plus the student's name/email (studio order bin). */
 export type OrderWithStudent = OrderRow & { studentName: string; studentEmail: string };
 
 /** "guidelines" | "clinical" | "reference" — what an attached file is for. */
-export type OrderFileKind = "guidelines" | "clinical" | "reference";
+export type OrderFileKind = "guidelines" | "clinical" | "reference" | "correction";
 
 export type OrderFileRow = {
   id: number;

@@ -43,6 +43,16 @@ function openSqlite(): DatabaseSync {
   sqlite.exec("PRAGMA foreign_keys = ON;");
   // Auto-create tables on first use (idempotent).
   sqlite.exec(SCHEMA_DDL);
+  for (const statement of [
+    'ALTER TABLE "student_orders" ADD COLUMN "correction_scope" text',
+    'ALTER TABLE "student_orders" ADD COLUMN "correction_text" text',
+  ]) {
+    try {
+      sqlite.exec(statement);
+    } catch {
+      // Columns already exist on databases created with the latest schema.
+    }
+  }
   return sqlite;
 }
 
@@ -171,6 +181,8 @@ function toOrderRow(row: typeof schema.studentOrdersTable.$inferSelect): OrderRo
     college: row.college,
     program: row.program,
     notes: row.notes,
+    correctionScope: row.correctionScope as OrderRow["correctionScope"],
+    correctionText: row.correctionText,
     status: row.status as OrderStatus,
     note: row.note,
     producedStudyId: row.producedStudyId,

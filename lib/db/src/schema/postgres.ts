@@ -126,6 +126,8 @@ export const studentOrdersTable = pgTable(
     college: text("college").notNull(),
     program: text("program").notNull(),
     notes: text("notes"),
+    correctionScope: text("correction_scope"),
+    correctionText: text("correction_text"),
     status: text("status").notNull().default("submitted"),
     note: text("note"),
     producedStudyId: integer("produced_study_id"),

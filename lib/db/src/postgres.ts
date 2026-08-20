@@ -130,6 +130,8 @@ function toOrderRow(row: typeof schema.studentOrdersTable.$inferSelect): OrderRo
     college: row.college,
     program: row.program,
     notes: row.notes,
+    correctionScope: row.correctionScope as OrderRow["correctionScope"],
+    correctionText: row.correctionText,
     status: row.status as OrderStatus,
     note: row.note,
     producedStudyId: row.producedStudyId,

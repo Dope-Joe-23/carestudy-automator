@@ -51,6 +51,8 @@ export type Order = {
   college: string;
   program: string;
   notes: string | null;
+  correctionScope: "chapter" | "full" | null;
+  correctionText: string | null;
   status: OrderStatus;
   note: string | null;
   /** The studio study created from this order (null until produced). */
@@ -151,7 +153,7 @@ export async function logoutStudent(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export type OrderFileInput = {
-  kind: "guidelines" | "clinical" | "reference";
+  kind: "guidelines" | "clinical" | "reference" | "correction";
   filename: string;
   content: string; // base64
 };
@@ -162,6 +164,7 @@ export function placeOrder(input: {
   college: string;
   program: string;
   notes?: string;
+  correctionScope?: "chapter" | "full";
   files: OrderFileInput[];
 }): Promise<{ order: Order; files: OrderFile[] }> {
   return requestJson("/orders", {

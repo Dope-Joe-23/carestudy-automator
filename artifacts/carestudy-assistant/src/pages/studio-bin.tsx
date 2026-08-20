@@ -69,10 +69,11 @@ const STATUS_VARIANT: Record<OrderStatus, "default" | "secondary" | "destructive
   cancelled: "destructive",
 };
 
-const FILE_KIND_LABELS: Record<OrderFile["kind"], string> = {
+const FILE_KIND_LABELS: Record<"guidelines" | "clinical" | "reference" | "correction", string> = {
   guidelines: "Care study guidelines",
   clinical: "Clinical notes & assessment data",
   reference: "Reference documents",
+  correction: "Uploaded study for correction",
 };
 
 function formatDate(iso: string): string {
@@ -166,6 +167,9 @@ function OrderRow({ order }: { order: StudioOrder }) {
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-xs text-muted-foreground">#{order.id}</span>
               <h3 className="font-semibold leading-snug">{order.title}</h3>
+              {order.correctionScope && (
+                <Badge variant="default">Correction · {order.correctionScope}</Badge>
+              )}
               <Badge variant={STATUS_VARIANT[order.status]}>{order.status.replace("_", " ")}</Badge>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -227,6 +231,19 @@ function OrderRow({ order }: { order: StudioOrder }) {
           </p>
         )}
 
+        {order.correctionText && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-3">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">
+              Requested changes
+            </p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed">{order.notes}</p>
+            <p className="mt-3 border-t border-primary/20 pt-3 text-xs text-muted-foreground">
+              The exact extracted text from the uploaded {order.correctionScope} is loaded into the
+              editable preview when you open the produced study.
+            </p>
+          </div>
+        )}
+
         {materialsOpen && (
           <div className="rounded-lg border bg-background p-3">
             {materialsQuery.isLoading ? (
@@ -241,7 +258,7 @@ function OrderRow({ order }: { order: StudioOrder }) {
               </p>
             ) : (
               <div className="space-y-3">
-                {(["guidelines", "clinical", "reference"] as const).map((kind) => {
+                {(["correction", "guidelines", "clinical", "reference"] as const).map((kind) => {
                   const kindFiles = (materialsQuery.data ?? []).filter((file) => file.kind === kind);
                   if (kindFiles.length === 0) return null;
                   return (

@@ -69,6 +69,9 @@ COPY --from=builder /app/artifacts/api-server/dist/ dist/
 COPY --from=builder /app/carestudy_rag/ carestudy_rag/
 
 # Create data directories
+# NOTE: On Render, /app/data is overridden by a persistent disk mount
+# (see render.yaml) so these directories survive deploys. In local
+# development the directories are created here.
 RUN mkdir -p /app/data/uploads /app/data/studies /app/data/library
 
 # Expose the API server port

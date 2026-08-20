@@ -90,6 +90,8 @@ CREATE TABLE IF NOT EXISTS "student_orders" (
   "college" text NOT NULL,
   "program" text NOT NULL,
   "notes" text,
+  "correction_scope" text,
+  "correction_text" text,
   "status" text NOT NULL DEFAULT 'submitted',
   "note" text,
   "produced_study_id" integer,

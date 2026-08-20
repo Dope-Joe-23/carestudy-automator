@@ -4,6 +4,7 @@
 # This blueprint defines:
 #   1. A PostgreSQL database
 #   2. A Docker-based web service for the API server
+#   3. A persistent disk for RAG indexes and uploaded files
 #
 # Deploy via Render Dashboard:
 #   1. Push this repo to GitHub/GitLab
@@ -21,8 +22,16 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    plan: starter  # 512 MB RAM, suitable for the RAG engine
+    plan: starter  # 512 MB RAM; upgrade to "standard" (2 GB) when memory is tight
     healthCheckPath: /api/health
+    # Persistent disk for RAG indexes and uploaded study files.
+    # The RAG worker writes pickled TF-IDF indexes here, and the API
+    # server stores uploaded documents. Without this mount every deploy
+    # wipes the indexes and files, forcing a full re-ingest.
+    disk:
+      name: app-data
+      mountPath: /app/data
+      sizeGB: 10
     envVars:
       - key: PORT
         value: 5000

@@ -67,7 +67,7 @@ function strOrNull(value: unknown): string | null {
   return trimmed ? trimmed : null;
 }
 
-const FILE_KINDS: OrderFileKind[] = ["guidelines", "clinical", "reference"];
+const FILE_KINDS: OrderFileKind[] = ["guidelines", "clinical", "reference", "correction"];
 const MAX_ORDER_FILES = 10;
 
 /** Decode the client's base64 payload; null when it isn't valid base64. */
@@ -91,6 +91,8 @@ function publicOrder(order: {
   college: string;
   program: string;
   notes: string | null;
+  correctionScope: string | null;
+  correctionText: string | null;
   status: string;
   note: string | null;
   producedStudyId: number | null;
@@ -109,6 +111,8 @@ function publicOrder(order: {
     college: order.college,
     program: order.program,
     notes: order.notes,
+    correctionScope: order.correctionScope,
+    correctionText: order.correctionText,
     status: order.status,
     note: order.note,
     producedStudyId: order.producedStudyId,
@@ -223,6 +227,9 @@ studentRouter.post(
     const college = str(req.body?.college);
     const program = str(req.body?.program);
     const notes = strOrNull(req.body?.notes);
+    const correctionScope = req.body?.correctionScope === "chapter" || req.body?.correctionScope === "full"
+      ? req.body.correctionScope
+      : null;
 
     if (!title || title.length < 4) {
       res.status(400).json({ error: "Please give your project a title." });
@@ -249,7 +256,7 @@ studentRouter.post(
     for (const raw of rawFiles) {
       const rawKind = typeof raw?.kind === "string" ? raw.kind : "";
       if (!(FILE_KINDS as string[]).includes(rawKind)) {
-        res.status(400).json({ error: "Each file needs a valid kind (guidelines, clinical, or reference)." });
+        res.status(400).json({ error: "Each file needs a valid kind (guidelines, clinical, reference, or correction)." });
         return;
       }
       const kind = rawKind as OrderFileKind;
@@ -267,6 +274,26 @@ studentRouter.post(
       }
       staged.push({ kind, filename, content });
     }
+    if (correctionScope && staged.filter((file) => file.kind === "correction").length !== 1) {
+      res.status(400).json({ error: "A correction order needs exactly one uploaded study or chapter." });
+      return;
+    }
+    let correctionText: string | null = null;
+    if (correctionScope) {
+      const correction = staged.find((file) => file.kind === "correction");
+      if (correction) {
+        const temporary = await storeOrderUpload(0, correction.content, correction.filename);
+        try {
+          correctionText = (await draftWorker.extract(temporary.storedPath)).text.trim() || null;
+        } finally {
+          await removeOrderArtifacts(0);
+        }
+        if (!correctionText) {
+          res.status(422).json({ error: "The uploaded document has no readable text. Please upload an editable text document or a text-based PDF." });
+          return;
+        }
+      }
+    }
 
     const db = studyStore();
     const order = await db.addOrder({
@@ -276,6 +303,8 @@ studentRouter.post(
       college,
       program,
       notes,
+      correctionScope,
+      correctionText,
     });
 
     const files = [];
@@ -556,7 +585,9 @@ studioRouter.post(
       },
       // The studio builds chapters from its own template when it opens a
       // study — an empty chapters array yields the full template workspace.
-      chapters: [],
+      chapters: order.correctionText
+        ? [{ name: "Assessment", sections: [{ id: "1.1", notes: "", draft: order.correctionText, references: [], data: {}, rowData: [] }], intro: "", introReferences: [] }]
+        : [],
     });
 
     // Register the student's materials as the study's clinical documents, so

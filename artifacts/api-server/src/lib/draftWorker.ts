@@ -36,6 +36,8 @@ export type IngestResult = {
   chunks: number;
 };
 
+export type ExtractResult = { text: string };
+
 export type VivaQuestion = {
   category: string;
   question: string;
@@ -48,7 +50,7 @@ export type VivaBankResult = {
 };
 
 /** A worker response is a draft, an ingest result, or a viva bank. */
-type WorkerResult = DraftResult | IngestResult | VivaBankResult;
+type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult;
 
 interface PendingRequest {
   /** The worker instance this request was written to. */
@@ -147,6 +149,32 @@ class DraftWorker {
       });
       try {
         child.stdin.write(JSON.stringify({ id, op: "ingest", studyId, paths }) + "\n");
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Extract source text for a correction preview without changing an index. */
+  async extract(filePath: string): Promise<ExtractResult> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<ExtractResult>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("Document text extraction timed out — please try again."));
+      }, 120_000);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as ExtractResult),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(JSON.stringify({ id, op: "extract", path: filePath }) + "\n");
       } catch (writeErr) {
         this.pending.delete(id);
         clearTimeout(timer);
@@ -285,6 +313,7 @@ class DraftWorker {
     let msg: {
       id?: number;
       draft?: string;
+      text?: string;
       references?: DraftReference[];
       files?: IngestFileResult[];
       chunks?: number;
@@ -305,6 +334,8 @@ class DraftWorker {
 
     if (typeof msg.error === "string") {
       pending.reject(new Error(msg.error.slice(0, 300)));
+    } else if (typeof msg.text === "string") {
+      pending.resolve({ text: msg.text });
     } else if (typeof msg.draft === "string") {
       pending.resolve({
         draft: msg.draft,

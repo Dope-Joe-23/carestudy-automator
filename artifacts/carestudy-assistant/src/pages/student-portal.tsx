@@ -62,6 +62,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import * as studentApi from "@/lib/studentApi";
 
 // ---------------------------------------------------------------------------
@@ -91,19 +98,22 @@ const STATUS_META: Record<
   cancelled: { label: "Cancelled", variant: "destructive", step: -1 },
 };
 
-const FILE_KIND_LABELS: Record<studentApi.OrderFile["kind"], string> = {
+const FILE_KIND_LABELS: Record<studentApi.OrderFile["kind"] | "correction", string> = {
   guidelines: "Care study guidelines",
   clinical: "Clinical notes & assessment data",
   reference: "Reference documents",
+  correction: "Prepared study or chapter",
 };
 
-const FILE_KIND_HINTS: Record<studentApi.OrderFile["kind"], string> = {
+const FILE_KIND_HINTS: Record<studentApi.OrderFile["kind"] | "correction", string> = {
   guidelines:
-    "Your college's patient/family care study guidelines, marking scheme, or template — so the study follows your school's expected format.",
+    "College guidelines, marking scheme, or template.",
   clinical:
-    "Your patient notes and assessment data from clinical placement — the real material your study will be built from.",
+    "Patient notes and assessment data from placement.",
   reference:
-    "Textbook chapters, WHO fact sheets, formularies, or past care studies you want used as reference sources.",
+    "Textbooks, fact sheets, formularies, or references.",
+  correction:
+    "The chapter or full study to be corrected.",
 };
 
 function formatBytes(bytes: number): string {
@@ -267,8 +277,8 @@ function PortalShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <PortalHeader />
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">{children}</main>
-      <footer className="mx-auto max-w-5xl px-4 pb-10 sm:px-6">
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">{children}</main>
+      <footer className="mx-auto max-w-4xl px-4 pb-8 sm:px-6">
         <Separator className="mb-6" />
         <p className="text-xs leading-relaxed text-muted-foreground">
           CareStudy Institute supports nursing education — preparing the study, and preparing you to
@@ -521,6 +531,8 @@ function StatusBadge({ status }: { status: OrderStatus }) {
 
 function OrdersList() {
   const [, navigate] = useLocation();
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["student-orders"],
     queryFn: async () => (await studentApi.listOrders()).orders,
@@ -545,10 +557,37 @@ function OrdersList() {
             study is ready.
           </p>
         </div>
-        <Button onClick={() => navigate("/student/orders/new")}>
-          <Plus className="size-4" /> Place an order
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => setOrderOpen(true)}>
+            <Plus className="size-4" /> Place an order
+          </Button>
+          <Button variant="outline" onClick={() => setCorrectionOpen(true)}>
+            <RotateCcw className="size-4" /> Make correction
+          </Button>
+        </div>
       </div>
+
+      <Dialog open={orderOpen} onOpenChange={setOrderOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Place an order</DialogTitle>
+            <DialogDescription>Submit a new care study order.</DialogDescription>
+          </DialogHeader>
+          <NewOrderPage onClose={() => setOrderOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={correctionOpen} onOpenChange={setCorrectionOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Make a correction</DialogTitle>
+            <DialogDescription>
+              Upload your prepared chapter or full study and describe the changes required.
+            </DialogDescription>
+          </DialogHeader>
+          <NewOrderPage correctionMode onClose={() => setCorrectionOpen(false)} />
+        </DialogContent>
+      </Dialog>
 
       {isLoading ? (
         <div className="flex min-h-[30vh] items-center justify-center">
@@ -571,7 +610,7 @@ function OrdersList() {
               When you place your first order — with your clinical notes, guidelines, and reference
               documents — it will appear here so you can follow it to delivery.
             </p>
-            <Button className="mt-5" onClick={() => navigate("/student/orders/new")}>
+            <Button className="mt-5" onClick={() => setOrderOpen(true)}>
               Place your first order <ArrowRight className="size-4" />
             </Button>
           </CardContent>
@@ -627,7 +666,7 @@ function OrdersList() {
 // New order form
 // ---------------------------------------------------------------------------
 
-type FileKind = studentApi.OrderFile["kind"];
+type FileKind = "guidelines" | "clinical" | "reference";
 
 function FilePicker({
   kind,
@@ -677,7 +716,13 @@ function FilePicker({
   );
 }
 
-function NewOrderPage() {
+function NewOrderPage({
+  correctionMode = false,
+  onClose,
+}: {
+  correctionMode?: boolean;
+  onClose?: () => void;
+}) {
   const { student } = useAuth();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
@@ -687,6 +732,8 @@ function NewOrderPage() {
   const [college, setCollege] = useState(student?.college ?? "");
   const [program, setProgram] = useState(student?.program ?? "");
   const [notes, setNotes] = useState("");
+  const [correctionScope, setCorrectionScope] = useState<"chapter" | "full" | null>(null);
+  const [correctionFile, setCorrectionFile] = useState<File | null>(null);
   const [filesByKind, setFilesByKind] = useState<Record<FileKind, File[]>>({
     guidelines: [],
     clinical: [],
@@ -705,12 +752,20 @@ function NewOrderPage() {
           });
         }
       }
+      if (correctionScope && correctionFile) {
+        files.push({
+          kind: "correction",
+          filename: correctionFile.name,
+          content: await studentApi.readFileAsBase64(correctionFile),
+        });
+      }
       return studentApi.placeOrder({
         title,
         diagnosis: diagnosis.trim() || undefined,
         college,
         program,
         notes: notes.trim() || undefined,
+        correctionScope: correctionMode ? correctionScope ?? undefined : undefined,
         files,
       });
     },
@@ -726,39 +781,57 @@ function NewOrderPage() {
 
   return (
     <div>
-      <Link href="/student/orders" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-4 -ml-2 text-muted-foreground')}>
-        <ArrowLeft className="size-4" /> My projects
-      </Link>
-      <div className="mb-6">
+      {correctionMode || onClose ? (
+        <button type="button" onClick={onClose} className="mb-3 text-sm text-muted-foreground hover:text-foreground">
+          Close request
+        </button>
+      ) : (
+        <Link href="/student/orders" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-4 -ml-2 text-muted-foreground')}>
+          <ArrowLeft className="size-4" /> My projects
+        </Link>
+      )}
+      {!correctionMode && <div className="mb-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
           The Care Study Support Programme
         </p>
-        <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight">
           Place an order
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
           Send us your project information — your clinical materials, your college's guidelines, and
           any reference documents. Our academic team prepares your study from what you provide.
         </p>
-      </div>
+      </div>}
 
       <form
-        className="space-y-5"
+        className="space-y-3"
         onSubmit={(event) => {
           event.preventDefault();
           if (!title.trim() || !college.trim() || !program) {
             toast.error("Please fill in the project title, college, and programme.");
             return;
           }
+          if (correctionMode && !correctionScope) {
+            toast.error("Please choose whether you are correcting a chapter or the full study.");
+            return;
+          }
+          if (correctionMode && !correctionFile) {
+            toast.error("Please upload the chapter or full study to correct.");
+            return;
+          }
+          if (correctionMode && !notes.trim()) {
+            toast.error("Please write the changes you want made to the uploaded work.");
+            return;
+          }
           placeOrder.mutate();
         }}
       >
         <Card>
-          <CardHeader>
+          <CardHeader className="px-4 py-3">
             <CardTitle className="text-base">Project information</CardTitle>
             <CardDescription>What your care study is about.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 px-4 pb-4">
             <div className="space-y-1.5">
               <Label htmlFor="order-title">Project title *</Label>
               <Input
@@ -804,21 +877,67 @@ function NewOrderPage() {
                 </Select>
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="order-notes">Project notes</Label>
-              <Textarea
-                id="order-notes"
-                rows={4}
-                placeholder="Tell us about your project — the patient, what you have collected so far, your supervisor's requirements, anything we should know."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
+            {!correctionMode && (
+              <div className="space-y-1.5">
+                <Label htmlFor="order-notes">Project notes</Label>
+                <Textarea
+                  id="order-notes"
+                  rows={4}
+                  placeholder="Tell us about your project — the patient, what you have collected so far, your supervisor's requirements, anything we should know."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        {correctionMode && <Card className="border-primary/20 bg-primary/[0.025]">
+          <CardHeader className="px-4 py-3">
+            <CardTitle className="text-base">Request a correction</CardTitle>
+            <CardDescription>Upload a prepared chapter or the full study, then describe exactly what should change.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 px-4 pb-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="correction-notes">Desired changes *</Label>
+                <Textarea
+                id="correction-notes"
+                  rows={3}
+                placeholder="Write exactly what should be corrected, added, removed, or reformatted."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                required={Boolean(correctionScope)}
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(["chapter", "full"] as const).map((scope) => (
+                <Button key={scope} type="button" size="sm" variant={correctionScope === scope ? "default" : "outline"} onClick={() => setCorrectionScope(correctionScope === scope ? null : scope)}>
+                  {scope === "chapter" ? "Correct a chapter" : "Correct the full study"}
+                </Button>
+              ))}
+            </div>
+            {correctionScope && (
+              <div className="space-y-2 rounded-lg border border-dashed p-4">
+                <Label htmlFor="correction-file" className="text-xs">{FILE_KIND_LABELS.correction}</Label>
+                <Input id="correction-file" type="file" accept=".pdf,.docx,.epub,.md,.markdown,.txt" onChange={(event) => setCorrectionFile(event.target.files?.[0] ?? null)} required />
+                {correctionFile && <p className="text-xs text-muted-foreground">{correctionFile.name} · {formatBytes(correctionFile.size)}</p>}
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="justify-end border-t px-4 py-3">
+            <Button type="submit" disabled={placeOrder.isPending}>
+              {placeOrder.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RotateCcw className="size-4" />
+              )}
+              Submit correction
+            </Button>
+          </CardFooter>
+        </Card>}
+
+        {!correctionMode && <Card>
+          <CardHeader className="px-4 py-3">
             <CardTitle className="text-base">Your project documents</CardTitle>
             <CardDescription>
               Optional — but the more of your own material you include, the more precisely the
@@ -827,7 +946,7 @@ function NewOrderPage() {
               documents later.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="grid gap-2 px-4 pb-4 sm:grid-cols-3">
             <FilePicker
               kind="guidelines"
               files={filesByKind.guidelines}
@@ -858,7 +977,7 @@ function NewOrderPage() {
               Submit order
             </Button>
           </CardFooter>
-        </Card>
+        </Card>}
       </form>
     </div>
   );
