@@ -62,8 +62,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-# Copy the bundled API server
-COPY --from=builder /app/artifacts/api-server/dist/ dist/
+# Preserve the build output path. esbuild-plugin-pino embeds this directory in
+# Pino's worker/transport paths, so moving the bundle to /app/dist would leave
+# thread-stream-worker.mjs unavailable at runtime.
+COPY --from=builder /app/artifacts/api-server/dist/ artifacts/api-server/dist/
 
 # Copy the Python RAG engine (needed by draftWorker at runtime)
 COPY --from=builder /app/carestudy_rag/ carestudy_rag/
@@ -82,4 +84,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:5000/api/health || exit 1
 
 # Start the API server
-CMD ["node", "--enable-source-maps", "./dist/index.mjs"]
+CMD ["node", "--enable-source-maps", "./artifacts/api-server/dist/index.mjs"]
