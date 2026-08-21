@@ -22,10 +22,118 @@ import type {
 } from "./store";
 
 // Postgres backend for deployment (DB_DRIVER=postgres). Requires DATABASE_URL;
-// tables are created with `pnpm --filter @workspace/db run push:pg`.
+// tables are provisioned automatically at server startup.
 
 let db: NodePgDatabase<typeof schema> | null = null;
 let pool: pg.Pool | null = null;
+
+const POSTGRES_SCHEMA_SQL = `
+CREATE TABLE IF NOT EXISTS "studies" (
+  "id" serial PRIMARY KEY,
+  "name" text NOT NULL,
+  "data" jsonb NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "updated_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS "study_versions" (
+  "id" serial PRIMARY KEY,
+  "study_id" integer NOT NULL REFERENCES "studies"("id") ON DELETE CASCADE,
+  "data" jsonb NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS "study_versions_study_id_idx" ON "study_versions" ("study_id");
+CREATE TABLE IF NOT EXISTS "study_files" (
+  "id" serial PRIMARY KEY,
+  "study_id" integer NOT NULL REFERENCES "studies"("id") ON DELETE CASCADE,
+  "filename" text NOT NULL,
+  "stored_path" text NOT NULL,
+  "kind" text NOT NULL DEFAULT 'clinical',
+  "mime" text NOT NULL,
+  "size" integer NOT NULL,
+  "status" text NOT NULL DEFAULT 'indexing',
+  "error" text,
+  "created_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS "study_files_study_id_idx" ON "study_files" ("study_id");
+CREATE TABLE IF NOT EXISTS "library_sources" (
+  "id" serial PRIMARY KEY,
+  "kind" text NOT NULL,
+  "title" text NOT NULL,
+  "author" text,
+  "year" text,
+  "venue" text,
+  "cite_key" text,
+  "url" text,
+  "filename" text NOT NULL,
+  "stored_path" text NOT NULL,
+  "status" text NOT NULL DEFAULT 'indexing',
+  "error" text,
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "updated_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS "admins" (
+  "id" serial PRIMARY KEY,
+  "username" text NOT NULL UNIQUE,
+  "password_hash" text NOT NULL,
+  "name" text,
+  "created_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS "admin_sessions" (
+  "token" text PRIMARY KEY,
+  "admin_id" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+  "created_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS "students" (
+  "id" serial PRIMARY KEY,
+  "name" text NOT NULL,
+  "email" text NOT NULL UNIQUE,
+  "password_hash" text NOT NULL,
+  "college" text NOT NULL,
+  "program" text NOT NULL,
+  "year" text,
+  "created_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS "student_sessions" (
+  "token" text PRIMARY KEY,
+  "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,
+  "created_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS "student_orders" (
+  "id" serial PRIMARY KEY,
+  "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,
+  "title" text NOT NULL,
+  "diagnosis" text,
+  "college" text NOT NULL,
+  "program" text NOT NULL,
+  "notes" text,
+  "correction_scope" text,
+  "correction_text" text,
+  "status" text NOT NULL DEFAULT 'submitted',
+  "note" text,
+  "produced_study_id" integer,
+  "delivery_filename" text,
+  "delivery_path" text,
+  "delivery_size" integer,
+  "viva_bank" text,
+  "viva_status" text NOT NULL DEFAULT 'none',
+  "viva_error" text,
+  "viva_updated_at" timestamptz,
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "updated_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS "student_orders_student_id_idx" ON "student_orders" ("student_id");
+CREATE TABLE IF NOT EXISTS "student_order_files" (
+  "id" serial PRIMARY KEY,
+  "order_id" integer NOT NULL REFERENCES "student_orders"("id") ON DELETE CASCADE,
+  "kind" text NOT NULL,
+  "filename" text NOT NULL,
+  "stored_path" text NOT NULL,
+  "mime" text NOT NULL,
+  "size" integer NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS "student_order_files_order_id_idx" ON "student_order_files" ("order_id");
+`;
 
 /** Lazily-created Postgres client. Throws only when first used. */
 export function getPostgresDb(): NodePgDatabase<typeof schema> {
@@ -40,6 +148,13 @@ export function getPostgresDb(): NodePgDatabase<typeof schema> {
     db = drizzle(pool, { schema });
   }
   return db;
+}
+
+/** Provision a fresh deployment database before accepting requests. */
+export async function initializePostgres(): Promise<void> {
+  if ((process.env.DB_DRIVER || "sqlite").toLowerCase() !== "postgres") return;
+  getPostgresDb();
+  await pool!.query(POSTGRES_SCHEMA_SQL);
 }
 
 /**

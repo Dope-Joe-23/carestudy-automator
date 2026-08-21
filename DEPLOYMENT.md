@@ -145,6 +145,10 @@ docker compose down
 
 ### Database Management
 
+The API creates the Postgres tables, including the `admins` table, during
+startup before it begins accepting requests. No manual migration command is
+required for a new Render or Supabase database.
+
 The PostgreSQL database runs in a Docker container. To run migrations:
 
 ```bash

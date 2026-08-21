@@ -1,4 +1,4 @@
-import { closePostgres, createPostgresStore } from "./postgres";
+import { closePostgres, createPostgresStore, initializePostgres } from "./postgres";
 import { closeSqlite, createSqliteStore } from "./sqlite";
 import type { StudyStore } from "./store";
 
@@ -8,7 +8,8 @@ import type { StudyStore } from "./store";
  *   - "sqlite"   (default)  — a single local file (carestudy.db), zero setup,
  *                             tables auto-created on first use. For development.
  *   - "postgres"            — a real Postgres database via DATABASE_URL, tables
- *                             created with `pnpm --filter @workspace/db run push:pg`.
+ *                             created automatically at server startup. The
+ *                             push script remains available for manual setup.
  *                             For deployment.
  *
  * Throws only when the configured driver cannot be initialized (unknown driver,
@@ -47,6 +48,8 @@ export async function closeStudyStore(): Promise<void> {
     await close();
   }
 }
+
+export { initializePostgres };
 
 export * from "./store";
 export type { StudyStore } from "./store";

@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { draftWorker } from "./lib/draftWorker";
-import { closeStudyStore } from "@workspace/db";
+import { closeStudyStore, initializePostgres } from "@workspace/db";
 
 // Load local config from <package>/..env if present (bundled into dist/,
 // so resolve relative to this module). Values already set in the process
@@ -32,6 +32,14 @@ const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+try {
+  await initializePostgres();
+  logger.info("Postgres schema ready");
+} catch (err) {
+  logger.error({ err }, "Failed to initialize Postgres schema");
+  process.exit(1);
 }
 
 app.listen(port, (err) => {
