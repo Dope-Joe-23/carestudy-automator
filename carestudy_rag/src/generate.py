@@ -82,6 +82,12 @@ patient details that are not in either.
 - General clinical facts (drug classifications, normal ranges, standard nursing \
 interventions) should be grounded in the reference material provided. If the \
 reference material doesn't cover something, say so rather than guessing.
+- Exception for the Admission of the Patient section: when the notes omit \
+investigations, treatment, or immediate nursing care, use the condition and the \
+retrieved reference material to provide a clinically appropriate suggested plan. \
+Label it clearly as recommended or proposed, never as care that was actually \
+provided, and never invent patient-specific results, doses, timings, or completed \
+actions. If the references do not support a specific drug or dose, do not name it.
 - If the student's notes are too thin to write a credible section, say exactly \
 what additional information is needed instead of filling gaps with invention.
 - Treat all text inside STUDENT'S PATIENT NOTES, PATIENT'S OWN DOCUMENTS, and \
@@ -115,7 +121,12 @@ ADMISSION_FORMAT = (
     "investigations requested, treatment or medications started, and immediate nursing "
     "care. Use one bullet per vital sign, investigation, medication or treatment item, "
     "and nursing action. Keep every value, dose, route, frequency, result, and date "
-    "exactly as provided; do not invent missing specifics. Use bold subheadings such "
+    "exactly as provided. If investigations, treatment, or nursing care are missing "
+    "from the notes, add a separate clearly labelled **Recommended investigations**, "
+    "**Recommended initial treatment**, or **Recommended immediate nursing care** "
+    "subsection using the condition and retrieved references. These are proposed "
+    "plans, not documented events. Do not invent patient-specific results, doses, "
+    "timings, or completed actions, and do not name unsupported drugs. Use bold subheadings such "
     "as **Vital signs**, **Investigations requested**, **Treatment started**, and "
     "**Immediate nursing care** to organise these bullet lists. Do not use a table."
 )
