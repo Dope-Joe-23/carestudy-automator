@@ -49,8 +49,10 @@ export type VivaBankResult = {
   questions: VivaQuestion[];
 };
 
-/** A worker response is a draft, an ingest result, or a viva bank. */
-type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult;
+export type StudyAssistantResult = { answer: string };
+
+/** A worker response is a draft, an ingest result, a viva bank, or an editorial answer. */
+type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult;
 
 interface PendingRequest {
   /** The worker instance this request was written to. */
@@ -118,6 +120,32 @@ class DraftWorker {
       } catch (writeErr) {
         // Stream destroyed (worker died a moment ago); fail fast instead of
         // leaving an entry that only self-cleans when the timer fires.
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Review or edit the complete in-memory study snapshot with the AI engine. */
+  async assistStudy(study: Record<string, unknown>, message: string): Promise<string> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<string>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("The study assistant timed out. Please try again."));
+      }, REQUEST_TIMEOUT_MS);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve((result as StudyAssistantResult).answer),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(JSON.stringify({ id, op: "study_assistant", study, message }) + "\n");
+      } catch (writeErr) {
         this.pending.delete(id);
         clearTimeout(timer);
         reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
@@ -318,6 +346,7 @@ class DraftWorker {
       files?: IngestFileResult[];
       chunks?: number;
       bank?: VivaBankResult;
+      answer?: string;
       error?: string;
     };
     try {
@@ -341,6 +370,8 @@ class DraftWorker {
         draft: msg.draft,
         references: Array.isArray(msg.references) ? msg.references : [],
       });
+    } else if (typeof msg.answer === "string") {
+      pending.resolve({ answer: msg.answer });
     } else if (msg.bank && Array.isArray(msg.bank.questions)) {
       pending.resolve({ questions: msg.bank.questions });
     } else {

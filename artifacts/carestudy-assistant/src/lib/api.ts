@@ -89,6 +89,40 @@ export async function requestDraft(
   }
 }
 
+/** Ask the study-aware editor to review or improve the full current workspace. */
+export async function requestStudyAssistant(
+  study: StoredStudy,
+  message: string,
+): Promise<string> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(`${API_URL}/study-assistant`, {
+      method: "POST",
+      headers: apiHeaders(),
+      body: JSON.stringify({ study, message }),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      signalIfUnauthorized(response);
+      const body = (await response.json().catch(() => null)) as
+        | { error?: string; detail?: string }
+        | null;
+      throw new Error(body?.detail ?? body?.error ?? `Study review failed (${response.status})`);
+    }
+    const data = (await response.json()) as { answer?: string };
+    if (!data.answer?.trim()) throw new Error("The study assistant returned an empty response.");
+    return data.answer;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("The study assistant timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 export type ExportField = { label: string; value: string };
 
 export type ExportSection = {

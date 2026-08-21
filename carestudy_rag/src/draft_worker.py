@@ -180,6 +180,64 @@ def emit(obj: dict) -> None:
     sys.stdout.flush()
 
 
+def assist_with_study(study: dict, message: str) -> str:
+    """Answer an editorial request against the entire current study snapshot."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
+    if not api_key and not auth_token:
+        raise RuntimeError("No AI API key is configured for the study assistant.")
+
+    import anthropic
+
+    client_kwargs: dict = {
+        "base_url": os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com",
+    }
+    if auth_token:
+        client_kwargs["auth_token"] = auth_token
+    else:
+        client_kwargs["api_key"] = api_key
+    client = anthropic.Anthropic(**client_kwargs)
+    primary_model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+    configured_fallbacks = [
+        candidate.strip()
+        for candidate in os.environ.get("ANTHROPIC_FALLBACK_MODELS", "").split(",")
+        if candidate.strip()
+    ]
+    fallbacks = configured_fallbacks or (
+        ["openrouter/free"]
+        if "openrouter.ai" in client_kwargs["base_url"] and primary_model != "openrouter/free"
+        else []
+    )
+    candidate_models = list(dict.fromkeys([primary_model, *fallbacks]))
+    snapshot = json.dumps(study, ensure_ascii=False, separators=(",", ":"))
+    prompt = f"STUDENT REQUEST:\n{message}\n\nCURRENT CARE STUDY JSON:\n{snapshot}"
+    system = (
+        "You are CareStudy's careful editorial assistant. Review the complete supplied "
+        "care-study snapshot before answering. Improve clarity, consistency, clinical-document "
+        "structure, grammar, and agreement between assessment, diagnoses, goals, interventions, "
+        "implementation, and evaluation. Do not invent patient facts, references, or clinical "
+        "findings. Name the chapter/section for each point. For editing, provide ready-to-paste "
+        "replacement text grouped by section. For review, prioritize the most consequential "
+        "issues and explain the fix. This is educational support, not clinical advice. Use concise Markdown."
+    )
+    for candidate_model in candidate_models:
+        try:
+            response = client.messages.create(
+                model=candidate_model,
+                max_tokens=3500,
+                system=system,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            answer = "".join(
+                block.text for block in response.content if block.type == "text"
+            ).strip()
+            if answer:
+                return answer
+        except Exception as exc:
+            print(f"[worker] study assistant model {candidate_model} failed: {exc}", file=sys.stderr, flush=True)
+    raise RuntimeError("The AI models returned no usable study review. Please try again.")
+
+
 def main() -> None:
     # Windows consoles default to cp1252, which can't encode every Unicode
     # character a model may output. Write UTF-8 and replace anything still
@@ -237,6 +295,15 @@ def main() -> None:
                     continue
                 bank = generate_viva_bank(title, chapters)
                 emit({"id": req.get("id"), "bank": bank})
+                continue
+            if op == "study_assistant":
+                study = req.get("study")
+                message = req.get("message", "")
+                if not isinstance(study, dict) or not isinstance(message, str) or not message.strip():
+                    emit({"id": req.get("id"), "error": "study_assistant requires a study and message"})
+                    continue
+                answer = assist_with_study(study, message.strip())
+                emit({"id": req.get("id"), "answer": answer})
                 continue
 
             study_id = req.get("studyId")

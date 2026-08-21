@@ -53,6 +53,7 @@ import {
   List,
   ListChecks,
   ListOrdered,
+  MessageCircle,
   Moon,
   NotebookPen,
   Palette,
@@ -62,6 +63,7 @@ import {
   Save,
   ScrollText,
   Search,
+  Send,
   ShieldCheck,
   Sparkles,
   Stethoscope,
@@ -97,6 +99,7 @@ import {
   listLibrarySources,
   listStudyFiles,
   requestDraft,
+  requestStudyAssistant,
   updateLibrarySource,
   updateStudy,
   uploadStudyFile,
@@ -2147,6 +2150,12 @@ function Home() {
   const [studyFiles, setStudyFiles] = useState<StudyFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantMessage, setAssistantMessage] = useState('');
+  const [assistantBusy, setAssistantBusy] = useState(false);
+  const [assistantMessages, setAssistantMessages] = useState<
+    { role: 'user' | 'assistant'; content: string }[]
+  >([]);
 
   // Personal reference library (ebooks, notes, articles, external resources).
   const [librarySources, setLibrarySources] = useState<LibrarySource[]>([]);
@@ -2850,6 +2859,24 @@ function Home() {
       })),
     })),
   });
+
+  const askStudyAssistant = async (question = assistantMessage) => {
+    const message = question.trim();
+    if (!message || assistantBusy) return;
+    setAssistantMessage('');
+    setAssistantBusy(true);
+    setAssistantMessages((messages) => [...messages, { role: 'user', content: message }]);
+    try {
+      const answer = await requestStudyAssistant(buildStudyPayload(), message);
+      setAssistantMessages((messages) => [...messages, { role: 'assistant', content: answer }]);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'The study assistant is unavailable.';
+      setAssistantMessages((messages) => [...messages, { role: 'assistant', content: `Unable to help: ${detail}` }]);
+      toast.error('Study assistant failed', { description: detail });
+    } finally {
+      setAssistantBusy(false);
+    }
+  };
 
   /**
    * Replace the workspace with a stored snapshot, re-keyed to the current
@@ -5614,6 +5641,70 @@ function Home() {
           </div>
         </div>
       )}
+
+      <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
+        {assistantOpen && (
+          <Card className="w-[min(24rem,calc(100vw-2.5rem))] overflow-hidden border-primary/25 shadow-2xl">
+            <CardHeader className="bg-primary px-4 py-3 text-primary-foreground">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-sm">CareStudy editor</CardTitle>
+                  <CardDescription className="mt-0.5 text-xs text-primary-foreground/80">
+                    Reviews the complete work currently on screen.
+                  </CardDescription>
+                </div>
+                <Button variant="ghost" size="icon" className="size-7 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" onClick={() => setAssistantOpen(false)} aria-label="Close study assistant">
+                  <X className="size-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3 p-3">
+              <div className="flex flex-wrap gap-1.5">
+                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Review the entire care study for inconsistencies, missing links between sections, and the five highest-priority improvements.')}>
+                  Review consistency
+                </Button>
+                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Fully edit the complete care study for clarity, grammar, professional tone, and internal consistency. Give ready-to-paste replacements grouped by section; do not invent facts.')}>
+                  Full edit
+                </Button>
+              </div>
+              <div className="max-h-72 space-y-2 overflow-y-auto rounded-md bg-muted/40 p-2 text-sm">
+                {assistantMessages.length === 0 ? (
+                  <p className="p-2 text-xs leading-relaxed text-muted-foreground">
+                    Ask about the whole work, or choose a review. Suggestions never overwrite your study automatically.
+                  </p>
+                ) : assistantMessages.map((item, index) => (
+                  <div key={`${item.role}-${index}`} className={cn('rounded-lg px-3 py-2 whitespace-pre-wrap', item.role === 'user' ? 'ml-7 bg-primary text-primary-foreground' : 'mr-3 bg-background border')}>
+                    {item.content}
+                  </div>
+                ))}
+                {assistantBusy && <div className="mr-3 rounded-lg border bg-background px-3 py-2 text-muted-foreground">Reviewing the full study…</div>}
+              </div>
+              <div className="flex gap-2">
+                <Textarea
+                  value={assistantMessage}
+                  onChange={(event) => setAssistantMessage(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault();
+                      void askStudyAssistant();
+                    }
+                  }}
+                  placeholder="Ask the editor about this care study…"
+                  className="min-h-10 resize-none text-sm"
+                  rows={2}
+                  disabled={assistantBusy}
+                />
+                <Button size="icon" className="mt-auto" disabled={!assistantMessage.trim() || assistantBusy} onClick={() => void askStudyAssistant()} aria-label="Send to study assistant">
+                  <Send className="size-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        <Button className="size-12 rounded-full shadow-lg" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open CareStudy editor">
+          <MessageCircle className="size-5" />
+        </Button>
+      </div>
 
       <Dialog open={onboardingOpen} onOpenChange={(open) => { setOnboardingOpen(open); if (!open) markOnboardingSeen(); }}>
         <DialogContent className="max-w-md">

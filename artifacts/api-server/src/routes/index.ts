@@ -8,6 +8,7 @@ import libraryRouter from "./library";
 import ordersRouter, { studioRouter } from "./orders";
 import studentsRouter from "./students";
 import studiesRouter from "./studies";
+import studyAssistantRouter from "./studyAssistant";
 import uploadsRouter from "./uploads";
 import verifyRouter from "./verify";
 
@@ -28,6 +29,7 @@ router.use(requireAdmin);
 router.use(draftRouter);
 router.use(exportRouter);
 router.use(studiesRouter);
+router.use(studyAssistantRouter);
 router.use(uploadsRouter);
 router.use(libraryRouter);
 router.use(verifyRouter);
