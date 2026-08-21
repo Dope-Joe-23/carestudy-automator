@@ -50,6 +50,10 @@ services:
         value: https://openrouter.ai/api
       - key: ANTHROPIC_MODEL
         value: openai/gpt-oss-20b:free
+      # Optional paid-model fallback list. When unset, the application retries
+      # failed or empty free-model responses through openrouter/free.
+      - key: ANTHROPIC_FALLBACK_MODELS
+        sync: false
       # ── Admin credentials (set these in Render Dashboard) ──
       - key: ADMIN_USERNAME
         value: admin

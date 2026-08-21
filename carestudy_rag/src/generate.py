@@ -536,31 +536,52 @@ def draft_section(
 
     client = anthropic.Anthropic(**client_kwargs)
     model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+    # Keep a free model as the preferred choice, but do not make a single
+    # overloaded provider able to block drafting. OpenRouter's free router is
+    # the no-cost fallback unless a deployment specifies its own model list.
+    configured_fallbacks = [
+        candidate.strip()
+        for candidate in os.environ.get("ANTHROPIC_FALLBACK_MODELS", "").split(",")
+        if candidate.strip()
+    ]
+    using_openrouter = "openrouter.ai" in client_kwargs["base_url"]
+    fallback_models = configured_fallbacks or (
+        ["openrouter/free"] if using_openrouter and model != "openrouter/free" else []
+    )
+    candidate_models = list(dict.fromkeys([model, *fallback_models]))
     # The literature review is a long structured essay; a chapter intro is
     # deliberately short — give each only as much room as it needs.
     max_tokens = 800 if chapter_intro else (4500 if is_lit else 1500)
 
-    def call_model() -> str:
+    def call_model(candidate_model: str) -> str:
         """One model call; returns the concatenated text blocks ('' when empty)."""
         response = client.messages.create(
-            model=model,
+            model=candidate_model,
             max_tokens=max_tokens,
             system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content": prompt}],
         )
         return "".join(block.text for block in response.content if block.type == "text")
 
-    draft = call_model()
+    draft = ""
+    # An empty completion is treated like a provider failure, allowing the
+    # fallback to rescue the request without repeating the same bad model.
+    for candidate_model in candidate_models:
+        try:
+            draft = call_model(candidate_model)
+        except Exception:
+            continue
+        if draft.strip():
+            break
 
     # Free-tier models occasionally return an empty completion (no text blocks)
     # on data-heavy sections. Retry once before surfacing an error — a silent
     # empty draft would otherwise be stored as if it were a real one and the
     # export would fall back to raw collected fields.
     if not draft.strip():
-        draft = call_model()
-    if not draft.strip():
         raise RuntimeError(
-            "The AI model returned an empty response for this section. Please try again."
+            "The AI models returned no usable response for this section "
+            f"(tried: {', '.join(candidate_models)}). Please try again."
         )
 
     # Prose enforcement: if the model still dumped the data as bullets/labels,
