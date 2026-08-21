@@ -8,7 +8,7 @@
  * login screen instead of letting the studio error out mid-work.
  */
 
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "/api";
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || "/api";
 
 const TOKEN_KEY = "carestudy_admin_token";
 

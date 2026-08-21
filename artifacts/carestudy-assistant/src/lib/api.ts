@@ -6,7 +6,7 @@
  * relative. Set VITE_API_URL to point elsewhere (e.g. a deployed backend).
  */
 
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "/api";
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || "/api";
 
 // Slightly above the API server's 300s child-process timeout, so the client
 // gives up last and reports a clear error instead of spinning forever.
