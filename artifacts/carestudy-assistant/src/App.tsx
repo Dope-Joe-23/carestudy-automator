@@ -110,6 +110,7 @@ import {
   type ExportScope,
   type LibrarySource,
   type SourceCheck,
+  type StoredSection,
   type StoredStudy,
   type StudyFile,
 } from '@/lib/api';
@@ -284,15 +285,15 @@ function sectionInputCount(section: Section): number {
 }
 
 /** Template inputs actually collected — fields and row cells only. The
- *  free-form Clinical notes box lives outside the data-collection modal, so
- *  it must not inflate the "X / Y collected" counter. */
+ *  free-form Clinical notes box is tracked separately from the template count. */
 function sectionCollectedCount(section: Section): number {
   const fieldFilled = section.fields.filter((field) => (section.data[field.id] ?? '').trim()).length;
   const cellFilled = section.rowData.reduce(
     (total, row) => total + row.cells.filter((cell) => cell.trim()).length,
     0,
   );
-  return fieldFilled + cellFilled;
+  const notesFilled = section.notes.trim() ? 1 : 0;
+  return fieldFilled + cellFilled + notesFilled;
 }
 
 /** Total template inputs (fields + row cells) for the "X / Y collected" badge. */
@@ -1990,7 +1991,7 @@ function Home() {
     current: string | null;
   } | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
-  const [sectionTab, setSectionTab] = useState<'collect' | 'draft'>('collect');
+  const [sectionTab, setSectionTab] = useState<'draft'>('draft');
   const [collectOpen, setCollectOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   // Manual draft editing: toggle the rendered draft into an editable text box.
@@ -2414,7 +2415,7 @@ function Home() {
   };
 
   const clearSection = () => {
-    setSectionTab('collect');
+    setSectionTab('draft');
     setCollectOpen(false);
     setDraftEditing(false);
     updateCurrentSection({ notes: '', draft: '', references: [], data: {}, rowData: [] });
@@ -2430,7 +2431,7 @@ function Home() {
 
   const resetAll = () => {
     workspaceGeneration.current += 1;
-    setSectionTab('collect');
+    setSectionTab('draft');
     setCollectOpen(false);
     setChapters(makeChapters());
     setActiveChapter(0);
@@ -2907,10 +2908,27 @@ function Home() {
         target.notes = typeof saved.notes === 'string' ? saved.notes : '';
         target.draft = typeof saved.draft === 'string' ? saved.draft : '';
         target.references = Array.isArray(saved.references) ? saved.references : [];
-        target.data =
+        const savedData =
           saved.data && typeof saved.data === 'object'
             ? (saved.data as Record<string, string>)
             : {};
+        const legacyFields = (saved as StoredSection & {
+          fields?: { label?: unknown; value?: unknown }[];
+        }).fields;
+        if (Object.keys(savedData).length > 0) {
+          target.data = savedData;
+        } else if (Array.isArray(legacyFields)) {
+          target.data = Object.fromEntries(
+            legacyFields.flatMap((field) => {
+              const templateField = target.fields.find((candidate) => candidate.label === field.label);
+              return templateField && typeof field.value === 'string'
+                ? [[templateField.id, field.value]]
+                : [];
+            }),
+          );
+        } else {
+          target.data = {};
+        }
         // Older templates stored problems, strengths and nursing diagnoses all
         // under the single “2.3 Health Needs Identified” section. Old saves
         // still hold those keys under 2.3 — move strengths and nursing
@@ -3441,7 +3459,7 @@ function Home() {
   // explicitly by clicking a section or the Collect data button.
   useEffect(() => {
     const hasDraft = currentSection.draft.trim().length > 0;
-    setSectionTab(hasDraft ? 'draft' : 'collect');
+    setSectionTab('draft');
     // Draft editing is per-section: drop any half-finished edit when moving on.
     setDraftEditing(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -4157,6 +4175,42 @@ function Home() {
                 </div>
               )}
 
+              <div className="space-y-2 border-t border-sidebar-border/60 pt-4">
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="section-notes"
+                    className="flex items-center gap-1.5 text-xs font-medium"
+                  >
+                    <FileText className="size-3.5 text-sidebar-foreground/70" />
+                    Clinical notes
+                    <span className="font-normal text-sidebar-foreground/70">
+                      (optional free text)
+                    </span>
+                  </label>
+                  <span className="tabular font-mono text-[11px] text-sidebar-foreground/70">
+                    {currentSection.notes.length} chars
+                  </span>
+                </div>
+                <Textarea
+                  id="section-notes"
+                  value={currentSection.notes}
+                  onChange={(event) => updateCurrentSection({ notes: event.target.value })}
+                  onKeyDown={handleNotesKeyDown}
+                  rows={5}
+                  placeholder={'Write what you observed, heard, measured, or were told…\n\nUse your own shorthand. There is no need to make it polished yet.'}
+                  className="min-h-[120px] bg-sidebar leading-relaxed"
+                />
+                <div className="flex items-center justify-between text-[11px] text-sidebar-foreground/70">
+                  <span>
+                    <kbd className="rounded border border-sidebar-border bg-sidebar px-1 font-mono text-[10px]">⌘</kbd>
+                    {' + '}
+                    <kbd className="rounded border border-sidebar-border bg-sidebar px-1 font-mono text-[10px]">Enter</kbd>
+                    {' '}to draft
+                  </span>
+                  <span>Private to this browser</span>
+                </div>
+              </div>
+
               {currentSection.rows && (
                 <RowEditor
                   rowDef={currentSection.rows}
@@ -4361,14 +4415,8 @@ function Home() {
               </CardHeader>
 
               <CardContent className="space-y-6 pt-4">
-                <Tabs
-                  value={sectionTab}
-                  onValueChange={(value) => setSectionTab(value as 'collect' | 'draft')}
-                >
-                  <TabsList className="grid w-full max-w-xs grid-cols-2">
-                    <TabsTrigger value="collect" className="gap-1.5">
-                      <ClipboardList className="size-3.5" /> Collect
-                    </TabsTrigger>
+                <Tabs value={sectionTab}>
+                  <TabsList className="grid w-full max-w-xs grid-cols-1">
                     <TabsTrigger value="draft" className="gap-1.5">
                       <BookOpen className="size-3.5" /> Draft
                       {currentSection.draft.trim() && (
@@ -4380,15 +4428,14 @@ function Home() {
                   </TabsList>
                   <AnimatePresence mode="wait">
                     <motion.div
-                      key={`${currentSection.id}-${activeChapter}-${activeSection}-${sectionTab}`}
+                      key={`${currentSection.id}-${activeChapter}-${activeSection}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.18, ease: 'easeOut' }}
                       className="space-y-6 pt-4"
                     >
-                      {sectionTab === 'collect' ? (
-                        <>
+                      <>
                     <div className="rounded-xl border bg-muted/30 p-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
@@ -4402,9 +4449,28 @@ function Home() {
                             </span>
                           </div>
                         </div>
-                        <Button onClick={() => setCollectOpen(true)} className="h-9 gap-1.5">
-                          <ClipboardList className="size-4" /> Collect data
-                        </Button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button onClick={() => setCollectOpen(true)} variant="outline" className="h-9 gap-1.5">
+                            <ClipboardList className="size-4" /> Collect data
+                          </Button>
+                          <Button
+                            onClick={draftSection}
+                            disabled={!draftAvailable || isDrafting}
+                            className="h-9 gap-1.5"
+                          >
+                            {isDrafting ? (
+                              <>
+                                <span className="size-1.5 animate-pulse rounded-full bg-primary-foreground/70" />
+                                Drafting…
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="size-4" />
+                                {currentSection.draft.trim() ? 'Redraft this section' : 'Draft this section'}
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
 
                       {currentRequiredMissing.length > 0 && !currentSection.draft.trim() && (
@@ -4421,68 +4487,6 @@ function Home() {
                       )}
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label
-                          htmlFor="section-notes"
-                          className="flex items-center gap-1.5 text-xs font-medium"
-                        >
-                          <FileText className="size-3.5 text-muted-foreground" />
-                          Clinical notes
-                          <span className="font-normal text-muted-foreground">
-                            (optional free text)
-                          </span>
-                        </label>
-                        <span className="tabular font-mono text-[11px] text-muted-foreground">
-                          {currentSection.notes.length} chars
-                        </span>
-                      </div>
-                      <Textarea
-                        id="section-notes"
-                        value={currentSection.notes}
-                        onChange={(event) => updateCurrentSection({ notes: event.target.value })}
-                        onKeyDown={handleNotesKeyDown}
-                        rows={5}
-                        placeholder={'Write what you observed, heard, measured, or were told…\n\nUse your own shorthand. There is no need to make it polished yet.'}
-                        className="min-h-[120px] bg-card leading-relaxed"
-                      />
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                        <span>
-                          <kbd className="rounded border bg-muted px-1 font-mono text-[10px]">⌘</kbd>
-                          {' + '}
-                          <kbd className="rounded border bg-muted px-1 font-mono text-[10px]">Enter</kbd>
-                          {' '}to draft
-                        </span>
-                        <span>Private to this browser</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Button
-                        onClick={draftSection}
-                        disabled={!draftAvailable || isDrafting}
-                        className="h-10 gap-2"
-                      >
-                        {isDrafting ? (
-                          <>
-                            <span className="size-1.5 animate-pulse rounded-full bg-primary-foreground/70" />
-                            Drafting…
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="size-4" /> Draft this section
-                            <ArrowRight className="size-4" />
-                          </>
-                        )}
-                      </Button>
-                      {!draftAvailable && (
-                        <span className="text-xs text-muted-foreground">
-                          Fill the template or add notes to unlock drafting
-                        </span>
-                      )}
-                    </div>
-                      </>
-                    ) : (
                     <div
                       className={cn(
                         'rounded-xl border p-4',
@@ -4607,30 +4611,15 @@ function Home() {
                               : 'Nothing collected yet. Fill the template, or jot down bedside observations, then draft this section.'}
                           </p>
                           {draftAvailable ? (
-                            <Button
-                              onClick={draftSection}
-                              disabled={isDrafting}
-                              size="sm"
-                              className="h-8 gap-1.5"
-                            >
-                              {isDrafting ? (
-                                <>
-                                  <span className="size-1.5 animate-pulse rounded-full bg-primary-foreground/70" />
-                                  Drafting…
-                                </>
-                              ) : (
-                                <>
-                                  <Sparkles className="size-3.5" /> Draft now
-                                </>
-                              )}
-                            </Button>
+                            <span className="text-xs text-muted-foreground">
+                              Use Collect data above to add the information needed for this section.
+                            </span>
                           ) : (
                             <Button
                               variant="outline"
                               size="sm"
                               className="h-8 gap-1.5"
                               onClick={() => {
-                                setSectionTab('collect');
                                 setCollectOpen(true);
                               }}
                             >
@@ -4698,7 +4687,7 @@ function Home() {
                         </div>
                       )}
                     </div>
-                    )}
+                      </>
                   </motion.div>
                 </AnimatePresence>
                 </Tabs>

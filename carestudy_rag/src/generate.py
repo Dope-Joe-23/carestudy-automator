@@ -108,6 +108,18 @@ FORMAT_PROSE = (
     "subheadings may organise subsections, but the text under them must be sentences."
 )
 
+ADMISSION_FORMAT = (
+    "FORMAT (Admission of the Patient): Write the admission story as flowing narrative "
+    "prose, including the date/time, route of admission, admitting diagnosis, and the "
+    "patient's presentation. Then use clear bullet lists for the recorded vital signs, "
+    "investigations requested, treatment or medications started, and immediate nursing "
+    "care. Use one bullet per vital sign, investigation, medication or treatment item, "
+    "and nursing action. Keep every value, dose, route, frequency, result, and date "
+    "exactly as provided; do not invent missing specifics. Use bold subheadings such "
+    "as **Vital signs**, **Investigations requested**, **Treatment started**, and "
+    "**Immediate nursing care** to organise these bullet lists. Do not use a table."
+)
+
 FORMAT_TABLE = (
     "FORMAT: This section is conventionally presented as a TABLE (e.g. drugs "
     "prescribed, a nursing care plan, or an outcome evaluation grid). Output the "
@@ -295,6 +307,12 @@ def is_literature_review(heading: str, tabular: bool = False) -> bool:
     return "literature" in normalized or normalized.startswith("1.10")
 
 
+def is_admission_section(heading: str) -> bool:
+    """Whether a heading is the patient-admission section."""
+    normalized = heading.strip().lower()
+    return "admission" in normalized and "patient" in normalized
+
+
 def build_prompt(
     heading: str,
     patient_notes: str,
@@ -341,6 +359,8 @@ def build_prompt(
         format_instruction = CHAPTER_INTRO_FORMAT
     elif tabular:
         format_instruction = FORMAT_TABLE
+    elif is_admission_section(heading):
+        format_instruction = ADMISSION_FORMAT
     else:
         format_instruction = FORMAT_PROSE
     if not chapter_intro and is_literature_review(heading, tabular):
@@ -439,10 +459,20 @@ _META_DRAFT_RE = re.compile(
     r"we must not fabricate)\b"
 )
 
+_FULL_STUDY_DRAFT_RE = re.compile(
+    r"(?is)\b(?:patient/family care study|table of content|chapter one|"
+    r"chapter two|chapter three|chapter four|chapter five|bibliography)\b"
+)
+
 
 def _looks_like_meta_draft(draft: str) -> bool:
     """True when the model returned prompt analysis instead of section content."""
     return bool(_META_DRAFT_RE.search(draft))
+
+
+def _looks_like_full_study_draft(draft: str) -> bool:
+    """True when a section request returned the entire care study."""
+    return len(_FULL_STUDY_DRAFT_RE.findall(draft)) >= 3
 
 
 REWRITE_AS_PROSE_PROMPT = (
@@ -490,7 +520,9 @@ def _rewrite_as_section(
     tabular: bool,
 ) -> str:
     """Convert an exposed planning response into content for the requested section."""
-    format_instruction = FORMAT_TABLE if tabular else FORMAT_PROSE
+    format_instruction = FORMAT_TABLE if tabular else (
+        ADMISSION_FORMAT if is_admission_section(heading) else FORMAT_PROSE
+    )
     response = client.messages.create(
         model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
         max_tokens=1500,
@@ -643,10 +675,10 @@ def draft_section(
     # Some models echo the assignment and citation rules instead of producing
     # the requested section. Give that response one focused repair pass while
     # retaining the original notes as the source of patient-specific facts.
-    if _looks_like_meta_draft(draft):
+    if _looks_like_meta_draft(draft) or _looks_like_full_study_draft(draft):
         try:
             rewritten = _rewrite_as_section(client, heading, patient_notes, draft, tabular)
-            if rewritten.strip() and not _looks_like_meta_draft(rewritten):
+            if rewritten.strip() and not _looks_like_meta_draft(rewritten) and not _looks_like_full_study_draft(rewritten):
                 draft = rewritten
         except Exception as exc:  # keep the model response available for review
             print(f"[generate] meta-response rewrite failed, keeping original draft: {exc}", file=sys.stderr)
