@@ -5719,14 +5719,19 @@ function Home() {
                   <div key={`${item.role}-${index}`} className={cn('rounded-lg px-3 py-2 whitespace-pre-wrap', item.role === 'user' ? 'ml-7 bg-primary text-primary-foreground' : 'mr-3 bg-background border')}>
                     {item.role === 'assistant' ? assistantPlainText(item.content) : item.content}
                     {item.role === 'assistant' && item.edits?.length && !item.applied ? (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="mt-3"
-                        onClick={() => applyAssistantEdits(index, item.edits ?? [])}
-                      >
-                        Apply {item.edits.length} suggested edit{item.edits.length === 1 ? '' : 's'}
-                      </Button>
+                      <div className="mt-3 rounded-md border border-primary/30 bg-primary/5 p-2">
+                        <p className="mb-1.5 text-[10px] font-medium text-primary">
+                          {item.edits.length} suggested edit{item.edits.length === 1 ? '' : 's'} — review and apply below
+                        </p>
+                        <Button
+                          size="sm"
+                          className="w-full gap-1.5 text-xs"
+                          onClick={() => applyAssistantEdits(index, item.edits ?? [])}
+                        >
+                          <CheckCircle2 className="size-3.5" />
+                          Apply {item.edits.length} edit{item.edits.length === 1 ? '' : 's'} to the study
+                        </Button>
+                      </div>
                     ) : null}
                     {item.role === 'assistant' && item.applied ? (
                       <p className="mt-2 text-xs text-muted-foreground">Applied to the study. Changes will autosave.</p>
