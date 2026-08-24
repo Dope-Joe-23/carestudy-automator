@@ -49,7 +49,7 @@ export type VivaBankResult = {
   questions: VivaQuestion[];
 };
 
-export type StudyAssistantResult = { answer: string; edits?: { sectionId: string; draft: string }[] };
+export type StudyAssistantResult = { answer: string; edits?: { sectionId: string; draft?: string; notes?: string; data?: Record<string, string> }[] };
 
 export type ImportedSection = {
   heading: string;

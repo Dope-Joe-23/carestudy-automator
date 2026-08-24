@@ -93,6 +93,7 @@ export type StudyAssistantEdit = {
   sectionId: string;
   draft?: string;
   notes?: string;
+  data?: Record<string, string>;
 };
 
 export type StudyAssistantResponse = {

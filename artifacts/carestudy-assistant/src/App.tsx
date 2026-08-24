@@ -2980,7 +2980,10 @@ function Home() {
   const applyAssistantEdits = (messageIndex: number, edits: StudyAssistantEdit[]) => {
     const knownIds = new Set(chapters.flatMap((chapter) => chapter.sections.map((section) => section.id)));
     const validEdits = edits.filter(
-      (edit) => knownIds.has(edit.sectionId) && (typeof edit.draft === 'string' || typeof edit.notes === 'string'),
+      (edit) => knownIds.has(edit.sectionId) && (
+        typeof edit.draft === 'string' || typeof edit.notes === 'string' ||
+        (edit.data && typeof edit.data === 'object' && Object.keys(edit.data).length > 0)
+      ),
     );
     if (validEdits.length === 0) {
       toast.error('No applicable edits', { description: 'The assistant did not target an existing section.' });
@@ -2996,6 +2999,9 @@ function Home() {
           const updates: Partial<Section> = {};
           if (typeof edit.draft === 'string') updates.draft = edit.draft;
           if (typeof edit.notes === 'string') updates.notes = edit.notes;
+          if (edit.data && typeof edit.data === 'object') {
+            updates.data = { ...section.data, ...edit.data };
+          }
           return { ...section, ...updates, status: computeStatus({ ...section, ...updates }) };
         }),
       })),

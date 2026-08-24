@@ -206,28 +206,62 @@ def _response_text(response) -> str:
 
 
 def _parse_assistant_result(raw: str) -> dict:
-    """Accept the structured edit response while tolerating plain-text models."""
+    """Accept the structured edit response while tolerating plain-text models.
+
+    Some models prepend natural-language text before the JSON block.  We
+    handle three shapes:
+      1. Pure JSON:  {"message": ..., "edits": [...]}
+      2. Fenced:     ```json { ... } ```
+      3. Mixed:      Some explanation...\n{"message": ..., "edits": [...]}
+    """
     candidate = raw.strip()
+
+    # Strip markdown fences.
     if candidate.startswith("```json") and candidate.endswith("```"):
         candidate = candidate[7:-3].strip()
+
+    # Try parsing the whole string first.
+    parsed = None
     try:
         parsed = json.loads(candidate)
-    except json.JSONDecodeError:
-        return {"message": raw.strip(), "edits": []}
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    # If that failed, look for a JSON object embedded in the text.
+    if parsed is None:
+        first_brace = candidate.find('{')
+        last_brace = candidate.rfind('}')
+        if first_brace != -1 and last_brace > first_brace:
+            try:
+                parsed = json.loads(candidate[first_brace:last_brace + 1])
+            except (json.JSONDecodeError, ValueError):
+                pass
+
     if not isinstance(parsed, dict) or not isinstance(parsed.get("message"), str):
         return {"message": raw.strip(), "edits": []}
+
+    # Collect the explanatory text that precedes the JSON block (if any).
+    message_text = parsed["message"].strip()
+    first_brace = raw.find('{')
+    if first_brace > 0:
+        prefix = raw[:first_brace].strip()
+        if prefix and prefix != message_text:
+            message_text = f"{prefix}\n\n{message_text}"
 
     edits = []
     for edit in parsed.get("edits", []):
         if not isinstance(edit, dict) or not isinstance(edit.get("sectionId"), str):
             continue
-        clean = {"sectionId": edit["sectionId"]}
+        clean: dict = {"sectionId": edit["sectionId"]}
         for field in ("draft", "notes"):
             if isinstance(edit.get(field), str):
                 clean[field] = edit[field]
+        # The assistant may also supply updated field data for the section.
+        if isinstance(edit.get("data"), dict):
+            clean["data"] = edit["data"]
         if len(clean) > 1:
             edits.append(clean)
-    return {"message": parsed["message"].strip(), "edits": edits}
+    return {"message": message_text, "edits": edits}
 
 
 def assist_with_study(study: dict, message: str) -> dict:
