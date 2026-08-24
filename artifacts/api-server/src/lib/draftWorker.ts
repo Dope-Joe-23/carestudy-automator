@@ -49,10 +49,35 @@ export type VivaBankResult = {
   questions: VivaQuestion[];
 };
 
-export type StudyAssistantResult = { answer: string };
+export type StudyAssistantResult = { answer: string; edits?: { sectionId: string; draft: string }[] };
 
-/** A worker response is a draft, an ingest result, a viva bank, or an editorial answer. */
-type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult;
+export type ImportedSection = {
+  heading: string;
+  content: string;
+};
+
+export type ImportedChapter = {
+  name: string;
+  sections: ImportedSection[];
+};
+
+export type ImportedTitle = {
+  patientName: string;
+  diagnosis: string;
+  studentName: string;
+  indexNumber: string;
+  collegeName: string;
+  collegeLocation: string;
+  year: string;
+};
+
+export type ImportStudyResult = {
+  title: ImportedTitle;
+  chapters: ImportedChapter[];
+};
+
+/** A worker response is a draft, an ingest result, a viva bank, an editorial answer, or an import. */
+type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | ImportStudyResult;
 
 interface PendingRequest {
   /** The worker instance this request was written to. */
@@ -128,10 +153,10 @@ class DraftWorker {
   }
 
   /** Review or edit the complete in-memory study snapshot with the AI engine. */
-  async assistStudy(study: Record<string, unknown>, message: string): Promise<string> {
+  async assistStudy(study: Record<string, unknown>, message: string): Promise<StudyAssistantResult> {
     const child = this.ensureWorker();
     const id = this.nextId++;
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<StudyAssistantResult>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
         this.restartWorker(child);
@@ -139,12 +164,38 @@ class DraftWorker {
       }, REQUEST_TIMEOUT_MS);
       this.pending.set(id, {
         child,
-        resolve: (result) => resolve((result as StudyAssistantResult).answer),
+        resolve: (result) => resolve(result as StudyAssistantResult),
         reject,
         timer,
       });
       try {
         child.stdin.write(JSON.stringify({ id, op: "study_assistant", study, message }) + "\n");
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Parse a pasted/uploaded care study document into structured chapters. */
+  async importStudy(text: string): Promise<ImportStudyResult> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<ImportStudyResult>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("Document import timed out. Please try again."));
+      }, REQUEST_TIMEOUT_MS);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as ImportStudyResult),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(JSON.stringify({ id, op: "import_study", text }) + "\n");
       } catch (writeErr) {
         this.pending.delete(id);
         clearTimeout(timer);
@@ -347,6 +398,8 @@ class DraftWorker {
       chunks?: number;
       bank?: VivaBankResult;
       answer?: string;
+      edits?: { sectionId: string; draft: string }[];
+      imported?: ImportStudyResult;
       error?: string;
     };
     try {
@@ -362,7 +415,7 @@ class DraftWorker {
     clearTimeout(pending.timer);
 
     if (typeof msg.error === "string") {
-      pending.reject(new Error(msg.error.slice(0, 300)));
+      pending.reject(new Error(msg.error.slice(0, 500)));
     } else if (typeof msg.text === "string") {
       pending.resolve({ text: msg.text });
     } else if (typeof msg.draft === "string") {
@@ -371,7 +424,9 @@ class DraftWorker {
         references: Array.isArray(msg.references) ? msg.references : [],
       });
     } else if (typeof msg.answer === "string") {
-      pending.resolve({ answer: msg.answer });
+      pending.resolve({ answer: msg.answer, edits: Array.isArray(msg.edits) ? msg.edits : [] });
+    } else if (msg.imported && Array.isArray(msg.imported.chapters)) {
+      pending.resolve({ title: msg.imported.title, chapters: msg.imported.chapters });
     } else if (msg.bank && Array.isArray(msg.bank.questions)) {
       pending.resolve({ questions: msg.bank.questions });
     } else {

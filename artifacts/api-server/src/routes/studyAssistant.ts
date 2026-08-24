@@ -27,8 +27,8 @@ router.post("/study-assistant", async (req, res) => {
   }
 
   try {
-    const answer = await draftWorker.assistStudy(study, message);
-    res.json({ answer });
+    const result = await draftWorker.assistStudy(study, message);
+    res.json(result);
   } catch (err) {
     req.log?.error?.({ err }, "study assistant failed");
     res.status(500).json({

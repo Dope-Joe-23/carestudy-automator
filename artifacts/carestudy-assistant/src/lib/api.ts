@@ -89,11 +89,22 @@ export async function requestDraft(
   }
 }
 
+export type StudyAssistantEdit = {
+  sectionId: string;
+  draft?: string;
+  notes?: string;
+};
+
+export type StudyAssistantResponse = {
+  answer: string;
+  edits: StudyAssistantEdit[];
+};
+
 /** Ask the study-aware editor to review or improve the full current workspace. */
 export async function requestStudyAssistant(
   study: StoredStudy,
   message: string,
-): Promise<string> {
+): Promise<StudyAssistantResponse> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
@@ -110,9 +121,9 @@ export async function requestStudyAssistant(
         | null;
       throw new Error(body?.detail ?? body?.error ?? `Study review failed (${response.status})`);
     }
-    const data = (await response.json()) as { answer?: string };
+    const data = (await response.json()) as { answer?: string; edits?: StudyAssistantEdit[] };
     if (!data.answer?.trim()) throw new Error("The study assistant returned an empty response.");
-    return data.answer;
+    return { answer: data.answer, edits: Array.isArray(data.edits) ? data.edits : [] };
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new Error("The study assistant timed out. Please try again.");
@@ -121,6 +132,38 @@ export async function requestStudyAssistant(
   } finally {
     window.clearTimeout(timer);
   }
+}
+
+export type ImportedSection = { heading: string; content: string };
+export type ImportedChapter = { name: string; sections: ImportedSection[] };
+export type ImportedTitle = {
+  patientName: string;
+  diagnosis: string;
+  studentName: string;
+  indexNumber: string;
+  collegeName: string;
+  collegeLocation: string;
+  year: string;
+};
+export type ImportStudyResponse = { title: ImportedTitle; chapters: ImportedChapter[] };
+
+/** Parse a pasted/uploaded care study document into structured chapters. */
+export async function importStudyDocument(text: string): Promise<ImportStudyResponse> {
+  const response = await fetch(`${API_URL}/import-study`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ text }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as
+      | { error?: string; detail?: string }
+      | null;
+    throw new Error(body?.detail ?? body?.error ?? `Import failed (${response.status})`);
+  }
+  const data = (await response.json()) as ImportStudyResponse;
+  if (!data.chapters?.length) throw new Error("The import returned no chapters.");
+  return data;
 }
 
 export type ExportField = { label: string; value: string };
@@ -188,6 +231,10 @@ export type DocTheme = {
   heading2_space_after?: number;
   body_alignment?: 'justify' | 'left' | 'center' | 'right';
   first_line_indent?: number;
+  top_margin?: number;
+  bottom_margin?: number;
+  left_margin?: number;
+  right_margin?: number;
 };
 
 export type ExportPayload = {

@@ -32,6 +32,7 @@ from loaders import load_as_text  # noqa: E402
 from viva import generate_viva_bank  # noqa: E402
 from reference_chunker import chunk_reference_text, ref_chunks_to_dicts  # noqa: E402
 from retrieval import SimpleIndex  # noqa: E402
+from import_worker import import_study  # noqa: E402
 
 # Per-study retrieval indexes, keyed by study id and cached in memory so each
 # draft doesn't reload the pickled index from disk. Lives at the project root
@@ -180,7 +181,56 @@ def emit(obj: dict) -> None:
     sys.stdout.flush()
 
 
-def assist_with_study(study: dict, message: str) -> str:
+def _response_text(response) -> str:
+    """Extract text from Anthropic SDK and compatible gateway responses."""
+    output_text = getattr(response, "output_text", None)
+    if isinstance(output_text, str) and output_text.strip():
+        return output_text.strip()
+
+    content = getattr(response, "content", None)
+    if isinstance(content, str):
+        return content.strip()
+    if not isinstance(content, (list, tuple)):
+        return ""
+
+    parts = []
+    for block in content:
+        block_type = getattr(block, "type", None)
+        text = getattr(block, "text", None)
+        if isinstance(block, dict):
+            block_type = block.get("type")
+            text = block.get("text")
+        if (block_type in (None, "text")) and isinstance(text, str):
+            parts.append(text)
+    return "".join(parts).strip()
+
+
+def _parse_assistant_result(raw: str) -> dict:
+    """Accept the structured edit response while tolerating plain-text models."""
+    candidate = raw.strip()
+    if candidate.startswith("```json") and candidate.endswith("```"):
+        candidate = candidate[7:-3].strip()
+    try:
+        parsed = json.loads(candidate)
+    except json.JSONDecodeError:
+        return {"message": raw.strip(), "edits": []}
+    if not isinstance(parsed, dict) or not isinstance(parsed.get("message"), str):
+        return {"message": raw.strip(), "edits": []}
+
+    edits = []
+    for edit in parsed.get("edits", []):
+        if not isinstance(edit, dict) or not isinstance(edit.get("sectionId"), str):
+            continue
+        clean = {"sectionId": edit["sectionId"]}
+        for field in ("draft", "notes"):
+            if isinstance(edit.get(field), str):
+                clean[field] = edit[field]
+        if len(clean) > 1:
+            edits.append(clean)
+    return {"message": parsed["message"].strip(), "edits": edits}
+
+
+def assist_with_study(study: dict, message: str) -> dict:
     """Answer an editorial request against the entire current study snapshot."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
@@ -209,33 +259,87 @@ def assist_with_study(study: dict, message: str) -> str:
         else []
     )
     candidate_models = list(dict.fromkeys([primary_model, *fallbacks]))
-    snapshot = json.dumps(study, ensure_ascii=False, separators=(",", ":"))
-    prompt = f"STUDENT REQUEST:\n{message}\n\nCURRENT CARE STUDY JSON:\n{snapshot}"
+    # Browser JSON can contain lone UTF-16 surrogates from pasted content.
+    # Escape them before the SDK encodes the prompt as UTF-8.
+    safe_message = message.encode("utf-8", "replace").decode("utf-8")
+    snapshot = json.dumps(study, ensure_ascii=True, separators=(",", ":"))
+    prompt = f"STUDENT REQUEST:\n{safe_message}\n\nCURRENT CARE STUDY JSON:\n{snapshot}"
     system = (
         "You are CareStudy's careful editorial assistant. Review the complete supplied "
         "care-study snapshot before answering. Improve clarity, consistency, clinical-document "
         "structure, grammar, and agreement between assessment, diagnoses, goals, interventions, "
         "implementation, and evaluation. Do not invent patient facts, references, or clinical "
-        "findings. Name the chapter/section for each point. For editing, provide ready-to-paste "
-        "replacement text grouped by section. For review, prioritize the most consequential "
-        "issues and explain the fix. This is educational support, not clinical advice. Use concise Markdown."
+        "findings, and do not create generic placeholder sections or values to fill missing data. "
+        "When information is absent, identify it as missing and state what existing evidence is "
+        "needed. Name the chapter/section for each point. For editing, provide ready-to-paste "
+        "replacement text grouped by section, limited to text supported by the snapshot. For "
+        "review, prioritize the most consequential issues and explain the fix. This is educational "
+        "support, not clinical advice. Return ONLY a JSON object with this exact shape: "
+        '{"message":"natural-language response", "edits":[{"sectionId":"...",'
+        '"draft":"replacement text"}]}'
+        ". "
+        "The message must use natural language with short paragraphs and no Markdown. "
+        "Add an edit only when you can provide a complete replacement supported by the study. "
+        "Use the exact section id from the supplied study. Omit draft or notes when it should "
+        "not change. Never invent missing patient facts."
     )
+    import time
+
+    max_retries = 2
+    model_errors: list[str] = []
     for candidate_model in candidate_models:
-        try:
-            response = client.messages.create(
-                model=candidate_model,
-                max_tokens=3500,
-                system=system,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            answer = "".join(
-                block.text for block in response.content if block.type == "text"
-            ).strip()
-            if answer:
-                return answer
-        except Exception as exc:
-            print(f"[worker] study assistant model {candidate_model} failed: {exc}", file=sys.stderr, flush=True)
-    raise RuntimeError("The AI models returned no usable study review. Please try again.")
+        last_exc: Exception | None = None
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = client.messages.create(
+                    model=candidate_model,
+                    max_tokens=3500,
+                    system=system,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                answer = _response_text(response)
+                if answer:
+                    result = _parse_assistant_result(answer)
+                    if result["message"]:
+                        return result
+                # Empty but successful response - retry once before moving on
+                if attempt < max_retries:
+                    wait = 2 ** attempt
+                    print(
+                        f"[worker] study assistant model {candidate_model} returned empty (attempt {attempt}/{max_retries}), retrying in {wait}s",
+                        file=sys.stderr, flush=True,
+                    )
+                    time.sleep(wait)
+                    continue
+                stop_reason = getattr(response, "stop_reason", None)
+                content_types = [
+                    getattr(block, "type", None)
+                    for block in (getattr(response, "content", None) or [])
+                ]
+                model_errors.append(
+                    f"{candidate_model}: returned empty response after {max_retries} attempts"
+                    f" (stop_reason={stop_reason!r}, content_types={content_types!r})"
+                )
+                print(
+                    f"[worker] study assistant model {candidate_model} returned empty after {max_retries} attempts, moving on",
+                    file=sys.stderr, flush=True,
+                )
+                break
+            except Exception as exc:
+                last_exc = exc
+                print(
+                    f"[worker] study assistant model {candidate_model} failed (attempt {attempt}/{max_retries}): {exc}",
+                    file=sys.stderr, flush=True,
+                )
+                if attempt < max_retries:
+                    wait = 2 ** attempt
+                    time.sleep(wait)
+        if last_exc is not None:
+            model_errors.append(f"{candidate_model}: {type(last_exc).__name__}: {last_exc}")
+    detail = "; ".join(model_errors) if model_errors else "all models returned empty responses"
+    raise RuntimeError(
+        f"The AI models returned no usable study review. Please try again. [{detail}]"
+    )
 
 
 def main() -> None:
@@ -296,14 +400,22 @@ def main() -> None:
                 bank = generate_viva_bank(title, chapters)
                 emit({"id": req.get("id"), "bank": bank})
                 continue
+            if op == "import_study":
+                raw_text = req.get("text", "")
+                if not isinstance(raw_text, str) or not raw_text.strip():
+                    emit({"id": req.get("id"), "error": "import_study requires a text field"})
+                    continue
+                result = import_study(raw_text.strip())
+                emit({"id": req.get("id"), "imported": result})
+                continue
             if op == "study_assistant":
                 study = req.get("study")
                 message = req.get("message", "")
                 if not isinstance(study, dict) or not isinstance(message, str) or not message.strip():
                     emit({"id": req.get("id"), "error": "study_assistant requires a study and message"})
                     continue
-                answer = assist_with_study(study, message.strip())
-                emit({"id": req.get("id"), "answer": answer})
+                result = assist_with_study(study, message.strip())
+                emit({"id": req.get("id"), "answer": result["message"], "edits": result["edits"]})
                 continue
 
             study_id = req.get("studyId")

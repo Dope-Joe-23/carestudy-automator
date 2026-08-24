@@ -107,6 +107,10 @@ class Theme:
     heading2_space_before: int = 10
     heading2_space_after: int = 4
     body_alignment: str = "justify"  # justify | left | center | right
+    top_margin: float = 1.0       # inches
+    bottom_margin: float = 1.0    # inches
+    left_margin: float = 1.0      # inches
+    right_margin: float = 1.0     # inches
 
     @classmethod
     def from_dict(cls, data):
@@ -149,9 +153,9 @@ BULLET_RE = re.compile(r"^\s*[-•]\s+")
 NUMBER_RE = re.compile(r"^\s*\d+[.)]\s+")
 # Paragraph-style directives the preview editor emits: a "<!-- ... -->" line
 # before a paragraph overrides the document theme's alignment / line spacing
-# for just that paragraph ("<!-- align:center spacing:1.5 -->").
+# for just that paragraph ("<!-- align:center spacing:1.5 indent:0.25 -->").
 PARA_DIRECTIVE_RE = re.compile(
-    r"^<!--\s*(?:align:(left|center|right|justify))?\s*(?:spacing:(\d+(?:\.\d+)?))?\s*-->\s*$"
+    r"^<!--\s*(?:align:(left|center|right|justify))?\s*(?:spacing:(\d+(?:\.\d+)?))?\s*(?:indent:(\d+(?:\.\d+)?))?\s*-->\s*$"
 )
 # Markdown pipe tables that can sneak into drafts (e.g. "| Item | Detail |").
 TABLE_ROW_RE = re.compile(r"^\s*\|")
@@ -347,7 +351,7 @@ def _add_inline_text(paragraph, text, theme):
             _add_run(paragraph, part, theme)
 
 
-def _add_markdown_paragraph(doc, text, theme, style=None, alignment=None, spacing=None):
+def _add_markdown_paragraph(doc, text, theme, style=None, alignment=None, spacing=None, indent=None):
     """Add a paragraph, honouring **bold**, *italic* and <sup>superscript</sup>.
     Style defaults to Care Study Body; alignment and line spacing default to
     the theme's, unless a paragraph directive overrides them."""
@@ -362,6 +366,9 @@ def _add_markdown_paragraph(doc, text, theme, style=None, alignment=None, spacin
         paragraph.alignment = alignment
     paragraph.paragraph_format.line_spacing = (
         spacing if spacing is not None else theme.line_spacing
+    )
+    paragraph.paragraph_format.first_line_indent = (
+        Inches(indent) if indent is not None else Inches(theme.first_line_indent)
     )
     _add_inline_text(paragraph, _format_ordinal_dates(text), theme)
     return paragraph
@@ -556,6 +563,8 @@ def _add_draft(doc, draft, theme):
                 style["alignment"] = directive.group(1)
             if directive.group(2):
                 style["spacing"] = min(max(float(directive.group(2)), 1.0), 3.0)
+            if directive.group(3):
+                style["indent"] = min(max(float(directive.group(3)), 0.0), 0.5)
             pending = {**pending, **style}  # adjacent directives combine
             index += 1
             continue
@@ -578,6 +587,7 @@ def _add_draft(doc, draft, theme):
                 doc, text, theme, style="List Bullet" if bullet else "List Number",
                 alignment=pending.pop("alignment", None),
                 spacing=pending.pop("spacing", None),
+                indent=pending.pop("indent", None),
             )
             if lists is not None:
                 _apply_list_numbering(
@@ -590,6 +600,7 @@ def _add_draft(doc, draft, theme):
                 doc, raw, theme,
                 alignment=pending.pop("alignment", None),
                 spacing=pending.pop("spacing", None),
+                indent=pending.pop("indent", None),
             )
         index += 1
 
@@ -1166,6 +1177,14 @@ def build_docx(payload):
     _setup_styles(doc, theme)
     _setup_lists(doc, theme)
     _add_page_number(doc)
+
+    # Apply page margins from the theme so every page has consistent spacing
+    # between the last line of text and the page edge.
+    section = doc.sections[0]
+    section.top_margin = Inches(theme.top_margin)
+    section.bottom_margin = Inches(theme.bottom_margin)
+    section.left_margin = Inches(theme.left_margin)
+    section.right_margin = Inches(theme.right_margin)
 
     title = payload.get("title") or {}
     chapters = payload.get("chapters") or []

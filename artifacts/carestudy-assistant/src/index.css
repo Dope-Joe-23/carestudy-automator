@@ -334,6 +334,7 @@ kbd {
   font-size: var(--doc-body-size, 12pt);
   line-height: var(--doc-line-height, 1.5);
   text-align: var(--doc-align, justify);
+  padding: var(--doc-margin-top, 1in) var(--doc-margin-right, 1in) var(--doc-margin-bottom, 1in) var(--doc-margin-left, 1in);
 }
 
 .print-doc h1,
@@ -364,6 +365,54 @@ kbd {
 
 .dark .print-doc table th {
   background: var(--doc-table-fill, #1e293b);
+}
+
+@media screen {
+  /* Flowing document — chapter dividers replace the old A4 page simulation. */
+  .print-doc {
+    border: 1px solid hsl(var(--border));
+    box-shadow: none;
+    background-color: transparent !important;
+    padding: 2.25rem 3rem;
+  }
+
+  .print-doc > section {
+    padding-bottom: 1.5rem;
+  }
+
+  .print-doc > section + section {
+    border-top: 1px dashed hsl(var(--border));
+    padding-top: 2rem;
+    margin-top: 2rem;
+  }
+
+  .print-doc p {
+    margin-top: 0.55em;
+    margin-bottom: 0.55em;
+  }
+
+  .print-doc h2 {
+    margin-top: 1.2em;
+    margin-bottom: 0.65em;
+  }
+
+  .print-doc h3 {
+    margin-top: 1em;
+    margin-bottom: 0.45em;
+  }
+
+  .print-doc table {
+    margin-top: 0.8em;
+    margin-bottom: 0.8em;
+  }
+
+  .print-doc > header,
+  .print-doc > section {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+  }
 }
 
 @media print {

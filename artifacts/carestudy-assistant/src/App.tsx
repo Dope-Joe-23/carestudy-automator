@@ -28,12 +28,12 @@ import {
   Check,
   CheckCircle2,
   CircleAlert,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsUpDown,
   Clipboard,
   ClipboardCheck,
   ClipboardList,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
   Download,
   Eye,
   FileCheck2,
@@ -56,7 +56,6 @@ import {
   MessageCircle,
   Moon,
   NotebookPen,
-  Palette,
   Pencil,
   Plus,
   RotateCcw,
@@ -73,7 +72,9 @@ import {
   Trash2,
   Underline,
   Upload,
+  Undo2,
   X,
+  Redo2,
   type LucideIcon,
 } from 'lucide-react';
 import { ThemeProvider, useTheme } from 'next-themes';
@@ -110,6 +111,7 @@ import {
   type ExportScope,
   type LibrarySource,
   type SourceCheck,
+  type StudyAssistantEdit,
   type StoredSection,
   type StoredStudy,
   type StudyFile,
@@ -348,6 +350,10 @@ const DEFAULT_DOC_THEME: DocTheme = {
   heading2_space_after: 4,
   body_alignment: 'justify',
   first_line_indent: 0,
+  top_margin: 1.0,
+  bottom_margin: 1.0,
+  left_margin: 1.0,
+  right_margin: 1.0,
 };
 
 // Persisted locally so a student's formatting choices survive reloads — the
@@ -468,6 +474,7 @@ type ParaState = {
   list: 'ul' | 'ol' | null;
   align: string | null;
   spacing: number | null;
+  indent: number | null;
 };
 
 function computeStatus(section: Section): SectionStatus {
@@ -961,7 +968,7 @@ function renderInlineMarkdown(text: string): ReactNode[] {
 // draft can carry a small directive line before it. Both the preview renderer
 // and the Word exporter (carestudy_rag/src/export_docx.py) understand:
 //
-//     <!-- align:center spacing:1.5 -->
+//     <!-- align:center spacing:1.5 indent:0.25 -->
 //
 // A directive styles the next paragraph (contiguous non-blank lines until a
 // blank line). Both keys are optional; spacing accepts LINE_SPACING_OPTIONS.
@@ -969,20 +976,22 @@ function renderInlineMarkdown(text: string): ReactNode[] {
 type ParaStyle = {
   align?: 'left' | 'center' | 'right' | 'justify';
   spacing?: number;
+  indent?: number;
 };
 
 const PARA_DIRECTIVE_RE =
-  /^<!--\s*(?:align:(left|center|right|justify))?\s*(?:spacing:(\d+(?:\.\d+)?))?\s*-->$/;
+  /^<!--\s*(?:align:(left|center|right|justify))?\s*(?:spacing:(\d+(?:\.\d+)?))?\s*(?:indent:(\d+(?:\.\d+)?))?\s*-->$/;
 const BULLET_LINE_RE = /^\s*[-•]\s+/;
 const NUMBER_LINE_RE = /^\s*\d+[.)]\s+/;
 
 /** Parse a directive line ("<!-- align:center spacing:1.5 -->") or null. */
 function parseParaDirective(line: string): ParaStyle | null {
   const match = line.match(PARA_DIRECTIVE_RE);
-  if (!match || (!match[1] && !match[2])) return null;
+  if (!match || (!match[1] && !match[2] && !match[3])) return null;
   const style: ParaStyle = {};
   if (match[1]) style.align = match[1] as ParaStyle['align'];
   if (match[2]) style.spacing = Math.min(Math.max(Number(match[2]), 1), 3);
+  if (match[3]) style.indent = Math.min(Math.max(Number(match[3]), 0), 0.5);
   return style;
 }
 
@@ -991,6 +1000,7 @@ function directiveLineFor(style: ParaStyle): string {
   const parts: string[] = [];
   if (style.align) parts.push(`align:${style.align}`);
   if (style.spacing !== undefined) parts.push(`spacing:${style.spacing}`);
+  if (style.indent !== undefined) parts.push(`indent:${style.indent}`);
   return parts.length ? `<!-- ${parts.join(' ')} -->` : '';
 }
 
@@ -1055,11 +1065,13 @@ function markdownFromHtml(html: string): string {
       // directive line before it, just like a styled paragraph.
       const align = element.style.textAlign;
       const liSpacing = Number.parseFloat(element.style.lineHeight);
+      const liIndent = Number.parseFloat(element.style.textIndent);
       const liStyle: ParaStyle = {};
       if (align && ['left', 'center', 'right', 'justify'].includes(align)) {
         liStyle.align = align as ParaStyle['align'];
       }
       if (Number.isFinite(liSpacing)) liStyle.spacing = liSpacing;
+      if (Number.isFinite(liIndent)) liStyle.indent = liIndent / 96;
       const directive = directiveLineFor(liStyle);
       const indent = '  '.repeat(list?.depth ?? 0);
       const marker = list?.ordered ? `${list.index.value}. ` : '- ';
@@ -1097,11 +1109,13 @@ function markdownFromHtml(html: string): string {
       // line so the preview and the Word export both honour it.
       const align = element.style.textAlign;
       const spacing = Number.parseFloat(element.style.lineHeight);
+      const indent = Number.parseFloat(element.style.textIndent);
       const style: ParaStyle = {};
       if (align && ['left', 'center', 'right', 'justify'].includes(align)) {
         style.align = align as ParaStyle['align'];
       }
       if (Number.isFinite(spacing)) style.spacing = spacing;
+      if (Number.isFinite(indent)) style.indent = indent / 96;
       const directive = directiveLineFor(style);
       return directive ? `${directive}\n${inner}\n` : `${inner}\n`;
     }
@@ -1317,11 +1331,12 @@ function styleSelectionParagraphs(
 function applyParaStyle(element: HTMLElement, style: ParaStyle): void {
   if (style.align) element.style.textAlign = style.align;
   if (style.spacing !== undefined) element.style.lineHeight = String(style.spacing);
+  if (style.indent !== undefined) element.style.textIndent = `${style.indent}in`;
 }
 
 /** The paragraph-level formatting under the caret, for the toolbar's state. */
 function readParagraphState(selection: Selection | null): ParaState {
-  const empty: ParaState = { list: null, align: null, spacing: null };
+  const empty: ParaState = { list: null, align: null, spacing: null, indent: null };
   if (!selection || !selection.anchorNode) return empty;
   const element =
     selection.anchorNode.nodeType === Node.TEXT_NODE
@@ -1342,11 +1357,49 @@ function readParagraphState(selection: Selection | null): ParaState {
   }
   const computed = window.getComputedStyle(paragraph);
   const inlineSpacing = Number.parseFloat(paragraph.style.lineHeight);
+  const inlineIndent = Number.parseFloat(paragraph.style.textIndent);
   return {
     list,
     align: computed.textAlign || null,
     spacing: Number.isFinite(inlineSpacing) ? inlineSpacing : null,
+    indent: Number.isFinite(inlineIndent) ? inlineIndent / 96 : null,
   };
+}
+
+function assistantPlainText(content: string): string {
+  const lines = content.split(/\r?\n/);
+  const output: string[] = [];
+  let inCodeBlock = false;
+
+  for (const originalLine of lines) {
+    const line = originalLine.trim();
+    if (line.startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+    if (!line || line === '---' || line === '***' || line === '___') {
+      if (output.at(-1) !== '') output.push('');
+      continue;
+    }
+    if (/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(line)) continue;
+
+    let plain = line
+      .replace(/^#{1,6}\s+/, '')
+      .replace(/^[-*+]\s+/, '')
+      .replace(/^\d+[.)]\s+/, '')
+      .replace(/^>\s?/, '')
+      .replace(/^\|\s?|\s?\|$/g, '')
+      .replace(/\|\s*/g, '. ')
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+      .replace(/`{1,3}/g, '')
+      .replace(/(\*\*|__|~~|==)/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+    if (inCodeBlock) plain = plain.replace(/^\s+/, '');
+    if (plain) output.push(plain);
+  }
+
+  return output.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 type PreviewBlock =
@@ -1404,14 +1457,37 @@ function splitPreviewBlocks(draft: string): PreviewBlock[] {
 
 /** Shared markdown-table renderer used by both the on-screen preview and the
  *  print/export view, so their table markup never drifts apart. */
-function PreviewTable({ header, rows }: { header: string[]; rows: string[][] }) {
+function tableToMarkdown(header: string[], rows: string[][]): string {
+  const formatRow = (row: string[]) => `| ${row.map((cell) => cell.replace(/\|/g, '\\|')).join(' | ')} |`;
+  return [formatRow(header), formatRow(header.map(() => '---')), ...rows.map(formatRow)].join('\n');
+}
+
+function PreviewTable({
+  header,
+  rows,
+  editable = false,
+  onCellEdit,
+}: {
+  header: string[];
+  rows: string[][];
+  editable?: boolean;
+  onCellEdit?: (rowIndex: number, cellIndex: number, value: string) => void;
+}) {
   return (
-    <table className="w-full border-collapse text-[11px]">
+    <table className="w-full table-fixed border-collapse text-[11px]">
       <thead>
         <tr>
           {header.map((cell, cellIndex) => (
-            <th key={cellIndex} className="border bg-muted px-2 py-1 text-left font-semibold">
+            <th key={cellIndex} className="w-1/5 border bg-muted px-2 py-1 text-left font-semibold">
+              <div
+                contentEditable={editable}
+                suppressContentEditableWarning
+                spellCheck={false}
+                onBlur={(event) => onCellEdit?.(-1, cellIndex, event.currentTarget.textContent ?? '')}
+                className="min-h-5 whitespace-pre-wrap break-words outline-none"
+              >
               {cell}
+              </div>
             </th>
           ))}
         </tr>
@@ -1420,8 +1496,16 @@ function PreviewTable({ header, rows }: { header: string[]; rows: string[][] }) 
         {rows.map((row, rowIndex) => (
           <tr key={rowIndex}>
             {row.map((cell, cellIndex) => (
-              <td key={cellIndex} className="border px-2 py-1 align-top">
-                {cell || '—'}
+              <td key={cellIndex} className="w-1/5 border px-2 py-1 align-top">
+                <div
+                  contentEditable={editable}
+                  suppressContentEditableWarning
+                  spellCheck={false}
+                  onBlur={(event) => onCellEdit?.(rowIndex, cellIndex, event.currentTarget.textContent ?? '')}
+                  className="min-h-5 whitespace-pre-wrap break-words outline-none"
+                >
+                  {cell}
+                </div>
               </td>
             ))}
           </tr>
@@ -1575,6 +1659,7 @@ function renderParaGroups(text: string): ReactNode {
       const css: CSSProperties = {};
       if (group.style.align) css.textAlign = group.style.align;
       if (group.style.spacing !== undefined) css.lineHeight = String(group.style.spacing);
+      if (group.style.indent !== undefined) css.textIndent = `${group.style.indent}in`;
       nodes.push(
         <div key={`para-${groupIndex}`} style={css} className="whitespace-pre-wrap">
           {content}
@@ -1615,7 +1700,7 @@ function EditableIntro({
       suppressContentEditableWarning
       spellCheck={false}
       onBlur={(event) => onBlur(markdownFromHtml(event.currentTarget.innerHTML))}
-      className="mt-2.5 whitespace-pre-wrap rounded-sm outline-none focus:ring-1 focus:ring-primary/40"
+      className="mt-2.5 whitespace-pre-wrap outline-none focus:outline-none"
       dangerouslySetInnerHTML={html}
     />
   );
@@ -1631,6 +1716,18 @@ function PrintDraft({
   onEdit?: (markdown: string) => void;
 }) {
   const blocks = useMemo(() => splitPreviewBlocks(draft), [draft]);
+  const editTableCell = (blockIndex: number, rowIndex: number, cellIndex: number, value: string) => {
+    if (!onEdit) return;
+    const nextBlocks = blocks.map((block, index) => {
+      if (index !== blockIndex || block.kind !== 'table') return block;
+      const nextHeader = [...block.header];
+      const nextRows = block.rows.map((row) => [...row]);
+      if (rowIndex < 0) nextHeader[cellIndex] = value;
+      else if (nextRows[rowIndex]) nextRows[rowIndex][cellIndex] = value;
+      return { kind: 'table' as const, header: nextHeader, rows: nextRows };
+    });
+    onEdit(nextBlocks.map((block) => block.kind === 'table' ? tableToMarkdown(block.header, block.rows) : block.text).join('\n\n'));
+  };
   // Editable blocks are rendered as static HTML, never as React children.
   // While editing, the browser owns the DOM inside a contenteditable (typing,
   // Enter, execCommand all restructure it), so React must not try to reconcile
@@ -1657,7 +1754,12 @@ function PrintDraft({
       {blocks.map((block, index) =>
         block.kind === 'table' ? (
           <div key={index} className="overflow-x-auto">
-            <PreviewTable header={block.header} rows={block.rows} />
+            <PreviewTable
+              header={block.header}
+              rows={block.rows}
+              editable={Boolean(onEdit)}
+              onCellEdit={(rowIndex, cellIndex, value) => editTableCell(index, rowIndex, cellIndex, value)}
+            />
           </div>
         ) : (
           // A <div> (not <p>): styled paragraphs and lists are legal children,
@@ -1668,7 +1770,7 @@ function PrintDraft({
             suppressContentEditableWarning
             spellCheck={false}
             onBlur={(event) => onEdit?.(markdownFromHtml(event.currentTarget.innerHTML))}
-            className="whitespace-pre-wrap rounded-sm outline-none focus:ring-1 focus:ring-primary/40"
+            className="whitespace-pre-wrap rounded-sm outline-none focus:outline-none"
             dangerouslySetInnerHTML={blockHtml[index] ?? undefined}
           />
         ),
@@ -2003,6 +2105,7 @@ function Home() {
   // the compact Intro / Draft all actions in the content header row.
   const [chapterOpen, setChapterOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [showPreliminaryPages, setShowPreliminaryPages] = useState(false);
   const [exportMeta, setExportMeta] = useState({
     patientName: '',
     diagnosis: '',
@@ -2042,6 +2145,7 @@ function Home() {
     list: null,
     align: null,
     spacing: null,
+    indent: null,
   });
 
   // Persist the document theme and panel-open state so reloads restore them.
@@ -2068,6 +2172,18 @@ function Home() {
     } else {
       document.execCommand(tool.command, false);
     }
+  };
+
+  const applyEditHistory = (command: 'undo' | 'redo') => {
+    const selection = window.getSelection();
+    const container = document.querySelector('.print-doc');
+    if (!selection?.anchorNode || !container?.contains(selection.anchorNode)) return;
+    const anchorElement =
+      selection.anchorNode.nodeType === Node.TEXT_NODE
+        ? selection.anchorNode.parentElement
+        : (selection.anchorNode as HTMLElement);
+    if (!anchorElement?.closest('[contenteditable="true"]')) return;
+    document.execCommand(command, false);
   };
 
   /** Paragraph-style the paragraph(s) under the caret/selection. */
@@ -2114,7 +2230,7 @@ function Home() {
     if (!selection || !selection.anchorNode || !selection.focusNode) {
       setPreviewTextSelected(false);
       setPreviewEditingActive(false);
-      setPreviewParaState({ list: null, align: null, spacing: null });
+      setPreviewParaState({ list: null, align: null, spacing: null, indent: null });
       return;
     }
     const editableOf = (node: Node | null) =>
@@ -2128,7 +2244,7 @@ function Home() {
     );
     setPreviewEditingActive(insideEditable);
     setPreviewTextSelected(insideEditable && !selection.isCollapsed);
-    setPreviewParaState(insideEditable ? readParagraphState(selection) : { list: null, align: null, spacing: null });
+    setPreviewParaState(insideEditable ? readParagraphState(selection) : { list: null, align: null, spacing: null, indent: null });
   };
   const [currentStudyId, setCurrentStudyId] = useState<number | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
@@ -2155,7 +2271,7 @@ function Home() {
   const [assistantMessage, setAssistantMessage] = useState('');
   const [assistantBusy, setAssistantBusy] = useState(false);
   const [assistantMessages, setAssistantMessages] = useState<
-    { role: 'user' | 'assistant'; content: string }[]
+    { role: 'user' | 'assistant'; content: string; edits?: StudyAssistantEdit[]; applied?: boolean }[]
   >([]);
 
   // Personal reference library (ebooks, notes, articles, external resources).
@@ -2861,6 +2977,37 @@ function Home() {
     })),
   });
 
+  const applyAssistantEdits = (messageIndex: number, edits: StudyAssistantEdit[]) => {
+    const knownIds = new Set(chapters.flatMap((chapter) => chapter.sections.map((section) => section.id)));
+    const validEdits = edits.filter(
+      (edit) => knownIds.has(edit.sectionId) && (typeof edit.draft === 'string' || typeof edit.notes === 'string'),
+    );
+    if (validEdits.length === 0) {
+      toast.error('No applicable edits', { description: 'The assistant did not target an existing section.' });
+      return;
+    }
+
+    setChapters((previous) =>
+      previous.map((chapter) => ({
+        ...chapter,
+        sections: chapter.sections.map((section) => {
+          const edit = validEdits.find((candidate) => candidate.sectionId === section.id);
+          if (!edit) return section;
+          const updates: Partial<Section> = {};
+          if (typeof edit.draft === 'string') updates.draft = edit.draft;
+          if (typeof edit.notes === 'string') updates.notes = edit.notes;
+          return { ...section, ...updates, status: computeStatus({ ...section, ...updates }) };
+        }),
+      })),
+    );
+    setAssistantMessages((messages) =>
+      messages.map((message, index) => (index === messageIndex ? { ...message, applied: true } : message)),
+    );
+    toast.success('Assistant edits applied', {
+      description: `${validEdits.length} section${validEdits.length === 1 ? '' : 's'} updated. Changes will autosave.`,
+    });
+  };
+
   const askStudyAssistant = async (question = assistantMessage) => {
     const message = question.trim();
     if (!message || assistantBusy) return;
@@ -2868,8 +3015,11 @@ function Home() {
     setAssistantBusy(true);
     setAssistantMessages((messages) => [...messages, { role: 'user', content: message }]);
     try {
-      const answer = await requestStudyAssistant(buildStudyPayload(), message);
-      setAssistantMessages((messages) => [...messages, { role: 'assistant', content: answer }]);
+      const result = await requestStudyAssistant(buildStudyPayload(), message);
+      setAssistantMessages((messages) => [
+        ...messages,
+        { role: 'assistant', content: result.answer, edits: result.edits },
+      ]);
     } catch (error) {
       const detail = error instanceof Error ? error.message : 'The study assistant is unavailable.';
       setAssistantMessages((messages) => [...messages, { role: 'assistant', content: `Unable to help: ${detail}` }]);
@@ -4940,6 +5090,10 @@ function Home() {
                 docTheme.table_header_fill && docTheme.table_header_fill !== 'D9D9D9'
                   ? `#${docTheme.table_header_fill}`
                   : undefined,
+              '--doc-margin-top': `${docTheme.top_margin ?? 1.0}in`,
+              '--doc-margin-bottom': `${docTheme.bottom_margin ?? 1.0}in`,
+              '--doc-margin-left': `${docTheme.left_margin ?? 1.0}in`,
+              '--doc-margin-right': `${docTheme.right_margin ?? 1.0}in`,
             } as CSSProperties
           }
         >
@@ -4950,7 +5104,19 @@ function Home() {
                 <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-primary">
                   Preview / Export
                 </p>
-                <h2 className="mt-0.5 text-xl font-semibold">Your care study</h2>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <h2 className="text-xl font-semibold">Your care study</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 gap-1 px-2 text-[10px] text-muted-foreground"
+                    onClick={() => setShowPreliminaryPages((visible) => !visible)}
+                    title={showPreliminaryPages ? 'Hide preliminary pages' : 'Show preliminary pages'}
+                  >
+                    <Eye className="size-3" />
+                    {showPreliminaryPages ? 'Hide preliminary' : 'Show preliminary'}
+                  </Button>
+                </div>
               </div>
               <Button
                 variant="outline"
@@ -5026,75 +5192,18 @@ function Home() {
               </DialogContent>
             </Dialog>
             <div className="w-full px-6 pb-4 md:px-10">
-              <div className="rounded-xl border bg-card p-3">
+              <div className="rounded-lg border bg-card p-1.5">
                 <Collapsible open={formatOpen} onOpenChange={setFormatOpen} className="group/collapsible">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground">
-                    <Palette className="size-3.5 shrink-0 text-primary" />
-                    <span className="truncate">Document formatting</span>
-                    <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-medium text-primary">
-                      {isDefaultDocTheme ? 'Default' : 'Customized'}
-                    </span>
+                <div className="flex items-center justify-between gap-1.5 px-1">
+                  <span className="text-[10px] font-semibold text-muted-foreground">
+                    Document formatting
                   </span>
                   <div className="flex shrink-0 items-center gap-1.5">
-                    <span
-                      className={cn('font-mono text-[10px] tabular', saveStatus.tone)}
-                      title="Edits and formatting are saved automatically, about a second after you stop typing."
-                    >
-                      {saveStatus.label}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-8"
-                      onClick={openSaveDialog}
-                      disabled={!canSave}
-                      title={canSave ? 'Save study' : 'Add at least one piece of data before saving'}
-                      aria-label="Save study"
-                    >
-                      {isSaving ? (
-                        <RotateCcw className="size-3.5 animate-spin" />
-                      ) : (
-                        <Save className="size-3.5" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-8"
-                      onClick={() => setTitlePageOpen(true)}
-                      title="Edit title page details (student, patient, college, year)"
-                      aria-label="Title page details"
-                    >
-                      <BookOpen className="size-3.5" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-8"
-                      onClick={() => window.print()}
-                      disabled={!canExport}
-                      title={canExport ? 'Print / Save as PDF' : 'Draft at least one section before exporting'}
-                      aria-label="Print / Save as PDF"
-                    >
-                      <PdfIcon className="size-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-8"
-                      onClick={() => downloadDocx()}
-                      disabled={!canExport}
-                      title={canExport ? 'Download Word (.docx)' : 'Draft at least one section before exporting'}
-                      aria-label="Download Word document"
-                    >
-                      <WordIcon className="size-4" />
-                    </Button>
                     <CollapsibleTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="size-8"
+                        className="size-7"
                         aria-label={
                           formatOpen ? 'Hide formatting options' : 'Show formatting options'
                         }
@@ -5104,17 +5213,17 @@ function Home() {
                     </CollapsibleTrigger>
                   </div>
                 </div>
-                <CollapsibleContent className="max-h-[32vh] overflow-y-auto">
-                  <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-4 xl:grid-cols-8">
-                    <label className="space-y-1">
-                      <span className="block text-[10px] font-medium text-muted-foreground">
-                        Body font
+                <CollapsibleContent className="overflow-hidden">
+                  <div className="mt-1 flex min-w-max items-end gap-1.5 overflow-x-auto pb-1">
+                    <label className="w-[112px] shrink-0 space-y-1">
+                      <span className="block text-[9px] font-medium text-muted-foreground">
+                        Font
                       </span>
                       <Select
                         value={docTheme.body_font ?? 'Times New Roman'}
-                        onValueChange={(value) => updateDocTheme({ body_font: value })}
+                        onValueChange={(value) => updateDocTheme({ body_font: value, heading_font: value })}
                       >
-                        <SelectTrigger className="h-7 text-xs">
+                        <SelectTrigger className="h-6 px-2 text-[10px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -5127,36 +5236,21 @@ function Home() {
                       </Select>
                     </label>
 
-                    <label className="space-y-1">
-                      <span className="block text-[10px] font-medium text-muted-foreground">
-                        Heading font
-                      </span>
-                      <Select
-                        value={docTheme.heading_font ?? 'Times New Roman'}
-                        onValueChange={(value) => updateDocTheme({ heading_font: value })}
-                      >
-                        <SelectTrigger className="h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {FONT_OPTIONS.map((font) => (
-                            <SelectItem key={font} value={font}>
-                              {font}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </label>
-
-                    <label className="space-y-1">
-                      <span className="block text-[10px] font-medium text-muted-foreground">
+                    <label className="w-[72px] shrink-0 space-y-1">
+                      <span className="block text-[9px] font-medium text-muted-foreground">
                         Body size
                       </span>
                       <Select
                         value={String(docTheme.body_size ?? 12)}
-                        onValueChange={(value) => updateDocTheme({ body_size: Number(value) })}
+                        onValueChange={(value) =>
+                          updateDocTheme({
+                            body_size: Number(value),
+                            heading1_size: Number(value),
+                            heading2_size: Number(value),
+                          })
+                        }
                       >
-                        <SelectTrigger className="h-7 text-xs">
+                        <SelectTrigger className="h-6 px-2 text-[10px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -5169,124 +5263,65 @@ function Home() {
                       </Select>
                     </label>
 
-                    <label className="space-y-1">
-                      <span className="block text-[10px] font-medium text-muted-foreground">
-                        Line spacing
-                      </span>
-                      <Select
-                        value={String(docTheme.line_spacing ?? 1.5)}
-                        onValueChange={(value) => updateDocTheme({ line_spacing: Number(value) })}
-                      >
-                        <SelectTrigger className="h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LINE_SPACING_OPTIONS.map((spacing) => (
-                            <SelectItem key={spacing} value={String(spacing)}>
-                              {spacing}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </label>
-
-                    <label className="space-y-1">
-                      <span className="block text-[10px] font-medium text-muted-foreground">
-                        Alignment
-                      </span>
-                      <Select
-                        value={docTheme.body_alignment ?? 'justify'}
-                        onValueChange={(value) =>
-                          updateDocTheme({ body_alignment: value as DocTheme['body_alignment'] })
-                        }
-                      >
-                        <SelectTrigger className="h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ALIGNMENT_OPTIONS.map((alignment) => (
-                            <SelectItem key={alignment} value={alignment}>
-                              {alignment.charAt(0).toUpperCase() + alignment.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </label>
-
-                    <label className="space-y-1">
-                      <span className="block text-[10px] font-medium text-muted-foreground">
-                        First-line indent
-                      </span>
-                      <Select
-                        value={String(docTheme.first_line_indent ?? 0)}
-                        onValueChange={(value) =>
-                          updateDocTheme({ first_line_indent: Number(value) })
-                        }
-                      >
-                        <SelectTrigger className="h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {FIRST_LINE_INDENT_OPTIONS.map((indent) => (
-                            <SelectItem key={indent} value={String(indent)}>
-                              {indent === 0 ? 'None' : `${indent}"`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </label>
-
-                    <label className="space-y-1">
-                      <span className="block text-[10px] font-medium text-muted-foreground">
-                        Heading color
-                      </span>
-                      <div className="flex h-7 items-center gap-2 rounded-md border border-input bg-transparent px-2">
-                        <input
-                          type="color"
-                          value={hexToInput(docTheme.heading_color ?? '000000')}
-                          onChange={(event) =>
-                            updateDocTheme({ heading_color: inputToHex(event.target.value) })
-                          }
-                          className="h-5 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
-                          aria-label="Heading color"
-                        />
-                        <span className="font-mono text-[10px] text-muted-foreground">
-                          {docTheme.heading_color ?? '000000'}
-                        </span>
-                      </div>
-                    </label>
-
-                    <label className="space-y-1">
-                      <span className="block text-[10px] font-medium text-muted-foreground">
-                        Table header fill
-                      </span>
-                      <div className="flex h-7 items-center gap-2 rounded-md border border-input bg-transparent px-2">
-                        <input
-                          type="color"
-                          value={hexToInput(docTheme.table_header_fill ?? 'D9D9D9')}
-                          onChange={(event) =>
-                            updateDocTheme({ table_header_fill: inputToHex(event.target.value) })
-                          }
-                          className="h-5 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
-                          aria-label="Table header fill"
-                        />
-                        <span className="font-mono text-[10px] text-muted-foreground">
-                          {docTheme.table_header_fill ?? 'D9D9D9'}
-                        </span>
-                      </div>
-                    </label>
-                  </div>
-
-                  <div className="mt-2 flex flex-wrap items-center gap-1">
-                    <span className="mr-1 text-[10px] font-medium text-muted-foreground">
-                      Text tools
+                  <div className="contents">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-6 shrink-0"
+                      title="Undo last preview edit"
+                      aria-label="Undo last preview edit"
+                      disabled={!previewEditingActive}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => applyEditHistory('undo')}
+                    >
+                      <Undo2 className="size-3.5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-6 shrink-0"
+                      title="Redo last preview edit"
+                      aria-label="Redo last preview edit"
+                      disabled={!previewEditingActive}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => applyEditHistory('redo')}
+                    >
+                      <Redo2 className="size-3.5" />
+                    </Button>
+                    <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
+                    <Button variant="outline" size="icon" className="size-6" onClick={openSaveDialog} disabled={!canSave} title="Save study" aria-label="Save study">
+                      {isSaving ? <RotateCcw className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
+                    </Button>
+                    <Button variant="outline" size="icon" className="size-6" onClick={() => setTitlePageOpen(true)} title="Title page details" aria-label="Title page details">
+                      <BookOpen className="size-3.5" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="size-6" onClick={() => window.print()} disabled={!canExport} title="Print / Save as PDF" aria-label="Print / Save as PDF">
+                      <PdfIcon className="size-3.5" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="size-6" onClick={() => downloadDocx()} disabled={!canExport} title="Download Word document" aria-label="Download Word document">
+                      <WordIcon className="size-3.5" />
+                    </Button>
+                    <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
+                    <Button
+                      variant={assistantOpen ? 'secondary' : 'outline'}
+                      size="icon"
+                      className="size-6"
+                      title="Toggle the AI editor sidebar"
+                      aria-label="Toggle AI editor sidebar"
+                      onClick={() => setAssistantOpen((open) => !open)}
+                    >
+                      <MessageCircle className="size-3.5" />
+                    </Button>
+                    <span className={cn('mr-1 font-mono text-[9px] tabular', saveStatus.tone)} title="Edits save automatically">
+                      {saveStatus.label}
                     </span>
+                    <span className="mr-1 text-[9px] font-semibold text-muted-foreground">Text</span>
                     {TEXT_TOOLS.map((tool) => (
                       <Button
                         key={tool.key}
                         variant="outline"
                         size="icon"
-                        className="size-7"
+                        className="size-6"
                         title={`${tool.label} — select text in the preview first`}
                         aria-label={tool.label}
                         disabled={!previewTextSelected}
@@ -5296,19 +5331,12 @@ function Home() {
                         <tool.icon className="size-3.5" />
                       </Button>
                     ))}
-                    <span className="ml-1 text-[10px] text-muted-foreground">
-                      Select text in the preview below, then apply.
-                    </span>
-                  </div>
-
-                  <div className="mt-2 flex flex-wrap items-center gap-1 border-t pt-2">
-                    <span className="mr-1 text-[10px] font-medium text-muted-foreground">
-                      Paragraph
-                    </span>
+                    <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
+                    <span className="mr-1 text-[9px] font-semibold text-muted-foreground">Paragraph</span>
                     <Button
                       variant={previewParaState.list === 'ul' ? 'secondary' : 'outline'}
                       size="icon"
-                      className="size-7"
+                      className="size-6"
                       title="Bullet list — select the lines in the preview first"
                       aria-label="Bullet list"
                       disabled={!previewEditingActive}
@@ -5320,7 +5348,7 @@ function Home() {
                     <Button
                       variant={previewParaState.list === 'ol' ? 'secondary' : 'outline'}
                       size="icon"
-                      className="size-7"
+                      className="size-6"
                       title="Numbered list — select the lines in the preview first"
                       aria-label="Numbered list"
                       disabled={!previewEditingActive}
@@ -5335,7 +5363,7 @@ function Home() {
                         key={alignment.value}
                         variant={previewParaState.align === alignment.value ? 'secondary' : 'outline'}
                         size="icon"
-                        className="size-7"
+                        className="size-6"
                         title={`${alignment.label} — select the paragraph in the preview first`}
                         aria-label={alignment.label}
                         disabled={!previewEditingActive}
@@ -5355,7 +5383,7 @@ function Home() {
                         onValueChange={(value) => applyParagraphStyle({ spacing: Number(value) })}
                         disabled={!previewEditingActive}
                       >
-                        <SelectTrigger className="h-7 w-[68px] text-xs">
+                        <SelectTrigger className="h-6 w-[58px] px-1.5 text-[10px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -5367,15 +5395,46 @@ function Home() {
                         </SelectContent>
                       </Select>
                     </label>
-                    <span className="ml-1 text-[10px] text-muted-foreground">
-                      Select a line or lines in the preview below, then apply.
-                    </span>
+                    <label className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-medium text-muted-foreground">Indent</span>
+                      <Select
+                        value={String(previewParaState.indent ?? 0)}
+                        onValueChange={(value) => applyParagraphStyle({ indent: Number(value) })}
+                        disabled={!previewEditingActive}
+                      >
+                        <SelectTrigger className="h-6 w-[58px] px-1.5 text-[10px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FIRST_LINE_INDENT_OPTIONS.map((indent) => (
+                            <SelectItem key={indent} value={String(indent)}>
+                              {indent === 0 ? 'None' : `${indent}"`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </label>
+                    <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
+                    <label className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-medium text-muted-foreground">Bottom margin</span>
+                      <Select
+                        value={String(docTheme.bottom_margin ?? 1.0)}
+                        onValueChange={(value) => updateDocTheme({ bottom_margin: Number(value) })}
+                      >
+                        <SelectTrigger className="h-6 w-[58px] px-1.5 text-[10px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[0.5, 0.75, 1.0, 1.25, 1.5].map((margin) => (
+                            <SelectItem key={margin} value={String(margin)}>
+                              {margin}"
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </label>
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
-                    <p className="text-[10px] leading-relaxed text-muted-foreground">
-                      Applied to the Word download — and previewed below. Full restyling is always
-                      available in Word itself via the Care Study styles.
-                    </p>
+                  <div className="contents">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -5385,16 +5444,19 @@ function Home() {
                     >
                       <RotateCcw className="size-3.5" /> Reset
                     </Button>
-                  </div>                  </CollapsibleContent>
+                  </div>
+                  </div>
+                </CollapsibleContent>
                 </Collapsible>
               </div>
             </div>
           </div>
 
-          <div className="print-scroll flex-1 overflow-y-auto">
+          <div className="print-scroll flex-1 overflow-y-auto flex">
+            <div className="flex-1 min-w-0 overflow-y-auto">
             <div className="mx-auto w-full max-w-[820px] px-6 py-8 md:px-10">
             <div
-              className="print-doc rounded-xl border bg-card p-8 shadow-sm md:p-12"
+              className="print-doc rounded-xl border p-8 shadow-sm md:p-12"
               onSelect={handlePreviewSelect}
             >
               <header className="border-b pb-6 text-center">
@@ -5411,9 +5473,9 @@ function Home() {
                 </p>
               </header>
 
-              {chapters.map((chapter, chapterIndex) => (
+              {chapters.map((chapter, chapterIndex) => !showPreliminaryPages && chapter.isFrontMatter ? null : (
                 <section key={chapter.name} className="mt-8">
-                  <h2 className="flex items-baseline gap-2 border-b pb-1.5">
+                  <h2 className="flex items-baseline gap-2 pb-1.5">
                     <span className="font-mono text-xs text-primary">
                       {isFrontMatterChapter(chapterIndex)
                         ? ''
@@ -5429,7 +5491,7 @@ function Home() {
                           (event.currentTarget.textContent ?? '').trim(),
                         )
                       }
-                      className="rounded-sm outline-none focus:ring-1 focus:ring-primary/40"
+                      className="rounded-sm outline-none focus:outline-none"
                     >
                       {isFrontMatterChapter(chapterIndex)
                         ? chapter.name.toUpperCase()
@@ -5486,7 +5548,7 @@ function Home() {
                                 heading: (event.currentTarget.textContent ?? '').trim(),
                               })
                             }
-                            className="rounded-sm outline-none focus:ring-1 focus:ring-primary/40"
+                            className="rounded-sm outline-none focus:outline-none"
                           >
                             {section.heading}
                           </span>
@@ -5627,48 +5689,53 @@ function Home() {
               </Button>
             </div>
             </div>
-          </div>
-        </div>
-      )}
+            </div>
 
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
-        {assistantOpen && (
-          <Card className="w-[min(24rem,calc(100vw-2.5rem))] overflow-hidden border-primary/25 shadow-2xl">
-            <CardHeader className="bg-primary px-4 py-3 text-primary-foreground">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <CardTitle className="text-sm">CareStudy editor</CardTitle>
-                  <CardDescription className="mt-0.5 text-xs text-primary-foreground/80">
-                    Reviews the complete work currently on screen.
-                  </CardDescription>
+          {assistantOpen && (
+            <div className="w-[340px] shrink-0 border-l bg-background flex flex-col overflow-hidden">
+              <div className="border-b bg-primary px-4 py-3 text-primary-foreground">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold">CareStudy editor</p>
+                    <p className="mt-0.5 text-xs text-primary-foreground/80">
+                      Reviews the complete work currently on screen.
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="size-7 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" onClick={() => setAssistantOpen(false)} aria-label="Close study assistant">
+                    <X className="size-4" />
+                  </Button>
                 </div>
-                <Button variant="ghost" size="icon" className="size-7 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" onClick={() => setAssistantOpen(false)} aria-label="Close study assistant">
-                  <X className="size-4" />
-                </Button>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-3 p-3">
-              <div className="flex flex-wrap gap-1.5">
-                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Review the entire care study for inconsistencies, missing links between sections, and the five highest-priority improvements.')}>
-                  Review consistency
-                </Button>
-                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Fully edit the complete care study for clarity, grammar, professional tone, and internal consistency. Give ready-to-paste replacements grouped by section; do not invent facts.')}>
-                  Full edit
-                </Button>
+              <div className="flex flex-wrap gap-1.5 border-b px-3 py-2">
+                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Review the entire care study for inconsistencies, missing links between sections, and the five highest-priority improvements.')}>Review consistency</Button>
+                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Fully edit the complete care study for clarity, grammar, professional tone, and internal consistency. Give ready-to-paste replacements grouped by section; do not invent facts.')}>Full edit</Button>
               </div>
-              <div className="max-h-72 space-y-2 overflow-y-auto rounded-md bg-muted/40 p-2 text-sm">
+              <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm">
                 {assistantMessages.length === 0 ? (
-                  <p className="p-2 text-xs leading-relaxed text-muted-foreground">
+                  <p className="text-xs leading-relaxed text-muted-foreground">
                     Ask about the whole work, or choose a review. Suggestions never overwrite your study automatically.
                   </p>
                 ) : assistantMessages.map((item, index) => (
                   <div key={`${item.role}-${index}`} className={cn('rounded-lg px-3 py-2 whitespace-pre-wrap', item.role === 'user' ? 'ml-7 bg-primary text-primary-foreground' : 'mr-3 bg-background border')}>
-                    {item.content}
+                    {item.role === 'assistant' ? assistantPlainText(item.content) : item.content}
+                    {item.role === 'assistant' && item.edits?.length && !item.applied ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="mt-3"
+                        onClick={() => applyAssistantEdits(index, item.edits ?? [])}
+                      >
+                        Apply {item.edits.length} suggested edit{item.edits.length === 1 ? '' : 's'}
+                      </Button>
+                    ) : null}
+                    {item.role === 'assistant' && item.applied ? (
+                      <p className="mt-2 text-xs text-muted-foreground">Applied to the study. Changes will autosave.</p>
+                    ) : null}
                   </div>
                 ))}
                 {assistantBusy && <div className="mr-3 rounded-lg border bg-background px-3 py-2 text-muted-foreground">Reviewing the full study…</div>}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 border-t p-3">
                 <Textarea
                   value={assistantMessage}
                   onChange={(event) => setAssistantMessage(event.target.value)}
@@ -5687,13 +5754,14 @@ function Home() {
                   <Send className="size-4" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        )}
-        <Button className="size-12 rounded-full shadow-lg" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open CareStudy editor">
-          <MessageCircle className="size-5" />
-        </Button>
-      </div>
+            </div>
+          )}
+
+          </div>
+        </div>
+      )}
+
+
 
       <Dialog open={onboardingOpen} onOpenChange={(open) => { setOnboardingOpen(open); if (!open) markOnboardingSeen(); }}>
         <DialogContent className="max-w-md">
