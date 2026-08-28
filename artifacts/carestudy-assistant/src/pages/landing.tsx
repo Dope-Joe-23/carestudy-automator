@@ -8,7 +8,7 @@
  * headline; the drafting technology sits behind the method and is addressed
  * honestly only in the FAQ.
  */
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowRight,
   BookOpen,
@@ -128,8 +128,55 @@ const NAV_LINKS = [
   { href: "#faq", label: "FAQ" },
 ];
 
+/** Section IDs that the nav links point to, in order. */
+const SECTION_IDS = NAV_LINKS.map((l) => l.href.replace("#", ""));
+
+/**
+ * Track which section is currently in the viewport using IntersectionObserver.
+ * Returns the id of the most visible section, or null when none is visible.
+ * The observer uses a rootMargin that accounts for the sticky header height
+ * so the active link updates when a section scrolls into the readable area.
+ */
+function useActiveSection(): string | null {
+  const [active, setActive] = useState<string | null>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Pick the entry with the highest intersection ratio.
+        let best: string | null = null;
+        let bestRatio = 0;
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.intersectionRatio > bestRatio) {
+            bestRatio = entry.intersectionRatio;
+            best = entry.target.id;
+          }
+        }
+        if (best) setActive(best);
+      },
+      {
+        // The sticky header is ~4rem tall; trigger when the section enters
+        // the bottom 60 % of the viewport so the highlight feels responsive.
+        rootMargin: "-20% 0px -35% 0px",
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      },
+    );
+
+    for (const id of SECTION_IDS) {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return active;
+}
+
 function LandingNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const activeSection = useActiveSection();
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6">
@@ -137,12 +184,24 @@ function LandingNav() {
           <BrandMark />
         </a>
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">
-          {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href} className="transition-colors hover:text-foreground">
-              {link.label}
-            </a>
-          ))}
+        <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
+          {NAV_LINKS.map((link) => {
+            const isActive = activeSection === link.href.replace("#", "");
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 transition-colors",
+                  isActive
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {link.label}
+              </a>
+            );
+          })}
         </nav>
         <div className="flex items-center gap-2">
           <Link href="/student/login" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'hidden text-muted-foreground sm:inline-flex')}>
@@ -167,16 +226,24 @@ function LandingNav() {
       {mobileOpen && (
         <div className="border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
           <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3 sm:px-6">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                onClick={() => setMobileOpen(false)}
-              >
-                {link.label}
-              </a>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const isActive = activeSection === link.href.replace("#", "");
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {link.label}
+                </a>
+              );
+            })}
             <div className="my-2 h-px bg-border/60" />
             <Link href="/student/login" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'justify-start text-muted-foreground')}>
               Sign in

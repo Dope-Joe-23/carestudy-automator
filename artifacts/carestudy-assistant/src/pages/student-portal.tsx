@@ -307,18 +307,62 @@ function PortalHeader() {
   );
 }
 
+/**
+ * Mobile bottom navigation bar — visible only on small screens (md:hidden).
+ * Fixed to the bottom of the viewport so the three primary actions are
+ * always one tap away.
+ */
+function MobileBottomNav() {
+  const [location] = useLocation();
+  const isOrders = location === "/student/orders" || location === "/student/orders/";
+  const isNew = location === "/student/orders/new";
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
+      <div className="mx-auto flex h-14 max-w-lg items-stretch">
+        <Link
+          href="/student/orders"
+          className={cn(
+            "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+            isOrders ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          <ClipboardList className="size-5" />
+          <span>Projects</span>
+        </Link>
+        <Link
+          href="/student/orders/new"
+          className={cn(
+            "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+            isNew ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          <Plus className="size-5" />
+          <span>New order</span>
+        </Link>
+      </div>
+    </nav>
+  );
+}
+
 function PortalShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <PortalHeader />
-      <main className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6">{children}</main>
-      <footer className="mx-auto max-w-4xl px-4 pb-6 sm:px-6 sm:pb-8">
-        <Separator className="mb-4 sm:mb-6" />
-        <p className="text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
-          CareStudy Institute supports nursing education — preparing the study, and preparing you to
-          defend it. Your materials stay yours and are used only to prepare your study.
-        </p>
+      <main className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6 md:pb-6">{children}</main>
+      {/* Footer hidden on mobile — the bottom nav takes that space */}
+      <footer className="hidden md:block">
+        <div className="mx-auto max-w-4xl px-4 pb-8 sm:px-6">
+          <Separator className="mb-6" />
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            CareStudy Institute supports nursing education — preparing the study, and preparing you to
+            defend it. Your materials stay yours and are used only to prepare your study.
+          </p>
+        </div>
       </footer>
+      <MobileBottomNav />
+      {/* Spacer so content is never hidden behind the fixed bottom nav on mobile */}
+      <div className="h-14 md:hidden" />
     </div>
   );
 }
