@@ -202,6 +202,13 @@ type Section = {
   status: SectionStatus;
   data: Record<string, string>;
   rowData: RowRow[];
+  /** Word-count validation metadata from the drafting engine. */
+  wordCount?: {
+    wordCount: number;
+    wordCountMin: number;
+    wordCountMax: number;
+    wordCountStatus: string;
+  };
 };
 
 type RowRow = { id: number; cells: string[] };
@@ -2497,6 +2504,7 @@ function Home() {
       updateSection(targetChapter, targetSection, {
         draft: result.draft,
         references: result.references,
+        wordCount: result.wordCount,
       });
       // Land on the Draft tab so the freshly generated text is what's on
       // screen — but only if the user is still viewing the section that was
@@ -3064,6 +3072,15 @@ function Home() {
         target.notes = typeof saved.notes === 'string' ? saved.notes : '';
         target.draft = typeof saved.draft === 'string' ? saved.draft : '';
         target.references = Array.isArray(saved.references) ? saved.references : [];
+        // Restore word-count metadata if present in the saved snapshot.
+        if (saved.wordCount && typeof saved.wordCount === 'object') {
+          target.wordCount = {
+            wordCount: Number(saved.wordCount.wordCount) || 0,
+            wordCountMin: Number(saved.wordCount.wordCountMin) || 0,
+            wordCountMax: Number(saved.wordCount.wordCountMax) || 0,
+            wordCountStatus: String(saved.wordCount.wordCountStatus || 'no_target'),
+          };
+        }
         const savedData =
           saved.data && typeof saved.data === 'object'
             ? (saved.data as Record<string, string>)
@@ -4674,6 +4691,29 @@ function Home() {
                             </p>
                           </div>
                         </div>
+                        {/* Word-count badge */}
+                        {currentSection.wordCount && currentSection.wordCount.wordCountStatus !== 'no_target' && (
+                          <span
+                            className={cn(
+                              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                              currentSection.wordCount.wordCountStatus === 'ok'
+                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                                : currentSection.wordCount.wordCountStatus === 'below'
+                                  ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                                  : 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+                            )}
+                            title={`${currentSection.wordCount.wordCount} words (target: ${currentSection.wordCount.wordCountMin}–${currentSection.wordCount.wordCountMax})`}
+                          >
+                            <span className="tabular-nums">{currentSection.wordCount.wordCount}</span>
+                            <span className="text-[9px] opacity-70">words</span>
+                            {currentSection.wordCount.wordCountStatus === 'below' && (
+                              <span className="text-[9px]">↓</span>
+                            )}
+                            {currentSection.wordCount.wordCountStatus === 'above' && (
+                              <span className="text-[9px]">↑</span>
+                            )}
+                          </span>
+                        )}
                         {currentSection.draft && !draftEditing && (
                           <Button
                             variant="outline"

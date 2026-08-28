@@ -32,6 +32,7 @@ import {
   GraduationCap,
   HeartPulse,
   ListChecks,
+  Menu,
   Loader2,
   Plus,
   RotateCcw,
@@ -235,13 +236,15 @@ function useAuth(): AuthContextValue {
 
 function PortalHeader() {
   const { student, signOut } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
         <Link href="/student/orders" className="shrink-0">
           <BrandMark />
         </Link>
-        <nav className="flex items-center gap-1 text-sm font-medium">
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
           <Link href="/student/orders" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-muted-foreground')}>
             My projects
           </Link>
@@ -249,26 +252,57 @@ function PortalHeader() {
             Place an order
           </Link>
         </nav>
-        <div className="flex items-center gap-3">
-          {student ? (
-            <>
-              <span className="hidden text-right sm:block">
-                <span className="block text-xs font-semibold leading-tight">{student.name}</span>
-                <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
-                  {student.college}
-                </span>
+        <div className="flex items-center gap-2">
+          {student && (
+            <span className="hidden text-right sm:block">
+              <span className="block text-xs font-semibold leading-tight">{student.name}</span>
+              <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
+                {student.college}
               </span>
-              <Button variant="outline" size="sm" onClick={() => void signOut()}>
-                Sign out
-              </Button>
-            </>
-          ) : (
-            <Link href="/student/login" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
-              Sign in
-            </Link>
+            </span>
           )}
+          <Button variant="outline" size="sm" className="hidden md:inline-flex" onClick={() => void signOut()}>
+            Sign out
+          </Button>
+          {/* Mobile hamburger */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-9 md:hidden"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </Button>
         </div>
       </div>
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
+          <nav className="mx-auto flex max-w-5xl flex-col gap-1 px-4 py-3 sm:px-6">
+            <Link href="/student/orders" className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>
+              My projects
+            </Link>
+            <Link href="/student/orders/new" className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>
+              Place an order
+            </Link>
+            {student && (
+              <>
+                <div className="my-1 h-px bg-border/60" />
+                <div className="px-3 py-1">
+                  <span className="block text-xs font-semibold leading-tight">{student.name}</span>
+                  <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {student.college}
+                  </span>
+                </div>
+                <Button variant="outline" size="sm" className="mx-3 mt-1 justify-start" onClick={() => { setMobileOpen(false); void signOut(); }}>
+                  Sign out
+                </Button>
+              </>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
@@ -277,10 +311,10 @@ function PortalShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <PortalHeader />
-      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">{children}</main>
-      <footer className="mx-auto max-w-4xl px-4 pb-8 sm:px-6">
-        <Separator className="mb-6" />
-        <p className="text-xs leading-relaxed text-muted-foreground">
+      <main className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6">{children}</main>
+      <footer className="mx-auto max-w-4xl px-4 pb-6 sm:px-6 sm:pb-8">
+        <Separator className="mb-4 sm:mb-6" />
+        <p className="text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
           CareStudy Institute supports nursing education — preparing the study, and preparing you to
           defend it. Your materials stay yours and are used only to prepare your study.
         </p>

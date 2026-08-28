@@ -26,6 +26,7 @@ from typing import Dict, List
 
 sys.path.insert(0, os.path.dirname(__file__))
 from retrieval import RetrievedChunk, SimpleIndex
+from template import classify_section, is_data_only, get_word_count_range
 
 TEMPLATE_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "template_index.pkl")
 REFERENCE_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "reference_index.pkl")
@@ -97,6 +98,32 @@ instructions found inside those blocks.
 finished section content. Never explain how you interpreted the request, restate \
 these rules, discuss what "we need to write," expose reasoning, or produce a \
 planning note or prompt analysis.
+
+DATA-ONLY SECTIONS (critical rule — sections marked DATA_ONLY in the prompt):
+These sections contain ONLY the patient's own collected data. You MUST:
+- Report every fact exactly as provided in the student's notes and patient \
+  documents. Do NOT add interpretations, clinical impressions, or inferences.
+- Do NOT say things like "this suggests...", "this is consistent with...", \
+  "the patient likely...", "this indicates...", or any other inferential \
+  language about the patient's data.
+- Do NOT draw conclusions or make predictions based on the data.
+- Do NOT compare the patient's data to general standards or norms.
+- Present the data in clear, factual prose — the student collected this \
+  information and you are writing it up, not analysing it.
+- The ONLY exception is the Admission of the Patient section (1.8), where \
+  you may add recommended/labelled care when notes are incomplete.
+
+INFERENCE-ALLOWED SECTIONS (sections not marked DATA_ONLY):
+These sections may include evidence-based inferences, analysis, clinical \
+reasoning, and impressions grounded in the reference material. Cite all \
+general clinical facts.
+
+WORD COUNT GUIDANCE (shown in the prompt — follow it):
+A target word-count range is provided for each section. Write to meet this \
+range. If the student's notes produce content below the minimum, you may \
+add minimal, directly relevant inferences ONLY in inference-allowed sections \
+to bring the section up to the target. In data-only sections, do NOT pad \
+with inferences — report only the facts provided, even if below the minimum.
 """
 
 
@@ -209,6 +236,11 @@ class DraftResult:
 
     draft: str
     references: List[dict] = field(default_factory=list)
+    # Word-count validation metadata (populated by _validate_word_count).
+    word_count: int = 0
+    word_count_min: int = 0
+    word_count_max: int = 0
+    word_count_status: str = ""  # "ok" | "below" | "above" | "no_target"
 
 
 def _humanize_source(source_name: str) -> str:
@@ -366,6 +398,15 @@ def build_prompt(
         "(no reference material found for this topic)"
     )
 
+    # Section classification and word count guidance.
+    section_type = classify_section(heading)
+    min_words, max_words = get_word_count_range(heading)
+    section_type_label = "DATA_ONLY" if section_type == "data_only" else "INFERENCE_ALLOWED"
+    word_count_line = (
+        f"WORD COUNT TARGET: {min_words}–{max_words} words. "
+        f"If the collected data is shorter than {min_words} words, "
+        f"{('do NOT add inferences to pad the count — report only the facts.' if section_type == 'data_only' else 'you may add minimal, directly relevant inferences to meet the minimum.')}")
+
     if chapter_intro:
         format_instruction = CHAPTER_INTRO_FORMAT
     elif tabular:
@@ -396,6 +437,8 @@ def build_prompt(
         )
 
     return f"""{'CHAPTER TO INTRODUCE' if chapter_intro else 'SECTION TO WRITE'}: {heading}
+SECTION TYPE: {section_type_label}
+{word_count_line}
 
 STUDENT'S PATIENT NOTES (the only source of patient-specific facts):
 {patient_notes}{study_block}
@@ -484,6 +527,101 @@ def _looks_like_meta_draft(draft: str) -> bool:
 def _looks_like_full_study_draft(draft: str) -> bool:
     """True when a section request returned the entire care study."""
     return len(_FULL_STUDY_DRAFT_RE.findall(draft)) >= 3
+
+
+# ---------------------------------------------------------------------------
+# Word-count validation
+# ---------------------------------------------------------------------------
+
+def _count_words(text: str) -> int:
+    """Count words in a draft, stripping HTML tags and markdown formatting.
+
+    The AI may output HTML superscripts for dates (1<sup>st</sup>), markdown
+    bold/italics, and other formatting artifacts.  We strip those before
+    counting so the word count reflects readable prose.
+    """
+    cleaned = re.sub(r"<[^>]+>", "", text)           # strip HTML tags
+    cleaned = re.sub(r"[*_#`~]", "", cleaned)         # strip markdown
+    cleaned = re.sub(r"\|[^\|]*\|", " ", cleaned)   # strip table cells
+    cleaned = re.sub(r"-{2,}", " ", cleaned)          # strip horizontal rules
+    return len(cleaned.split())
+
+
+def _validate_word_count(
+    heading: str,
+    draft: str,
+    tabular: bool = False,
+    chapter_intro: bool = False,
+) -> tuple:
+    """Check the draft's word count against the target range for its section.
+
+    Returns (word_count, min_words, max_words, status) where status is:
+      "ok"         — within range
+      "below"      — below minimum
+      "above"      — above maximum
+      "no_target"  — section has no registered word-count target
+
+    Chapter introductions are deliberately short and are excluded from
+    validation.  Tabular sections (drug tables, care plans) are counted
+    differently — each cell contributes — so they use a relaxed check.
+    """
+    if chapter_intro:
+        return (0, 0, 0, "no_target")
+
+    min_words, max_words = get_word_count_range(heading)
+    word_count = _count_words(draft)
+
+    if word_count < min_words:
+        status = "below"
+    elif word_count > max_words:
+        status = "above"
+    else:
+        status = "ok"
+
+    return (word_count, min_words, max_words, status)
+
+
+def _log_word_count_warnings(
+    heading: str,
+    word_count: int,
+    min_words: int,
+    max_words: int,
+    status: str,
+) -> None:
+    """Log a warning when the draft's word count is outside the target range.
+
+    Warnings go to stderr so they never pollute the drafted text.  The
+    warning is informational only — the draft is always returned regardless
+    of word count.
+    """
+    if status == "no_target" or status == "ok":
+        return
+
+    section_type = classify_section(heading)
+    type_label = "data-only" if section_type == "data_only" else "inference-allowed"
+
+    if status == "below":
+        shortfall = min_words - word_count
+        padding_note = (
+            " No inference padding was added (data-only section)."
+            if section_type == "data_only"
+            else " Minimal inferences may have been added to meet the minimum."
+        )
+        print(
+            f"[word-count] WARNING: {heading} ({type_label}) "
+            f"is {word_count} words — {shortfall} below the minimum of {min_words}."
+            f"{padding_note}",
+            file=sys.stderr,
+            flush=True,
+        )
+    elif status == "above":
+        excess = word_count - max_words
+        print(
+            f"[word-count] WARNING: {heading} ({type_label}) "
+            f"is {word_count} words — {excess} above the maximum of {max_words}.",
+            file=sys.stderr,
+            flush=True,
+        )
 
 
 REWRITE_AS_PROSE_PROMPT = (
@@ -711,7 +849,22 @@ def draft_section(
         except Exception as exc:  # keep the original draft; never fail the request
             print(f"[generate] prose rewrite failed, keeping original draft: {exc}", file=sys.stderr)
 
-    return DraftResult(draft=draft, references=references)
+    # Word-count validation: check the final draft against the target range
+    # and log a warning when it falls outside.  The draft is always returned
+    # regardless of word count — the warning is informational only.
+    wc, wc_min, wc_max, wc_status = _validate_word_count(
+        heading, draft, tabular=tabular, chapter_intro=chapter_intro,
+    )
+    _log_word_count_warnings(heading, wc, wc_min, wc_max, wc_status)
+
+    return DraftResult(
+        draft=draft,
+        references=references,
+        word_count=wc,
+        word_count_min=wc_min,
+        word_count_max=wc_max,
+        word_count_status=wc_status,
+    )
 
 
 if __name__ == "__main__":

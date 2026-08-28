@@ -23,6 +23,11 @@ export type DraftReference = {
 export type DraftResult = {
   draft: string;
   references: DraftReference[];
+  /** Word-count validation metadata from the drafting engine. */
+  wordCount?: number;
+  wordCountMin?: number;
+  wordCountMax?: number;
+  wordCountStatus?: string;
 };
 
 export type IngestFileResult = {
@@ -394,6 +399,10 @@ class DraftWorker {
       draft?: string;
       text?: string;
       references?: DraftReference[];
+      wordCount?: number;
+      wordCountMin?: number;
+      wordCountMax?: number;
+      wordCountStatus?: string;
       files?: IngestFileResult[];
       chunks?: number;
       bank?: VivaBankResult;
@@ -422,6 +431,10 @@ class DraftWorker {
       pending.resolve({
         draft: msg.draft,
         references: Array.isArray(msg.references) ? msg.references : [],
+        ...(typeof msg.wordCount === 'number' ? { wordCount: msg.wordCount } : {}),
+        ...(typeof msg.wordCountMin === 'number' ? { wordCountMin: msg.wordCountMin } : {}),
+        ...(typeof msg.wordCountMax === 'number' ? { wordCountMax: msg.wordCountMax } : {}),
+        ...(typeof msg.wordCountStatus === 'string' ? { wordCountStatus: msg.wordCountStatus } : {}),
       });
     } else if (typeof msg.answer === "string") {
       pending.resolve({ answer: msg.answer, edits: Array.isArray(msg.edits) ? msg.edits : [] });

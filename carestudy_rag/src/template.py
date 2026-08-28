@@ -350,3 +350,169 @@ CHAPTERS = [
         "6.2 Conclusion",
     ]),
 ]
+
+# ---------------------------------------------------------------------------
+# Section classification & word-count targets
+# ---------------------------------------------------------------------------
+#
+# "data_only" sections contain only the patient's own collected data.
+# The AI must NOT make inferences, impressions, or predictions in these
+# sections — it should report the facts exactly as provided.
+#
+# "allows_inference" sections require external knowledge (literature,
+# analysis, care planning, evaluation) so the AI may add evidence-based
+# inferences, analysis, and clinical reasoning.
+
+def _heading_key(heading: str) -> str:
+    """Normalise a heading for lookup — strip leading numbers and whitespace."""
+    import re as _re
+    return _re.sub(r"^[\d.]+\s*", "", heading.strip().lower())
+
+
+# Section heading (or unique substring) -> classification
+_SECTION_CLASSIFICATION: dict = {
+    # Chapter 1 — Assessment (data-only sections)
+    "patient\u2019s particulars": "data_only",
+    "patient's particulars": "data_only",
+    "family\u2019s medical/surgical history": "data_only",
+    "family's medical/surgical history": "data_only",
+    "family\u2019s socio-economic history": "data_only",
+    "family's socio-economic history": "data_only",
+    "patient\u2019s developmental history": "data_only",
+    "patient's developmental history": "data_only",
+    "patient\u2019s lifestyle": "data_only",
+    "patient's lifestyle": "data_only",
+    "past medical/surgical/obstetric history": "data_only",
+    "present medical/surgical history": "data_only",
+    "admission of the patient": "data_only",
+    "patient\u2019s concept of illness": "data_only",
+    "patient's concept of illness": "data_only",
+    "validation of data": "data_only",
+    # Chapter 1 — Literature Review (inference allowed)
+    "literature review": "allows_inference",
+    # Chapter 2 — Analysis of Data
+    "comparison of data with standards": "allows_inference",
+    "pharmacology of drugs prescribed": "allows_inference",
+    "health needs identified": "allows_inference",
+    # Chapter 3 — Planning
+    "objectives for patient/family care": "allows_inference",
+    "nursing care plan": "allows_inference",
+    # Chapter 4 — Implementation
+    "summary of the actual nursing care": "allows_inference",
+    # Chapter 5 — Evaluation
+    "statement of evaluation": "allows_inference",
+    # Chapter 6 — Summary and Conclusion
+    "summary": "allows_inference",
+    "conclusion": "allows_inference",
+}
+
+
+def classify_section(heading: str) -> str:
+    """Return 'data_only' or 'allows_inference' for a section heading.
+
+    Defaults to 'allows_inference' when the heading is not in the lookup
+    table (new sections, custom headings, etc.).
+    """
+    normalised = heading.strip().lower()
+    # Exact match first.
+    if normalised in _SECTION_CLASSIFICATION:
+        return _SECTION_CLASSIFICATION[normalised]
+    # Fuzzy match — check if any registered key is contained in the heading.
+    for key, classification in _SECTION_CLASSIFICATION.items():
+        if key in normalised or normalised in key:
+            return classification
+    return "allows_inference"
+
+
+def is_data_only(heading: str) -> bool:
+    """True when a section must contain only patient data (no AI inferences)."""
+    return classify_section(heading) == "data_only"
+
+
+# Target word-count ranges per section heading (min, max).
+#
+# Derived from actual word counts measured across 7 sample care studies in
+# data/templates/ (CASE STUDY.docx, Halima Final care study...HPT.docx,
+# Joe's Care Study.docx, Kyeremeh Amanda Ampaabeng.docx, Nad's.docx,
+# SHARIFA'S.docx, rafa's.docx).  Ranges use the observed min/max with a
+# ~20 % buffer on each side, then capped at practical limits.
+#
+# The AI should aim for this range; if the collected data is shorter than
+# the minimum, it may add minimal and directly relevant inferences only to
+# bring the section up to the target.  Data-only sections will never
+# exceed their maximum from AI padding — they are capped by the actual
+# data provided.
+#
+# Keys are lowercase unique substrings of the section headings.
+WORD_COUNT_RANGES: dict = {
+    # Chapter 1 — Assessment (data-only)
+    # 1.1 Patient's Particulars: observed 102–2150 words across 5 samples.
+    # Wide range because some studies include detailed narrative; a typical
+    # particulars section is 150–400 words.
+    "patient\u2019s particulars": (150, 500),
+    "patient's particulars": (150, 500),
+    # 1.2 Family's Medical/Surgical History: observed 80–249 words (6 samples)
+    "family\u2019s medical/surgical history": (80, 300),
+    "family's medical/surgical history": (80, 300),
+    # 1.3 Family's Socio-Economic History: observed 75–164 words (3 samples)
+    "family\u2019s socio-economic history": (75, 200),
+    "family's socio-economic history": (75, 200),
+    # 1.4 Patient's Developmental History: observed 114–687 words (6 samples)
+    "patient\u2019s developmental history": (100, 500),
+    "patient's developmental history": (100, 500),
+    # 1.5 Patient's Lifestyle & Hobbies: observed 138–408 words (5 samples)
+    "patient\u2019s lifestyle": (130, 500),
+    "patient's lifestyle": (130, 500),
+    # 1.6 Past Medical/Surgical/Obstetric History: observed 40–152 words (3 samples)
+    "past medical/surgical/obstetric history": (50, 200),
+    # 1.7 Present Medical/Surgical History: observed 40–196 words (7 samples)
+    "present medical/surgical history": (50, 250),
+    # 1.8 Admission of the Patient: observed 233–2200 words (6 samples).
+    # Very wide range because some studies include extensive admission detail.
+    "admission of the patient": (200, 600),
+    # 1.9 Patient's Concept of Illness: observed 48–141 words (7 samples)
+    "patient\u2019s concept of illness": (50, 200),
+    "patient's concept of illness": (50, 200),
+    # 1.10 Literature Review: observed 453–4412 words (7 samples)
+    "literature review": (1000, 3000),
+    # 1.11 Validation of Data: observed 7–117 words (6 samples)
+    "validation of data": (50, 150),
+    # Chapter 2 — Analysis of Data (inference-allowed)
+    # 2.1 Comparison of Data with Standards: observed 27–150 words (5 samples)
+    "comparison of data with standards": (50, 250),
+    # 2.2 Pharmacology of Drugs Prescribed: observed 1–783 words (7 samples)
+    # Typically a table of 3–5 drugs; 300–600 words is typical.
+    "pharmacology of drugs prescribed": (200, 700),
+    # 2.3 Health Needs Identified: observed 52–6870 words (6 samples)
+    # Wide range; typical is 200–500 words for nursing diagnoses + needs.
+    "health needs identified": (200, 600),
+    # Chapter 3 — Planning (inference-allowed)
+    # 3.1 Objectives for Patient/Family Care: observed 49–286 words (6 samples)
+    "objectives for patient/family care": (80, 350),
+    # 3.2 Nursing Care Plan: observed 1–1105 words (5 samples)
+    # Usually a table; 300–700 words typical.
+    "nursing care plan": (300, 700),
+    # Chapter 4 — Implementation (inference-allowed)
+    # 4.1 Summary of the Actual Nursing Care: observed 2–271 words (4 samples)
+    "summary of the actual nursing care": (100, 400),
+    # Chapter 5 — Evaluation (inference-allowed)
+    # 5.1 Statement of Evaluation: observed 254 words (1 sample)
+    "statement of evaluation": (200, 400),
+    # Chapter 6 — Summary and Conclusion (inference-allowed)
+    # 6.1 Summary: observed 72 words (1 sample)
+    "summary": (100, 300),
+    # 6.2 Conclusion: observed 343 words (1 sample)
+    "conclusion": (200, 500),
+}
+
+
+def get_word_count_range(heading: str) -> tuple:
+    """Return (min_words, max_words) for a section heading.
+
+    Defaults to (150, 300) for sections not in the lookup table.
+    """
+    normalised = heading.strip().lower()
+    for key, range_ in WORD_COUNT_RANGES.items():
+        if key in normalised or normalised in key:
+            return range_
+    return (150, 300)

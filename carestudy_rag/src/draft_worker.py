@@ -469,7 +469,15 @@ def main() -> None:
                 library_chunks=library_chunks,
                 row_columns=req.get("rowColumns") or None,
             )
-            emit({"id": req.get("id"), "draft": result.draft, "references": result.references})
+            response = {"id": req.get("id"), "draft": result.draft, "references": result.references}
+            # Include word-count metadata when available so the frontend can
+            # display section length info without re-counting.
+            if result.word_count_status and result.word_count_status != "no_target":
+                response["wordCount"] = result.word_count
+                response["wordCountMin"] = result.word_count_min
+                response["wordCountMax"] = result.word_count_max
+                response["wordCountStatus"] = result.word_count_status
+            emit(response)
         except Exception as exc:
             # A failed model call must not kill the worker: report it for this
             # request and keep serving the next line.

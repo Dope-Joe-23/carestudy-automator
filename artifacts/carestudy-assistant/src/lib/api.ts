@@ -38,6 +38,18 @@ export type DraftReference = {
   url?: string | null;
 };
 
+/** Word-count validation metadata returned by the drafting engine. */
+export type DraftWordCount = {
+  /** Actual word count of the drafted text. */
+  wordCount: number;
+  /** Minimum target word count for this section type. */
+  wordCountMin: number;
+  /** Maximum target word count for this section type. */
+  wordCountMax: number;
+  /** "ok" | "below" | "above" | "no_target" */
+  wordCountStatus: string;
+};
+
 export async function requestDraft(
   heading: string,
   notes: string,
@@ -45,7 +57,7 @@ export async function requestDraft(
   kind: "section" | "chapter_intro" = "section",
   studyId: number | null = null,
   rowColumns: string[] = [],
-): Promise<{ draft: string; references: DraftReference[] }> {
+): Promise<{ draft: string; references: DraftReference[]; wordCount?: DraftWordCount }> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -70,6 +82,10 @@ export async function requestDraft(
     const data = (await response.json()) as {
       draft: string;
       references?: DraftReference[];
+      wordCount?: number;
+      wordCountMin?: number;
+      wordCountMax?: number;
+      wordCountStatus?: string;
     };
     // A "successful" response with no text (free-tier models occasionally
     // return an empty completion) must never look like a real draft — treat it
@@ -78,7 +94,20 @@ export async function requestDraft(
     if (!data.draft || !data.draft.trim()) {
       throw new Error('The drafting engine returned an empty response — please try again.');
     }
-    return { draft: data.draft, references: Array.isArray(data.references) ? data.references : [] };
+    const wordCount: DraftWordCount | undefined =
+      typeof data.wordCount === 'number' && data.wordCountStatus
+        ? {
+            wordCount: data.wordCount,
+            wordCountMin: data.wordCountMin ?? 0,
+            wordCountMax: data.wordCountMax ?? 0,
+            wordCountStatus: data.wordCountStatus,
+          }
+        : undefined;
+    return {
+      draft: data.draft,
+      references: Array.isArray(data.references) ? data.references : [],
+      wordCount,
+    };
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new Error("Drafting timed out — the engine took too long. Please try again.");
@@ -350,6 +379,8 @@ export type StoredSection = {
   data: Record<string, string>;
   /** Table rows as cell strings (row ids are runtime-only). */
   rowData: { cells: string[] }[];
+  /** Word-count validation metadata from the drafting engine. */
+  wordCount?: DraftWordCount;
 };
 
 export type StoredChapter = {
