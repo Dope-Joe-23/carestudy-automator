@@ -61,6 +61,20 @@ export type ImportedSection = {
   content: string;
 };
 
+/** Enhanced import section — includes sectionId, extracted fields, and draft text. */
+export type ImportedFieldSection = {
+  sectionId: string;
+  heading: string;
+  fields: Record<string, string>;
+  draft: string;
+};
+
+export type ImportedFieldChapter = {
+  name: string;
+  intro?: string;
+  sections: ImportedFieldSection[];
+};
+
 export type ImportedChapter = {
   name: string;
   sections: ImportedSection[];
@@ -201,6 +215,32 @@ class DraftWorker {
       });
       try {
         child.stdin.write(JSON.stringify({ id, op: "import_study", text }) + "\n");
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Parse a care study document with field extraction — returns sectionIds, extracted fields, and draft text. */
+  async importStudyWithFields(text: string): Promise<{ title: ImportedTitle; chapters: ImportedFieldChapter[] }> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<{ title: ImportedTitle; chapters: ImportedFieldChapter[] }>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("Document import timed out. Please try again."));
+      }, REQUEST_TIMEOUT_MS);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as unknown as { title: ImportedTitle; chapters: ImportedFieldChapter[] }),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(JSON.stringify({ id, op: "import_study_with_fields", text }) + "\n");
       } catch (writeErr) {
         this.pending.delete(id);
         clearTimeout(timer);

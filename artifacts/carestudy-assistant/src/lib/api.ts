@@ -196,6 +196,34 @@ export async function importStudyDocument(text: string): Promise<ImportStudyResp
   return data;
 }
 
+export type ImportedFieldSection = {
+  sectionId: string;
+  heading: string;
+  fields: Record<string, string>;
+  draft: string;
+};
+export type ImportedFieldChapter = { name: string; sections: ImportedFieldSection[] };
+export type ImportStudyFieldsResponse = { title: ImportedTitle; chapters: ImportedFieldChapter[] };
+
+/** Parse a care study document with field extraction — returns sectionIds, extracted fields, and draft text. */
+export async function importStudyWithFields(text: string): Promise<ImportStudyFieldsResponse> {
+  const response = await fetch(`${API_URL}/import-study-fields`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ text }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as
+      | { error?: string; detail?: string }
+      | null;
+    throw new Error(body?.detail ?? body?.error ?? `Import failed (${response.status})`);
+  }
+  const data = (await response.json()) as ImportStudyFieldsResponse;
+  if (!data.chapters?.length) throw new Error("The import returned no chapters.");
+  return data;
+}
+
 export type ExportField = { label: string; value: string };
 
 export type ExportSection = {

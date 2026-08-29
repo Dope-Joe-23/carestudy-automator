@@ -573,6 +573,12 @@ studioRouter.post(
     }
 
     const student = await db.getStudent(order.studentId);
+    // For correction orders, place the extracted text in the first section.
+    let chapters: Array<{ name: string; intro: string; introReferences: Array<unknown>; sections: Array<{ id: string; notes: string; draft: string; references: Array<unknown>; data: Record<string, string>; rowData: Array<{ cells: string[] }> }> }> = [];
+    if (order.correctionText && order.correctionScope) {
+      chapters = [{ name: "Assessment", intro: "", introReferences: [], sections: [{ id: "1.1", notes: "", draft: order.correctionText, references: [], data: {}, rowData: [] }] }];
+    }
+
     const study = await db.create(order.title, {
       title: {
         patientName: "",
@@ -583,11 +589,7 @@ studioRouter.post(
         collegeLocation: "",
         year: student?.year ?? String(new Date().getFullYear()),
       },
-      // The studio builds chapters from its own template when it opens a
-      // study — an empty chapters array yields the full template workspace.
-      chapters: order.correctionText
-        ? [{ name: "Assessment", sections: [{ id: "1.1", notes: "", draft: order.correctionText, references: [], data: {}, rowData: [] }], intro: "", introReferences: [] }]
-        : [],
+      chapters,
     });
 
     // Register the student's materials as the study's clinical documents, so

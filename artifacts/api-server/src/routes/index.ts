@@ -21,6 +21,9 @@ router.use(healthRouter);
 router.use(adminRouter);
 router.use(studentsRouter);
 router.use(ordersRouter);
+// Document import is available to both students (correction flow) and the
+// studio, so it sits before the admin gate.
+router.use(importStudyRouter);
 
 // The studio — drafting, exports, saved studies, uploads, the personal
 // reference library, reference verification, and the order bin. Every route
@@ -31,7 +34,6 @@ router.use(draftRouter);
 router.use(exportRouter);
 router.use(studiesRouter);
 router.use(studyAssistantRouter);
-router.use(importStudyRouter);
 router.use(uploadsRouter);
 router.use(libraryRouter);
 router.use(verifyRouter);

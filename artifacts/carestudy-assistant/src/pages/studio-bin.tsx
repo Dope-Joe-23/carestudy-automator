@@ -191,22 +191,37 @@ function OrderRow({ order }: { order: StudioOrder }) {
           </div>
           <div className="flex flex-col items-stretch gap-2">
             {order.producedStudyId ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => order.producedStudyId && openInStudio(order.producedStudyId)}
-              >
-                <ExternalLink className="size-4" /> Open in studio
-              </Button>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => order.producedStudyId && openInStudio(order.producedStudyId)}
+                >
+                  <ExternalLink className="size-4" /> Open in studio
+                </Button>
+
+              </div>
             ) : (
-              <Button size="sm" onClick={() => produce.mutate()} disabled={produce.isPending}>
-                {produce.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Play className="size-4" />
+              <div className="flex flex-col gap-1.5">
+                <Button size="sm" onClick={() => produce.mutate()} disabled={produce.isPending}>
+                  {produce.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Play className="size-4" />
+                  )}
+                  {produce.isPending
+                    ? order.correctionScope
+                      ? 'Extracting document…'
+                      : 'Creating study…'
+                    : 'Start producing'
+                  }
+                </Button>
+                {produce.isPending && order.correctionScope && (
+                  <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    AI is parsing the document into sections and extracting field data. This may take a minute.
+                  </p>
                 )}
-                Start producing
-              </Button>
+              </div>
             )}
             <Button
               variant="ghost"

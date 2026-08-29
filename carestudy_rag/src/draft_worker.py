@@ -32,7 +32,8 @@ from loaders import load_as_text  # noqa: E402
 from viva import generate_viva_bank  # noqa: E402
 from reference_chunker import chunk_reference_text, ref_chunks_to_dicts  # noqa: E402
 from retrieval import SimpleIndex  # noqa: E402
-from import_worker import import_study  # noqa: E402
+from import_worker import import_study, import_study_with_fields  # noqa: E402
+from import_worker import import_study, import_study_with_fields  # noqa: E402
 
 # Per-study retrieval indexes, keyed by study id and cached in memory so each
 # draft doesn't reload the pickled index from disk. Lives at the project root
@@ -297,25 +298,24 @@ def assist_with_study(study: dict, message: str) -> dict:
     # Escape them before the SDK encodes the prompt as UTF-8.
     safe_message = message.encode("utf-8", "replace").decode("utf-8")
     snapshot = json.dumps(study, ensure_ascii=True, separators=(",", ":"))
-    prompt = f"STUDENT REQUEST:\n{safe_message}\n\nCURRENT CARE STUDY JSON:\n{snapshot}"
+    prompt = f"STUDENT REQUEST:\n{safe_message}\n\nCARE STUDY JSON:\n{snapshot}"
     system = (
-        "You are CareStudy's careful editorial assistant. Review the complete supplied "
-        "care-study snapshot before answering. Improve clarity, consistency, clinical-document "
-        "structure, grammar, and agreement between assessment, diagnoses, goals, interventions, "
-        "implementation, and evaluation. Do not invent patient facts, references, or clinical "
-        "findings, and do not create generic placeholder sections or values to fill missing data. "
-        "When information is absent, identify it as missing and state what existing evidence is "
-        "needed. Name the chapter/section for each point. For editing, provide ready-to-paste "
-        "replacement text grouped by section, limited to text supported by the snapshot. For "
-        "review, prioritize the most consequential issues and explain the fix. This is educational "
-        "support, not clinical advice. Return ONLY a JSON object with this exact shape: "
-        '{"message":"natural-language response", "edits":[{"sectionId":"...",'
-        '"draft":"replacement text"}]}'
-        ". "
-        "The message must use natural language with short paragraphs and no Markdown. "
-        "Add an edit only when you can provide a complete replacement supported by the study. "
-        "Use the exact section id from the supplied study. Omit draft or notes when it should "
-        "not change. Never invent missing patient facts."
+        "You are a senior nursing tutor at a Ghana NMC-accredited college. "
+        "You are reviewing a student's care study. Be direct, specific, and concise. "
+        "Never write walls of text. Use short paragraphs (2-3 sentences max). "
+        "Never invent patient facts or clinical findings.\n\n"
+        "RESPONSE FORMAT — always return this exact JSON: "
+        '{"message": "your response", "edits": [{"sectionId": "...", "draft": "..."}]}'
+        "\n\n"
+        "RULES:\n"
+        "- message: 3-5 short paragraphs. Lead with the most important finding. "
+        "End with one concrete next step the student should take.\n"
+        "- edits: only include when you have a complete, ready-to-paste replacement. "
+        "Use the exact sectionId from the study. Never include partial edits.\n"
+        "- If asked to polish text: rewrite it in the message, then put the improved "
+        "version in edits with the correct sectionId.\n"
+        "- If asked to review: list the top 3-5 issues as bullet points, not prose.\n"
+        "- Never use markdown formatting in the message field."
     )
     import time
 
@@ -441,6 +441,17 @@ def main() -> None:
                     continue
                 result = import_study(raw_text.strip())
                 emit({"id": req.get("id"), "imported": result})
+                continue
+            if op == "import_study_with_fields":
+                raw_text = req.get("text", "")
+                if not isinstance(raw_text, str) or not raw_text.strip():
+                    emit({"id": req.get("id"), "error": "import_study_with_fields requires a text field"})
+                    continue
+                try:
+                    result = import_study_with_fields(raw_text.strip())
+                    emit({"id": req.get("id"), "imported": result})
+                except Exception as exc:
+                    emit({"id": req.get("id"), "error": str(exc)})
                 continue
             if op == "study_assistant":
                 study = req.get("study")

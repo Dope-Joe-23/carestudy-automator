@@ -28,6 +28,9 @@ import {
   Check,
   CheckCircle2,
   CircleAlert,
+  FileDown,
+  FileUp,
+  MoreHorizontal,
   Clipboard,
   ClipboardCheck,
   ClipboardList,
@@ -64,6 +67,7 @@ import {
   Search,
   Send,
   ShieldCheck,
+  Loader2,
   Sparkles,
   Stethoscope,
   Strikethrough,
@@ -183,6 +187,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudiesPanel } from '@/components/studies-panel';
@@ -1390,18 +1395,26 @@ function assistantPlainText(content: string): string {
     }
     if (/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(line)) continue;
 
-    let plain = line
-      .replace(/^#{1,6}\s+/, '')
-      .replace(/^[-*+]\s+/, '')
-      .replace(/^\d+[.)]\s+/, '')
-      .replace(/^>\s?/, '')
-      .replace(/^\|\s?|\s?\|$/g, '')
-      .replace(/\|\s*/g, '. ')
-      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-      .replace(/`{1,3}/g, '')
-      .replace(/(\*\*|__|~~|==)/g, '')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
+    // Preserve bullet points and numbered lists for scannability.
+    const bulletMatch = line.match(/^([-*+])\s+(.+)/);
+    const numMatch = line.match(/^(\d+[.)])\s+(.+)/);
+    let plain: string;
+    if (bulletMatch) {
+      plain = `• ${bulletMatch[2]}`;
+    } else if (numMatch) {
+      plain = `${numMatch[1]} ${numMatch[2]}`;
+    } else {
+      plain = line
+        .replace(/^#{1,6}\s+/, '')
+        .replace(/^>\s?/, '')
+        .replace(/^\|\s?|\s?\|$/g, '')
+        .replace(/\|\s*/g, '. ')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/`{1,3}/g, '')
+        .replace(/(\*\*|__|~~|==)/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    }
     if (inCodeBlock) plain = plain.replace(/^\s+/, '');
     if (plain) output.push(plain);
   }
@@ -2274,6 +2287,326 @@ function Home() {
   const [studyFiles, setStudyFiles] = useState<StudyFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const chapterImportInputRef = useRef<HTMLInputElement>(null);
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const [pendingImport, setPendingImport] = useState<StoredStudy | null>(null);
+  const [chapterImportConfirmOpen, setChapterImportConfirmOpen] = useState(false);
+  const [pendingChapterImport, setPendingChapterImport] = useState<{
+    chapterIndex: number;
+    data: StoredStudy['chapters'][number];
+  } | null>(null);
+  // Document import: paste text or upload a file to have the AI parse it
+  // into section drafts + extracted field data.
+  const [docImportOpen, setDocImportOpen] = useState(false);
+  const [docImportText, setDocImportText] = useState('');
+  const [docImportBusy, setDocImportBusy] = useState(false);
+  const [docImportError, setDocImportError] = useState<string | null>(null);
+  const docImportFileRef = useRef<HTMLInputElement>(null);
+
+  /** Compute a human-readable summary of how much data a chapter array holds. */
+  const summariseChapterData = (
+    chapterData: { name: string; intro?: string; sections: Array<{
+      id: string;
+      data?: Record<string, string>;
+      rowData?: Array<{ cells: string[] }>;
+      notes?: string;
+      draft?: string;
+    }> }[],
+  ): string => {
+    let sectionsWithData = 0;
+    let sectionsWithDraft = 0;
+    let totalFields = 0;
+    let totalRows = 0;
+    for (const chapter of chapterData) {
+      for (const section of chapter.sections) {
+        const data = section.data ?? {};
+        const filled = Object.values(data).filter((v) => typeof v === 'string' && v.trim()).length;
+        const rows = section.rowData?.length ?? 0;
+        const hasNotes = typeof section.notes === 'string' && section.notes.trim().length > 0;
+        const hasDraft = typeof section.draft === 'string' && section.draft.trim().length > 0;
+        if (filled > 0 || rows > 0 || hasNotes) sectionsWithData++;
+        if (hasDraft) sectionsWithDraft++;
+        totalFields += filled;
+        totalRows += rows;
+      }
+    }
+    const parts: string[] = [];
+    parts.push(`${sectionsWithData} section${sectionsWithData === 1 ? '' : 's'} with collected data`);
+    if (totalFields > 0) parts.push(`${totalFields} field${totalFields === 1 ? '' : 's'} filled`);
+    if (totalRows > 0) parts.push(`${totalRows} row${totalRows === 1 ? '' : 's'}`);
+    if (sectionsWithDraft > 0) parts.push(`${sectionsWithDraft} draft${sectionsWithDraft === 1 ? '' : 's'}`);
+    return parts.join(' · ');
+  };
+
+  /** Export all collected data (field values, row data, notes, drafts) as a
+   *  JSON file that can be re-imported to repopulate the section forms. */
+  const exportCollectedData = () => {
+    const payload = buildStudyPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${deriveStudyName() || 'care-study'}-data.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    const summary = summariseChapterData(payload.chapters);
+    toast.success('Data exported', {
+      description: summary || 'Workspace saved as a JSON file.',
+    });
+  };
+
+  /** Read the selected file, validate it, and open the confirmation dialog. */
+  const importCollectedData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result as string);
+        if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.chapters)) {
+          throw new Error('Invalid file format — expected a care study data export.');
+        }
+        setPendingImport(parsed as StoredStudy);
+        setImportConfirmOpen(true);
+      } catch (error) {
+        toast.error('Import failed', {
+          description: error instanceof Error ? error.message : 'Could not read the file.',
+        });
+      }
+    };
+    reader.onerror = () => {
+      toast.error('Import failed', { description: 'Could not read the file.' });
+    };
+    reader.readAsText(file);
+  };
+
+  /** Actually apply the pending import after the user confirms. */
+  const confirmImport = () => {
+    if (!pendingImport) return;
+    const summary = summariseChapterData(pendingImport.chapters);
+    loadStudyIntoWorkspace(pendingImport, null);
+    setDirty(true);
+    toast.success('Data imported', {
+      description: summary || `Loaded ${pendingImport.chapters.length} chapters.`,
+    });
+    setPendingImport(null);
+    setImportConfirmOpen(false);
+  };
+
+  /** Export just the active chapter's collected data as a JSON file. */
+  const exportChapter = () => {
+    const chapter = chapters[activeChapter];
+    const payload = {
+      type: 'carestudy-chapter' as const,
+      chapterIndex: activeChapter,
+      chapter: {
+        name: chapter.name,
+        intro: chapter.intro,
+        introReferences: chapter.introReferences,
+        sections: chapter.sections.map((section) => ({
+          id: section.id,
+          notes: section.notes,
+          draft: section.draft,
+          references: section.references,
+          data: section.data,
+          rowData: section.rowData.map((row) => ({ cells: row.cells })),
+        })),
+      },
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${chapter.name.toLowerCase().replace(/\s+/g, '-')}-data.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    const summary = summariseChapterData([payload.chapter]);
+    toast.success(`${chapter.name} exported`, {
+      description: summary || 'Chapter data saved as a JSON file.',
+    });
+  };
+
+  /** Read a chapter JSON file and open the confirmation dialog. */
+  const importChapter = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result as string);
+        if (
+          !parsed || typeof parsed !== 'object' ||
+          parsed.type !== 'carestudy-chapter' ||
+          !parsed.chapter || typeof parsed.chapter !== 'object' ||
+          !Array.isArray(parsed.chapter.sections)
+        ) {
+          throw new Error('Invalid file — expected a care study chapter export.');
+        }
+        // Find the matching chapter in the current template
+        const templateIndex = CHAPTER_TEMPLATE.findIndex(
+          (template) => template.name === parsed.chapter.name,
+        );
+        const chapterIndex = typeof parsed.chapterIndex === 'number'
+          ? parsed.chapterIndex
+          : templateIndex;
+        if (chapterIndex < 0 || chapterIndex >= chapters.length) {
+          throw new Error(
+            `Chapter "${parsed.chapter.name}" does not exist in the current template.`,
+          );
+        }
+        setPendingChapterImport({ chapterIndex, data: parsed.chapter });
+        setChapterImportConfirmOpen(true);
+      } catch (error) {
+        toast.error('Import failed', {
+          description: error instanceof Error ? error.message : 'Could not read the file.',
+        });
+      }
+    };
+    reader.onerror = () => {
+      toast.error('Import failed', { description: 'Could not read the file.' });
+    };
+    reader.readAsText(file);
+  };
+
+  /** Apply a chapter import after user confirmation. */
+  const confirmChapterImport = () => {
+    if (!pendingChapterImport) return;
+    const { chapterIndex, data } = pendingChapterImport;
+    const target = chapters[chapterIndex];
+    setChapters((previous) =>
+      previous.map((chapter, ci) => {
+        if (ci !== chapterIndex) return chapter;
+        const intro = typeof data.intro === 'string' ? data.intro : chapter.intro;
+        const introReferences = Array.isArray(data.introReferences)
+          ? data.introReferences
+          : chapter.introReferences;
+        const sections = chapter.sections.map((section) => {
+          const saved = data.sections.find((s: { id: string }) => s.id === section.id);
+          if (!saved) return section;
+          const updates: Partial<Section> = {
+            notes: typeof saved.notes === 'string' ? saved.notes : '',
+            draft: typeof saved.draft === 'string' ? saved.draft : '',
+            references: Array.isArray(saved.references) ? saved.references : [],
+            data: saved.data && typeof saved.data === 'object' ? (saved.data as Record<string, string>) : {},
+            rowData: Array.isArray(saved.rowData)
+              ? saved.rowData.map((row: { cells: string[] }, ri: number) => ({
+                  id: section.rowData[ri]?.id ?? nextRowId(),
+                  cells: Array.isArray(row.cells) ? row.cells : [],
+                }))
+              : [],
+          };
+          return { ...section, ...updates, status: computeStatus({ ...section, ...updates }) };
+        });
+        return { ...chapter, intro, introReferences, sections };
+      }),
+    );
+    setDirty(true);
+    const imported = data.sections.filter(
+      (s: { data?: Record<string, string>; rowData?: unknown[]; notes?: string }) =>
+        (s.data && Object.values(s.data).some((v) => typeof v === 'string' && v.trim())) ||
+        (Array.isArray(s.rowData) && s.rowData.length > 0) ||
+        (typeof s.notes === 'string' && s.notes.trim()),
+    ).length;
+    const importedDrafts = data.sections.filter(
+      (s: { draft?: string }) => typeof s.draft === 'string' && s.draft.trim().length > 0,
+    ).length;
+    const importedRows = data.sections.reduce(
+      (sum: number, s: { rowData?: unknown[] }) => sum + (Array.isArray(s.rowData) ? s.rowData.length : 0),
+      0,
+    );
+    const parts: string[] = [];
+    parts.push(`${imported} section${imported === 1 ? '' : 's'} with collected data`);
+    if (importedRows > 0) parts.push(`${importedRows} row${importedRows === 1 ? '' : 's'}`);
+    if (importedDrafts > 0) parts.push(`${importedDrafts} draft${importedDrafts === 1 ? '' : 's'}`);
+    toast.success(`${target.name} imported`, {
+      description: parts.join(' · '),
+    });
+    setPendingChapterImport(null);
+    setChapterImportConfirmOpen(false);
+  };
+
+  /** Read an uploaded document file and populate the import text area. */
+  const handleDocImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setDocImportText(reader.result as string);
+    reader.readAsText(file);
+  };
+
+  /** Send the document text to the AI, parse it, and populate the workspace. */
+  const runDocImport = async () => {
+    if (!docImportText.trim() || docImportBusy) return;
+    setDocImportBusy(true);
+    setDocImportError(null);
+    try {
+      const { importStudyWithFields } = await import('@/lib/api');
+      const result = await importStudyWithFields(docImportText.trim());
+      // Map the AI-returned chapters into the workspace.
+      setChapters((previous) => {
+        const next = previous.map((chapter) => ({ ...chapter }));
+        for (const aiChapter of result.chapters) {
+          const chapterIndex = CHAPTER_TEMPLATE.findIndex(
+            (template) => template.name === aiChapter.name,
+          );
+          if (chapterIndex < 0) continue;
+          const target = next[chapterIndex];
+          for (const aiSection of aiChapter.sections) {
+            const section = target.sections.find(
+              (s) => s.id === aiSection.sectionId,
+            );
+            if (!section) continue;
+            // Populate form fields from extracted data.
+            if (aiSection.fields && typeof aiSection.fields === 'object') {
+              section.data = { ...section.data, ...aiSection.fields };
+            }
+            // Set the draft so it appears polished in the preview.
+            if (typeof aiSection.draft === 'string' && aiSection.draft.trim()) {
+              section.draft = aiSection.draft.trim();
+            }
+            section.status = computeStatus(section);
+          }
+        }
+        return next;
+      });
+      setDirty(true);
+      const sectionsImported = result.chapters.reduce(
+        (sum, ch) => sum + ch.sections.length,
+        0,
+      );
+      const fieldsExtracted = result.chapters.reduce(
+        (sum, ch) => sum + ch.sections.reduce(
+          (s, sec) => s + Object.keys(sec.fields ?? {}).length,
+          0,
+        ),
+        0,
+      );
+      setDocImportOpen(false);
+      setDocImportText('');
+      toast.success('Document imported', {
+        description: `${sectionsImported} sections parsed · ${fieldsExtracted} fields extracted · drafts populated.`,
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Import failed.';
+      setDocImportError(msg);
+      toast.error('Document import failed', { description: msg });
+    } finally {
+      setDocImportBusy(false);
+    }
+  };
+
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [assistantMessage, setAssistantMessage] = useState('');
   const [assistantBusy, setAssistantBusy] = useState(false);
@@ -3038,6 +3371,31 @@ function Home() {
       const detail = error instanceof Error ? error.message : 'The study assistant is unavailable.';
       setAssistantMessages((messages) => [...messages, { role: 'assistant', content: `Unable to help: ${detail}` }]);
       toast.error('Study assistant failed', { description: detail });
+    } finally {
+      setAssistantBusy(false);
+    }
+  };
+
+  /** Polish the current section's draft via the AI assistant. */
+  const polishCurrentSection = async () => {
+    if (!currentSection || !currentSection.draft.trim() || assistantBusy) return;
+    const sectionHeading = currentSection.heading;
+    const sectionId = currentSection.id;
+    const draftText = currentSection.draft;
+    const prompt = `Polish this section for a nursing care study. Keep all patient facts, clinical data, and references exactly as they are. Improve grammar, clarity, professional tone, and paragraph flow. Return ONLY the improved text.\n\nSECTION: ${sectionHeading} (ID: ${sectionId})\n\nCURRENT DRAFT:\n${draftText}`;
+    setAssistantOpen(true);
+    setAssistantBusy(true);
+    setAssistantMessages((messages) => [...messages, { role: 'user', content: `Polish: ${sectionHeading}` }]);
+    try {
+      const result = await requestStudyAssistant(buildStudyPayload(), prompt);
+      setAssistantMessages((messages) => [
+        ...messages,
+        { role: 'assistant', content: result.answer, edits: result.edits },
+      ]);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'Polishing failed.';
+      setAssistantMessages((messages) => [...messages, { role: 'assistant', content: `Unable to polish: ${detail}` }]);
+      toast.error('Polish failed', { description: detail });
     } finally {
       setAssistantBusy(false);
     }
@@ -3926,6 +4284,12 @@ function Home() {
               <DropdownMenuItem onClick={() => setOverviewOpen(true)}>
                 <Info /> Study overview
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportCollectedData}>
+                <FileDown /> Export data
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => importInputRef.current?.click()}>
+                <FileUp /> Import data
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
@@ -3952,75 +4316,97 @@ function Home() {
       </Sidebar>
 
       <SidebarInset className="no-print">
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-md md:px-6">
+        <header className="sticky top-0 z-20 flex h-11 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur-md md:px-5">
           <SidebarTrigger />
-          <Separator orientation="vertical" className="h-5" />
-          <div className="min-w-0 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-            <span className="inline-block max-w-[22rem] truncate align-bottom">
+          <Separator orientation="vertical" className="h-4" />
+          <div className="min-w-0 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span className="inline-block max-w-[18rem] truncate align-bottom">
               {currentStudyName ?? deriveStudyName()}
             </span>{' '}
-            <span className="mx-1 opacity-50">/</span>{' '}
+            <span className="mx-0.5 opacity-50">/</span>{' '}
             <span className="text-foreground">
               {isFrontMatterChapter(activeChapter)
-                ? 'Preliminary pages'
-                : `Chapter ${chapterOrdinal(activeChapter) + 1}`}
+                ? 'Prelim'
+                : `Ch ${chapterOrdinal(activeChapter) + 1}`}
             </span>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1">
             <button
               onClick={() => setCommandOpen(true)}
-              className="flex h-9 w-9 items-center justify-center gap-2 rounded-md border bg-card text-muted-foreground shadow-xs transition-colors hover:bg-muted sm:w-auto sm:px-3 sm:justify-start"
+              className="flex size-8 items-center justify-center rounded-md border bg-card text-blue-500 shadow-xs transition-colors hover:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-400/10"
               aria-label="Search sections"
+              title="Search sections (⌘K)"
             >
-              <Search className="size-4 shrink-0" />
-              <span className="hidden text-sm sm:inline">Search sections…</span>
-              <kbd className="hidden rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] sm:inline">
-                ⌘K
-              </kbd>
+              <Search className="size-3.5 shrink-0" />
             </button>
             <span className={cn('hidden font-mono text-[10px] tabular lg:inline', saveStatus.tone)}>
               {saveStatus.label}
             </span>
             <Button
               variant="outline"
-              size="sm"
-              className="hidden h-9 gap-1.5 sm:inline-flex"
+              size="icon"
+              className="size-8 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600 dark:text-emerald-400 dark:hover:bg-emerald-400/10"
               onClick={openSaveDialog}
               disabled={!canSave}
-              title={canSave ? undefined : 'Add at least one piece of data before saving'}
+              title={canSave ? 'Save study' : 'Add data before saving'}
             >
-              <Save className="size-4" />
-              Save
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="hidden h-9 gap-1.5 sm:inline-flex"
-              onClick={openNewStudyDialog}
-              title="Start a fresh blank study"
-            >
-              <Plus className="size-4" /> New study
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="hidden h-9 gap-1.5 sm:inline-flex"
-              onClick={() => setPreviewOpen(true)}
-            >
-              <Eye className="size-4" /> Preview
+              <Save className="size-3.5" />
             </Button>
             <Button
               variant="outline"
               size="icon"
-              className="size-9"
-              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-              aria-label="Toggle theme"
+              className="size-8 text-primary hover:bg-primary/10"
+              onClick={openNewStudyDialog}
+              title="New study"
             >
-              {resolvedTheme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
+              <Plus className="size-3.5" />
             </Button>
-            <Button variant="outline" size="icon" className="size-9" onClick={() => setOverviewOpen(true)} aria-label="Study overview">
-              <Info className="size-4" />
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8 text-violet-600 hover:bg-violet-500/10 hover:text-violet-600 dark:text-violet-400 dark:hover:bg-violet-400/10"
+              onClick={() => setPreviewOpen(true)}
+              title="Preview & export"
+            >
+              <Eye className="size-3.5" />
             </Button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={importCollectedData}
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 text-amber-600 hover:bg-amber-500/10 hover:text-amber-600 dark:text-amber-400 dark:hover:bg-amber-400/10"
+                  aria-label="More options"
+                >
+                  <MoreHorizontal className="size-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={exportCollectedData}>
+                  <FileDown /> Export data
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => importInputRef.current?.click()}>
+                  <FileUp /> Import data
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDocImportOpen(true)}>
+                  <FileText /> Import document
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
+                  {resolvedTheme === 'dark' ? <Sun /> : <Moon />} Toggle theme
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOverviewOpen(true)}>
+                  <Info /> Study overview
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
@@ -4210,6 +4596,40 @@ function Home() {
                       </>
                     )}
                   </Button>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium">Chapter data</p>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                      Export or import the collected data for just this chapter.
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <input
+                      ref={chapterImportInputRef}
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={importChapter}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5"
+                      onClick={exportChapter}
+                    >
+                      <FileDown className="size-3.5" /> Export
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5"
+                      onClick={() => chapterImportInputRef.current?.click()}
+                    >
+                      <FileUp className="size-3.5" /> Import
+                    </Button>
+                  </div>
                 </div>
 
                 {isChapterDrafting && chapterDraftProgress && (
@@ -4724,6 +5144,18 @@ function Home() {
                             <Pencil className="size-3.5" /> Edit
                           </Button>
                         )}
+                        {currentSection.draft && !draftEditing && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-violet-600 hover:bg-violet-500/10 hover:text-violet-600 dark:text-violet-400 dark:hover:bg-violet-400/10"
+                            onClick={polishCurrentSection}
+                            disabled={assistantBusy}
+                          >
+                            {assistantBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+                            {assistantBusy ? 'Polishing…' : 'Polish'}
+                          </Button>
+                        )}
                         {currentSection.draft && (
                           <Button
                             variant="outline"
@@ -5050,6 +5482,123 @@ function Home() {
                 <Plus className="size-4" /> Start study
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import data</DialogTitle>
+            <DialogDescription>
+              This will replace everything in your current workspace — all collected field data,
+              notes, drafts, and chapter introductions. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => { setImportConfirmOpen(false); setPendingImport(null); }}>
+              Cancel
+            </Button>
+            <Button onClick={confirmImport} className="gap-2">
+              <FileUp className="size-4" /> Import & replace
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={chapterImportConfirmOpen} onOpenChange={setChapterImportConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import chapter data</DialogTitle>
+            <DialogDescription>
+              This will replace the collected data, notes, and drafts in
+              {' '}<span className="font-semibold text-foreground">
+                {pendingChapterImport ? chapters[pendingChapterImport.chapterIndex]?.name : 'the target chapter'}
+              </span>.
+              Other chapters will not be affected.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => { setChapterImportConfirmOpen(false); setPendingChapterImport(null); }}>
+              Cancel
+            </Button>
+            <Button onClick={confirmChapterImport} className="gap-2">
+              <FileUp className="size-4" /> Import & replace chapter
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={docImportOpen} onOpenChange={(open) => { setDocImportOpen(open); if (!open) { setDocImportText(''); setDocImportError(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="size-4 shrink-0 text-primary" />
+              Import a care study document
+            </DialogTitle>
+            <DialogDescription>
+              Paste the full text or upload a file. The AI will parse it into the standard
+              section structure — extracting field values and populating drafts so the
+              content appears polished in the preview.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="doc-import-text">Document text</Label>
+              <Textarea
+                id="doc-import-text"
+                value={docImportText}
+                onChange={(e) => setDocImportText(e.target.value)}
+                placeholder="Paste the full care study text here…"
+                rows={12}
+                className="min-h-[200px] font-mono text-xs leading-relaxed"
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={docImportFileRef}
+                  type="file"
+                  accept=".txt,.md,.markdown"
+                  className="hidden"
+                  onChange={handleDocImportFile}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => docImportFileRef.current?.click()}
+                  disabled={docImportBusy}
+                >
+                  <Upload className="size-3.5" /> Upload text file
+                </Button>
+                <span className="text-[11px] text-muted-foreground">
+                  {docImportText.length > 0
+                    ? `${docImportText.length.toLocaleString()} characters`
+                    : 'Paste text or upload .txt/.md — for .docx, use the correction order flow'
+                  }
+                </span>
+              </div>
+              <Button
+                onClick={runDocImport}
+                disabled={!docImportText.trim() || docImportBusy}
+                className="gap-2"
+              >
+                {docImportBusy ? (
+                  <>
+                    <RotateCcw className="size-4 animate-spin" /> Parsing document…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="size-4" /> Parse & populate
+                  </>
+                )}
+              </Button>
+            </div>
+            {docImportError && (
+              <p className="flex items-start gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs leading-relaxed text-destructive">
+                <CircleAlert className="mt-0.5 size-3.5 shrink-0" /> {docImportError}
+              </p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -5753,29 +6302,44 @@ function Home() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-1.5 border-b px-3 py-2">
-                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Review the entire care study for inconsistencies, missing links between sections, and the five highest-priority improvements.')}>Review consistency</Button>
-                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Fully edit the complete care study for clarity, grammar, professional tone, and internal consistency. Give ready-to-paste replacements grouped by section; do not invent facts.')}>Full edit</Button>
+                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Review this care study. List the top 5 issues as short bullet points. For each, name the section and give one concrete fix.')} className="text-[11px]">Top 5 issues</Button>
+                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Check grammar, spelling, and professional tone across all sections. List only actual errors found, with section names.')} className="text-[11px]">Grammar check</Button>
+                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Are there any missing sections, incomplete data, or gaps in the nursing process flow? List what is missing and where.')} className="text-[11px]">Find gaps</Button>
+                <Button size="sm" variant="secondary" disabled={assistantBusy} onClick={() => void askStudyAssistant('Rewrite the introduction chapter to be more professional, concise, and aligned with NMC Ghana standards. Return the improved text as an edit.')} className="text-[11px]">Polish intro</Button>
               </div>
               <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm">
                 {assistantMessages.length === 0 ? (
-                  <p className="text-xs leading-relaxed text-muted-foreground">
-                    Ask about the whole work, or choose a review. Suggestions never overwrite your study automatically.
-                  </p>
+                  <div className="space-y-3">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      Ask anything about this care study. I can review, polish, fix grammar, or suggest improvements.
+                    </p>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-medium text-muted-foreground">Try asking:</p>
+                      <p className="text-[11px] text-muted-foreground/80">"Is the nursing diagnosis section complete?"</p>
+                      <p className="text-[11px] text-muted-foreground/80">"Rewrite the introduction to be more professional"</p>
+                      <p className="text-[11px] text-muted-foreground/80">"Check if my care plan interventions match the goals"</p>
+                    </div>
+                  </div>
                 ) : assistantMessages.map((item, index) => (
                   <div key={`${item.role}-${index}`} className={cn('rounded-lg px-3 py-2 whitespace-pre-wrap', item.role === 'user' ? 'ml-7 bg-primary text-primary-foreground' : 'mr-3 bg-background border')}>
                     {item.role === 'assistant' ? assistantPlainText(item.content) : item.content}
                     {item.role === 'assistant' && item.edits?.length && !item.applied ? (
                       <div className="mt-3 rounded-md border border-primary/30 bg-primary/5 p-2">
                         <p className="mb-1.5 text-[10px] font-medium text-primary">
-                          {item.edits.length} suggested edit{item.edits.length === 1 ? '' : 's'} — review and apply below
+                          {item.edits.length} suggested edit{item.edits.length === 1 ? '' : 's'}
                         </p>
+                        <div className="mb-2 space-y-0.5">
+                          {item.edits.map((edit, ei) => (
+                            <p key={ei} className="text-[10px] text-muted-foreground">• Section {edit.sectionId}</p>
+                          ))}
+                        </div>
                         <Button
                           size="sm"
                           className="w-full gap-1.5 text-xs"
                           onClick={() => applyAssistantEdits(index, item.edits ?? [])}
                         >
                           <CheckCircle2 className="size-3.5" />
-                          Apply {item.edits.length} edit{item.edits.length === 1 ? '' : 's'} to the study
+                          Apply {item.edits.length} edit{item.edits.length === 1 ? '' : 's'}
                         </Button>
                       </div>
                     ) : null}
@@ -5784,7 +6348,7 @@ function Home() {
                     ) : null}
                   </div>
                 ))}
-                {assistantBusy && <div className="mr-3 rounded-lg border bg-background px-3 py-2 text-muted-foreground">Reviewing the full study…</div>}
+                {assistantBusy && <div className="mr-3 rounded-lg border bg-background px-3 py-2 text-xs text-muted-foreground">Thinking…</div>}
               </div>
               <div className="flex gap-2 border-t p-3">
                 <Textarea
@@ -5796,7 +6360,7 @@ function Home() {
                       void askStudyAssistant();
                     }
                   }}
-                  placeholder="Ask the editor about this care study…"
+                  placeholder="Ask about this care study… (e.g. polish, review, fix grammar)"
                   className="min-h-10 resize-none text-sm"
                   rows={2}
                   disabled={assistantBusy}
