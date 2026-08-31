@@ -160,7 +160,7 @@ UPDATE "students" SET "username" = split_part("email", '@', 1) || '_' || "id" WH
 ALTER TABLE "students" ALTER COLUMN "username" SET NOT NULL;
 DO $$ BEGIN
   ALTER TABLE "students" ADD CONSTRAINT "students_username_unique" UNIQUE ("username");
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 -- Admins: add new columns (role has a safe DEFAULT)
