@@ -78,6 +78,9 @@ CREATE TABLE IF NOT EXISTS "admins" (
   "username" text NOT NULL UNIQUE,
   "password_hash" text NOT NULL,
   "name" text,
+  "role" text NOT NULL DEFAULT 'staff',
+  "email" text,
+  "invited_by" integer,
   "created_at" timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS "admin_sessions" (
@@ -88,6 +91,7 @@ CREATE TABLE IF NOT EXISTS "admin_sessions" (
 CREATE TABLE IF NOT EXISTS "students" (
   "id" serial PRIMARY KEY,
   "name" text NOT NULL,
+  "username" text NOT NULL UNIQUE,
   "email" text NOT NULL UNIQUE,
   "password_hash" text NOT NULL,
   "college" text NOT NULL,
@@ -120,6 +124,10 @@ CREATE TABLE IF NOT EXISTS "student_orders" (
   "viva_status" text NOT NULL DEFAULT 'none',
   "viva_error" text,
   "viva_updated_at" timestamptz,
+  "payment_status" text NOT NULL DEFAULT 'none',
+  "paid_scope" text,
+  "paid_amount" integer,
+  "paystack_ref" text,
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
@@ -135,6 +143,16 @@ CREATE TABLE IF NOT EXISTS "student_order_files" (
   "created_at" timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS "student_order_files_order_id_idx" ON "student_order_files" ("order_id");
+
+-- Migration: add columns that may be missing from older deployments ----------
+ALTER TABLE "students" ADD COLUMN IF NOT EXISTS "username" text NOT NULL UNIQUE;
+ALTER TABLE "admins" ADD COLUMN IF NOT EXISTS "role" text NOT NULL DEFAULT 'staff';
+ALTER TABLE "admins" ADD COLUMN IF NOT EXISTS "email" text;
+ALTER TABLE "admins" ADD COLUMN IF NOT EXISTS "invited_by" integer;
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "payment_status" text NOT NULL DEFAULT 'none';
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paid_scope" text;
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paid_amount" integer;
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paystack_ref" text;
 `;
 
 /** Lazily-created Postgres client. Throws only when first used. */
