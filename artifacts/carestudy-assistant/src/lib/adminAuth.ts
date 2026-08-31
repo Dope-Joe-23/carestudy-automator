@@ -33,6 +33,8 @@ export type Admin = {
   id: number;
   username: string;
   name: string | null;
+  role: string;
+  email: string | null;
 };
 
 /** Fire the "session expired" signal so the AdminGate shows the login screen. */

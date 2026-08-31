@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { requireAdmin } from "../lib/adminAuth";
 import adminRouter from "./admin";
+import adminDashboardRouter from "./adminDashboard";
 import draftRouter from "./draft";
 import exportRouter from "./export";
 import healthRouter from "./health";
@@ -19,6 +20,7 @@ const router: IRouter = Router();
 // and the student's own orders + viva prep — all outside the studio gate).
 router.use(healthRouter);
 router.use(adminRouter);
+router.use(adminDashboardRouter);
 router.use(studentsRouter);
 router.use(ordersRouter);
 // Document import is available to both students (correction flow) and the

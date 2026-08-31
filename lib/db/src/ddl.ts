@@ -56,6 +56,9 @@ CREATE TABLE IF NOT EXISTS "admins" (
   "username" text NOT NULL UNIQUE,
   "password_hash" text NOT NULL,
   "name" text,
+  "role" text NOT NULL DEFAULT 'staff',
+  "email" text,
+  "invited_by" integer,
   "created_at" integer NOT NULL
 );
 
@@ -65,9 +68,20 @@ CREATE TABLE IF NOT EXISTS "admin_sessions" (
   "created_at" integer NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS "staff_invites" (
+  "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  "token" text NOT NULL UNIQUE,
+  "created_by" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+  "label" text,
+  "used_at" integer,
+  "used_by" integer,
+  "created_at" integer NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS "students" (
   "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   "name" text NOT NULL,
+  "username" text NOT NULL UNIQUE,
   "email" text NOT NULL UNIQUE,
   "password_hash" text NOT NULL,
   "college" text NOT NULL,
@@ -102,6 +116,10 @@ CREATE TABLE IF NOT EXISTS "student_orders" (
   "viva_status" text NOT NULL DEFAULT 'none',
   "viva_error" text,
   "viva_updated_at" integer,
+  "payment_status" text NOT NULL DEFAULT 'none',
+  "paid_scope" text,
+  "paid_amount" integer,
+  "paystack_ref" text,
   "created_at" integer NOT NULL,
   "updated_at" integer NOT NULL
 );

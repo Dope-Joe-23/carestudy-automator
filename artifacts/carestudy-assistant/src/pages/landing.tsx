@@ -204,7 +204,7 @@ function LandingNav() {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <Link href="/student/login" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'hidden text-muted-foreground sm:inline-flex')}>
+          <Link href="/login" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'hidden text-muted-foreground sm:inline-flex')}>
             Sign in
           </Link>
           <Link href="/student/register" className={cn(buttonVariants({ size: 'sm' }), 'hidden sm:inline-flex')}>
@@ -245,7 +245,7 @@ function LandingNav() {
               );
             })}
             <div className="my-2 h-px bg-border/60" />
-            <Link href="/student/login" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'justify-start text-muted-foreground')}>
+            <Link href="/login" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'justify-start text-muted-foreground')}>
               Sign in
             </Link>
             <Link href="/student/register" className={cn(buttonVariants({ size: 'sm' }))}>
@@ -992,7 +992,7 @@ function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/student/login" className="transition-colors hover:text-[hsl(43_30%_94%)]">
+                <Link href="/login" className="transition-colors hover:text-[hsl(43_30%_94%)]">
                   Sign in
                 </Link>
               </li>
@@ -1013,12 +1013,20 @@ function Footer() {
             carestudy supports nursing education — preparing the study, and preparing you to defend
             it.
           </p>
-          <Link
-            href="/studio"
-            className="font-mono text-[10px] uppercase tracking-[0.14em] text-[hsl(43_30%_94%/0.35)] transition-colors hover:text-[hsl(43_30%_94%/0.7)]"
-          >
-            Agency studio
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/login"
+              className="font-mono text-[10px] uppercase tracking-[0.14em] text-[hsl(43_30%_94%/0.35)] transition-colors hover:text-[hsl(43_30%_94%/0.7)]"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/studio"
+              className="font-mono text-[10px] uppercase tracking-[0.14em] text-[hsl(43_30%_94%/0.35)] transition-colors hover:text-[hsl(43_30%_94%/0.7)]"
+            >
+              Agency studio
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

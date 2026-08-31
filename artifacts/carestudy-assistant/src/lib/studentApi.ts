@@ -32,6 +32,7 @@ export function setStudentToken(token: string | null): void {
 export type Student = {
   id: number;
   name: string;
+  username: string;
   email: string;
   college: string;
   program: string;
@@ -43,6 +44,12 @@ export type Student = {
 export type OrderStatus = "submitted" | "in_production" | "ready" | "cancelled";
 
 export type OrderDelivery = { filename: string; size: number };
+
+/** Payment status for a delivered order. */
+export type PaymentStatus = "none" | "pending" | "verified" | "failed";
+
+/** Which scope the student paid for. */
+export type PaidScope = "full" | "chapter" | null;
 
 export type Order = {
   id: number;
@@ -58,6 +65,12 @@ export type Order = {
   /** The studio study created from this order (null until produced). */
   producedStudyId: number | null;
   delivery: OrderDelivery | null;
+  /** Payment tracking — present when the order has a delivery. */
+  paymentStatus: PaymentStatus;
+  paidScope: PaidScope;
+  paidAmount: number | null;
+  /** Paystack transaction reference. */
+  paystackRef: string | null;
   /** "none" | "pending" | "ready" | "error" — viva question bank lifecycle. */
   vivaStatus: "none" | "pending" | "ready" | "error";
   vivaError: string | null;
@@ -117,6 +130,7 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function registerStudent(input: {
   name: string;
+  username: string;
   email: string;
   password: string;
   college: string;
@@ -129,10 +143,10 @@ export function registerStudent(input: {
   });
 }
 
-export function loginStudent(email: string, password: string): Promise<{ token: string; student: Student }> {
+export function loginStudent(identifier: string, password: string): Promise<{ token: string; student: Student }> {
   return requestJson("/students/login", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ identifier, password }),
   });
 }
 
@@ -146,6 +160,112 @@ export async function logoutStudent(): Promise<void> {
   } finally {
     setStudentToken(null);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Payment (Paystack)
+// ---------------------------------------------------------------------------
+
+/** Pricing constants (in Ghana cedis). */
+export const PRICE_FULL_STUDY = 250;
+export const PRICE_CHAPTER = 50;
+
+/** Initialize a Paystack payment for a delivered order.
+ * Returns the reference and amount (in pesewas) the frontend passes to
+ * Paystack's inline popup. */
+export function initializePayment(
+  orderId: number,
+  scope: "full" | "chapter",
+  chapterIndex?: number,
+): Promise<{
+  reference: string;
+  amount: number; // pesewas
+  email: string;
+  authorization_url: string;
+}> {
+  return requestJson(`/orders/${orderId}/pay`, {
+    method: "POST",
+    body: JSON.stringify({ scope, chapterIndex }),
+  });
+}
+
+/** Verify a Paystack transaction reference after the popup succeeds. */
+export function verifyPayment(
+  orderId: number,
+  reference: string,
+): Promise<{
+  verified: boolean;
+  paymentStatus: PaymentStatus;
+  paidScope: PaidScope;
+  message: string;
+}> {
+  return requestJson(`/orders/${orderId}/pay/verify`, {
+    method: "POST",
+    body: JSON.stringify({ reference }),
+  });
+}
+
+/** Check the payment status of an order (used to refresh UI after return). */
+export function getPaymentStatus(orderId: number): Promise<{
+  paymentStatus: PaymentStatus;
+  paidScope: PaidScope;
+  paidAmount: number | null;
+}> {
+  return requestJson(`/orders/${orderId}/payment-status`);
+}
+
+// ---------------------------------------------------------------------------
+// Preview — read-only study viewer
+// ---------------------------------------------------------------------------
+
+/** A single section's preview content. */
+export type PreviewSection = {
+  id: string;
+  heading: string;
+  draft: string;
+  /** Field values for sections without a draft (rendered as prose). */
+  data: Record<string, string>;
+  /** Table rows if this is a row-based section (e.g. care plan, drugs). */
+  rowData: { cells: string[] }[];
+  /** Column labels for table sections. */
+  rowColumns?: { id: string; label: string }[];
+};
+
+/** A chapter's preview content. */
+export type PreviewChapter = {
+  name: string;
+  isFrontMatter?: boolean;
+  intro?: string;
+  sections: PreviewSection[];
+};
+
+/** Title-page metadata for the preview header. */
+export type PreviewTitle = {
+  collegeName: string;
+  studentName: string;
+  indexNumber: string;
+  year: string;
+  diagnosis: string;
+};
+
+/** Full study preview payload returned by the backend. */
+export type StudyPreview = {
+  title: PreviewTitle;
+  chapters: PreviewChapter[];
+};
+
+/** Fetch the read-only preview of a delivered study.
+ * Returns the structured study content for rendering in the preview page. */
+export function getOrderPreview(orderId: number): Promise<StudyPreview> {
+  return requestJson(`/orders/${orderId}/preview`);
+}
+
+/** Fetch available chapters for chapter-level payment. */
+export function getExportableChapters(orderId: number): Promise<{
+  chapters: { index: number; name: string; sectionCount: number }[];
+  hasFullStudy: boolean;
+}> {
+  return requestJson(`/orders/${orderId}/chapters`);
 }
 
 // ---------------------------------------------------------------------------
@@ -214,6 +334,30 @@ export async function downloadOrderStudy(order: Order): Promise<void> {
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = order.delivery?.filename ?? "care-study.docx";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Download a specific chapter of the study (post-payment). */
+export async function downloadOrderChapter(order: Order, chapterIndex: number): Promise<void> {
+  const token = getStudentToken();
+  if (!token) throw new Error("You must be signed in to download.");
+  const response = await fetch(
+    `${API_URL}/orders/${order.id}/download?chapter=${chapterIndex}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `Download failed (${response.status})`);
+  }
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = order.delivery?.filename?.replace(/\.docx$/i, '') ?? 'care-study';
+  anchor.download += `-chapter-${chapterIndex + 1}.docx`;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();

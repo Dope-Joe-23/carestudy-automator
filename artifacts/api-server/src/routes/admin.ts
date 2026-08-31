@@ -37,8 +37,8 @@ function asyncRoute(handler: (req: Request, res: Response) => Promise<void>) {
   };
 }
 
-function publicAdmin(admin: { id: number; username: string; name: string | null }) {
-  return { id: admin.id, username: admin.username, name: admin.name };
+function publicAdmin(admin: { id: number; username: string; name: string | null; role: string; email: string | null }) {
+  return { id: admin.id, username: admin.username, name: admin.name, role: admin.role, email: admin.email };
 }
 
 // POST /api/admin/login — username + password → admin session token.

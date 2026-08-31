@@ -22,6 +22,8 @@ import type {
   StudentRow,
   StudyFileRow,
   StudyRow,
+  StaffInviteRow,
+  NewStaffInvite,
   StudyStore,
   VivaStatus,
 } from "./store";
@@ -46,12 +48,52 @@ function openSqlite(): DatabaseSync {
   for (const statement of [
     'ALTER TABLE "student_orders" ADD COLUMN "correction_scope" text',
     'ALTER TABLE "student_orders" ADD COLUMN "correction_text" text',
+    'ALTER TABLE "student_orders" ADD COLUMN "payment_status" text NOT NULL DEFAULT \'none\'',
+    'ALTER TABLE "student_orders" ADD COLUMN "paid_scope" text',
+    'ALTER TABLE "student_orders" ADD COLUMN "paid_amount" integer',
+    'ALTER TABLE "student_orders" ADD COLUMN "paystack_ref" text',
+    'ALTER TABLE "admins" ADD COLUMN "role" text NOT NULL DEFAULT \'staff\'',
+    'ALTER TABLE "admins" ADD COLUMN "email" text',
+    'ALTER TABLE "admins" ADD COLUMN "invited_by" integer',
+    'ALTER TABLE "students" ADD COLUMN "username" text',
   ]) {
     try {
       sqlite.exec(statement);
     } catch {
       // Columns already exist on databases created with the latest schema.
     }
+  }
+  // Backfill username for existing students from their email prefix + id
+  try {
+    sqlite.exec(
+      `UPDATE "students" SET "username" = LOWER(SUBSTR("email", 1, INSTR("email", '@') - 1)) || '-' || "id" WHERE "username" IS NULL OR "username" = ''`
+    );
+  } catch {
+    // Best effort
+  }
+  // Create staff_invites table if it doesn't exist (for pre-existing databases)
+  try {
+    sqlite.exec(`CREATE TABLE IF NOT EXISTS "staff_invites" (
+      "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+      "token" text NOT NULL UNIQUE,
+      "created_by" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+      "label" text,
+      "used_at" integer,
+      "used_by" integer,
+      "created_at" integer NOT NULL
+    )`);
+  } catch {
+    // Table already exists
+  }
+  // Upgrade the bootstrap admin (from ADMIN_USERNAME env) to role="admin"
+  // if it was created before the role column existed.
+  try {
+    const bootstrapUsername = (process.env.ADMIN_USERNAME || "admin").trim().replace(/'/g, "''");
+    sqlite.exec(
+      `UPDATE "admins" SET "role" = 'admin' WHERE "username" = '${bootstrapUsername}' AND "role" != 'admin'`,
+    );
+  } catch {
+    // Best-effort — if the column or row doesn't exist yet, skip.
   }
   return sqlite;
 }
@@ -155,6 +197,21 @@ function toAdminRow(row: typeof schema.adminsTable.$inferSelect): AdminRow {
     username: row.username,
     passwordHash: row.passwordHash,
     name: row.name,
+    role: row.role ?? "staff",
+    email: row.email ?? null,
+    invitedBy: row.invitedBy ?? null,
+    createdAt: row.createdAt,
+  };
+}
+
+function toStaffInviteRow(row: typeof schema.staffInvitesTable.$inferSelect): StaffInviteRow {
+  return {
+    id: row.id,
+    token: row.token,
+    createdBy: row.createdBy,
+    label: row.label ?? null,
+    usedAt: row.usedAt ?? null,
+    usedBy: row.usedBy ?? null,
     createdAt: row.createdAt,
   };
 }
@@ -163,6 +220,7 @@ function toStudentRow(row: typeof schema.studentsTable.$inferSelect): StudentRow
   return {
     id: row.id,
     name: row.name,
+    username: row.username,
     email: row.email,
     passwordHash: row.passwordHash,
     college: row.college,
@@ -193,6 +251,10 @@ function toOrderRow(row: typeof schema.studentOrdersTable.$inferSelect): OrderRo
     vivaStatus: row.vivaStatus as VivaStatus,
     vivaError: row.vivaError,
     vivaUpdatedAt: row.vivaUpdatedAt,
+    paymentStatus: (row.paymentStatus ?? "none") as OrderRow["paymentStatus"],
+    paidScope: (row.paidScope ?? null) as OrderRow["paidScope"],
+    paidAmount: row.paidAmount ?? null,
+    paystackRef: row.paystackRef ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -369,11 +431,67 @@ export function createSqliteStore(): StudyStore {
       return deleted.length > 0;
     },
 
+    // --- Staff management --------------------------------------------------
+
+    async listAdmins() {
+      const rows = await db.select().from(admins).orderBy(desc(admins.id));
+      return rows.map(toAdminRow);
+    },
+
+    async updateAdmin(id, fields) {
+      const [row] = await db
+        .update(admins)
+        .set(fields)
+        .where(eq(admins.id, id))
+        .returning();
+      return row ? toAdminRow(row) : null;
+    },
+
+    async createStaffInvite(invite) {
+      const [row] = await db.insert(schema.staffInvitesTable).values(invite).returning();
+      return toStaffInviteRow(row);
+    },
+
+    async listStaffInvites() {
+      const rows = await db
+        .select()
+        .from(schema.staffInvitesTable)
+        .orderBy(desc(schema.staffInvitesTable.id));
+      return rows.map(toStaffInviteRow);
+    },
+
+    async getStaffInviteByToken(token) {
+      const [row] = await db
+        .select()
+        .from(schema.staffInvitesTable)
+        .where(eq(schema.staffInvitesTable.token, token));
+      return row ? toStaffInviteRow(row) : null;
+    },
+
+    async useStaffInvite(id, usedByAdminId) {
+      const [row] = await db
+        .update(schema.staffInvitesTable)
+        .set({ usedAt: new Date(), usedBy: usedByAdminId })
+        .where(eq(schema.staffInvitesTable.id, id))
+        .returning();
+      return row ? toStaffInviteRow(row) : null;
+    },
+
     // --- Student portal ----------------------------------------------------
 
     async addStudent(student) {
       const [row] = await db.insert(students).values(student).returning();
       return toStudentRow(row);
+    },
+
+    async listAllStudents() {
+      const rows = await db.select().from(students).orderBy(desc(students.id));
+      return rows.map(toStudentRow);
+    },
+
+    async getStudentByUsername(username) {
+      const [row] = await db.select().from(students).where(eq(students.username, username));
+      return row ? toStudentRow(row) : null;
     },
 
     async getStudentByEmail(email) {
@@ -487,6 +605,48 @@ export function createSqliteStore(): StudyStore {
                 updatedAt: new Date(),
               },
         )
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async setOrderPaymentPending(id, paystackRef, scope) {
+      const [row] = await db
+        .update(orders)
+        .set({
+          paymentStatus: "pending",
+          paystackRef,
+          paidScope: scope,
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async setOrderPaymentVerified(id, paystackRef, scope, amount) {
+      const [row] = await db
+        .update(orders)
+        .set({
+          paymentStatus: "verified",
+          paystackRef,
+          paidScope: scope,
+          paidAmount: Math.round(amount * 100),
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async setOrderPaymentFailed(id, paystackRef) {
+      const [row] = await db
+        .update(orders)
+        .set({
+          paymentStatus: "failed",
+          paystackRef,
+          updatedAt: new Date(),
+        })
         .where(eq(orders.id, id))
         .returning();
       return row ? toOrderRow(row) : null;

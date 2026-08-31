@@ -54,6 +54,7 @@ function strOrNull(value: unknown): string | null {
 function publicStudent(student: {
   id: number;
   name: string;
+  username: string;
   email: string;
   college: string;
   program: string;
@@ -63,6 +64,7 @@ function publicStudent(student: {
   return {
     id: student.id,
     name: student.name,
+    username: student.username,
     email: student.email,
     college: student.college,
     program: student.program,
@@ -76,6 +78,7 @@ router.post(
   "/students/register",
   asyncRoute(async (req, res) => {
     const name = str(req.body?.name);
+    const username = str(req.body?.username).toLowerCase();
     const email = str(req.body?.email).toLowerCase();
     const password = typeof req.body?.password === "string" ? req.body.password : "";
     const college = str(req.body?.college);
@@ -84,6 +87,10 @@ router.post(
 
     if (!name || name.length < 2) {
       res.status(400).json({ error: "Please enter your full name." });
+      return;
+    }
+    if (!username || username.length < 3) {
+      res.status(400).json({ error: "Username must be at least 3 characters." });
       return;
     }
     if (!EMAIL_RE.test(email)) {
@@ -104,14 +111,20 @@ router.post(
     }
 
     const db = studyStore();
-    const existing = await db.getStudentByEmail(email);
-    if (existing) {
+    const existingEmail = await db.getStudentByEmail(email);
+    if (existingEmail) {
       res.status(409).json({ error: "An account with this email already exists — sign in instead." });
+      return;
+    }
+    const existingUsername = await db.getStudentByUsername(username);
+    if (existingUsername) {
+      res.status(409).json({ error: "This username is already taken." });
       return;
     }
 
     const student = await db.addStudent({
       name,
+      username,
       email,
       passwordHash: hashPassword(password),
       college,
@@ -125,24 +138,30 @@ router.post(
 );
 
 // POST /api/students/login — verify credentials and issue a session token.
+// Accepts either `email` or `identifier` (username or email).
 router.post(
   "/students/login",
   asyncRoute(async (req, res) => {
-    const email = str(req.body?.email).toLowerCase();
+    const identifier = str(req.body?.identifier || req.body?.email).toLowerCase();
     const password = typeof req.body?.password === "string" ? req.body.password : "";
-    if (!email || !password) {
-      res.status(400).json({ error: "Email and password are required." });
+    if (!identifier || !password) {
+      res.status(400).json({ error: "Email/username and password are required." });
       return;
     }
 
-    const student = await studyStore().getStudentByEmail(email);
+    const db = studyStore();
+    // Try username first, then email
+    let student = await db.getStudentByUsername(identifier);
+    if (!student && EMAIL_RE.test(identifier)) {
+      student = await db.getStudentByEmail(identifier);
+    }
     if (!student || !verifyPassword(password, student.passwordHash)) {
-      res.status(401).json({ error: "Incorrect email or password." });
+      res.status(401).json({ error: "Incorrect email/username or password." });
       return;
     }
 
     const token = createAuthToken();
-    await studyStore().createSession(student.id, token);
+    await db.createSession(student.id, token);
     res.json({ token, student: publicStudent(student) });
   }),
 );

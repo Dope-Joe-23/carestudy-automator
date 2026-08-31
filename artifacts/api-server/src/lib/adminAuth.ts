@@ -28,12 +28,22 @@ export async function ensureBootstrapAdmin(): Promise<AdminRow | null> {
   const db = getStudyStore();
   const username = (process.env.ADMIN_USERNAME || "admin").trim();
   const existing = await db.getAdminByUsername(username);
-  if (existing) return existing;
+  if (existing) {
+    // Upgrade existing bootstrap accounts that were created before the role
+    // column existed (they defaulted to "staff"). The env-configured admin
+    // should always be an admin.
+    if (existing.role !== "admin") {
+      await db.updateAdmin(existing.id, { role: "admin" });
+      return { ...existing, role: "admin" };
+    }
+    return existing;
+  }
   const name = process.env.ADMIN_NAME?.trim() || null;
   return db.addAdmin({
     username,
     passwordHash: hashPassword(password),
     name,
+    role: "admin",
   });
 }
 

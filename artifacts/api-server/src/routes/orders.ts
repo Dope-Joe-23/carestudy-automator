@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { randomBytes } from "node:crypto";
 import {
   getStudyStore,
   ORDER_STATUSES,
@@ -16,6 +17,15 @@ import {
 import { indexStudyFiles } from "./uploads";
 import { requireStudent, type AuthedRequest } from "../lib/studentAuth";
 import { draftWorker, type VivaQuestion } from "../lib/draftWorker";
+
+// Paystack configuration — the secret key lives in the API server's env,
+// never in the frontend. The frontend only sees the publishable key.
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY ?? "";
+const PAYSTACK_BASE = "https://api.paystack.co";
+
+/** Pricing (Ghana cedis). */
+const PRICE_FULL_STUDY = 250;
+const PRICE_CHAPTER = 50;
 
 // Two routers from one file: the student-facing half (orders the signed-in
 // student places, plus the viva preparation) and the studio half (the order
@@ -101,6 +111,10 @@ function publicOrder(order: {
   vivaStatus: string;
   vivaError: string | null;
   vivaUpdatedAt: Date | null;
+  paymentStatus: string;
+  paidScope: string | null;
+  paidAmount: number | null;
+  paystackRef: string | null;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -123,6 +137,10 @@ function publicOrder(order: {
     vivaStatus: order.vivaStatus,
     vivaError: order.vivaError,
     vivaUpdatedAt: order.vivaUpdatedAt ? order.vivaUpdatedAt.toISOString() : null,
+    paymentStatus: order.paymentStatus ?? "none",
+    paidScope: order.paidScope ?? null,
+    paidAmount: order.paidAmount ?? null,
+    paystackRef: order.paystackRef ?? null,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
   };
@@ -486,7 +504,8 @@ studentRouter.post(
   }),
 );
 
-// GET /api/orders/:id/download — the completed study (owner only, once ready).
+// GET /api/orders/:id/download — the completed study (owner only, once ready + paid).
+// Supports ?chapter=N to download a single chapter.
 studentRouter.get(
   "/orders/:id/download",
   requireStudent,
@@ -507,7 +526,348 @@ studentRouter.get(
       res.status(409).json({ error: "Your completed study is not ready for download yet." });
       return;
     }
+    // Payment gate: require verified payment for downloads
+    if (order.paymentStatus !== "verified") {
+      res.status(402).json({
+        error: "Please complete payment before downloading your study.",
+        paymentRequired: true,
+      });
+      return;
+    }
     res.download(order.deliveryPath, order.deliveryFilename);
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Payment (Paystack) — student-facing routes for purchasing exports
+// ---------------------------------------------------------------------------
+
+// POST /api/orders/:id/pay — initialize a Paystack payment.
+// Body: { scope: "full" | "chapter", chapterIndex?: number }
+// Returns: { reference, amount (pesewas), email, authorization_url }
+studentRouter.post(
+  "/orders/:id/pay",
+  requireStudent,
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    const student = (req as AuthedRequest).student;
+    const db = studyStore();
+    const order = await db.getOrder(id);
+    if (!order || order.studentId !== student.id) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    if (order.status !== "ready" || !order.deliveryPath) {
+      res.status(409).json({ error: "Your study is not ready for download yet." });
+      return;
+    }
+    if (order.paymentStatus === "verified") {
+      res.status(409).json({ error: "You have already paid for this study." });
+      return;
+    }
+
+    const scope = req.body?.scope === "chapter" ? "chapter" : "full";
+    const amount = scope === "full" ? PRICE_FULL_STUDY : PRICE_CHAPTER;
+
+    // Generate a unique reference
+    const reference = `CS-${id}-${scope}-${randomBytes(8).toString("hex")}`;
+
+    // Record the pending payment
+    await db.setOrderPaymentPending(id, reference, scope);
+
+    // If Paystack secret is configured, initialize the transaction server-side
+    let authorizationUrl = "";
+    if (PAYSTACK_SECRET) {
+      try {
+        const response = await fetch(`${PAYSTACK_BASE}/transaction/initialize`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${PAYSTACK_SECRET}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: student.email,
+            amount: amount * 100, // pesewas
+            reference,
+            currency: "GHS",
+            metadata: {
+              orderId: id,
+              scope,
+              studentId: student.id,
+            },
+          }),
+        });
+        const data = (await response.json()) as {
+          status?: boolean;
+          data?: { authorization_url?: string; access_code?: string };
+          message?: string;
+        };
+        if (data.status && data.data?.authorization_url) {
+          authorizationUrl = data.data.authorization_url;
+        } else {
+          req.log?.warn?.({ paystack: data }, "Paystack initialization returned non-success");
+        }
+      } catch (err) {
+        req.log?.error?.({ err }, "Paystack initialization failed — falling back to client-side"
+        );
+      }
+    }
+
+    res.json({
+      reference,
+      amount: amount * 100, // pesewas for the frontend popup
+      email: student.email,
+      authorization_url: authorizationUrl,
+    });
+  }),
+);
+
+// POST /api/orders/:id/pay/verify — verify a Paystack transaction.
+// Body: { reference: string }
+studentRouter.post(
+  "/orders/:id/pay/verify",
+  requireStudent,
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    const student = (req as AuthedRequest).student;
+    const db = studyStore();
+    const order = await db.getOrder(id);
+    if (!order || order.studentId !== student.id) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
+    const reference = str(req.body?.reference);
+    if (!reference) {
+      res.status(400).json({ error: "Payment reference is required." });
+      return;
+    }
+
+    // Verify with Paystack API
+    if (PAYSTACK_SECRET) {
+      try {
+        const response = await fetch(
+          `${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(reference)}`,
+          {
+            headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` },
+          },
+        );
+        const data = (await response.json()) as {
+          status?: boolean;
+          data?: {
+            status?: string;
+            amount?: number;
+            reference?: string;
+            metadata?: { scope?: string };
+          };
+        };
+
+        if (data.status && data.data?.status === "success") {
+          const scope =
+            data.data.metadata?.scope === "chapter" ? "chapter" : "full";
+          const amountPesewas = data.data.amount ?? 0;
+          const amountGhs = amountPesewas / 100;
+
+          await db.setOrderPaymentVerified(id, reference, scope, amountGhs);
+
+          res.json({
+            verified: true,
+            paymentStatus: "verified",
+            paidScope: scope,
+            message: "Payment confirmed.",
+          });
+          return;
+        }
+      } catch (err) {
+        req.log?.error?.({ err }, "Paystack verification failed");
+      }
+    }
+
+    // Fallback: if Paystack is not configured or verification failed,
+    // still allow the payment to be verified manually (dev mode)
+    if (!PAYSTACK_SECRET) {
+      const scope = req.body?.scope === "chapter" ? "chapter" : "full";
+      const amount = scope === "full" ? PRICE_FULL_STUDY : PRICE_CHAPTER;
+      await db.setOrderPaymentVerified(id, reference, scope, amount);
+      res.json({
+        verified: true,
+        paymentStatus: "verified",
+        paidScope: scope,
+        message: "Payment confirmed (dev mode).",
+      });
+      return;
+    }
+
+    await db.setOrderPaymentFailed(id, reference);
+    res.json({
+      verified: false,
+      paymentStatus: "failed",
+      paidScope: null,
+      message: "Payment verification failed. Please try again or contact support.",
+    });
+  }),
+);
+
+// GET /api/orders/:id/payment-status — check payment status.
+studentRouter.get(
+  "/orders/:id/payment-status",
+  requireStudent,
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    const student = (req as AuthedRequest).student;
+    const db = studyStore();
+    const order = await db.getOrder(id);
+    if (!order || order.studentId !== student.id) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    res.json({
+      paymentStatus: order.paymentStatus,
+      paidScope: order.paidScope,
+      paidAmount: order.paidAmount,
+    });
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Preview — read-only study viewer (student-facing)
+// ---------------------------------------------------------------------------
+
+// GET /api/orders/:id/preview — structured study content for rendering.
+studentRouter.get(
+  "/orders/:id/preview",
+  requireStudent,
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    const student = (req as AuthedRequest).student;
+    const db = studyStore();
+    const order = await db.getOrder(id);
+    if (!order || order.studentId !== student.id) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    if (order.status !== "ready" || !order.producedStudyId) {
+      res.status(409).json({ error: "Study is not ready for preview yet." });
+      return;
+    }
+
+    const study = await db.get(order.producedStudyId);
+    if (!study) {
+      res.status(404).json({ error: "Study data not found." });
+      return;
+    }
+
+    const snapshot = (study.data ?? {}) as {
+      title?: {
+        collegeName?: string;
+        studentName?: string;
+        indexNumber?: string;
+        year?: string;
+        diagnosis?: string;
+      };
+      chapters?: Array<{
+        name?: string;
+        isFrontMatter?: boolean;
+        intro?: string;
+        sections?: Array<{
+          id?: string;
+          heading?: string;
+          draft?: string;
+          data?: Record<string, string>;
+          rowData?: Array<{ cells: string[] }>;
+          fields?: Array<{ id: string; label: string }>;
+          rows?: { columns: Array<{ id: string; label: string }> };
+        }>;
+      }>;
+    };
+
+    const title = {
+      collegeName: snapshot.title?.collegeName ?? order.college,
+      studentName: snapshot.title?.studentName ?? "",
+      indexNumber: snapshot.title?.indexNumber ?? "",
+      year: snapshot.title?.year ?? "",
+      diagnosis: snapshot.title?.diagnosis ?? order.diagnosis ?? "",
+    };
+
+    const chapters = (snapshot.chapters ?? []).map((ch) => ({
+      name: ch.name ?? "",
+      isFrontMatter: ch.isFrontMatter ?? false,
+      intro: ch.intro ?? "",
+      sections: (ch.sections ?? []).map((sec) => ({
+        id: sec.id ?? "",
+        heading: sec.heading ?? sec.id ?? "",
+        draft: sec.draft ?? "",
+        data: sec.data ?? {},
+        rowData: sec.rowData ?? [],
+        rowColumns: sec.rows?.columns,
+      })),
+    }));
+
+    res.json({ title, chapters });
+  }),
+);
+
+// GET /api/orders/:id/chapters — list chapters available for chapter-level payment.
+studentRouter.get(
+  "/orders/:id/chapters",
+  requireStudent,
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    const student = (req as AuthedRequest).student;
+    const db = studyStore();
+    const order = await db.getOrder(id);
+    if (!order || order.studentId !== student.id) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    if (order.status !== "ready" || !order.producedStudyId) {
+      res.status(409).json({ error: "Study is not ready yet." });
+      return;
+    }
+
+    const study = await db.get(order.producedStudyId);
+    if (!study) {
+      res.status(404).json({ error: "Study data not found." });
+      return;
+    }
+
+    const snapshot = (study.data ?? {}) as {
+      chapters?: Array<{
+        name?: string;
+        sections?: Array<unknown>;
+      }>;
+    };
+
+    const chapters = (snapshot.chapters ?? []).map((ch, index) => ({
+      index,
+      name: ch.name ?? `Chapter ${index + 1}`,
+      sectionCount: (ch.sections ?? []).length,
+    }));
+
+    res.json({
+      chapters,
+      hasFullStudy: chapters.length > 0,
+    });
   }),
 );
 

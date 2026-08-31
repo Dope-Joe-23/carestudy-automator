@@ -83,6 +83,12 @@ export type AdminRow = {
   passwordHash: string;
   /** Display name (optional). */
   name: string | null;
+  /** "admin" (full access) or "staff" (studio + order bin only). */
+  role: string;
+  /** Email for notifications and invite tracking. */
+  email: string | null;
+  /** The admin who invited this staff member (null for bootstrap admin). */
+  invitedBy: number | null;
   createdAt: Date;
 };
 
@@ -90,6 +96,34 @@ export type NewAdmin = {
   username: string;
   passwordHash: string;
   name?: string | null;
+  role?: string;
+  email?: string | null;
+  invitedBy?: number | null;
+};
+
+// ---------------------------------------------------------------------------
+// Staff invite rows
+// ---------------------------------------------------------------------------
+
+export type StaffInviteRow = {
+  id: number;
+  /** Unique invite token (URL-safe). */
+  token: string;
+  /** The admin who created this invite. */
+  createdBy: number;
+  /** Optional label (e.g. "Academic team — Kumasi"). */
+  label: string | null;
+  /** null = unused; timestamp = when the staff member registered. */
+  usedAt: Date | null;
+  /** The admin id that was created from this invite (null until used). */
+  usedBy: number | null;
+  createdAt: Date;
+};
+
+export type NewStaffInvite = {
+  token: string;
+  createdBy: number;
+  label?: string | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -99,6 +133,8 @@ export type NewAdmin = {
 export type StudentRow = {
   id: number;
   name: string;
+  /** Unique username for login (lowercased). */
+  username: string;
   /** Lowercased login email (unique). */
   email: string;
   /** scrypt hash "salt:hash" — never the plaintext password. */
@@ -111,6 +147,7 @@ export type StudentRow = {
 
 export type NewStudent = {
   name: string;
+  username: string;
   email: string;
   passwordHash: string;
   college: string;
@@ -147,12 +184,27 @@ export type OrderRow = {
   vivaStatus: VivaStatus;
   vivaError: string | null;
   vivaUpdatedAt: Date | null;
+  // --- Payment (Paystack) ---
+  /** "none" | "pending" | "verified" | "failed". */
+  paymentStatus: PaymentStatus;
+  /** Which scope was paid for: "full" or "chapter". */
+  paidScope: PaidScope;
+  /** Amount paid in Ghana cedis (e.g. 250). */
+  paidAmount: number | null;
+  /** Paystack transaction reference. */
+  paystackRef: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
 /** "none" | "pending" | "ready" | "error" — viva question bank lifecycle. */
 export type VivaStatus = "none" | "pending" | "ready" | "error";
+
+/** "none" | "pending" | "verified" | "failed" — payment lifecycle. */
+export type PaymentStatus = "none" | "pending" | "verified" | "failed";
+
+/** Which scope the student paid for. */
+export type PaidScope = "full" | "chapter" | null;
 
 export type NewOrder = {
   studentId: number;
@@ -243,10 +295,29 @@ export interface StudyStore {
   /** Destroy an admin session; false when nothing was deleted. */
   removeAdminSession(token: string): Promise<boolean>;
 
+  // --- Staff management (admin-only) --------------------------------------
+
+  /** All admins/staff, newest first. */
+  listAdmins(): Promise<AdminRow[]>;
+  /** Update an admin's role, name, or email. */
+  updateAdmin(id: number, fields: Partial<Pick<AdminRow, "role" | "name" | "email">>): Promise<AdminRow | null>;
+  /** Create a staff invite link. */
+  createStaffInvite(invite: NewStaffInvite): Promise<StaffInviteRow>;
+  /** All invite links, newest first. */
+  listStaffInvites(): Promise<StaffInviteRow[]>;
+  /** Resolve an invite token, or null. */
+  getStaffInviteByToken(token: string): Promise<StaffInviteRow | null>;
+  /** Mark an invite as used. */
+  useStaffInvite(id: number, usedByAdminId: number): Promise<StaffInviteRow | null>;
+
   // --- Student portal: accounts, sessions, orders -------------------------
 
   /** Create a student account; rejects on duplicate email. */
   addStudent(student: NewStudent): Promise<StudentRow>;
+  /** All students, newest first. */
+  listAllStudents(): Promise<StudentRow[]>;
+  /** One student by login username, or null. */
+  getStudentByUsername(username: string): Promise<StudentRow | null>;
   /** One student by login email, or null. */
   getStudentByEmail(email: string): Promise<StudentRow | null>;
   /** One student by id, or null. */
@@ -287,6 +358,30 @@ export interface StudyStore {
   setOrderViva(
     id: number,
     viva: { status: "ready"; bankJson: string } | { status: "error"; error: string },
+  ): Promise<OrderRow | null>;
+
+  // --- Payment (Paystack) ---
+
+  /** Record a pending payment (reference generated, popup opened). */
+  setOrderPaymentPending(
+    id: number,
+    paystackRef: string,
+    scope: "full" | "chapter",
+    chapterIndex?: number,
+  ): Promise<OrderRow | null>;
+
+  /** Mark a payment as verified (success) after Paystack confirmation. */
+  setOrderPaymentVerified(
+    id: number,
+    paystackRef: string,
+    scope: "full" | "chapter",
+    amount: number,
+  ): Promise<OrderRow | null>;
+
+  /** Mark a payment as failed. */
+  setOrderPaymentFailed(
+    id: number,
+    paystackRef: string,
   ): Promise<OrderRow | null>;
 
   /** Register a document attached to an order. */
