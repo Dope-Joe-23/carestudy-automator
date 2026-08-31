@@ -1,3 +1,16 @@
+/**
+ * Student portal — sidebar layout with tab navigation.
+ *
+ * Accessible at /student/*  Left sidebar has navigation items;
+ * the right content area renders the active section.
+ *
+ * Tabs:
+ * - Projects (default) — list of care study orders
+ * - New Order — place a new order
+ * - Order Detail — view a specific order (dynamic route)
+ * - Payments — payment history
+ * - Preview — study preview (dynamic route)
+ */
 import {
   createContext,
   useCallback,
@@ -25,14 +38,16 @@ import {
   HeartPulse,
   ListChecks,
   Lock,
-  Menu,
   Loader2,
+  Menu,
   Plus,
   Receipt,
   RotateCcw,
   ShieldCheck,
   Upload,
   X,
+  LogOut,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -63,6 +78,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarSeparator,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import * as studentApi from "@/lib/studentApi";
 import { StudentPreviewPage } from "@/pages/student-preview";
 import { PaymentHistoryPage } from "@/pages/payment-history";
@@ -211,8 +242,6 @@ function AuthProvider({ children }: { children: ReactNode }) {
     await studentApi.logoutStudent().catch(() => {});
     setToken(null);
     setStudent(null);
-    // Hard redirect to the unified login page — avoids flashing the
-    // portal shell while wouter resolves the route.
     window.location.href = "/login";
   }, []);
 
@@ -228,98 +257,97 @@ function useAuth(): AuthContextValue {
 }
 
 // ---------------------------------------------------------------------------
-// Layout
+// Sidebar navigation
 // ---------------------------------------------------------------------------
 
-function PortalHeader() {
+type TabId = "projects" | "new-order" | "payments";
+
+const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+  { id: "projects", label: "My projects", icon: ClipboardList },
+  { id: "new-order", label: "Place an order", icon: Plus },
+  { id: "payments", label: "Payments", icon: Receipt },
+];
+
+function PortalSidebar({
+  activeTab,
+  onSelect,
+}: {
+  activeTab: TabId | null;
+  onSelect: (tab: TabId) => void;
+}) {
   const { student, signOut } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
-        <Link href="/student/orders" className="shrink-0">
+    <Sidebar>
+      <SidebarHeader>
+        <Link href="/student/orders" className="px-2 py-1">
           <BrandMark />
         </Link>
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
-          <Link href="/student/orders" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-muted-foreground')}>
-            My projects
-          </Link>
-          <Link href="/student/orders/new" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-muted-foreground')}>
-            Place an order
-          </Link>
-          <Link href="/student/payments" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-muted-foreground')}>
-            Payments
-          </Link>
-        </nav>
-        <div className="flex items-center gap-2">
-          {student && (
-            <span className="hidden text-right sm:block">
-              <span className="block text-xs font-semibold leading-tight">{student.name}</span>
-              <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
-                {student.college}
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <SidebarMenuItem key={tab.id}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      onClick={() => onSelect(tab.id)}
+                    >
+                      <Icon className="size-4 shrink-0" />
+                      <span>{tab.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarSeparator />
+      <SidebarFooter>
+        {student && (
+          <div className="px-3 py-2">
+            <div className="flex items-center gap-2">
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                {student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
               </span>
-            </span>
-          )}
-          <Button variant="outline" size="sm" className="hidden md:inline-flex" onClick={() => void signOut()}>
-            Sign out
-          </Button>
-          {/* Mobile hamburger */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-9 md:hidden"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </Button>
-        </div>
-      </div>
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
-          <nav className="mx-auto flex max-w-5xl flex-col gap-1 px-4 py-3 sm:px-6">
-            <Link href="/student/orders" className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>
-              My projects
-            </Link>
-            <Link href="/student/orders/new" className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>
-              Place an order
-            </Link>
-            <Link href="/student/payments" className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>
-              Payments
-            </Link>
-            {student && (
-              <>
-                <div className="my-1 h-px bg-border/60" />
-                <div className="px-3 py-1">
-                  <span className="block text-xs font-semibold leading-tight">{student.name}</span>
-                  <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {student.college}
-                  </span>
-                </div>
-                <Button variant="outline" size="sm" className="mx-3 mt-1 justify-start" onClick={() => { setMobileOpen(false); void signOut(); }}>
-                  Sign out
-                </Button>
-              </>
-            )}
-          </nav>
-        </div>
-      )}
-    </header>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{student.name}</p>
+                <p className="truncate text-[10px] text-muted-foreground">
+                  {student.college}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 w-full justify-start gap-2 text-muted-foreground"
+              onClick={() => void signOut()}
+            >
+              <LogOut className="size-4" />
+              Sign out
+            </Button>
+          </div>
+        )}
+      </SidebarFooter>
+    </Sidebar>
   );
 }
 
-/**
- * Mobile bottom navigation bar — visible only on small screens (md:hidden).
- * Fixed to the bottom of the viewport so the three primary actions are
- * always one tap away.
- */
+// ---------------------------------------------------------------------------
+// Mobile bottom navigation bar
+// ---------------------------------------------------------------------------
+
 function MobileBottomNav() {
   const [location] = useLocation();
-  const isOrders = location === "/student/orders" || location === "/student/orders/";
   const isNew = location === "/student/orders/new";
   const isPayments = location === "/student/payments";
+  const isProjects = !isNew && !isPayments && location.startsWith("/student");
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
@@ -328,7 +356,7 @@ function MobileBottomNav() {
           href="/student/orders"
           className={cn(
             "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-            isOrders ? "text-primary" : "text-muted-foreground",
+            isProjects ? "text-primary" : "text-muted-foreground",
           )}
         >
           <ClipboardList className="size-5" />
@@ -359,27 +387,9 @@ function MobileBottomNav() {
   );
 }
 
-function PortalShell({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-h-screen bg-background">
-      <PortalHeader />
-      <main className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6 md:pb-6">{children}</main>
-      {/* Footer hidden on mobile — the bottom nav takes that space */}
-      <footer className="hidden md:block">
-        <div className="mx-auto max-w-4xl px-4 pb-8 sm:px-6">
-          <Separator className="mb-6" />
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            CareStudy Institute supports nursing education — preparing the study, and preparing you to
-            defend it. Your materials stay yours and are used only to prepare your study.
-          </p>
-        </div>
-      </footer>
-      <MobileBottomNav />
-      {/* Spacer so content is never hidden behind the fixed bottom nav on mobile */}
-      <div className="h-14 md:hidden" />
-    </div>
-  );
-}
+// ---------------------------------------------------------------------------
+// Layout
+// ---------------------------------------------------------------------------
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { student, ready } = useAuth();
@@ -1209,6 +1219,7 @@ export function StudentPortal() {
 
 function StudentPortalRouter() {
   const [location] = useLocation();
+  const [, navigate] = useLocation();
 
   // Route parsing
   const matchPreview = location.match(/^\/student\/orders\/(\d+)\/preview$/);
@@ -1216,15 +1227,66 @@ function StudentPortalRouter() {
   const matchNew = location === "/student/orders/new";
   const matchOrder = location.match(/^\/student\/orders\/(\d+)$/);
 
+  // Determine active tab
+  const activeTab: TabId | null = matchPayments
+    ? "payments"
+    : matchNew
+      ? "new-order"
+      : "projects";
+
+  const handleTabSelect = (tab: TabId) => {
+    if (tab === "projects") navigate("/student/orders");
+    else if (tab === "new-order") navigate("/student/orders/new");
+    else if (tab === "payments") navigate("/student/payments");
+  };
+
+  // Full-page routes (preview, order detail) render without sidebar
+  const isFullPage = Boolean(matchPreview) || Boolean(matchOrder);
+
+  if (isFullPage) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AuthGate>
+          {matchPreview && <StudentPreviewPage orderId={Number(matchPreview[1])} />}
+          {matchOrder && <OrderDetailPage orderId={Number(matchOrder[1])} />}
+        </AuthGate>
+        <MobileBottomNav />
+        <div className="h-14 md:hidden" />
+      </div>
+    );
+  }
+
   return (
-    <PortalShell>
-      <AuthGate>
-        {matchPreview && <StudentPreviewPage orderId={Number(matchPreview[1])} />}
-        {matchPayments && <PaymentHistoryPage />}
-        {matchNew && <NewOrderPage />}
-        {matchOrder && <OrderDetailPage orderId={Number(matchOrder[1])} />}
-        {!matchPreview && !matchPayments && !matchNew && !matchOrder && <OrdersList />}
-      </AuthGate>
-    </PortalShell>
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-background">
+        <PortalSidebar activeTab={activeTab} onSelect={handleTabSelect} />
+        <SidebarInset>
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-background/95 backdrop-blur px-4 md:hidden">
+            <SidebarTrigger />
+            <BrandMark compact />
+          </header>
+          <main className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6 md:pb-6">
+              <AuthGate>
+                {activeTab === "projects" && <OrdersList />}
+                {activeTab === "new-order" && <NewOrderPage />}
+                {activeTab === "payments" && <PaymentHistoryPage />}
+              </AuthGate>
+            </div>
+          </main>
+          <footer className="hidden md:block">
+            <div className="mx-auto max-w-4xl px-4 pb-8 sm:px-6">
+              <Separator className="mb-6" />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                CareStudy Institute supports nursing education — preparing the study, and preparing you to
+                defend it. Your materials stay yours and are used only to prepare your study.
+              </p>
+            </div>
+          </footer>
+        </SidebarInset>
+      </div>
+      <MobileBottomNav />
+      <div className="h-14 md:hidden" />
+    </SidebarProvider>
   );
 }
