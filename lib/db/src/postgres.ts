@@ -145,10 +145,21 @@ CREATE TABLE IF NOT EXISTS "student_order_files" (
 CREATE INDEX IF NOT EXISTS "student_order_files_order_id_idx" ON "student_order_files" ("order_id");
 
 -- Migration: add columns that may be missing from older deployments ----------
-ALTER TABLE "students" ADD COLUMN IF NOT EXISTS "username" text NOT NULL UNIQUE;
+-- Students: add username nullable, backfill, then constrain
+ALTER TABLE "students" ADD COLUMN IF NOT EXISTS "username" text;
+UPDATE "students" SET "username" = split_part("email", '@', 1) || '_' || "id" WHERE "username" IS NULL;
+ALTER TABLE "students" ALTER COLUMN "username" SET NOT NULL;
+DO $$ BEGIN
+  ALTER TABLE "students" ADD CONSTRAINT "students_username_unique" UNIQUE ("username");
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- Admins: add new columns (role has a safe DEFAULT)
 ALTER TABLE "admins" ADD COLUMN IF NOT EXISTS "role" text NOT NULL DEFAULT 'staff';
 ALTER TABLE "admins" ADD COLUMN IF NOT EXISTS "email" text;
 ALTER TABLE "admins" ADD COLUMN IF NOT EXISTS "invited_by" integer;
+
+-- Student orders: add payment columns (paymentStatus has a safe DEFAULT)
 ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "payment_status" text NOT NULL DEFAULT 'none';
 ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paid_scope" text;
 ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paid_amount" integer;
