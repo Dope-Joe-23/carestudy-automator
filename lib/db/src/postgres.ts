@@ -88,6 +88,15 @@ CREATE TABLE IF NOT EXISTS "admin_sessions" (
   "admin_id" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
   "created_at" timestamptz NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS "staff_invites" (
+  "id" serial PRIMARY KEY,
+  "token" text NOT NULL UNIQUE,
+  "created_by" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+  "label" text,
+  "used_at" timestamptz,
+  "used_by" integer,
+  "created_at" timestamptz NOT NULL DEFAULT now()
+);
 CREATE TABLE IF NOT EXISTS "students" (
   "id" serial PRIMARY KEY,
   "name" text NOT NULL,
