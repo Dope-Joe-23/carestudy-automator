@@ -87,6 +87,12 @@ import { LandingPage } from '@/pages/landing';
 import { StudentPortal } from '@/pages/student-portal';
 import { StudioBin } from '@/pages/studio-bin';
 import { AdminGate } from '@/components/admin-gate';
+import { AdminDashboardGate } from '@/components/admin-dashboard-gate';
+import { AdminDashboard } from '@/pages/admin-dashboard';
+import { StaffRegisterPage } from '@/pages/staff-register';
+import { LoginPage } from '@/pages/login';
+import { StudentRegisterPage } from '@/pages/student-register';
+import { WelcomePage } from '@/pages/welcome';
 import { adminLogout } from '@/lib/adminAuth';
 import {
   CHAPTER_TEMPLATE,
@@ -191,6 +197,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudiesPanel } from '@/components/studies-panel';
+import { useAdmin, getInitials, getDisplayName, getRoleLabel } from '@/lib/adminContext';
 
 type SectionStatus = 'empty' | 'noted' | 'drafted';
 
@@ -2099,6 +2106,11 @@ const ONBOARDING_STEPS = [
 
 function Home() {
   const { resolvedTheme, setTheme } = useTheme();
+  const admin = useAdmin();
+  const isAdmin = admin?.role === "admin";
+  const sidebarAdminInitials = getInitials(admin);
+  const sidebarAdminName = getDisplayName(admin);
+  const sidebarAdminRole = getRoleLabel(admin);
   const [chapters, setChapters] = useState(makeChapters);
   const [activeChapter, setActiveChapter] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
@@ -4266,14 +4278,14 @@ function Home() {
             <DropdownMenuTrigger asChild>
               <button className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-sidebar-accent">
                 <span className="grid size-8 shrink-0 place-items-center rounded-full bg-sidebar-primary font-mono text-[11px] font-medium text-sidebar-primary-foreground">
-                  NS
+                  {sidebarAdminInitials}
                 </span>
                 <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
                   <span className="block truncate text-xs font-medium text-sidebar-foreground">
-                    Nursing student
+                    {sidebarAdminName}
                   </span>
                   <span className="block truncate text-[11px] text-sidebar-foreground/60">
-                    Personal workspace
+                    {sidebarAdminRole}
                   </span>
                 </span>
                 <ChevronsUpDown className="size-3.5 shrink-0 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden" />
@@ -4302,8 +4314,8 @@ function Home() {
                 className="text-destructive focus:text-destructive"
                 onClick={() => {
                   void adminLogout().finally(() => {
-                    // Back to the studio URL — the gate shows the sign-in screen.
-                    window.location.href = "/studio";
+                    // Redirect to the unified login page.
+                    window.location.href = "/login";
                   });
                 }}
               >
@@ -4932,50 +4944,52 @@ function Home() {
                         ? `${collectedCount} collected · ${rowCount} ${rowCount === 1 ? 'row' : 'rows'}`
                         : `${collectedCount} / ${collectedTotal} collected`}
                     </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 gap-1.5"
-                          disabled={!canExport}
-                          title={
-                            canExport ? undefined : 'Draft at least one section before exporting'
-                          }
-                        >
-                          <Download className="size-3.5" /> Export
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            downloadDocx({
-                              type: 'section',
-                              chapterIndex: activeChapter,
-                              sectionIndex: activeSection,
-                            })
-                          }
-                          disabled={filledCount === 0 && !currentSection.draft.trim()}
-                        >
-                          <FileText className="size-4" />
-                          This section (.docx)
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            downloadDocx({ type: 'chapter', chapterIndex: activeChapter })
-                          }
-                          disabled={
-                            !currentChapter.sections.some(
-                              (section) =>
-                                sectionFilledCount(section) > 0 || section.draft.trim().length > 0,
-                            )
-                          }
-                        >
-                          <BookOpen className="size-4" />
-                          This chapter (.docx)
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {isAdmin && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5"
+                            disabled={!canExport}
+                            title={
+                              canExport ? undefined : 'Draft at least one section before exporting'
+                            }
+                          >
+                            <Download className="size-3.5" /> Export
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              downloadDocx({
+                                type: 'section',
+                                chapterIndex: activeChapter,
+                                sectionIndex: activeSection,
+                              })
+                            }
+                            disabled={filledCount === 0 && !currentSection.draft.trim()}
+                          >
+                            <FileText className="size-4" />
+                            This section (.docx)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              downloadDocx({ type: 'chapter', chapterIndex: activeChapter })
+                            }
+                            disabled={
+                              !currentChapter.sections.some(
+                                (section) =>
+                                  sectionFilledCount(section) > 0 || section.draft.trim().length > 0,
+                              )
+                            }
+                          >
+                            <BookOpen className="size-4" />
+                            This chapter (.docx)
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -5890,12 +5904,16 @@ function Home() {
                     <Button variant="outline" size="icon" className="size-6" onClick={() => setTitlePageOpen(true)} title="Title page details" aria-label="Title page details">
                       <BookOpen className="size-3.5" />
                     </Button>
-                    <Button variant="outline" size="icon" className="size-6" onClick={() => window.print()} disabled={!canExport} title="Print / Save as PDF" aria-label="Print / Save as PDF">
-                      <PdfIcon className="size-3.5" />
-                    </Button>
-                    <Button variant="outline" size="icon" className="size-6" onClick={() => downloadDocx()} disabled={!canExport} title="Download Word document" aria-label="Download Word document">
-                      <WordIcon className="size-3.5" />
-                    </Button>
+                    {isAdmin && (
+                      <>
+                        <Button variant="outline" size="icon" className="size-6" onClick={() => window.print()} disabled={!canExport} title="Print / Save as PDF" aria-label="Print / Save as PDF">
+                          <PdfIcon className="size-3.5" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="size-6" onClick={() => downloadDocx()} disabled={!canExport} title="Download Word document" aria-label="Download Word document">
+                          <WordIcon className="size-3.5" />
+                        </Button>
+                      </>
+                    )}
                     <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
                     <Button
                       variant={assistantOpen ? 'secondary' : 'outline'}
@@ -6433,7 +6451,12 @@ function Router() {
           <Switch>
             <Route path="/" component={LandingPage} />
             <Route path="/studio">{() => <AdminGate><Home /></AdminGate>}</Route>
+            <Route path="/studio/dashboard">{() => <AdminDashboardGate><AdminDashboard /></AdminDashboardGate>}</Route>
             <Route path="/studio/bin">{() => <AdminGate><StudioBin /></AdminGate>}</Route>
+            <Route path="/welcome" component={WelcomePage} />
+            <Route path="/login" component={LoginPage} />
+            <Route path="/student/register" component={StudentRegisterPage} />
+            <Route path="/staff/register" component={StaffRegisterPage} />
             <Route path="/student" nest component={StudentPortal} />
             <Route component={NotFound} />
           </Switch>

@@ -1,11 +1,3 @@
-/**
- * Student portal — account creation, order placement with project materials,
- * status tracking, and delivery of the completed study.
- *
- * Mounted at /student (wouter). The student never sees the studio; this is
- * the only surface they interact with. The tone matches the agency
- * positioning: calm, institutional, professional.
- */
 import {
   createContext,
   useCallback,
@@ -32,9 +24,11 @@ import {
   GraduationCap,
   HeartPulse,
   ListChecks,
+  Lock,
   Menu,
   Loader2,
   Plus,
+  Receipt,
   RotateCcw,
   ShieldCheck,
   Upload,
@@ -43,7 +37,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -71,6 +64,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import * as studentApi from "@/lib/studentApi";
+import { StudentPreviewPage } from "@/pages/student-preview";
+import { PaymentHistoryPage } from "@/pages/payment-history";
 
 // ---------------------------------------------------------------------------
 // Shared bits
@@ -216,8 +211,10 @@ function AuthProvider({ children }: { children: ReactNode }) {
     await studentApi.logoutStudent().catch(() => {});
     setToken(null);
     setStudent(null);
-    navigate("/student/login", { replace: true });
-  }, [navigate]);
+    // Hard redirect to the unified login page — avoids flashing the
+    // portal shell while wouter resolves the route.
+    window.location.href = "/login";
+  }, []);
 
   const value = useMemo(
     () => ({ student, ready, signIn, signOut }),
@@ -250,6 +247,9 @@ function PortalHeader() {
           </Link>
           <Link href="/student/orders/new" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-muted-foreground')}>
             Place an order
+          </Link>
+          <Link href="/student/payments" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-muted-foreground')}>
+            Payments
           </Link>
         </nav>
         <div className="flex items-center gap-2">
@@ -286,6 +286,9 @@ function PortalHeader() {
             <Link href="/student/orders/new" className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>
               Place an order
             </Link>
+            <Link href="/student/payments" className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>
+              Payments
+            </Link>
             {student && (
               <>
                 <div className="my-1 h-px bg-border/60" />
@@ -316,6 +319,7 @@ function MobileBottomNav() {
   const [location] = useLocation();
   const isOrders = location === "/student/orders" || location === "/student/orders/";
   const isNew = location === "/student/orders/new";
+  const isPayments = location === "/student/payments";
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
@@ -339,6 +343,16 @@ function MobileBottomNav() {
         >
           <Plus className="size-5" />
           <span>New order</span>
+        </Link>
+        <Link
+          href="/student/payments"
+          className={cn(
+            "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+            isPayments ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          <Receipt className="size-5" />
+          <span>Payments</span>
         </Link>
       </div>
     </nav>
@@ -369,10 +383,9 @@ function PortalShell({ children }: { children: ReactNode }) {
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { student, ready } = useAuth();
-  const [, navigate] = useLocation();
   useEffect(() => {
-    if (ready && !student) navigate("/student/login", { replace: true });
-  }, [ready, student, navigate]);
+    if (ready && !student) window.location.href = "/login";
+  }, [ready, student]);
   if (!ready || !student) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -381,221 +394,6 @@ function AuthGate({ children }: { children: ReactNode }) {
     );
   }
   return <>{children}</>;
-}
-
-// ---------------------------------------------------------------------------
-// Auth pages
-// ---------------------------------------------------------------------------
-
-function AuthShell({ children, heading, sub }: { children: ReactNode; heading: string; sub: string }) {
-  return (
-    <div className="mx-auto max-w-md">
-      <div className="mb-6 flex justify-center">
-        <BrandMark />
-      </div>
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">{heading}</CardTitle>
-          <CardDescription>{sub}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">{children}</CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function LoginPage() {
-  const { signIn, student, ready } = useAuth();
-  const [, navigate] = useLocation();
-
-  useEffect(() => {
-    if (ready && student) navigate("/student/orders", { replace: true });
-  }, [ready, student, navigate]);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    try {
-      const { token, student } = await studentApi.loginStudent(email, password);
-      signIn(token, student);
-      navigate("/student/orders", { replace: true });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Sign in failed");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <AuthShell heading="Welcome back" sub="Sign in to track your care study projects.">
-      <form onSubmit={submit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="login-email">Email</Label>
-          <Input
-            id="login-email"
-            type="email"
-            autoComplete="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="login-password">Password</Label>
-          <PasswordInput
-            id="login-password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <Button type="submit" className="w-full" disabled={submitting}>
-          {submitting && <Loader2 className="size-4 animate-spin" />}
-          Sign in
-        </Button>
-      </form>
-      <p className="pt-4 text-center text-sm text-muted-foreground">
-        New here?{" "}
-        <Link href="/student/register" className="font-medium text-primary hover:underline">
-          Create an account
-        </Link>
-      </p>
-    </AuthShell>
-  );
-}
-
-function RegisterPage() {
-  const { signIn, student, ready } = useAuth();
-  const [, navigate] = useLocation();
-
-  useEffect(() => {
-    if (ready && student) navigate("/student/orders", { replace: true });
-  }, [ready, student, navigate]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [college, setCollege] = useState("");
-  const [program, setProgram] = useState("");
-  const [year, setYear] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    try {
-      const { token, student } = await studentApi.registerStudent({
-        name,
-        email,
-        password,
-        college,
-        program,
-        year: year || undefined,
-      });
-      signIn(token, student);
-      navigate("/student/orders", { replace: true });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Account creation failed");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <AuthShell
-      heading="Create your account"
-      sub="Your private dashboard for ordering and tracking your care study."
-    >
-      <form onSubmit={submit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="reg-name">Full name</Label>
-          <Input
-            id="reg-name"
-            autoComplete="name"
-            placeholder="e.g. Ama Mensah"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="reg-email">Email</Label>
-          <Input
-            id="reg-email"
-            type="email"
-            autoComplete="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="reg-password">Password</Label>
-          <Input
-            id="reg-password"
-            type="password"
-            autoComplete="new-password"
-            placeholder="At least 8 characters"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="reg-college">Nursing college / school</Label>
-          <Input
-            id="reg-college"
-            placeholder="e.g. Nurses' Training College, Korle-Bu"
-            value={college}
-            onChange={(e) => setCollege(e.target.value)}
-            required
-          />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Programme</Label>
-            <Select value={program} onValueChange={setProgram}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select programme" />
-              </SelectTrigger>
-              <SelectContent>
-                {PROGRAMMES.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="reg-year">Year of study</Label>
-            <Input
-              id="reg-year"
-              placeholder="e.g. Year 3"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-            />
-          </div>
-        </div>
-        <Button type="submit" className="w-full" disabled={submitting || !program}>
-          {submitting && <Loader2 className="size-4 animate-spin" />}
-          Create account
-        </Button>
-      </form>
-      <p className="pt-4 text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
-        <Link href="/student/login" className="font-medium text-primary hover:underline">
-          Sign in
-        </Link>
-      </p>
-    </AuthShell>
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -713,21 +511,29 @@ function OrdersList() {
                     {formatDate(order.createdAt)}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   {order.status === "ready" && order.delivery && (
-                    <Button
-                      size="sm"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        studentApi
-                          .downloadOrderStudy(order)
-                          .catch((err) =>
-                            toast.error(err instanceof Error ? err.message : "Download failed"),
-                          );
-                      }}
-                    >
-                      <Download className="size-4" /> Download
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate(`/student/orders/${order.id}/preview`);
+                        }}
+                      >
+                        <Eye className="size-4" /> Preview
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate(`/student/orders/${order.id}/preview`);
+                        }}
+                      >
+                        <Lock className="size-4" /> Purchase
+                      </Button>
+                    </>
                   )}
                   <ArrowRight className="size-4 text-muted-foreground" />
                 </div>
@@ -1201,27 +1007,45 @@ function OrderDetailPage({ orderId }: { orderId: number }) {
 
       {order.status === "ready" && order.delivery && (
         <Card className="mb-5 border-primary/40 bg-primary/5">
-          <CardContent className="flex flex-wrap items-center justify-between gap-4 py-5">
-            <div className="flex items-center gap-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10">
-                <CheckCircle2 className="size-6 text-primary" />
-              </span>
-              <div>
-                <p className="font-semibold">Your completed study is ready</p>
-                <p className="text-xs text-muted-foreground">
-                  {order.delivery.filename} · {formatBytes(order.delivery.size)}
-                </p>
+          <CardContent className="space-y-4 py-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10">
+                  <CheckCircle2 className="size-6 text-primary" />
+                </span>
+                <div>
+                  <p className="font-semibold">Your completed study is ready</p>
+                  <p className="text-xs text-muted-foreground">
+                    {order.delivery.filename} · {formatBytes(order.delivery.size)}
+                  </p>
+                </div>
               </div>
             </div>
-            <Button
-              onClick={() =>
-                studentApi.downloadOrderStudy(order).catch((err) =>
-                  toast.error(err instanceof Error ? err.message : "Download failed"),
-                )
-              }
-            >
-              <Download className="size-4" /> Download your study
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild>
+                <Link href={`/student/orders/${order.id}/preview`}>
+                  <Eye className="size-4" /> Preview study
+                </Link>
+              </Button>
+              {order.paymentStatus === "verified" ? (
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    studentApi.downloadOrderStudy(order).catch((err) =>
+                      toast.error(err instanceof Error ? err.message : "Download failed"),
+                    )
+                  }
+                >
+                  <Download className="size-4" /> Download Word
+                </Button>
+              ) : (
+                <Button variant="outline" asChild>
+                  <Link href={`/student/orders/${order.id}/preview`}>
+                    <Lock className="size-4" /> Purchase to download
+                  </Link>
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -1294,77 +1118,75 @@ function VivaPreparationPanel({ orderId }: { orderId: number }) {
     <Card className="border-primary/30">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10">
+          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10">
             <GraduationCap className="size-5 text-primary" />
           </span>
           <div>
             <CardTitle className="text-base">Viva Preparation Programme</CardTitle>
             <CardDescription>
-              A mock defense built from your completed study — the questions a panel would
-              actually ask, and the guidance to answer them.
+              Practice defending your care study with a mock question bank.
             </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        {viva.isLoading ? (
-          <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Loading your viva preparation…
-          </div>
-        ) : status === "pending" || generate.isPending ? (
-          <div className="flex items-center gap-3 py-6">
-            <Loader2 className="size-5 animate-spin text-primary" />
-            <div>
-              <p className="text-sm font-semibold">The panel is reviewing your study</p>
-              <p className="text-xs text-muted-foreground">
-                Building your question bank — this usually takes about a minute.
-              </p>
-            </div>
-          </div>
-        ) : status === "error" ? (
-          <div className="space-y-3 py-2">
-            <div className="flex items-start gap-2 text-sm">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-destructive" />
-              <p className="leading-relaxed">
-                {bank?.error ?? "Your question bank could not be prepared."}{" "}
-                <span className="text-muted-foreground">Please try again.</span>
-              </p>
-            </div>
-            <Button size="sm" onClick={() => generate.mutate(true)} disabled={!bank?.canGenerate}>
-              <RotateCcw className="size-4" /> Try again
+        {status === "none" && !bank?.canGenerate && (
+          <p className="text-sm text-muted-foreground">
+            Viva preparation will be available once your study is delivered and produced.
+          </p>
+        )}
+        {status === "none" && bank?.canGenerate && (
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-muted-foreground">
+              Generate a question bank based on your study content.
+            </p>
+            <Button size="sm" onClick={() => generate.mutate(false)} disabled={generate.isPending}>
+              {generate.isPending ? <Loader2 className="size-4 animate-spin" /> : <ListChecks className="size-4" />}
+              Generate questions
             </Button>
           </div>
-        ) : status === "ready" && bank && bank.questions.length > 0 ? (
-          <VivaBankReady questions={bank.questions} onRegenerate={() => generate.mutate(true)} />
-        ) : (
-          <div className="flex flex-wrap items-center justify-between gap-4 py-2">
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-primary/10">
-                <BookOpen className="size-4 text-primary" />
-              </span>
-              <div className="max-w-lg">
-                <p className="text-sm font-semibold">
-                  {bank?.canGenerate
-                    ? "Your study is ready — build your defense now"
-                    : "Opens once your completed study is delivered"}
-                </p>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  The programme reviews your study and prepares the questions your panel is most
-                  likely to ask — each with a guidance outline, organised by the categories real
-                  viva panels probe.
-                </p>
-              </div>
+        )}
+        {status === "pending" && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+            Generating your question bank…
+          </div>
+        )}
+        {status === "ready" && bank && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm">
+                <span className="font-semibold">{bank.questions.length} questions</span>{" "}
+                across your study content.
+              </p>
+              <Button size="sm" variant="outline" onClick={() => generate.mutate(true)} disabled={generate.isPending}>
+                {generate.isPending ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
+                Regenerate
+              </Button>
             </div>
-            <Button size="sm" onClick={() => generate.mutate(false)} disabled={!bank?.canGenerate}>
-              {bank?.canGenerate ? (
-                <>
-                  <ListChecks className="size-4" /> Build my question bank
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="size-4" /> Locked until delivery
-                </>
-              )}
+            <div className="space-y-2">
+              {bank.questions.map((q, i) => (
+                <Card key={i}>
+                  <CardContent className="py-3">
+                    <Badge variant="secondary" className="mb-1.5 text-[10px]">{q.category}</Badge>
+                    <p className="text-sm font-medium">{q.question}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{q.guidance}</p>
+                    {q.tip && (
+                      <p className="mt-1 text-xs italic text-primary/80">💡 {q.tip}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+        {status === "error" && (
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">
+              {bank?.error ?? "Failed to generate questions."}
+            </p>
+            <Button size="sm" variant="outline" onClick={() => generate.mutate(true)} disabled={generate.isPending}>
+              Try again
             </Button>
           </div>
         )}
@@ -1373,253 +1195,36 @@ function VivaPreparationPanel({ orderId }: { orderId: number }) {
   );
 }
 
-function VivaBankReady({
-  questions,
-  onRegenerate,
-}: {
-  questions: studentApi.VivaQuestion[];
-  /** Rebuild the bank from the study's latest content (shows the reviewing state). */
-  onRegenerate: () => void;
-}) {
-  const [sessionStarted, setSessionStarted] = useState(false);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-
-  const categories = useMemo(() => {
-    const map = new Map<string, studentApi.VivaQuestion[]>();
-    for (const q of questions) {
-      const key = q.category || "Reflection & Viva Skills";
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(q);
-    }
-    return [...map.entries()];
-  }, [questions]);
-
-  return (
-    <div className="space-y-5">
-      {sessionStarted ? (
-        <PracticeSession questions={questions} onExit={() => setSessionStarted(false)} />
-      ) : (
-        <>
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-primary/5 px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold">Mock defense session</p>
-              <p className="text-xs text-muted-foreground">
-                {questions.length} questions · answer aloud, then reveal the guidance to check
-                yourself
-              </p>
-            </div>
-            <Button size="sm" onClick={() => setSessionStarted(true)}>
-              <GraduationCap className="size-4" /> Start a practice session
-            </Button>
-          </div>
-
-          <div>
-            <p className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <ListChecks className="size-4 text-primary" /> Question bank by category
-            </p>
-            <div className="space-y-2">
-              {categories.map(([category, categoryQuestions]) => {
-                const isExpanded = expandedCategory === category;
-                return (
-                  <div key={category} className="rounded-lg border">
-                    <button
-                      type="button"
-                      onClick={() => setExpandedCategory(isExpanded ? null : category)}
-                      className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium hover:bg-muted/50"
-                    >
-                      {category}
-                      <span className="text-xs text-muted-foreground">
-                        {categoryQuestions.length}
-                      </span>
-                    </button>
-                    {isExpanded && (
-                      <div className="space-y-2 border-t px-4 py-3">
-                        {categoryQuestions.map((q, index) => (
-                          <QuestionRow key={index} question={q} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-            <p className="text-xs text-muted-foreground">
-              Built from your study's current content — regenerate if your study changes before the
-              viva.
-            </p>
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onRegenerate}>
-              <RotateCcw className="size-3.5" /> Regenerate
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function QuestionRow({ question }: { question: studentApi.VivaQuestion }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="rounded-md border bg-card">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm"
-      >
-        <span className="font-medium">{question.question}</span>
-        <span className="shrink-0 text-xs text-muted-foreground">{open ? "Hide" : "Guidance"}</span>
-      </button>
-      {open && (
-        <div className="space-y-2 border-t px-3 py-3">
-          <p className="text-sm leading-relaxed whitespace-pre-line">{question.guidance}</p>
-          {question.tip && (
-            <p className="flex items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
-              <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
-              <span className="italic">{question.tip}</span>
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** One question at a time: answer aloud, reveal guidance, move on. */
-function PracticeSession({
-  questions,
-  onExit,
-}: {
-  questions: studentApi.VivaQuestion[];
-  onExit: () => void;
-}) {
-  const [index, setIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const current = questions[index];
-
-  const restart = () => {
-    setIndex(0);
-    setRevealed(false);
-  };
-
-  if (!current) {
-    return (
-      <div className="space-y-3 py-4 text-center">
-        <CheckCircle2 className="mx-auto size-8 text-primary" />
-        <p className="font-semibold">Session complete — well prepared.</p>
-        <div className="flex justify-center gap-2">
-          <Button variant="outline" size="sm" onClick={restart}>
-            <RotateCcw className="size-4" /> Run it again
-          </Button>
-          <Button variant="outline" size="sm" onClick={onExit}>
-            Browse the full bank
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Question {index + 1} of {questions.length} · {current.category}
-        </p>
-        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onExit}>
-          <X className="size-4" /> Exit session
-        </Button>
-      </div>
-
-      <div className="rounded-lg border bg-muted/30 px-5 py-6">
-        <p className="font-serif text-lg font-medium leading-relaxed">{current.question}</p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Answer aloud as you would before your panel — then reveal the guidance.
-        </p>
-      </div>
-
-      {revealed ? (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            What a strong answer covers
-          </p>
-          <p className="rounded-lg border bg-card px-4 py-3 text-sm leading-relaxed whitespace-pre-line">
-            {current.guidance}
-          </p>
-          {current.tip && (
-            <p className="flex items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
-              <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
-              <span className="italic">{current.tip}</span>
-            </p>
-          )}
-          <Button
-            size="sm"
-            className="mt-1"
-            onClick={() => {
-              setRevealed(false);
-              setIndex(index + 1);
-            }}
-          >
-            {index + 1 === questions.length ? "Finish session" : "Next question"}
-            <ArrowRight className="size-4" />
-          </Button>
-        </div>
-      ) : (
-        <Button size="sm" variant="outline" onClick={() => setRevealed(true)}>
-          <Eye className="size-4" /> Reveal guidance
-        </Button>
-      )}
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
-// Portal root — wouter sub-routing on /student/:page*
+// Router
 // ---------------------------------------------------------------------------
 
 export function StudentPortal() {
-  // Sub-routing: the portal lives under /student (nest route); parse the rest
-  // of the path ourselves so we never depend on wouter's wildcard param
-  // shape, which varies by version.
-  const [location] = useLocation();
-  // Location is absolute here, but the `nest` route may re-base it under
-  // /student — strip both forms down to the subpage path.
-  const rest = location.replace(/^\/student\/?/, "").replace(/^\//, "");
-
-  let view: "login" | "register" | "orders" | "new" | "detail" = "orders";
-  let orderId: number | null = null;
-  if (rest === "login") view = "login";
-  else if (rest === "register") view = "register";
-  else if (rest === "orders" || rest === "") view = "orders";
-  else if (rest === "orders/new") view = "new";
-  else if (rest.startsWith("orders/")) {
-    view = "detail";
-    orderId = Number(rest.slice("orders/".length)) || null;
-  }
-
   return (
     <AuthProvider>
-      <PortalShell>
-        {view === "login" && <LoginPage />}
-        {view === "register" && <RegisterPage />}
-        {view === "orders" && (
-          <AuthGate>
-            <OrdersList />
-          </AuthGate>
-        )}
-        {view === "new" && (
-          <AuthGate>
-            <NewOrderPage />
-          </AuthGate>
-        )}
-        {view === "detail" && orderId !== null && (
-          <AuthGate>
-            <OrderDetailPage orderId={orderId} />
-          </AuthGate>
-        )}
-        {view === "detail" && orderId === null && <OrdersList />}
-      </PortalShell>
+      <StudentPortalRouter />
     </AuthProvider>
+  );
+}
+
+function StudentPortalRouter() {
+  const [location] = useLocation();
+
+  // Route parsing
+  const matchPreview = location.match(/^\/student\/orders\/(\d+)\/preview$/);
+  const matchPayments = location === "/student/payments";
+  const matchNew = location === "/student/orders/new";
+  const matchOrder = location.match(/^\/student\/orders\/(\d+)$/);
+
+  return (
+    <PortalShell>
+      <AuthGate>
+        {matchPreview && <StudentPreviewPage orderId={Number(matchPreview[1])} />}
+        {matchPayments && <PaymentHistoryPage />}
+        {matchNew && <NewOrderPage />}
+        {matchOrder && <OrderDetailPage orderId={Number(matchOrder[1])} />}
+        {!matchPreview && !matchPayments && !matchNew && !matchOrder && <OrdersList />}
+      </AuthGate>
+    </PortalShell>
   );
 }
