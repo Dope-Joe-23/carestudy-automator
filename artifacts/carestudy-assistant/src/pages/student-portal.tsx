@@ -39,6 +39,7 @@ import {
   ListChecks,
   Lock,
   Loader2,
+  LogOut,
   Menu,
   Plus,
   Receipt,
@@ -46,8 +47,6 @@ import {
   ShieldCheck,
   Upload,
   X,
-  LogOut,
-  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -78,6 +77,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Sidebar,
   SidebarContent,
@@ -312,26 +316,39 @@ function PortalSidebar({
       <SidebarFooter>
         {student && (
           <div className="px-3 py-2">
-            <div className="flex items-center gap-2">
-              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                {student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{student.name}</p>
-                <p className="truncate text-[10px] text-muted-foreground">
-                  {student.college}
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 w-full justify-start gap-2 text-muted-foreground"
-              onClick={() => void signOut()}
-            >
-              <LogOut className="size-4" />
-              Sign out
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent"
+                >
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                    {student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{student.name}</p>
+                    <p className="truncate text-[10px] text-muted-foreground">
+                      {student.college}
+                    </p>
+                  </div>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="start" className="w-56 p-1">
+                <div className="px-3 py-2">
+                  <p className="text-sm font-medium">{student.name}</p>
+                  <p className="text-xs text-muted-foreground">{student.email}</p>
+                </div>
+                <Separator />
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => void signOut()}
+                >
+                  <LogOut className="size-4" />
+                  Sign out
+                </button>
+              </PopoverContent>
+            </Popover>
           </div>
         )}
       </SidebarFooter>
