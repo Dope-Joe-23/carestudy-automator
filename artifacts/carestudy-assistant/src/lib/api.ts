@@ -203,7 +203,24 @@ export type ImportedFieldSection = {
   draft: string;
 };
 export type ImportedFieldChapter = { name: string; sections: ImportedFieldSection[] };
-export type ImportStudyFieldsResponse = { title: ImportedTitle; chapters: ImportedFieldChapter[] };
+export type ImportCoverage = {
+  expected: string[];
+  detected: string[];
+  missing: string[];
+  complete: boolean;
+  byChapter?: Record<string, {
+    expected: string[];
+    detected: string[];
+    missing: string[];
+    complete: boolean;
+  }>;
+};
+export type ImportStudyFieldsResponse = {
+  title: ImportedTitle;
+  chapters: ImportedFieldChapter[];
+  importMode?: 'deterministic' | 'ai';
+  coverage?: ImportCoverage;
+};
 
 /** Parse a care study document with field extraction — returns sectionIds, extracted fields, and draft text. */
 export async function importStudyWithFields(text: string): Promise<ImportStudyFieldsResponse> {

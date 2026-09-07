@@ -152,7 +152,13 @@ function OrderRow({ order }: { order: StudioOrder }) {
     mutationFn: async () => produceOrder(order.id),
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ["studio-orders"] });
-      toast.success("Study created from the order — opening it in the studio.");
+      const coverage = result.importCoverage;
+      const coverageMessage = coverage
+        ? `${coverage.detected.length}/${coverage.expected.length} sections mapped${coverage.missing.length > 0 ? ` · missing ${coverage.missing.join(", ")}` : " · complete"}`
+        : "The uploaded materials are attached.";
+      toast.success("Study created from the order — opening it in the studio.", {
+        description: coverageMessage,
+      });
       openInStudio(result.study.id);
     },
     onError: (err) =>

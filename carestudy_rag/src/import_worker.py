@@ -8,6 +8,7 @@ this into the study's chapter scaffold.
 """
 import json
 import os
+import re
 import sys
 import time
 from typing import Any
@@ -258,6 +259,213 @@ FIELD_ID_LIST = "\n".join(
 )
 
 
+def _coverage_report(chapters: list[dict[str, Any]]) -> dict[str, Any]:
+    """Report section coverage against the complete studio template."""
+    expected = list(SECTION_ID_MAP)
+    detected = list(dict.fromkeys(
+        section.get("sectionId")
+        for chapter in chapters
+        for section in chapter.get("sections", [])
+        if section.get("sectionId") in SECTION_ID_MAP
+    ))
+    by_chapter: dict[str, dict[str, Any]] = {}
+    chapter_names = {
+        "P": "Preliminary Pages",
+        "1": "Assessment",
+        "2": "Analysis of Data",
+        "3": "Planning",
+        "4": "Implementation",
+        "5": "Evaluation",
+        "6": "Summary and Conclusion",
+    }
+    for prefix, name in chapter_names.items():
+        chapter_expected = [section_id for section_id in expected if section_id.startswith(f"{prefix}.")]
+        chapter_detected = [section_id for section_id in detected if section_id.startswith(f"{prefix}.")]
+        by_chapter[name] = {
+            "expected": chapter_expected,
+            "detected": chapter_detected,
+            "missing": [section_id for section_id in chapter_expected if section_id not in chapter_detected],
+            "complete": len(chapter_expected) == len(chapter_detected),
+        }
+    return {
+        "expected": expected,
+        "detected": detected,
+        "missing": [section_id for section_id in expected if section_id not in detected],
+        "complete": len(detected) == len(expected),
+        "byChapter": by_chapter,
+    }
+
+
+def _normalise_heading(value: str) -> str:
+    """Normalise heading text for matching Word headings and pasted text."""
+    value = re.sub(r"['’]s\b", "", value.lower())
+    tokens = re.findall(r"[a-z0-9]+", value)
+    return " ".join(token[:-1] if len(token) > 3 and token.endswith("s") else token for token in tokens)
+
+
+def _section_id_for_heading(value: str, heading_by_normalised: dict[str, str]) -> str | None:
+    """Match exact headings first, then close standard-heading variants."""
+    normalised = _normalise_heading(value)
+    exact = heading_by_normalised.get(normalised)
+    if exact:
+        return exact
+    tokens = set(normalised.split())
+    if len(tokens) < 2:
+        return None
+    best_id: str | None = None
+    best_score = 0.0
+    for candidate, section_id in heading_by_normalised.items():
+        candidate_tokens = set(candidate.split())
+        score = len(tokens & candidate_tokens) / max(len(tokens), len(candidate_tokens))
+        if score >= 0.75 and score > best_score:
+            best_id = section_id
+            best_score = score
+    return best_id
+
+
+def _extract_labeled_fields(text: str, section_id: str) -> dict[str, str]:
+    """Extract unambiguous label/value pairs without requiring an AI call."""
+    fields = SECTION_FIELDS.get(section_id, [])
+    if not fields:
+        return {}
+
+    aliases: dict[str, list[str]] = {
+        "initials": ["patient name", "patient initials", "name / initials", "name"],
+        "age": ["age"],
+        "sex": ["sex", "gender"],
+        "dob": ["date of birth", "dob", "birth date"],
+        "religion": ["religion"],
+        "ethnicity": ["ethnicity", "tribe"],
+        "maritalStatus": ["marital status"],
+        "occupation": ["occupation"],
+        "address": ["address", "residential address"],
+        "hospitalNumber": ["hospital number", "hospital no", "patient number"],
+        "ward": ["ward"],
+        "facility": ["hospital", "health facility", "facility"],
+        "admissionDateTime": ["date of admission", "admission date", "date and time of admission"],
+        "diagnosis": ["diagnosis", "admitting diagnosis"],
+        "informant": ["informant"],
+        "pseudonym": ["pseudonym"],
+        "chiefComplaint": ["chief complaint", "presenting complaint"],
+        "presentingSymptoms": ["presenting symptoms", "symptoms"],
+        "admissionDate": ["date of admission", "admission date"],
+        "nursingDiagnoses": ["nursing diagnoses", "nursing diagnosis"],
+    }
+    result: dict[str, str] = {}
+    label_to_field = {
+        _normalise_heading(alias): field
+        for field in fields
+        for alias in aliases.get(field, [re.sub(r"(?<!^)([A-Z])", r" \1", field)])
+    }
+    labels = "|".join(re.escape(label) for label in sorted(label_to_field, key=len, reverse=True))
+    if not labels:
+        return result
+    pattern = re.compile(rf"^\s*({labels})\s*[:\-|]\s*(.+?)\s*$", re.IGNORECASE)
+    for line in text.splitlines():
+        match = pattern.match(line)
+        if match:
+            pairs = [(match.group(1), match.group(2))]
+        else:
+            cells = [cell.strip() for cell in line.split("|") if cell.strip()]
+            pairs = list(zip(cells[::2], cells[1::2]))
+        for label, value in pairs:
+            field = label_to_field.get(_normalise_heading(label))
+            value = value.strip()
+            if field and value and field not in result:
+                result[field] = value
+    return result
+
+
+def _deterministic_import(raw_text: str) -> dict | None:
+    """Build an import result from explicit section headings and labels.
+
+    Returning None means the document needs the AI classifier. Returning a
+    result, including one with unmapped narrative omitted, means the document
+    had enough structure to import without an external model.
+    """
+    heading_by_normalised = {
+        _normalise_heading(heading): section_id
+        for section_id, heading in SECTION_ID_MAP.items()
+    }
+    heading_pattern = re.compile(r"^\s*((?:P|[1-6])\.\d+)\s*[).:\-]?\s*(.*?)\s*$", re.IGNORECASE)
+    sections: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    for raw_line in raw_text.splitlines():
+        line = raw_line.strip()
+        match = heading_pattern.match(line)
+        section_id = match.group(1).upper() if match else None
+        heading = match.group(2).strip() if match else ""
+        if re.search(r"(?:\.{3,}|…{2,})", line):
+            match = None
+            section_id = None
+            heading = ""
+        if not match:
+            section_id = _section_id_for_heading(line, heading_by_normalised)
+            heading = line
+        if section_id not in SECTION_ID_MAP:
+            section_id = _section_id_for_heading(heading, heading_by_normalised)
+        if section_id:
+            if current:
+                current["draft"] = "\n".join(current["lines"]).strip()
+                current.pop("lines", None)
+                current["fields"] = _extract_labeled_fields(current["draft"], current["sectionId"])
+                sections.append(current)
+            current = {
+                "sectionId": section_id,
+                "heading": SECTION_ID_MAP[section_id],
+                "lines": [],
+                "fields": {},
+                "draft": "",
+            }
+            continue
+        if current:
+            current["lines"].append(raw_line.rstrip())
+
+    if current:
+        current["draft"] = "\n".join(current["lines"]).strip()
+        current.pop("lines", None)
+        current["fields"] = _extract_labeled_fields(current["draft"], current["sectionId"])
+        sections.append(current)
+
+    if not sections:
+        return None
+    chapters: list[dict[str, Any]] = []
+    chapter_by_name: dict[str, dict[str, Any]] = {}
+    section_by_id: dict[str, dict[str, Any]] = {}
+    for section in sections:
+        section_id = section["sectionId"]
+        chapter_name = "Preliminary Pages" if section_id.startswith("P.") else {
+            "1": "Assessment",
+            "2": "Analysis of Data",
+            "3": "Planning",
+            "4": "Implementation",
+            "5": "Evaluation",
+            "6": "Summary and Conclusion",
+        }.get(section_id[0], "Assessment")
+        chapter = chapter_by_name.setdefault(
+            chapter_name,
+            {"name": chapter_name, "sections": []},
+        )
+        existing = section_by_id.get(section_id)
+        if existing is None:
+            section_by_id[section_id] = section
+            chapter["sections"].append(section)
+        else:
+            if len(section["draft"]) > len(existing["draft"]):
+                existing["draft"] = section["draft"]
+            existing["fields"].update(
+                {key: value for key, value in section["fields"].items() if key not in existing["fields"]}
+            )
+    chapters.extend(chapter_by_name.values())
+    return {
+        "title": {},
+        "chapters": chapters,
+        "importMode": "deterministic",
+        "unmappedText": "",
+        "coverage": _coverage_report(chapters),
+    }
+
+
 def import_study_with_fields(raw_text: str) -> dict:
     """Parse a care study document into structured sections with field extraction.
 
@@ -284,6 +492,10 @@ def import_study_with_fields(raw_text: str) -> dict:
     """
     if len(raw_text) > 80_000:
         raw_text = raw_text[:80_000] + "\n\n[...document truncated at 80 000 characters...]"
+
+    deterministic = _deterministic_import(raw_text)
+    if deterministic is not None:
+        return deterministic
 
     client = _make_client()
     models = _candidate_models()
@@ -355,6 +567,8 @@ def import_study_with_fields(raw_text: str) -> dict:
                 result = json.loads(text)
                 if "chapters" not in result or not isinstance(result["chapters"], list):
                     raise ValueError("Response missing 'chapters' array")
+                result["importMode"] = "ai"
+                result["coverage"] = _coverage_report(result.get("chapters", []))
                 return result
 
             except (json.JSONDecodeError, ValueError) as exc:

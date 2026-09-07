@@ -660,7 +660,7 @@ studentRouter.post(
         const response = await fetch(
           `${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(reference)}`,
           {
-            headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` },
+            headers: { Authorization: `Bearer ${getPaystackSecret()}` },
           },
         );
         const data = (await response.json()) as {
@@ -936,21 +936,66 @@ studioRouter.post(
     }
 
     const student = await db.getStudent(order.studentId);
-    // For correction orders, place the extracted text in the first section.
-    let chapters: Array<{ name: string; intro: string; introReferences: Array<unknown>; sections: Array<{ id: string; notes: string; draft: string; references: Array<unknown>; data: Record<string, string>; rowData: Array<{ cells: string[] }> }> }> = [];
+    // For correction orders, parse the extracted document into the matching
+    // chapter/section forms before creating the study. If both the local
+    // parser and AI classifier fail, leave the workspace unclassified; the
+    // original uploaded document remains attached for a retry or manual import.
+    type NewStudySection = { id: string; notes: string; draft: string; references: Array<unknown>; data: Record<string, string>; rowData: Array<{ cells: string[] }> };
+    type NewStudyChapter = { name: string; intro: string; introReferences: Array<unknown>; sections: NewStudySection[] };
+    type ImportCoverage = { expected: string[]; detected: string[]; missing: string[]; complete: boolean };
+    let chapters: NewStudyChapter[] = [];
+    let importedTitle: { patientName?: string; diagnosis?: string; studentName?: string; indexNumber?: string; collegeName?: string; collegeLocation?: string; year?: string } | null = null;
+    let importCoverage: ImportCoverage | null = null;
     if (order.correctionText && order.correctionScope) {
-      chapters = [{ name: "Assessment", intro: "", introReferences: [], sections: [{ id: "1.1", notes: "", draft: order.correctionText, references: [], data: {}, rowData: [] }] }];
+      try {
+        const imported = await draftWorker.importStudyWithFields(order.correctionText);
+        importedTitle = imported.title;
+        // A chapter correction does not carry a chapter number in the order
+        // contract. Infer it from the chapter with the most detected sections
+        // and keep unrelated headings out of the correction workspace.
+        const importedChapters = order.correctionScope === "chapter"
+          ? [...imported.chapters]
+              .filter((chapter) => Array.isArray(chapter.sections) && chapter.sections.length > 0)
+              .sort((left, right) => right.sections.length - left.sections.length)
+              .slice(0, 1)
+          : imported.chapters;
+        const selectedChapterName = importedChapters[0]?.name;
+        importCoverage = order.correctionScope === "chapter" && selectedChapterName && imported.coverage?.byChapter?.[selectedChapterName]
+          ? imported.coverage.byChapter[selectedChapterName]
+          : imported.coverage ?? null;
+        chapters = importedChapters
+          .filter((chapter) => Array.isArray(chapter.sections) && chapter.sections.length > 0)
+          .map((chapter) => ({
+            name: chapter.name,
+            intro: "",
+            introReferences: [],
+            sections: chapter.sections
+              .filter((section) => typeof section.sectionId === "string" && section.sectionId.trim())
+              .map((section) => ({
+                id: section.sectionId,
+                notes: "",
+                draft: typeof section.draft === "string" ? section.draft.trim() : "",
+                references: [],
+                data: section.fields && typeof section.fields === "object" ? section.fields : {},
+                rowData: [],
+              })),
+          }))
+          .filter((chapter) => chapter.sections.length > 0);
+      } catch (err) {
+        req.log?.warn?.({ err }, "structured correction import failed; preserving raw text");
+      }
+
     }
 
     const study = await db.create(order.title, {
       title: {
-        patientName: "",
-        diagnosis: order.diagnosis ?? "",
-        studentName: student?.name ?? "",
-        indexNumber: "",
-        collegeName: order.college,
-        collegeLocation: "",
-        year: student?.year ?? String(new Date().getFullYear()),
+        patientName: importedTitle?.patientName || "",
+        diagnosis: importedTitle?.diagnosis || order.diagnosis || "",
+        studentName: importedTitle?.studentName || student?.name || "",
+        indexNumber: importedTitle?.indexNumber || "",
+        collegeName: importedTitle?.collegeName || order.college,
+        collegeLocation: importedTitle?.collegeLocation || "",
+        year: importedTitle?.year || student?.year || String(new Date().getFullYear()),
       },
       chapters,
     });
@@ -981,7 +1026,7 @@ studioRouter.post(
       study.id,
       "The study was created from your order — your materials are attached and ready.",
     );
-    res.status(201).json({ study: { id: study.id }, produced: true });
+    res.status(201).json({ study: { id: study.id }, produced: true, importCoverage });
   }),
 );
 

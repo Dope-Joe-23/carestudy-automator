@@ -84,8 +84,22 @@ def load_as_text(path: str) -> str:
 
     if ext == ".docx":
         import docx
+        from docx.table import Table
+        from docx.text.paragraph import Paragraph
         doc = docx.Document(path)
-        return "\n".join(p.text for p in doc.paragraphs)
+        parts = []
+        for element in doc.element.body:
+            if element.tag.endswith("}p"):
+                text = Paragraph(element, doc).text.strip()
+                if text:
+                    parts.append(text)
+            elif element.tag.endswith("}tbl"):
+                table = Table(element, doc)
+                for row in table.rows:
+                    cells = [cell.text.strip() for cell in row.cells]
+                    if any(cells):
+                        parts.append(" | ".join(cells))
+        return "\n".join(parts)
 
     if ext == ".doc":
         # Legacy binary Word format - needs LibreOffice to convert

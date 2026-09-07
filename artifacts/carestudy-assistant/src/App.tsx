@@ -119,6 +119,7 @@ import {
   type DraftReference,
   type ExportPayload,
   type ExportScope,
+  type ImportStudyFieldsResponse,
   type LibrarySource,
   type SourceCheck,
   type StudyAssistantEdit,
@@ -2342,6 +2343,7 @@ function Home() {
   const [docImportText, setDocImportText] = useState('');
   const [docImportBusy, setDocImportBusy] = useState(false);
   const [docImportError, setDocImportError] = useState<string | null>(null);
+  const [docImportReview, setDocImportReview] = useState<ImportStudyFieldsResponse | null>(null);
   const docImportFileRef = useRef<HTMLInputElement>(null);
 
   /** Compute a human-readable summary of how much data a chapter array holds. */
@@ -2633,10 +2635,15 @@ function Home() {
         ),
         0,
       );
+      const coverage = result.coverage;
+      const coverageDescription = coverage
+        ? `${coverage.detected.length}/${coverage.expected.length} sections mapped${coverage.missing.length > 0 ? ` · missing ${coverage.missing.join(', ')}` : ' · complete'}`
+        : `${sectionsImported} sections parsed`;
       setDocImportOpen(false);
       setDocImportText('');
+      setDocImportReview(result);
       toast.success('Document imported', {
-        description: `${sectionsImported} sections parsed · ${fieldsExtracted} fields extracted · drafts populated.`,
+        description: `${coverageDescription} · ${fieldsExtracted} fields extracted · drafts populated.`,
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Import failed.';
@@ -5642,6 +5649,73 @@ function Home() {
               </p>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(docImportReview)} onOpenChange={(open) => { if (!open) setDocImportReview(null); }}>
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListChecks className="size-4 text-primary" /> Import review
+            </DialogTitle>
+            <DialogDescription>
+              The document has been populated into the workspace. Review the coverage before drafting or submitting.
+            </DialogDescription>
+          </DialogHeader>
+          {docImportReview && (() => {
+            const coverage = docImportReview.coverage;
+            const sections = docImportReview.chapters.flatMap((chapter) => chapter.sections);
+            const drafts = sections.filter((section) => section.draft.trim()).length;
+            const fields = sections.reduce((sum, section) => sum + Object.keys(section.fields ?? {}).length, 0);
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Sections</p>
+                    <p className="mt-1 text-lg font-semibold">{coverage ? `${coverage.detected.length}/${coverage.expected.length}` : sections.length}</p>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Drafts</p>
+                    <p className="mt-1 text-lg font-semibold">{drafts}</p>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Fields</p>
+                    <p className="mt-1 text-lg font-semibold">{fields}</p>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Mode</p>
+                    <p className="mt-1 text-sm font-semibold capitalize">{docImportReview.importMode ?? 'unknown'}</p>
+                  </div>
+                </div>
+                {coverage && coverage.missing.length > 0 ? (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+                    <p className="flex items-center gap-2 font-medium text-amber-800 dark:text-amber-300">
+                      <CircleAlert className="size-4" /> Missing sections ({coverage.missing.length})
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{coverage.missing.join(', ')}</p>
+                  </div>
+                ) : (
+                  <p className="flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">
+                    <CheckCircle2 className="size-4" /> All canonical sections were detected.
+                  </p>
+                )}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Imported sections</p>
+                  <div className="grid gap-1 sm:grid-cols-2">
+                    {sections.map((section) => (
+                      <div key={section.sectionId} className="flex items-center justify-between rounded border px-2.5 py-2 text-xs">
+                        <span className="font-medium">{section.sectionId} · {section.heading}</span>
+                        <span className="ml-2 shrink-0 text-muted-foreground">{section.draft.trim() ? 'draft' : 'no draft'} · {Object.keys(section.fields ?? {}).length} fields</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={() => setDocImportReview(null)}>Continue reviewing</Button>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 

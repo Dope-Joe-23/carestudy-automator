@@ -405,7 +405,18 @@ export function getStudioOrder(id: number): Promise<{ order: StudioOrder; files:
 
 /** Turn an order into a studio study: creates the study, attaches the order's
  *  materials as clinical documents, and builds the retrieval index. */
-export function produceOrder(id: number): Promise<{ study: { id: number }; produced: boolean }> {
+export type ImportCoverageSummary = {
+  expected: string[];
+  detected: string[];
+  missing: string[];
+  complete: boolean;
+};
+
+export function produceOrder(id: number): Promise<{
+  study: { id: number };
+  produced: boolean;
+  importCoverage?: ImportCoverageSummary | null;
+}> {
   return studioRequestJson(`/studio/orders/${id}/produce`, { method: "POST" });
 }
 

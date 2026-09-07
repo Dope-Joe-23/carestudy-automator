@@ -224,10 +224,40 @@ class DraftWorker {
   }
 
   /** Parse a care study document with field extraction — returns sectionIds, extracted fields, and draft text. */
-  async importStudyWithFields(text: string): Promise<{ title: ImportedTitle; chapters: ImportedFieldChapter[] }> {
+  async importStudyWithFields(text: string): Promise<{
+    title: ImportedTitle;
+    chapters: ImportedFieldChapter[];
+    coverage?: {
+      expected: string[];
+      detected: string[];
+      missing: string[];
+      complete: boolean;
+      byChapter?: Record<string, {
+        expected: string[];
+        detected: string[];
+        missing: string[];
+        complete: boolean;
+      }>;
+    };
+  }> {
     const child = this.ensureWorker();
     const id = this.nextId++;
-    return new Promise<{ title: ImportedTitle; chapters: ImportedFieldChapter[] }>((resolve, reject) => {
+    return new Promise<{
+      title: ImportedTitle;
+      chapters: ImportedFieldChapter[];
+      coverage?: {
+        expected: string[];
+        detected: string[];
+        missing: string[];
+        complete: boolean;
+        byChapter?: Record<string, {
+          expected: string[];
+          detected: string[];
+          missing: string[];
+          complete: boolean;
+        }>;
+      };
+    }>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
         this.restartWorker(child);
@@ -235,7 +265,7 @@ class DraftWorker {
       }, REQUEST_TIMEOUT_MS);
       this.pending.set(id, {
         child,
-        resolve: (result) => resolve(result as unknown as { title: ImportedTitle; chapters: ImportedFieldChapter[] }),
+        resolve: (result) => resolve(result as unknown as { title: ImportedTitle; chapters: ImportedFieldChapter[]; coverage?: { expected: string[]; detected: string[]; missing: string[]; complete: boolean; byChapter?: Record<string, { expected: string[]; detected: string[]; missing: string[]; complete: boolean }> } }),
         reject,
         timer,
       });
