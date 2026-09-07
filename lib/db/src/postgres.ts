@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS "staff_invites" (
   "token" text NOT NULL UNIQUE,
   "created_by" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
   "label" text,
+  "role" text NOT NULL DEFAULT 'staff',
   "used_at" timestamptz,
   "used_by" integer,
   "created_at" timestamptz NOT NULL DEFAULT now()
@@ -173,6 +174,9 @@ ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "payment_status" text NOT 
 ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paid_scope" text;
 ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paid_amount" integer;
 ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paystack_ref" text;
+
+-- Staff invites: add role column
+ALTER TABLE "staff_invites" ADD COLUMN IF NOT EXISTS "role" text NOT NULL DEFAULT 'staff';
 `;
 
 /** Lazily-created Postgres client. Throws only when first used. */
@@ -272,6 +276,7 @@ function toStaffInviteRow(row: typeof schema.staffInvitesTable.$inferSelect): St
     token: row.token,
     createdBy: row.createdBy,
     label: row.label ?? null,
+    role: row.role ?? "staff",
     usedAt: row.usedAt ?? null,
     usedBy: row.usedBy ?? null,
     createdAt: row.createdAt,

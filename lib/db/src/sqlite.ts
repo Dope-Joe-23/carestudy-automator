@@ -78,12 +78,19 @@ function openSqlite(): DatabaseSync {
       "token" text NOT NULL UNIQUE,
       "created_by" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
       "label" text,
+      "role" text NOT NULL DEFAULT 'staff',
       "used_at" integer,
       "used_by" integer,
       "created_at" integer NOT NULL
     )`);
   } catch {
     // Table already exists
+  }
+  // Add role column to staff_invites if missing (migration)
+  try {
+    sqlite.exec('ALTER TABLE "staff_invites" ADD COLUMN "role" text NOT NULL DEFAULT \'staff\'');
+  } catch {
+    // Column already exists
   }
   // Upgrade the bootstrap admin (from ADMIN_USERNAME env) to role="admin"
   // if it was created before the role column existed.
@@ -210,6 +217,7 @@ function toStaffInviteRow(row: typeof schema.staffInvitesTable.$inferSelect): St
     token: row.token,
     createdBy: row.createdBy,
     label: row.label ?? null,
+    role: row.role ?? "staff",
     usedAt: row.usedAt ?? null,
     usedBy: row.usedBy ?? null,
     createdAt: row.createdAt,

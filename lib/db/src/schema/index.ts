@@ -120,6 +120,8 @@ export const staffInvitesTable = sqliteTable("staff_invites", {
     .references(() => adminsTable.id, { onDelete: "cascade" }),
   /** Optional label (e.g. "Academic team — Kumasi"). */
   label: text("label"),
+  /** "admin" or "staff" — the role the invitee will receive. */
+  role: text("role").notNull().$defaultFn(() => "staff"),
   /** null = unused; timestamp = when the staff member registered. */
   usedAt: integer("used_at", { mode: "timestamp" }),
   /** The admin id that was created from this invite (null until used). */

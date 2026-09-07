@@ -113,6 +113,8 @@ export type StaffInviteRow = {
   createdBy: number;
   /** Optional label (e.g. "Academic team — Kumasi"). */
   label: string | null;
+  /** "admin" or "staff" — the role the invitee will receive. */
+  role: string;
   /** null = unused; timestamp = when the staff member registered. */
   usedAt: Date | null;
   /** The admin id that was created from this invite (null until used). */
@@ -124,6 +126,7 @@ export type NewStaffInvite = {
   token: string;
   createdBy: number;
   label?: string | null;
+  role?: string;
 };
 
 // ---------------------------------------------------------------------------

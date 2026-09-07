@@ -51,6 +51,7 @@ export function StaffRegisterPage() {
   const [validating, setValidating] = useState(true);
   const [inviteValid, setInviteValid] = useState(false);
   const [inviteLabel, setInviteLabel] = useState<string | null>(null);
+  const [inviteRole, setInviteRole] = useState<string>("staff");
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   const [username, setUsername] = useState("");
@@ -72,6 +73,7 @@ export function StaffRegisterPage() {
       .then((result) => {
         setInviteValid(result.valid);
         setInviteLabel(result.label);
+        setInviteRole(result.role);
       })
       .catch((err) => {
         setInviteError(err instanceof Error ? err.message : "Invalid invite link.");
@@ -151,11 +153,13 @@ export function StaffRegisterPage() {
           <span className="mx-auto grid size-12 place-items-center rounded-full bg-primary/10">
             <UserPlus className="size-6 text-primary" />
           </span>
-          <CardTitle className="font-serif text-xl">Create your staff account</CardTitle>
+          <CardTitle className="font-serif text-xl">
+            Create your {inviteRole === "admin" ? "admin" : "staff"} account
+          </CardTitle>
           <CardDescription>
             {inviteLabel
-              ? `You've been invited to join: ${inviteLabel}`
-              : "You've been invited to join the CareStudy team."}
+              ? `You've been invited to join as ${inviteRole === "admin" ? "an admin" : "a staff member"}: ${inviteLabel}`
+              : `You've been invited to join the CareStudy team as ${inviteRole === "admin" ? "an admin" : "a staff member"}.`}
           </CardDescription>
         </CardHeader>
         <CardContent>

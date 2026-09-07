@@ -255,7 +255,7 @@ router.get(
 // Invite links (admin-only)
 // ---------------------------------------------------------------------------
 
-// POST /api/admin/invites — generate a new staff invite link.
+// POST /api/admin/invites — generate a new staff/admin invite link.
 router.post(
   "/admin/invites",
   requireAdmin,
@@ -263,18 +263,21 @@ router.post(
   asyncRoute(async (req, res) => {
     const admin = (req as AuthedAdminRequest).admin;
     const label = str(req.body?.label) || null;
+    const role = req.body?.role === "admin" ? "admin" : "staff";
     const token = randomBytes(24).toString("hex");
     const db = studyStore();
     const invite = await db.createStaffInvite({
       token,
       createdBy: admin.id,
       label,
+      role,
     });
     res.status(201).json({
       invite: {
         id: invite.id,
         token: invite.token,
         label: invite.label,
+        role: invite.role,
         createdAt: invite.createdAt.toISOString(),
         registrationUrl: `/staff/register?invite=${invite.token}`,
       },
@@ -298,6 +301,7 @@ router.get(
         id: i.id,
         token: i.token,
         label: i.label,
+        role: i.role,
         createdBy: adminMap.get(i.createdBy)?.name ?? adminMap.get(i.createdBy)?.username ?? "Unknown",
         usedAt: i.usedAt ? i.usedAt.toISOString() : null,
         usedBy: i.usedBy ? adminMap.get(i.usedBy)?.name ?? adminMap.get(i.usedBy)?.username ?? "Unknown" : null,
@@ -334,12 +338,13 @@ router.get(
     res.json({
       valid: true,
       label: invite.label,
+      role: invite.role,
       registrationUrl: `/staff/register?invite=${token}`,
     });
   }),
 );
 
-// POST /api/admin/staff/register — register a new staff member via invite link.
+// POST /api/admin/staff/register — register a new staff/admin member via invite link.
 router.post(
   "/admin/staff/register",
   asyncRoute(async (req, res) => {
@@ -382,12 +387,12 @@ router.post(
       return;
     }
 
-    // Create the staff account
+    // Create the account with the role from the invite (admin or staff)
     const admin = await db.addAdmin({
       username,
       passwordHash: hashPassword(password),
       name,
-      role: "staff",
+      role: invite.role,
       email,
       invitedBy: invite.createdBy,
     });

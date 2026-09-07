@@ -77,6 +77,7 @@ export type StaffInvite = {
   id: number;
   token: string;
   label: string | null;
+  role: string;
   createdBy: string;
   usedAt: string | null;
   usedBy: string | null;
@@ -123,13 +124,14 @@ export function updateStaff(
   });
 }
 
-/** Generate a new staff invite link. */
+/** Generate a new staff/admin invite link. */
 export function createInvite(
   label?: string,
+  role?: string,
 ): Promise<{ invite: StaffInvite }> {
   return requestJson("/admin/invites", {
     method: "POST",
-    body: JSON.stringify({ label: label || null }),
+    body: JSON.stringify({ label: label || null, role: role || "staff" }),
   });
 }
 
@@ -146,7 +148,7 @@ export function listStudents(): Promise<{ students: StudentRecord[] }> {
 /** Validate an invite token (public — no auth needed). */
 export function validateInvite(
   token: string,
-): Promise<{ valid: boolean; label: string | null }> {
+): Promise<{ valid: boolean; label: string | null; role: string }> {
   return requestJson(`/admin/invites/${encodeURIComponent(token)}`);
 }
 

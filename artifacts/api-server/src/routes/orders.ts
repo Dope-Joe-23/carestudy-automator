@@ -20,7 +20,10 @@ import { draftWorker, type VivaQuestion } from "../lib/draftWorker";
 
 // Paystack configuration — the secret key lives in the API server's env,
 // never in the frontend. The frontend only sees the publishable key.
-const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY ?? "";
+// Lazy getter so the env is read after dotenv/loadEnvFile runs.
+function getPaystackSecret(): string {
+  return process.env.PAYSTACK_SECRET_KEY ?? "";
+}
 const PAYSTACK_BASE = "https://api.paystack.co";
 
 /** Pricing (Ghana cedis). */
@@ -581,12 +584,12 @@ studentRouter.post(
 
     // If Paystack secret is configured, initialize the transaction server-side
     let authorizationUrl = "";
-    if (PAYSTACK_SECRET) {
+    if (getPaystackSecret()) {
       try {
         const response = await fetch(`${PAYSTACK_BASE}/transaction/initialize`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${PAYSTACK_SECRET}`,
+            Authorization: `Bearer ${getPaystackSecret()}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -652,7 +655,7 @@ studentRouter.post(
     }
 
     // Verify with Paystack API
-    if (PAYSTACK_SECRET) {
+    if (getPaystackSecret()) {
       try {
         const response = await fetch(
           `${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(reference)}`,
@@ -693,7 +696,7 @@ studentRouter.post(
 
     // Fallback: if Paystack is not configured or verification failed,
     // still allow the payment to be verified manually (dev mode)
-    if (!PAYSTACK_SECRET) {
+    if (!getPaystackSecret()) {
       const scope = req.body?.scope === "chapter" ? "chapter" : "full";
       const amount = scope === "full" ? PRICE_FULL_STUDY : PRICE_CHAPTER;
       await db.setOrderPaymentVerified(id, reference, scope, amount);

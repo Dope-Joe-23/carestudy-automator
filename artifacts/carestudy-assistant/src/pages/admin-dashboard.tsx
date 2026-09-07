@@ -270,16 +270,17 @@ function InviteDialog({
 }) {
   const queryClient = useQueryClient();
   const [label, setLabel] = useState("");
+  const [role, setRole] = useState("staff");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
 
   const createInvite = useMutation({
-    mutationFn: () => adminApi.createInvite(label.trim() || undefined),
+    mutationFn: () => adminApi.createInvite(label.trim() || undefined, role),
     onSuccess: (result) => {
       const fullUrl = `${window.location.origin}${result.invite.registrationUrl}`;
       setCreatedUrl(fullUrl);
       queryClient.invalidateQueries({ queryKey: ["admin-invites"] });
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
-      toast.success("Invite link created.");
+      toast.success(`Invite link created (${result.invite.role} role).`);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to create invite."),
   });
@@ -294,20 +295,43 @@ function InviteDialog({
   }, [createdUrl]);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) { onClose(); setCreatedUrl(null); setLabel(""); } }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { onClose(); setCreatedUrl(null); setLabel(""); setRole("staff"); } }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="size-5 text-primary" />
-            Invite staff member
+            Invite team member
           </DialogTitle>
           <DialogDescription>
-            Generate a one-time registration link for a new staff member.
+            Generate a one-time registration link for a new team member.
           </DialogDescription>
         </DialogHeader>
 
         {!createdUrl ? (
           <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="invite-role">Role *</Label>
+              <Select value={role} onValueChange={setRole}>
+                <SelectTrigger id="invite-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="staff">
+                    <span className="flex items-center gap-1.5">
+                      <ShieldOff className="size-3.5" /> Staff — Studio access only
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    <span className="flex items-center gap-1.5">
+                      <ShieldCheck className="size-3.5" /> Admin — Full access
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Admins can access the dashboard and manage staff. Staff can only use the studio.
+              </p>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="invite-label">Label (optional)</Label>
               <Input
@@ -330,7 +354,7 @@ function InviteDialog({
               ) : (
                 <Plus className="size-4" />
               )}
-              Generate invite link
+              Generate {role === "admin" ? "admin" : "staff"} invite link
             </Button>
           </div>
         ) : (
@@ -848,6 +872,9 @@ function InvitesTab({ onInvite }: { onInvite: () => void }) {
                       <span className="text-sm font-medium">
                         {invite.label || `Invite #${invite.id}`}
                       </span>
+                      <Badge variant={invite.role === "admin" ? "default" : "secondary"} className="text-[10px]">
+                        {invite.role === "admin" ? "Admin" : "Staff"}
+                      </Badge>
                       {invite.usedAt ? (
                         <Badge variant="default" className="gap-1 bg-emerald-600">
                           <CheckCircle2 className="size-3" /> Used

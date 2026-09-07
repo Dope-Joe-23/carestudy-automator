@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS "staff_invites" (
   "token" text NOT NULL UNIQUE,
   "created_by" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
   "label" text,
+  "role" text NOT NULL DEFAULT 'staff',
   "used_at" integer,
   "used_by" integer,
   "created_at" integer NOT NULL

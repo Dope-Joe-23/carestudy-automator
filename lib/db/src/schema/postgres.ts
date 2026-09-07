@@ -102,6 +102,8 @@ export const staffInvitesTable = pgTable("staff_invites", {
     .notNull()
     .references(() => adminsTable.id, { onDelete: "cascade" }),
   label: text("label"),
+  /** "admin" or "staff" — the role the invitee will receive. */
+  role: text("role").notNull().default("staff"),
   usedAt: timestamp("used_at", { withTimezone: true }),
   usedBy: integer("used_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
