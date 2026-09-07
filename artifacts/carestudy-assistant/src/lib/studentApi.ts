@@ -403,6 +403,13 @@ export function getStudioOrder(id: number): Promise<{ order: StudioOrder; files:
   return studioRequestJson(`/studio/orders/${id}`);
 }
 
+/** Read the produced study snapshot so the order bin can reconstruct import coverage after refresh. */
+export function getStudioStudySnapshot(id: number): Promise<{
+  data?: { chapters?: Array<{ sections?: Array<{ id?: string }> }> };
+}> {
+  return studioRequestJson(`/studies/${id}`);
+}
+
 /** Turn an order into a studio study: creates the study, attaches the order's
  *  materials as clinical documents, and builds the retrieval index. */
 export type ImportCoverageSummary = {

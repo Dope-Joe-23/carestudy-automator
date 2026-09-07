@@ -13,7 +13,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ChevronDown,
+  CircleAlert,
   ClipboardList,
+  CheckCircle2,
   Download,
   ExternalLink,
   FileText,
@@ -46,6 +48,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   attachOrderDelivery,
   getStudioOrder,
+  getStudioStudySnapshot,
   listStudioOrders,
   produceOrder,
   readFileAsBase64,
@@ -76,6 +79,13 @@ const FILE_KIND_LABELS: Record<"guidelines" | "clinical" | "reference" | "correc
   correction: "Uploaded study for correction",
 };
 
+const CANONICAL_SECTION_IDS = [
+  "P.1", "P.2", "P.3",
+  "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "1.10", "1.11",
+  "2.1", "2.2", "2.3", "2.4", "2.5", "3.1", "3.2", "4.1", "4.2", "4.3",
+  "5.1", "5.2", "5.3", "6.1", "6.2", "6.3",
+];
+
 function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
@@ -94,6 +104,33 @@ function OrderRow({ order }: { order: StudioOrder }) {
   const [note, setNote] = useState(order.note ?? "");
   const [deliveryFile, setDeliveryFile] = useState<File | null>(null);
   const [materialsOpen, setMaterialsOpen] = useState(false);
+  const [productionReport, setProductionReport] = useState<{
+    mapped: number;
+    expected: number;
+    missing: string[];
+    error?: string;
+  } | null>(null);
+
+  const existingCoverageQuery = useQuery({
+    queryKey: ["studio-order-coverage", order.id, order.producedStudyId],
+    queryFn: async () => {
+      if (!order.producedStudyId) return null;
+      const snapshot = await getStudioStudySnapshot(order.producedStudyId);
+      const detected = (snapshot.data?.chapters ?? [])
+        .flatMap((chapter) => chapter.sections ?? [])
+        .map((section) => section.id)
+        .filter((id): id is string => typeof id === "string" && CANONICAL_SECTION_IDS.includes(id));
+      const uniqueDetected = [...new Set(detected)];
+      return {
+        mapped: uniqueDetected.length,
+        expected: CANONICAL_SECTION_IDS.length,
+        missing: CANONICAL_SECTION_IDS.filter((id) => !uniqueDetected.includes(id)),
+      };
+    },
+    enabled: Boolean(order.producedStudyId) && !productionReport,
+  });
+
+  const extractionSummary = productionReport ?? existingCoverageQuery.data;
 
   // The order's attached documents, fetched on demand when the student's
   // materials are expanded — this is what the study will be produced from.
@@ -156,13 +193,22 @@ function OrderRow({ order }: { order: StudioOrder }) {
       const coverageMessage = coverage
         ? `${coverage.detected.length}/${coverage.expected.length} sections mapped${coverage.missing.length > 0 ? ` · missing ${coverage.missing.join(", ")}` : " · complete"}`
         : "The uploaded materials are attached.";
-      toast.success("Study created from the order — opening it in the studio.", {
+      setProductionReport(coverage
+        ? {
+            mapped: coverage.detected.length,
+            expected: coverage.expected.length,
+            missing: coverage.missing,
+          }
+        : null);
+      toast.success("Study created from the order.", {
         description: coverageMessage,
       });
-      openInStudio(result.study.id);
     },
-    onError: (err) =>
-      toast.error(err instanceof Error ? err.message : "Could not create the study"),
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : "Could not create the study";
+      setProductionReport({ mapped: 0, expected: 0, missing: [], error: message });
+      toast.error("Could not create the study", { description: message });
+    },
   });
 
   return (
@@ -253,17 +299,57 @@ function OrderRow({ order }: { order: StudioOrder }) {
         )}
 
         {order.correctionText && (
-          <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-3">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">
-              Requested changes
+          <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+              Document correction
             </p>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">{order.notes}</p>
-            <p className="mt-3 border-t border-primary/20 pt-3 text-xs text-muted-foreground">
-              The exact extracted text from the uploaded {order.correctionScope} is loaded into the
-              editable preview when you open the produced study.
+            <p className="mt-1 text-sm text-muted-foreground">
+              The uploaded {order.correctionScope} is ready for extraction. Open the produced study
+              to review and edit the imported document.
             </p>
           </div>
         )}
+
+        {(productionReport?.error) ? (
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+            <CircleAlert className="mt-0.5 size-4 shrink-0" />
+            <div>
+              <p className="font-medium">Extraction failed</p>
+              <p className="mt-0.5 text-xs leading-relaxed">{productionReport.error}</p>
+            </div>
+          </div>
+        ) : extractionSummary ? (
+          <div className={cn(
+            "rounded-lg border px-3 py-2.5",
+            extractionSummary.missing.length > 0
+              ? "border-amber-500/30 bg-amber-500/10"
+              : "border-primary/30 bg-primary/5",
+          )}>
+            <p className="flex items-center gap-2 text-sm font-medium">
+              <CheckCircle2 className="size-4 text-primary" />
+              Extraction results
+            </p>
+            <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-md bg-background/70 px-2 py-1.5">
+                <p className="text-base font-semibold text-primary">{extractionSummary.mapped}</p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Successful</p>
+              </div>
+              <div className="rounded-md bg-background/70 px-2 py-1.5">
+                <p className="text-base font-semibold text-amber-700 dark:text-amber-300">{extractionSummary.missing.length}</p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Unsuccessful</p>
+              </div>
+              <div className="rounded-md bg-background/70 px-2 py-1.5">
+                <p className="text-base font-semibold">{extractionSummary.expected}</p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Expected</p>
+              </div>
+            </div>
+            {extractionSummary.missing.length > 0 && (
+              <p className="mt-2 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+                Unsuccessful sections: {extractionSummary.missing.join(", ")}
+              </p>
+            )}
+          </div>
+        ) : null}
 
         {materialsOpen && (
           <div className="rounded-lg border bg-background p-3">

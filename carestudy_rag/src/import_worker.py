@@ -304,23 +304,15 @@ def _normalise_heading(value: str) -> str:
 
 
 def _section_id_for_heading(value: str, heading_by_normalised: dict[str, str]) -> str | None:
-    """Match exact headings first, then close standard-heading variants."""
+    """Match only a complete standard heading.
+
+    Import text contains many descriptive subheadings (especially in a
+    literature review). Fuzzy matching those lines can incorrectly split one
+    section into another canonical section, so boundary detection must be
+    conservative here.
+    """
     normalised = _normalise_heading(value)
-    exact = heading_by_normalised.get(normalised)
-    if exact:
-        return exact
-    tokens = set(normalised.split())
-    if len(tokens) < 2:
-        return None
-    best_id: str | None = None
-    best_score = 0.0
-    for candidate, section_id in heading_by_normalised.items():
-        candidate_tokens = set(candidate.split())
-        score = len(tokens & candidate_tokens) / max(len(tokens), len(candidate_tokens))
-        if score >= 0.75 and score > best_score:
-            best_id = section_id
-            best_score = score
-    return best_id
+    return heading_by_normalised.get(normalised)
 
 
 def _extract_labeled_fields(text: str, section_id: str) -> dict[str, str]:
@@ -376,6 +368,60 @@ def _extract_labeled_fields(text: str, section_id: str) -> dict[str, str]:
     return result
 
 
+def _extract_narrative_fields(text: str, section_id: str) -> dict[str, str]:
+    """Extract only high-confidence facts written as ordinary prose."""
+    if section_id == "1.1":
+        result: dict[str, str] = {}
+        age = re.search(r"\b(\d{1,3})\s*years?\s*old\b", text, re.IGNORECASE)
+        if age:
+            result["age"] = f"{age.group(1)} years"
+        if re.search(r"\b(young\s+)?lady\b|\bwoman\b|\bfemale\b", text, re.IGNORECASE):
+            result["sex"] = "Female"
+        elif re.search(r"\b(man|male|boy)\b", text, re.IGNORECASE):
+            result["sex"] = "Male"
+        birth_date = re.search(
+            r"\bborn\s+on\s+(?:the\s+)?(\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]+,?\s+\d{4})",
+            text,
+            re.IGNORECASE,
+        )
+        if birth_date:
+            result["dob"] = birth_date.group(1).strip()
+        religion = re.search(r"\bis\s+a[n]?\s+(Christian|Muslim|Hindu|traditionalist)\b", text, re.IGNORECASE)
+        if religion:
+            result["religion"] = religion.group(1).capitalize()
+        ethnicity = re.search(r"\bis\s+([A-Za-z][A-Za-z -]+?)\s+by\s+tribe\b", text, re.IGNORECASE)
+        if ethnicity:
+            result["ethnicity"] = ethnicity.group(1).strip()
+        marital_status = re.search(r"\bis\s+(single|married|divorced|widowed|separated)\b", text, re.IGNORECASE)
+        if marital_status:
+            result["maritalStatus"] = marital_status.group(1).capitalize()
+        return result
+
+    if section_id == "1.2":
+        result = {}
+        if re.search(r"\bno\s+known\s+history\b", text, re.IGNORECASE):
+            result["familyHistoryPresent"] = "No"
+        elif re.search(r"\bknown\s+history\b", text, re.IGNORECASE):
+            result["familyHistoryPresent"] = "Yes"
+        conditions = re.search(
+            r"(?:hereditary|chronic)\s+diseases?\s+like\s+(.+?)(?=\s+in\s+the\s+family|[.;])",
+            text,
+            re.IGNORECASE,
+        )
+        if conditions:
+            result["familyConditions"] = conditions.group(1).strip()
+        occupation = re.search(
+            r"(?:family|they)\s+derives?\s+(?:their\s+)?financial\s+support\s+from\s+(?:their\s+)?occupation\s*\[?([^].,;]+)",
+            text,
+            re.IGNORECASE,
+        )
+        if occupation:
+            result["familyOccupation"] = occupation.group(1).strip()
+        return result
+
+    return {}
+
+
 def _deterministic_import(raw_text: str) -> dict | None:
     """Build an import result from explicit section headings and labels.
 
@@ -409,6 +455,10 @@ def _deterministic_import(raw_text: str) -> dict | None:
                 current["draft"] = "\n".join(current["lines"]).strip()
                 current.pop("lines", None)
                 current["fields"] = _extract_labeled_fields(current["draft"], current["sectionId"])
+                current["fields"].update(
+                    {key: value for key, value in _extract_narrative_fields(current["draft"], current["sectionId"]).items()
+                     if key not in current["fields"]}
+                )
                 sections.append(current)
             current = {
                 "sectionId": section_id,
@@ -425,6 +475,10 @@ def _deterministic_import(raw_text: str) -> dict | None:
         current["draft"] = "\n".join(current["lines"]).strip()
         current.pop("lines", None)
         current["fields"] = _extract_labeled_fields(current["draft"], current["sectionId"])
+        current["fields"].update(
+            {key: value for key, value in _extract_narrative_fields(current["draft"], current["sectionId"]).items()
+             if key not in current["fields"]}
+        )
         sections.append(current)
 
     if not sections:
@@ -521,6 +575,12 @@ def import_study_with_fields(raw_text: str) -> dict:
         "Rules:\n"
         "- Every section MUST have a 'sectionId' that matches one of the IDs listed above.\n"
         "- The 'heading' should match the standard heading for that sectionId.\n"
+        "- Treat only an explicit numbered heading (for example, '1.10 Literature Review') "
+        "or an exact standard heading as a section boundary.\n"
+        "- Subheadings inside Literature Review, including Definition, Incidence, Causes, "
+        "Pathophysiology, Signs and Symptoms, Diagnostic Investigations, Medical Management, "
+        "Nursing Management, Prevention, and Complications, must remain in section 1.10; "
+        "do not map them to other canonical sections.\n"
         "- The 'draft' is the FULL text of the section from the document — preserve the student's original wording.\n"
         "- The 'fields' object extracts specific values from the text. Use the field IDs listed above.\n"
         "  Only include fields you can confidently extract. Omit fields you cannot find.\n"
