@@ -510,8 +510,73 @@ def _looks_like_data_dump(draft: str) -> bool:
 _META_DRAFT_RE = re.compile(
     r"(?is)\b(?:we need to write|now we need to|the user wants|the prompt says|"
     r"must cite sources|reference material block|patient notes say|"
-    r"we must not fabricate)\b"
+    r"we must not fabricate|here'?s? a thinking process|"
+    r"let me think|let me draft|I need to write|"
+    r"key constraints|critical rule|data-only sections)\b"
 )
+
+# Safety-filter responses: the model returned a policy/safety acknowledgement
+# instead of the requested section content.
+_SAFETY_FILTER_RE = re.compile(
+    r"(?is)^\s*(?:user\s*safety|content\s*safety|safety\s*policy|"
+    r"safety\s*guideline|cannot\s*assist|unable\s*to\s*provide|"
+    r"against\s*(?:my|the)\s*policy|violates?\s*(?:my|the)\s*policy|"
+    r"not\s*(?:able|allowed)\s*to|decline|refuse)\s*:\s*(?:safe|ok|yes|passed)?\s*$",
+)
+
+# Patterns that indicate the model leaked its internal reasoning / thinking
+# process instead of producing section content.
+_THINKING_RE = re.compile(
+    r"(?is)^(?:\s*Here's a thinking process:.*?\n\n|" # open block
+    r"\s*(?:Let me |I need to |I should |I'll |First,|Step \d).*)", # line-level
+    re.MULTILINE,
+)
+
+# Stronger: detect multi-line thinking blocks that start with markers
+_THINKING_BLOCK_RE = re.compile(
+    r"(?is)^\s*(?:Here'?s? a thinking process:?|Thinking Process:?|" +
+    r"\*\*?(?:Analysis|Reasoning|Plan|Step \d)\*?\*?:)\s*\n",
+    re.MULTILINE,
+)
+
+
+
+def _strip_thinking(draft: str) -> str:
+    """Remove leaked thinking/reasoning blocks from a model response."""
+    # Remove explicit thinking blocks (e.g. "Here's a thinking process:")
+    draft = _THINKING_BLOCK_RE.sub("", draft)
+
+    # Remove leading thinking lines (e.g. lines starting with "Let me", "I need to")
+    # only when they appear before any real content.
+    lines = draft.split("\n")
+    start = 0
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped:
+            start = i + 1
+            continue
+        # If the first non-empty line looks like thinking, skip it and continue
+        if _THINKING_RE.match(stripped):
+            start = i + 1
+            continue
+        # Real content — stop scanning
+        break
+    if start > 0:
+        draft = "\n".join(lines[start:])
+
+    return draft.strip()
+
+
+def _is_safety_filter_response(draft: str) -> bool:
+    """True when the model returned a safety/policy acknowledgement instead of content."""
+    stripped = draft.strip()
+    # Very short responses that are just safety acknowledgements
+    if len(stripped) < 50 and _SAFETY_FILTER_RE.match(stripped):
+        return True
+    # Also catch standalone "User Safety: safe" style responses
+    if re.match(r"(?i)^\s*user\s*safety\s*:\s*(?:safe|ok|passed|yes)\s*$", stripped):
+        return True
+    return False
 
 _FULL_STUDY_DRAFT_RE = re.compile(
     r"(?is)\b(?:patient/family care study|table of content|chapter one|"
@@ -821,10 +886,19 @@ def draft_section(
             f"(tried: {', '.join(candidate_models)}). Please try again."
         )
 
+    # Strip leaked thinking/reasoning blocks from free-tier models that
+    # sometimes output their internal reasoning instead of section content.
+    draft = _strip_thinking(draft)
+
+    # If the model returned a safety filter response (e.g. "User Safety: safe")
+    # instead of actual content, treat it as a failed response and retry.
+    if _is_safety_filter_response(draft):
+        draft = ""
+
     # Some models echo the assignment and citation rules instead of producing
     # the requested section. Give that response one focused repair pass while
     # retaining the original notes as the source of patient-specific facts.
-    if _looks_like_meta_draft(draft) or _looks_like_full_study_draft(draft):
+    if draft and (_looks_like_meta_draft(draft) or _looks_like_full_study_draft(draft)):
         try:
             rewritten = _rewrite_as_section(client, heading, patient_notes, draft, tabular)
             if rewritten.strip() and not _looks_like_meta_draft(rewritten) and not _looks_like_full_study_draft(rewritten):

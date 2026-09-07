@@ -11,7 +11,7 @@
  * for it — the "template" the drafting forms are driven by.
  */
 
-export type TemplateFieldType = "text" | "textarea" | "select" | "date";
+export type TemplateFieldType = "text" | "textarea" | "select" | "date" | "datetime-local";
 
 export type TemplateField = {
   id: string;
@@ -30,6 +30,7 @@ export type TemplateRowColumn = {
   id: string;
   label: string;
   placeholder: string;
+  type?: TemplateFieldType;
 };
 
 /** A repeatable set of rows (e.g. one row per drug, per care plan entry). */
@@ -306,8 +307,7 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
           {
             id: "admissionDateTime",
             label: "Date & time of admission",
-            placeholder: "e.g. 21st August, 2023, 2:30 pm",
-            type: "text",
+            type: "datetime-local",
           },
           {
             id: "diagnosis",
@@ -582,8 +582,7 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
           {
             id: "admissionDate",
             label: "Date & time of admission",
-            placeholder: "e.g. 21st August, 2023, 11:20 am",
-            type: "text",
+            type: "datetime-local",
           },
           {
             id: "admissionRoute",
@@ -942,12 +941,12 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
           addLabel: "Add another care plan entry",
           emptyHint: "One row per nursing diagnosis — date/time, diagnosis, objectives/outcome criteria, nursing orders, interventions, evaluation date/time and evaluation.",
           columns: [
-            { id: "diagnosisDate", label: "Date / time — diagnosis", placeholder: "e.g. 21/08/2026, 2:00 pm" },
+            { id: "diagnosisDate", label: "Date / time — diagnosis", placeholder: "e.g. 21/08/2026, 2:00 pm", type: "datetime-local" },
             { id: "diagnosis", label: "Nursing diagnosis", placeholder: "e.g. Ineffective airway clearance" },
             { id: "goal", label: "Objectives / outcome criteria", placeholder: "e.g. Client will maintain SpO₂ ≥ 95% within 24 hrs, evidenced by comfortable breathing" },
             { id: "nursingOrders", label: "Nursing orders", placeholder: "e.g. Turn client every 2 hrs; give O₂ at 4 L/min; monitor SpO₂ hourly" },
             { id: "interventions", label: "Nursing interventions", placeholder: "e.g. Position semi-Fowler's, give O₂, monitor vitals" },
-            { id: "evaluationDate", label: "Date / time — evaluation", placeholder: "e.g. 23/08/2026, 8:00 am" },
+            { id: "evaluationDate", label: "Date / time — evaluation", placeholder: "e.g. 23/08/2026, 8:00 am", type: "datetime-local" },
             { id: "evaluation", label: "Evaluation", placeholder: "e.g. Goal fully met — breathing comfortable, SpO₂ 98% on room air" },
             { id: "rationale", label: "Rationale", placeholder: "e.g. Promotes lung expansion" },
           ],
@@ -1039,7 +1038,7 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
           addLabel: "Add a home visit",
           emptyHint: "The pre-discharge visit plus follow-up visits after discharge — preferably three visits about a week apart, ending in a hand-over for continuity of care.",
           columns: [
-            { id: "date", label: "Date / visit", placeholder: "e.g. Visit 1 — pre-discharge, 5th Sept" },
+            { id: "date", label: "Date / visit", placeholder: "e.g. Visit 1 — pre-discharge, 5th Sept", type: "datetime-local" },
             { id: "objectives", label: "Objectives", placeholder: "e.g. Assess home environment and resources for care" },
             { id: "findings", label: "Assessment & findings", placeholder: "e.g. 4-room house, pipe-borne water; client afebrile, BP 120/80 mmHg" },
             { id: "education", label: "Health education given", placeholder: "e.g. Reinforced drug compliance and danger signs" },

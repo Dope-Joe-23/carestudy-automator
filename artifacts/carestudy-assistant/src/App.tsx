@@ -812,6 +812,16 @@ function FieldControl({
             ))}
           </SelectContent>
         </Select>
+      ) : field.type === 'datetime-local' ? (
+        <Input
+          id={inputId}
+          type="datetime-local"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-9 border-white/15 bg-white/10 text-sidebar-foreground [color-scheme:dark]"
+          aria-describedby={field.hint ? `hint-${field.id}` : undefined}
+          aria-required={field.required || undefined}
+        />
       ) : field.type === 'date' ? (
         <Input
           id={inputId}
@@ -910,13 +920,31 @@ function RowEditor({
                 {rowIndex + 1}
               </span>
               {rowDef.columns.map((column, columnIndex) => (
-                <Input
-                  key={column.id}
-                  className="h-8 border-white/15 bg-white/10 text-xs text-sidebar-foreground placeholder:text-sidebar-foreground/40"
-                  placeholder={column.label}
-                  value={row.cells[columnIndex] ?? ''}
-                  onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
-                />
+                column.type === 'datetime-local' ? (
+                  <Input
+                    key={column.id}
+                    type="datetime-local"
+                    className="h-8 border-white/15 bg-white/10 text-xs text-sidebar-foreground [color-scheme:dark]"
+                    value={row.cells[columnIndex] ?? ''}
+                    onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
+                  />
+                ) : column.type === 'date' ? (
+                  <Input
+                    key={column.id}
+                    type="date"
+                    className="h-8 border-white/15 bg-white/10 text-xs text-sidebar-foreground [color-scheme:dark]"
+                    value={row.cells[columnIndex] ?? ''}
+                    onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
+                  />
+                ) : (
+                  <Input
+                    key={column.id}
+                    className="h-8 border-white/15 bg-white/10 text-xs text-sidebar-foreground placeholder:text-sidebar-foreground/40"
+                    placeholder={column.label}
+                    value={row.cells[columnIndex] ?? ''}
+                    onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
+                  />
+                )
               ))}
               <Button
                 variant="ghost"
