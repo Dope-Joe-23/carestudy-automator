@@ -4286,6 +4286,11 @@ function Home() {
         }
       } catch {
         // No last study, server unreachable, or it was deleted — keep the blank workspace.
+        try {
+          window.localStorage.removeItem(LAST_STUDY_KEY);
+        } catch {
+          // ignore storage errors
+        }
       }
     })();
     return () => {
