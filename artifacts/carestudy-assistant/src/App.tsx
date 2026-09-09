@@ -201,6 +201,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudiesPanel } from '@/components/studies-panel';
 import { useAdmin, getInitials, getDisplayName, getRoleLabel } from '@/lib/adminContext';
+import { deriveStudyFacts, validateStudyFacts } from '@/lib/studyFacts';
 
 type SectionStatus = 'empty' | 'noted' | 'drafted';
 
@@ -239,6 +240,17 @@ type Chapter = {
   /** Sources cited by the drafted chapter introduction. */
   introReferences: DraftReference[];
   sections: Section[];
+};
+
+type PlanningProposal = {
+  objectives: Record<string, string>;
+  carePlanRows: string[][];
+};
+
+type EvaluationProposal = {
+  rows: string[][];
+  amendmentRows: string[][];
+  overall: string;
 };
 
 /** Result of verifying one section's (or the whole study's) references. */
@@ -2170,6 +2182,12 @@ function Home() {
   const [chapter2Recommendations, setChapter2Recommendations] = useState<Chapter2Recommendations | null>(null);
   const [chapter2RecommendationOpen, setChapter2RecommendationOpen] = useState(false);
   const [chapter2RecommendationBusy, setChapter2RecommendationBusy] = useState(false);
+  const [planningProposal, setPlanningProposal] = useState<PlanningProposal | null>(null);
+  const [planningProposalOpen, setPlanningProposalOpen] = useState(false);
+  const [evaluationProposal, setEvaluationProposal] = useState<EvaluationProposal | null>(null);
+  const [evaluationProposalOpen, setEvaluationProposalOpen] = useState(false);
+  const [qualityGateOpen, setQualityGateOpen] = useState(false);
+  const [actualCareReviewOpen, setActualCareReviewOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [showPreliminaryPages, setShowPreliminaryPages] = useState(false);
   const [exportMeta, setExportMeta] = useState({
@@ -2711,11 +2729,16 @@ function Home() {
 
   const currentChapter = chapters[activeChapter];
   const currentSection = currentChapter.sections[activeSection];
+  const studyFacts = useMemo(() => deriveStudyFacts(chapters, exportMeta), [chapters, exportMeta]);
+  const studyFactIssues = useMemo(() => validateStudyFacts(studyFacts), [studyFacts]);
   const allSections = useMemo(() => chapters.flatMap((chapter) => chapter.sections), [chapters]);
   const navigableChapterIndices = chapters
     .map((chapter, index) => (chapter.isFrontMatter ? -1 : index))
     .filter((index) => index >= 0);
   const isChapter2 = currentChapter.name === 'Analysis of Data';
+  const isChapter3 = currentChapter.name === 'Planning';
+  const isChapter4 = currentChapter.name === 'Implementation';
+  const isChapter5 = currentChapter.name === 'Evaluation';
 
   // The front-matter chapter (preface/acknowledgement/introduction) is
   // unnumbered in the document; the real chapters keep their I–VI numbering.
@@ -2841,17 +2864,11 @@ function Home() {
 
   const recommendChapter2 = async () => {
     if (chapter2RecommendationBusy) return;
-    const assessment = chapters.find((chapter) => chapter.name === 'Assessment');
-    if (!assessment) {
-      toast.error('Assessment chapter is unavailable.');
-      return;
-    }
-    const chapter1Fields = Object.fromEntries(
-      assessment.sections.flatMap((section) =>
-        Object.entries(section.data).map(([key, value]) => [key, value]),
-      ),
-    );
-    if (Object.values(chapter1Fields).every((value) => !value.trim())) {
+    const chapter1Fields = {
+      ...studyFacts.assessment.fields,
+      clinicalNotes: studyFacts.assessment.evidenceText,
+    };
+    if (!studyFacts.assessment.evidenceText.trim()) {
       toast.error('Collect Chapter 1 data first.', {
         description: 'Recommendations are based on the assessment, history, and admission findings.',
       });
@@ -2859,8 +2876,7 @@ function Home() {
     }
     setChapter2RecommendationBusy(true);
     try {
-      const condition =
-        chapter1Fields.diagnosis?.trim() || exportMeta.diagnosis.trim();
+      const condition = studyFacts.patient.diagnosis;
       const result = await requestChapter2Recommendations(chapter1Fields, condition);
       setChapter2Recommendations(result);
       setChapter2RecommendationOpen(true);
@@ -2903,6 +2919,154 @@ function Home() {
     toast.success('Chapter 2 recommendations applied', {
       description: 'Review the suggested problems, strengths, and diagnoses before drafting.',
     });
+  };
+
+  const recommendChapter3 = () => {
+    const diagnoses = studyFacts.analysis.nursingDiagnoses;
+    const diagnosisList = diagnoses
+      .split(/\n+/)
+      .map((line) => line.replace(/^\s*[-•]\s*/, '').trim())
+      .filter((line) => line && !/^\(no nursing diagnoses/i.test(line));
+    if (diagnosisList.length === 0) {
+      toast.error('Generate or enter Chapter 2 nursing diagnoses first.');
+      return;
+    }
+    const assessment = studyFacts.assessment.fields;
+    const evidence = [
+      assessment.presentingSymptoms,
+      assessment.associatedSymptoms,
+      assessment.physicalFindings,
+      assessment.investigations,
+    ].filter(Boolean).join('; ');
+    const observed = evidence || 'the documented assessment findings';
+    const indicatorFor = (diagnosis: string) => {
+      const lower = diagnosis.toLowerCase();
+      if (/breathing|airway|gas exchange|oxygen/.test(lower)) {
+        return assessment.assessmentSpo2
+          ? `SpO2 ${assessment.assessmentSpo2}% and documented breathing effort`
+          : 'respiratory rate, oxygen saturation, and documented breathing effort';
+      }
+      if (/pain/.test(lower)) return 'patient-reported pain score, location, and functional comfort';
+      if (/fluid|dehydrat|nausea|vomit|nutrition/.test(lower)) return 'oral intake, output, hydration signs, and symptom frequency';
+      if (/fall|mobility|activity/.test(lower)) return 'safe mobility, assistance needs, and absence of falls';
+      if (/knowledge|anxiety|coping|sleep/.test(lower)) return 'patient teach-back, stated concerns, and participation in care';
+      return 'the relevant patient-reported symptom, assessment finding, and measurable response';
+    };
+    const planFor = (diagnosis: string) => {
+      const indicator = indicatorFor(diagnosis);
+      return {
+        indicator,
+        goal: `Proposed outcome for ${diagnosis}: ${indicator} will improve or remain stable from the documented baseline (${observed.slice(0, 180)}).`,
+        orders: `Proposed orders for ${diagnosis}: monitor ${indicator}; document the response at each review; escalate deterioration according to the approved clinical plan.`,
+        interventions: `Proposed interventions for ${diagnosis}: assess the relevant findings, provide only approved care within scope, involve the patient/family, and record the response.`,
+        rationale: `Supports timely reassessment of ${diagnosis} against the patient's documented baseline and agreed outcome criteria.`,
+      };
+    };
+    const plans = diagnosisList.map((diagnosis) => planFor(diagnosis));
+    const objectives = {
+      longTerm: diagnosisList.map((diagnosis, index) => `${index + 1}. Proposed long-term objective for ${diagnosis}: by discharge or the agreed follow-up period, ${plans[index].indicator} will show sustained improvement or stability from the documented baseline.`).join('\n'),
+      shortTerm: diagnosisList.map((diagnosis, index) => `${index + 1}. Proposed short-term objective for ${diagnosis}: within 24–72 hours, reassess ${plans[index].indicator} and document whether the agreed target is being met.`).join('\n'),
+      outcomeCriteria: diagnosisList.map((diagnosis, index) => `${index + 1}. For ${diagnosis}: record the baseline, target, date/time, patient response, and measurement for ${plans[index].indicator}.`).join('\n'),
+      familyObjectives: 'Proposed: family will demonstrate the knowledge and practical support relevant to the documented diagnoses before discharge, verified by teach-back or observed participation.',
+    };
+    const carePlanRows = diagnosisList.map((diagnosis, index) => [
+      '',
+      diagnosis,
+      plans[index].goal,
+      plans[index].orders,
+      plans[index].interventions,
+      '',
+      'Pending implementation and patient response.',
+      plans[index].rationale,
+    ]);
+    setPlanningProposal({ objectives, carePlanRows });
+    setPlanningProposalOpen(true);
+  };
+
+  const applyPlanningProposal = () => {
+    if (!planningProposal) return;
+    setChapters((previous) => previous.map((chapter) => ({
+      ...chapter,
+      sections: chapter.sections.map((section) => {
+        if (section.id === '3.1') {
+          return { ...section, data: { ...section.data, ...planningProposal.objectives }, status: computeStatus({ ...section, data: { ...section.data, ...planningProposal.objectives } }) };
+        }
+        if (section.id === '3.2') {
+          const existingDiagnoses = new Set(
+            section.rowData.map((row) => row.cells[1]?.trim().toLowerCase()).filter(Boolean),
+          );
+          const newRows = planningProposal.carePlanRows
+            .filter((cells) => !existingDiagnoses.has(cells[1].trim().toLowerCase()))
+            .map((cells) => ({ id: nextRowId(), cells }));
+          const rowData = [...section.rowData, ...newRows];
+          return { ...section, rowData, status: computeStatus({ ...section, rowData }) };
+        }
+        return section;
+      }),
+    })));
+    setDirty(true);
+    setPlanningProposalOpen(false);
+    toast.success('Chapter 3 planning proposal applied', { description: 'Review every objective, intervention, rationale, and date before use.' });
+  };
+
+  const recommendChapter5 = () => {
+    const rows = studyFacts.planning.carePlanRows.filter((row) => row[1]?.trim());
+    if (rows.length === 0) {
+      toast.error('Build the Chapter 3 care plan first.');
+      return;
+    }
+    const evaluationRows = rows.map((row) => [
+      row[1],
+      'Pending: record the patient response and mark the outcome fully met, partially met, or not met.',
+    ]);
+    const amendmentRows = studyFacts.evaluation.outcomeRows
+      .filter((row) => /partially\s+met|not\s+met|unmet/i.test(row[1] ?? ''))
+      .map((row) => [
+        row[0],
+        'Proposed amendment: review or add an intervention, revise the target, or extend the evaluation period based on the documented response.',
+        `Documented outcome requiring review: ${row[1]}`,
+        'Pending documented result after the amended plan.',
+      ]);
+    setEvaluationProposal({
+      rows: evaluationRows,
+      amendmentRows,
+      overall: 'Evaluation pending: review each care-plan outcome against the patient response and documented measurements.',
+    });
+    setEvaluationProposalOpen(true);
+  };
+
+  const applyEvaluationProposal = () => {
+    if (!evaluationProposal) return;
+    setChapters((previous) => previous.map((chapter) => ({
+      ...chapter,
+      sections: chapter.sections.map((section) => {
+        if (section.id !== '5.1') return section;
+        const data = { ...section.data, overallEvaluation: evaluationProposal.overall };
+        const existingDiagnoses = new Set(
+          section.rowData.map((row) => row.cells[0]?.trim().toLowerCase()).filter(Boolean),
+        );
+        const newRows = evaluationProposal.rows
+          .filter((cells) => !existingDiagnoses.has(cells[0].trim().toLowerCase()))
+          .map((cells) => ({ id: nextRowId(), cells }));
+        const rowData = [...section.rowData, ...newRows];
+        return { ...section, data, rowData, status: computeStatus({ ...section, data, rowData }) };
+      }),
+    })));
+    setChapters((previous) => previous.map((chapter) => ({
+      ...chapter,
+      sections: chapter.sections.map((section) => {
+        if (section.id !== '5.2' || evaluationProposal.amendmentRows.length === 0) return section;
+        const existing = new Set(section.rowData.map((row) => row.cells[0]?.trim().toLowerCase()).filter(Boolean));
+        const additions = evaluationProposal.amendmentRows
+          .filter((row) => !existing.has(row[0].trim().toLowerCase()))
+          .map((cells) => ({ id: nextRowId(), cells }));
+        const rowData = [...section.rowData, ...additions];
+        return { ...section, rowData, status: computeStatus({ ...section, rowData }) };
+      }),
+    })));
+    setDirty(true);
+    setEvaluationProposalOpen(false);
+    toast.success('Chapter 5 evaluation scaffold applied', { description: 'Enter actual outcomes before finalising the evaluation.' });
   };
 
   const goPrevious = () => {
@@ -3382,6 +3546,21 @@ function Home() {
   });
 
   const downloadDocx = async (scope: ExportScope = { type: 'full' }) => {
+    if (scope.type === 'full') {
+      const blockingIssues = studyFactIssues.filter((issue) => issue.severity === 'error');
+      if (blockingIssues.length > 0) {
+        toast.error('Complete the required study facts before exporting', {
+          description: blockingIssues.map((issue) => issue.message).join(' '),
+        });
+        return;
+      }
+      const reviewIssues = studyFactIssues.filter((issue) => issue.severity === 'warning');
+      if (reviewIssues.length > 0) {
+        toast('Review recommended before export', {
+          description: reviewIssues.map((issue) => issue.message).join(' '),
+        });
+      }
+    }
     try {
       const blob = await exportStudyDocx(buildExportPayload(scope));
       const url = URL.createObjectURL(blob);
@@ -4481,6 +4660,23 @@ function Home() {
             <span className={cn('hidden font-mono text-[10px] tabular lg:inline', saveStatus.tone)}>
               {saveStatus.label}
             </span>
+            {studyFactIssues.length > 0 && (
+              <Button
+                variant="outline"
+                size="icon"
+                className={cn(
+                  'size-8',
+                  studyFactIssues.some((issue) => issue.severity === 'error')
+                    ? 'text-destructive hover:bg-destructive/10'
+                    : 'text-amber-600 hover:bg-amber-500/10 dark:text-amber-400',
+                )}
+                onClick={() => setQualityGateOpen(true)}
+                title="Review study quality checks"
+                aria-label="Review study quality checks"
+              >
+                <CircleAlert className="size-3.5" />
+              </Button>
+            )}
             <Button
               variant="outline"
               size="icon"
@@ -4574,6 +4770,28 @@ function Home() {
                 >
                   <Sparkles className={cn("size-3.5", chapter2RecommendationBusy && "animate-pulse")} />
                   {chapter2RecommendationBusy ? 'Analysing…' : 'Recommend from Ch 1'}
+                </Button>
+              )}
+              {isChapter3 && (
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={recommendChapter3}>
+                  <Sparkles className="size-3.5" /> Build plan from Ch 2
+                </Button>
+              )}
+              {isChapter4 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-primary"
+                  onClick={() => setActualCareReviewOpen(true)}
+                  disabled={isChapterDrafting || isDrafting || isIntroDrafting}
+                  title="Review documented care before drafting implementation sections"
+                >
+                  <FileCheck2 className="size-3.5" /> Review actual care
+                </Button>
+              )}
+              {isChapter5 && (
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={recommendChapter5}>
+                  <Sparkles className="size-3.5" /> Evaluate care plan
                 </Button>
               )}
               <Progress value={overallCompletion} className="h-1.5 w-16" aria-hidden="true" />
@@ -4880,6 +5098,124 @@ function Home() {
                   </div>
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={planningProposalOpen} onOpenChange={setPlanningProposalOpen}>
+            <DialogContent className="max-h-[85vh] w-full max-w-3xl overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Proposed Chapter 3 plan</DialogTitle>
+                <DialogDescription>
+                  Generated from Chapter 2 diagnoses. These are planning suggestions, not proof that care was delivered.
+                </DialogDescription>
+              </DialogHeader>
+              {planningProposal && (
+                <div className="space-y-3">
+                  <div className="rounded-lg border p-3 text-xs leading-relaxed">
+                    <p className="font-semibold">Objectives</p>
+                    <pre className="mt-2 whitespace-pre-wrap font-sans text-muted-foreground">{Object.values(planningProposal.objectives).join('\n\n')}</pre>
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border">
+                    <table className="w-full min-w-[900px] text-[11px]">
+                      <thead><tr className="border-b bg-muted/50">{['Diagnosis', 'Objective', 'Nursing orders', 'Interventions', 'Evaluation', 'Rationale'].map((heading) => <th key={heading} className="px-2 py-2 text-left">{heading}</th>)}</tr></thead>
+                      <tbody>{planningProposal.carePlanRows.map((row, index) => <tr key={index} className="border-b last:border-0 align-top">{[row[1], row[2], row[3], row[4], row[6], row[7]].map((cell, cellIndex) => <td key={cellIndex} className="px-2 py-2 text-muted-foreground">{cell}</td>)}</tr>)}</tbody>
+                    </table>
+                  </div>
+                  <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setPlanningProposalOpen(false)}>Cancel</Button><Button onClick={applyPlanningProposal}>Apply to Chapter 3</Button></div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={evaluationProposalOpen} onOpenChange={setEvaluationProposalOpen}>
+            <DialogContent className="max-h-[85vh] w-full max-w-2xl overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Proposed Chapter 5 evaluation</DialogTitle>
+                <DialogDescription>
+                  The diagnoses are copied from the care plan. Actual outcomes must be entered from documented patient responses.
+                </DialogDescription>
+              </DialogHeader>
+              {evaluationProposal && (
+                <div className="space-y-3">
+                  <div className="rounded-lg border p-3 text-sm text-muted-foreground">{evaluationProposal.overall}</div>
+                  <div className="space-y-2">{evaluationProposal.rows.map((row, index) => <div key={index} className="rounded-lg border p-3"><p className="text-sm font-medium">{row[0]}</p><p className="mt-1 text-xs text-muted-foreground">{row[1]}</p></div>)}</div>
+                  {evaluationProposal.amendmentRows.length > 0 && (
+                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+                      <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Amendments detected</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Explicitly documented partially met or unmet outcomes will be added to section 5.2 for review.</p>
+                      <div className="mt-2 space-y-2">{evaluationProposal.amendmentRows.map((row, index) => <div key={index} className="text-xs"><span className="font-medium">{row[0]}</span><span className="text-muted-foreground"> — {row[2]}</span></div>)}</div>
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setEvaluationProposalOpen(false)}>Cancel</Button><Button onClick={applyEvaluationProposal}>Apply to Chapter 5</Button></div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={qualityGateOpen} onOpenChange={setQualityGateOpen}>
+            <DialogContent className="max-h-[85vh] w-full max-w-xl overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Study quality checks</DialogTitle>
+                <DialogDescription>
+                  Review these cross-chapter checks before exporting the full study.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2">
+                {studyFactIssues.map((issue) => (
+                  <div
+                    key={issue.code}
+                    className={cn(
+                      'rounded-lg border p-3 text-sm',
+                      issue.severity === 'error'
+                        ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                        : 'border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300',
+                    )}
+                  >
+                    <p className="font-medium">{issue.severity === 'error' ? 'Required' : 'Review'}: {issue.message}</p>
+                    <p className="mt-1 text-xs opacity-80">Sections: {issue.sections.join(', ')}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button onClick={() => setQualityGateOpen(false)}>Close</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={actualCareReviewOpen} onOpenChange={setActualCareReviewOpen}>
+            <DialogContent className="max-h-[85vh] w-full max-w-2xl overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Documented actual care</DialogTitle>
+                <DialogDescription>
+                  Chapter 4 can only report care, discharge preparation, and visits that you have documented. Missing items will remain missing rather than being invented.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                {[
+                  ['4.1 · Actual nursing care', Object.entries(studyFacts.implementation.fields).map(([key, value]) => `${key}: ${value}`).join('\n')],
+                  ['4.1–4.2 · Recorded notes', studyFacts.implementation.notes],
+                  ['4.3 · Home visits', studyFacts.implementation.homeVisitRows.map((row) => row.join(' | ')).join('\n')],
+                ].map(([heading, content]) => (
+                  <div key={heading} className="rounded-lg border p-3">
+                    <p className="text-sm font-semibold">{heading}</p>
+                    <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+                      {content || 'No documented data yet.'}
+                    </p>
+                  </div>
+                ))}
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setActualCareReviewOpen(false)}>Close</Button>
+                  <Button
+                    disabled={!studyFacts.implementation.notes && Object.keys(studyFacts.implementation.fields).length === 0 && studyFacts.implementation.homeVisitRows.length === 0}
+                    onClick={() => {
+                      setActualCareReviewOpen(false);
+                      void draftChapter();
+                    }}
+                  >
+                    <Sparkles className="size-3.5" /> Draft from documented care
+                  </Button>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
 

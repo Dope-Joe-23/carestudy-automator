@@ -323,6 +323,8 @@ SECTIONS = {
                "e.g. Patient will be discharged with no respiratory distress by...", "textarea"),
             _f("shortTerm", "Short-term objectives",
                "e.g. Patient will maintain SpO₂ ≥ 95% within 24 hours of oxygen therapy...", "textarea"),
+                _f("outcomeCriteria", "Outcome criteria",
+                    "e.g. Patient verbalises comfortable breathing and SpO₂ remains at or above the target", "textarea"),
             _f("familyObjectives", "Family objectives",
                "e.g. Family will demonstrate understanding of the disease and support care", "textarea"),
         ],
@@ -333,8 +335,9 @@ SECTIONS = {
         "fields": [],
         "rows": {
             "title": "Care plan entries",
-            "columns": ["Nursing diagnosis", "Goal / outcome", "Nursing interventions",
-                        "Rationale", "Evaluation"],
+            "columns": ["Date / time — diagnosis", "Nursing diagnosis", "Objectives / outcome criteria",
+                        "Nursing orders", "Nursing interventions", "Date / time — evaluation",
+                        "Evaluation", "Rationale"],
             "slots": 3,
         },
     },
@@ -352,6 +355,25 @@ SECTIONS = {
         ],
         "rows": None,
     },
+    "4.2 Preparation of Patient and Family for Discharge and Rehabilitation": {
+        "blurb": "How the patient and family were prepared to go home and continue care.",
+        "fields": [
+            _f("dischargeEducation", "Discharge health education given", "e.g. Disease education, danger signs, medicines, and review date", "textarea"),
+            _f("longTermNeeds", "Long-term needs & responsibilities", "e.g. Follow-up, rehabilitation, nutrition, and medication responsibilities", "textarea"),
+            _f("communityResources", "Community resources & referrals", "e.g. Community health nurse, clinic referral, or home-visit support", "textarea"),
+            _f("dischargeProcess", "The discharge process", "e.g. How the patient and family were prepared and involved in handover", "textarea"),
+        ],
+        "rows": None,
+    },
+    "4.3 Follow-up / Home Visit / Continuity of Care": {
+        "blurb": "Pre-discharge and post-discharge visits that continue care at home.",
+        "fields": [],
+        "rows": {
+            "title": "Home visits",
+            "columns": ["Date / visit", "Objectives", "Assessment & findings", "Health education given", "Outcome / continuity"],
+            "slots": 3,
+        },
+    },
     "5.1 Statement of Evaluation": {
         "blurb": "Evaluate each goal — fully met, partially met, or not met.",
         "fields": [
@@ -365,6 +387,27 @@ SECTIONS = {
             "columns": ["Nursing diagnosis", "Outcome"],
             "slots": 3,
         },
+    },
+    "5.2 Amendment of Nursing Care for Partially Met or Unmet Outcome Criteria": {
+        "blurb": "What was changed when an outcome was partially met or not met.",
+        "fields": [
+            _f("failedOutcomes", "Outcomes partially met or not met", "e.g. Goal partially met — the patient remained short of breath after 48 hours", "textarea"),
+            _f("amendment", "How the care was amended", "e.g. Additional intervention, revised target, or extended evaluation period", "textarea"),
+        ],
+        "rows": {
+            "title": "Amended care plan",
+            "columns": ["Nursing diagnosis", "Amendment made", "Reason", "Result"],
+            "slots": 3,
+        },
+    },
+    "5.3 Termination of Care": {
+        "blurb": "How the nurse-patient interaction ended and how continuity was handed over.",
+        "fields": [
+            _f("terminationProcess", "How care was terminated", "e.g. Care was gradually withdrawn after recovery and the final home visit", "textarea"),
+            _f("patientInvolvement", "Involvement & information of patient and family", "e.g. Family was taught self-care and informed ahead of termination", "textarea"),
+            _f("handover", "Resources & facilities for further treatment", "e.g. Handover to the community health nurse and outpatient clinic", "textarea"),
+        ],
+        "rows": None,
     },
     "6.1 Summary": {
         "blurb": "A concise recap of the whole study.",
@@ -414,9 +457,13 @@ CHAPTERS = [
     ]),
     ("Implementation", [
         "4.1 Summary of the Actual Nursing Care",
+        "4.2 Preparation of Patient and Family for Discharge and Rehabilitation",
+        "4.3 Follow-up / Home Visit / Continuity of Care",
     ]),
     ("Evaluation", [
         "5.1 Statement of Evaluation",
+        "5.2 Amendment of Nursing Care for Partially Met or Unmet Outcome Criteria",
+        "5.3 Termination of Care",
     ]),
     ("Summary and Conclusion", [
         "6.1 Summary",
@@ -473,10 +520,16 @@ _SECTION_CLASSIFICATION: dict = {
     # Chapter 3 — Planning
     "objectives for patient/family care": "allows_inference",
     "nursing care plan": "allows_inference",
-    # Chapter 4 — Implementation
-    "summary of the actual nursing care": "allows_inference",
-    # Chapter 5 — Evaluation
-    "statement of evaluation": "allows_inference",
+    # Chapter 4 — Implementation: report only care explicitly documented by
+    # the student; the drafting engine must not turn a proposed plan into an
+    # event that happened.
+    "summary of the actual nursing care": "data_only",
+    "preparation of patient and family for discharge and rehabilitation": "data_only",
+    "follow-up / home visit / continuity of care": "data_only",
+    # Chapter 5 — Evaluation: report only documented responses and outcomes.
+    "statement of evaluation": "data_only",
+    "amendment of nursing care": "data_only",
+    "termination of care": "data_only",
     # Chapter 6 — Summary and Conclusion
     "summary": "allows_inference",
     "conclusion": "allows_inference",
@@ -575,9 +628,13 @@ WORD_COUNT_RANGES: dict = {
     # Chapter 4 — Implementation (inference-allowed)
     # 4.1 Summary of the Actual Nursing Care: observed 2–271 words (4 samples)
     "summary of the actual nursing care": (100, 400),
+    "preparation of patient and family for discharge and rehabilitation": (150, 500),
+    "follow-up / home visit / continuity of care": (150, 500),
     # Chapter 5 — Evaluation (inference-allowed)
     # 5.1 Statement of Evaluation: observed 254 words (1 sample)
     "statement of evaluation": (200, 400),
+    "amendment of nursing care": (150, 400),
+    "termination of care": (150, 400),
     # Chapter 6 — Summary and Conclusion (inference-allowed)
     # 6.1 Summary: observed 72 words (1 sample)
     "summary": (100, 300),

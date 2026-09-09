@@ -166,6 +166,17 @@ FORMAT_TABLE = (
     "You may begin with a single brief introductory sentence above the table."
 )
 
+FORMAT_ANALYSIS_LIST = (
+    "FORMAT (Chapter 2 analysis list): Output this section as clearly separated "
+    "bullet lists, never as flowing narrative paragraphs. Use bold labels for "
+    "the fields when more than one list is present. Section 2.3 must list actual "
+    "problems, potential problems, and priority in bullets. Section 2.4 must "
+    "list general and specific patient/family strengths in bullets. Section 2.5 "
+    "must list nursing diagnoses and their priority in bullets. Keep each problem, "
+    "strength, or diagnosis as a separate bullet. Do not merge the items into a "
+    "prose paragraph, even when the source notes are written as prose."
+)
+
 CHAPTER_INTRO_FORMAT = (
     "FORMAT (Chapter Introduction): Write ONE short paragraph (3-5 sentences) "
     "that opens this chapter of the patient/family care study, in the formal "
@@ -356,6 +367,19 @@ def is_admission_section(heading: str) -> bool:
     return "admission" in normalized and "patient" in normalized
 
 
+def is_analysis_list_section(heading: str) -> bool:
+    """Whether a Chapter 2 problems/strengths/diagnoses section is list-only."""
+    normalized = heading.strip().lower()
+    return (
+        normalized.startswith("2.3")
+        or normalized.startswith("2.4")
+        or normalized.startswith("2.5")
+        or "health problems identified" in normalized
+        or "patient/family strengths" in normalized
+        or "nursing diagnoses" in normalized
+    )
+
+
 def build_prompt(
     heading: str,
     patient_notes: str,
@@ -411,6 +435,8 @@ def build_prompt(
         format_instruction = CHAPTER_INTRO_FORMAT
     elif tabular:
         format_instruction = FORMAT_TABLE
+    elif is_analysis_list_section(heading):
+        format_instruction = FORMAT_ANALYSIS_LIST
     elif is_admission_section(heading):
         format_instruction = ADMISSION_FORMAT
     else:

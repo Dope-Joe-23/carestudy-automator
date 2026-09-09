@@ -849,7 +849,9 @@ def format_nanda_diagnosis_bullets(diagnoses: List[Dict], bullet_char: str = "-"
         parts = [diag["diagnosis"]]
         if diag.get("related_to"):
             parts.append(f"related to {diag['related_to']}")
-        if diag.get("as_evidenced_by"):
+        # Risk diagnoses describe susceptibility, not an existing problem, so
+        # they must not carry an "as evidenced by" clause.
+        if diag.get("as_evidenced_by") and not diag["diagnosis"].lower().startswith("risk for"):
             parts.append(f"as evidenced by {diag['as_evidenced_by']}")
         lines.append(f"{bullet_char} {' '.join(parts)}.")
 
@@ -867,6 +869,12 @@ def extract_problems_from_chapter1(chapter1_data: Dict[str, str]) -> List[str]:
       - Patient's concept of illness (1.9 emotionalResponse → anxiety/etc.)
     """
     problems: List[str] = []
+    clinical_notes = chapter1_data.get("clinicalNotes", "")
+    if clinical_notes:
+        problems.extend(_extract_items_from_text(clinical_notes))
+        emotional_problem = _extract_emotional_problem(clinical_notes)
+        if emotional_problem:
+            problems.append(emotional_problem)
 
     # From presenting symptoms
     presenting = chapter1_data.get("presentingSymptoms", "")
