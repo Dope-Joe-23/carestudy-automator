@@ -56,6 +56,12 @@ export type VivaBankResult = {
 
 export type StudyAssistantResult = { answer: string; edits?: { sectionId: string; draft?: string; notes?: string; data?: Record<string, string> }[] };
 
+export type Chapter2Recommendations = {
+  section_23: { actualProblems: string; potentialProblems: string; problemPriority: string };
+  section_24: { generalStrengths: string; specificStrengths: string };
+  section_25: { nursingDiagnoses: string; diagnosisPriority: string };
+};
+
 export type ImportedSection = {
   heading: string;
   content: string;
@@ -189,6 +195,35 @@ class DraftWorker {
       });
       try {
         child.stdin.write(JSON.stringify({ id, op: "study_assistant", study, message }) + "\n");
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Recommend Chapter 2 problems, strengths, and diagnoses from Chapter 1. */
+  async recommendChapter2(
+    chapter1Fields: Record<string, string>,
+    condition: string,
+  ): Promise<Chapter2Recommendations> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<Chapter2Recommendations>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("Chapter 2 recommendations timed out. Please try again."));
+      }, REQUEST_TIMEOUT_MS);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as unknown as Chapter2Recommendations),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(JSON.stringify({ id, op: "chapter2_recommendations", chapter1Fields, condition }) + "\n");
       } catch (writeErr) {
         this.pending.delete(id);
         clearTimeout(timer);

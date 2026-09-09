@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { requireAdmin } from "../lib/adminAuth";
 import adminRouter from "./admin";
 import adminDashboardRouter from "./adminDashboard";
+import chapter2Router from "./chapter2";
 import draftRouter from "./draft";
 import exportRouter from "./export";
 import healthRouter from "./health";
@@ -33,6 +34,7 @@ router.use(importStudyRouter);
 // rejected with 401.
 router.use(requireAdmin);
 router.use(draftRouter);
+router.use(chapter2Router);
 router.use(exportRouter);
 router.use(studiesRouter);
 router.use(studyAssistantRouter);

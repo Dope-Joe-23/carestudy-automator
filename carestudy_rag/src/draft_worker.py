@@ -33,6 +33,7 @@ from viva import generate_viva_bank  # noqa: E402
 from reference_chunker import chunk_reference_text, ref_chunks_to_dicts  # noqa: E402
 from retrieval import SimpleIndex  # noqa: E402
 from import_worker import import_study, import_study_with_fields  # noqa: E402
+from nanda_mapper import build_chapter2_analysis_from_chapter1  # noqa: E402
 from import_worker import import_study, import_study_with_fields  # noqa: E402
 
 # Per-study retrieval indexes, keyed by study id and cached in memory so each
@@ -461,6 +462,18 @@ def main() -> None:
                     continue
                 result = assist_with_study(study, message.strip())
                 emit({"id": req.get("id"), "answer": result["message"], "edits": result["edits"]})
+                continue
+            if op == "chapter2_recommendations":
+                chapter1_fields = req.get("chapter1Fields") or {}
+                condition = req.get("condition", "")
+                if not isinstance(chapter1_fields, dict) or not isinstance(condition, str):
+                    emit({"id": req.get("id"), "error": "chapter2_recommendations requires chapter1Fields and condition"})
+                    continue
+                result = build_chapter2_analysis_from_chapter1(
+                    {str(key): str(value) for key, value in chapter1_fields.items()},
+                    condition.strip(),
+                )
+                emit({"id": req.get("id"), "recommendations": result})
                 continue
 
             study_id = req.get("studyId")

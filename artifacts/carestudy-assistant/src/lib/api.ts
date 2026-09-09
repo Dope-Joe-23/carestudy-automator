@@ -164,6 +164,32 @@ export async function requestStudyAssistant(
   }
 }
 
+export type Chapter2Recommendations = {
+  section_23: { actualProblems: string; potentialProblems: string; problemPriority: string };
+  section_24: { generalStrengths: string; specificStrengths: string };
+  section_25: { nursingDiagnoses: string; diagnosisPriority: string };
+};
+
+/** Recommend Chapter 2 analysis from the collected Chapter 1 fields. */
+export async function requestChapter2Recommendations(
+  chapter1Fields: Record<string, string>,
+  condition: string,
+): Promise<Chapter2Recommendations> {
+  const response = await fetch(`${API_URL}/chapter2/recommendations`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ chapter1Fields, condition }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
+    throw new Error(body?.detail ?? body?.error ?? `Recommendation request failed (${response.status})`);
+  }
+  const data = (await response.json()) as { recommendations?: Chapter2Recommendations };
+  if (!data.recommendations) throw new Error("The recommendation engine returned no results.");
+  return data.recommendations;
+}
+
 export type ImportedSection = { heading: string; content: string };
 export type ImportedChapter = { name: string; sections: ImportedSection[] };
 export type ImportedTitle = {

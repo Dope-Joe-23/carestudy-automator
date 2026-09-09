@@ -111,6 +111,8 @@ import {
   listStudyFiles,
   requestDraft,
   requestStudyAssistant,
+  requestChapter2Recommendations,
+  type Chapter2Recommendations,
   updateLibrarySource,
   updateStudy,
   uploadStudyFile,
@@ -2165,6 +2167,9 @@ function Home() {
   // Chapter dialog: the intro editor + whole-chapter drafting, reached from
   // the compact Intro / Draft all actions in the content header row.
   const [chapterOpen, setChapterOpen] = useState(false);
+  const [chapter2Recommendations, setChapter2Recommendations] = useState<Chapter2Recommendations | null>(null);
+  const [chapter2RecommendationOpen, setChapter2RecommendationOpen] = useState(false);
+  const [chapter2RecommendationBusy, setChapter2RecommendationBusy] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [showPreliminaryPages, setShowPreliminaryPages] = useState(false);
   const [exportMeta, setExportMeta] = useState({
@@ -2710,6 +2715,7 @@ function Home() {
   const navigableChapterIndices = chapters
     .map((chapter, index) => (chapter.isFrontMatter ? -1 : index))
     .filter((index) => index >= 0);
+  const isChapter2 = currentChapter.name === 'Analysis of Data';
 
   // The front-matter chapter (preface/acknowledgement/introduction) is
   // unnumbered in the document; the real chapters keep their I–VI numbering.
@@ -2832,6 +2838,72 @@ function Home() {
   };
 
   const selectChapter = (index: number) => jumpTo(index, 0);
+
+  const recommendChapter2 = async () => {
+    if (chapter2RecommendationBusy) return;
+    const assessment = chapters.find((chapter) => chapter.name === 'Assessment');
+    if (!assessment) {
+      toast.error('Assessment chapter is unavailable.');
+      return;
+    }
+    const chapter1Fields = Object.fromEntries(
+      assessment.sections.flatMap((section) =>
+        Object.entries(section.data).map(([key, value]) => [key, value]),
+      ),
+    );
+    if (Object.values(chapter1Fields).every((value) => !value.trim())) {
+      toast.error('Collect Chapter 1 data first.', {
+        description: 'Recommendations are based on the assessment, history, and admission findings.',
+      });
+      return;
+    }
+    setChapter2RecommendationBusy(true);
+    try {
+      const condition =
+        chapter1Fields.diagnosis?.trim() || exportMeta.diagnosis.trim();
+      const result = await requestChapter2Recommendations(chapter1Fields, condition);
+      setChapter2Recommendations(result);
+      setChapter2RecommendationOpen(true);
+    } catch (error) {
+      toast.error('Could not generate Chapter 2 recommendations', {
+        description: error instanceof Error ? error.message : 'Recommendation engine unavailable.',
+      });
+    } finally {
+      setChapter2RecommendationBusy(false);
+    }
+  };
+
+  const applyChapter2Recommendations = () => {
+    if (!chapter2Recommendations) return;
+    const values: Record<string, Record<string, string>> = {
+      '2.3': {
+        healthProblems: chapter2Recommendations.section_23.actualProblems,
+        potentialProblems: chapter2Recommendations.section_23.potentialProblems,
+        problemPriority: chapter2Recommendations.section_23.problemPriority,
+      },
+      '2.4': {
+        generalStrengths: chapter2Recommendations.section_24.generalStrengths,
+        strengths: chapter2Recommendations.section_24.specificStrengths,
+      },
+      '2.5': {
+        nursingDiagnoses: chapter2Recommendations.section_25.nursingDiagnoses,
+        diagnosisPriority: chapter2Recommendations.section_25.diagnosisPriority,
+      },
+    };
+    setChapters((previous) => previous.map((chapter) => ({
+      ...chapter,
+      sections: chapter.sections.map((section) =>
+        values[section.id]
+          ? { ...section, data: { ...section.data, ...values[section.id] }, status: computeStatus({ ...section, data: { ...section.data, ...values[section.id] } }) }
+          : section,
+      ),
+    })));
+    setDirty(true);
+    setChapter2RecommendationOpen(false);
+    toast.success('Chapter 2 recommendations applied', {
+      description: 'Review the suggested problems, strengths, and diagnoses before drafting.',
+    });
+  };
 
   const goPrevious = () => {
     setDraftError(null);
@@ -4491,6 +4563,19 @@ function Home() {
               </span>
             </p>
             <div className="flex shrink-0 items-center gap-2">
+              {isChapter2 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-primary"
+                  onClick={() => void recommendChapter2()}
+                  disabled={chapter2RecommendationBusy}
+                  title="Recommend Chapter 2 problems, strengths, and diagnoses from Chapter 1"
+                >
+                  <Sparkles className={cn("size-3.5", chapter2RecommendationBusy && "animate-pulse")} />
+                  {chapter2RecommendationBusy ? 'Analysing…' : 'Recommend from Ch 1'}
+                </Button>
+              )}
               <Progress value={overallCompletion} className="h-1.5 w-16" aria-hidden="true" />
               <span className="tabular text-xs font-semibold text-primary">
                 {overallCompletion}%
@@ -4758,6 +4843,43 @@ function Home() {
                   </div>
                 )}
               </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={chapter2RecommendationOpen} onOpenChange={setChapter2RecommendationOpen}>
+            <DialogContent className="max-h-[85vh] w-full max-w-3xl overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-primary" /> Chapter 2 recommendations
+                </DialogTitle>
+                <DialogDescription>
+                  These suggestions were derived from the collected Chapter 1 assessment. Review them before applying them to sections 2.3, 2.4, and 2.5.
+                </DialogDescription>
+              </DialogHeader>
+              {chapter2Recommendations && (
+                <div className="space-y-3">
+                  {([
+                    ['2.3 · Health problems', chapter2Recommendations.section_23],
+                    ['2.4 · Patient/family strengths', chapter2Recommendations.section_24],
+                    ['2.5 · Nursing diagnoses', chapter2Recommendations.section_25],
+                  ] as [string, Record<string, string>][]).map(([heading, section]) => (
+                    <div key={heading} className="rounded-lg border p-3">
+                      <h3 className="text-sm font-semibold">{heading}</h3>
+                      <pre className="mt-2 whitespace-pre-wrap font-sans text-xs leading-relaxed text-muted-foreground">
+                        {Object.values(section as Record<string, string>).join('\n\n')}
+                      </pre>
+                    </div>
+                  ))}
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" onClick={() => setChapter2RecommendationOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={applyChapter2Recommendations}>
+                      Apply to Chapter 2
+                    </Button>
+                  </div>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
 
