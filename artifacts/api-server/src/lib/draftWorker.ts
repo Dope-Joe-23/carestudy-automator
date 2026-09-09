@@ -101,8 +101,8 @@ export type ImportStudyResult = {
   chapters: ImportedChapter[];
 };
 
-/** A worker response is a draft, an ingest result, a viva bank, an editorial answer, or an import. */
-type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | ImportStudyResult;
+/** A worker response is a draft, an ingest result, a viva bank, an editorial answer, an import, or chapter 2 recommendations. */
+type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | ImportStudyResult | Chapter2Recommendations;
 
 interface PendingRequest {
   /** The worker instance this request was written to. */
@@ -514,6 +514,7 @@ class DraftWorker {
       answer?: string;
       edits?: { sectionId: string; draft: string }[];
       imported?: ImportStudyResult;
+      recommendations?: Chapter2Recommendations;
       error?: string;
     };
     try {
@@ -545,6 +546,15 @@ class DraftWorker {
       pending.resolve({ answer: msg.answer, edits: Array.isArray(msg.edits) ? msg.edits : [] });
     } else if (msg.imported && Array.isArray(msg.imported.chapters)) {
       pending.resolve({ title: msg.imported.title, chapters: msg.imported.chapters });
+    } else if (msg.recommendations && typeof msg.recommendations === "object") {
+      // Resolve the sections object itself — callers type it directly as
+      // Chapter2Recommendations (same unwrapping as the bank branch above).
+      pending.resolve(msg.recommendations);
+    } else if (Array.isArray(msg.files)) {
+      pending.resolve({
+        files: msg.files,
+        chunks: typeof msg.chunks === "number" ? msg.chunks : 0,
+      });
     } else if (msg.bank && Array.isArray(msg.bank.questions)) {
       pending.resolve({ questions: msg.bank.questions });
     } else {
