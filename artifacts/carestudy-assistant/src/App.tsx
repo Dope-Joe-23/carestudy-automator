@@ -2141,7 +2141,7 @@ function Home() {
   const sidebarAdminName = getDisplayName(admin);
   const sidebarAdminRole = getRoleLabel(admin);
   const [chapters, setChapters] = useState(makeChapters);
-  const [activeChapter, setActiveChapter] = useState(0);
+  const [activeChapter, setActiveChapter] = useState(1);
   const [activeSection, setActiveSection] = useState(0);
   const [isDrafting, setIsDrafting] = useState(false);
   const [isIntroDrafting, setIsIntroDrafting] = useState(false);
@@ -2707,6 +2707,9 @@ function Home() {
   const currentChapter = chapters[activeChapter];
   const currentSection = currentChapter.sections[activeSection];
   const allSections = useMemo(() => chapters.flatMap((chapter) => chapter.sections), [chapters]);
+  const navigableChapterIndices = chapters
+    .map((chapter, index) => (chapter.isFrontMatter ? -1 : index))
+    .filter((index) => index >= 0);
 
   // The front-matter chapter (preface/acknowledgement/introduction) is
   // unnumbered in the document; the real chapters keep their I–VI numbering.
@@ -2834,9 +2837,12 @@ function Home() {
     setDraftError(null);
     if (activeSection > 0) {
       setActiveSection(activeSection - 1);
-    } else if (activeChapter > 0) {
-      setActiveChapter(activeChapter - 1);
-      setActiveSection(chapters[activeChapter - 1].sections.length - 1);
+    } else {
+      const currentPosition = navigableChapterIndices.indexOf(activeChapter);
+      const previousChapterIndex = navigableChapterIndices[currentPosition - 1];
+      if (previousChapterIndex === undefined) return;
+      setActiveChapter(previousChapterIndex);
+      setActiveSection(chapters[previousChapterIndex].sections.length - 1);
     }
   };
 
@@ -2844,8 +2850,11 @@ function Home() {
     setDraftError(null);
     if (activeSection < currentChapter.sections.length - 1) {
       setActiveSection(activeSection + 1);
-    } else if (activeChapter < chapters.length - 1) {
-      setActiveChapter(activeChapter + 1);
+    } else {
+      const currentPosition = navigableChapterIndices.indexOf(activeChapter);
+      const nextChapterIndex = navigableChapterIndices[currentPosition + 1];
+      if (nextChapterIndex === undefined) return;
+      setActiveChapter(nextChapterIndex);
       setActiveSection(0);
     }
   };
@@ -2938,7 +2947,7 @@ function Home() {
     setSectionTab('draft');
     setCollectOpen(false);
     setChapters(makeChapters());
-    setActiveChapter(0);
+    setActiveChapter(1);
     setActiveSection(0);
     setVerifyBySection({});
     setVerifyAll(null);
@@ -3564,7 +3573,7 @@ function Home() {
     setCurrentStudyName(null);
     // Files are study-scoped; the caller refreshes them when a study id exists.
     setStudyFiles([]);
-    setActiveChapter(0);
+    setActiveChapter(1);
     setActiveSection(0);
     setCopied(false);
     setDraftError(null);
@@ -3953,7 +3962,7 @@ function Home() {
     setCurrentStudyName(name);
     setStudyFiles([]);
     setUploadError(null);
-    setActiveChapter(0);
+    setActiveChapter(1);
     setActiveSection(0);
     setCopied(false);
     setDraftError(null);
@@ -3984,10 +3993,20 @@ function Home() {
         event.preventDefault();
         setCommandOpen((open) => !open);
       }
+      // Chapter navigation: Alt + Arrow Left/Right
+      if (event.altKey && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          goPrevious();
+        } else if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          goNext();
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [goPrevious, goNext]);
 
   // Resume the last-opened study after a refresh. Silently falls back to a
   // blank workspace when the server is unreachable or the study was deleted.
@@ -4082,9 +4101,9 @@ function Home() {
     !isFrontMatterChapter(activeChapter) && !currentChapter.intro.trim();
   const canDraftChapter = chapterReadyCount > 0 || chapterIntroPending;
   const currentRequiredMissing = missingRequiredFields(currentSection);
-  const atFirst = activeChapter === 0 && activeSection === 0;
+  const atFirst = activeChapter === navigableChapterIndices[0] && activeSection === 0;
   const atLast =
-    activeChapter === chapters.length - 1 &&
+    activeChapter === navigableChapterIndices[navigableChapterIndices.length - 1] &&
     activeSection === currentChapter.sections.length - 1;
 
   // Live save status — shared by the main header and the Preview/Export
@@ -4144,7 +4163,8 @@ function Home() {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub>
-                      {chapters.map((chapter, index) => {
+                      {navigableChapterIndices.map((index) => {
+                        const chapter = chapters[index];
                         const Icon = CHAPTER_ICONS[index] ?? FileText;
                         const completion = chapterCompletion(index);
                         const missingRequired = chapterMissingRequired(index);
@@ -4510,6 +4530,48 @@ function Home() {
                   </>
                 )}
               </Button>
+            </div>
+
+            {/* Chapter navigation buttons */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5"
+                onClick={goPrevious}
+                disabled={activeChapter === 0 && activeSection === 0}
+                title="Previous section (Alt+Arrow Left)"
+              >
+                <ChevronLeft className="size-3.5" />
+                <span className="hidden sm:inline">Prev</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5"
+                onClick={goNext}
+                disabled={activeChapter === chapters.length - 1 && activeSection === currentChapter.sections.length - 1}
+                title="Next section (Alt+Arrow Right)"
+              >
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight className="size-3.5" />
+              </Button>
+              <div className="h-5 w-px bg-border mx-1" />
+              {navigableChapterIndices.map((chapterIndex) => {
+                const chapterNumber = chapterOrdinal(chapterIndex) + 1;
+                return (
+                  <Button
+                    key={chapterIndex}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5"
+                    onClick={() => selectChapter(chapterIndex)}
+                    title={`Go to Chapter ${chapterNumber}`}
+                  >
+                    <span className="text-[11px]">Ch {chapterNumber}</span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
           {isChapterDrafting && chapterDraftProgress && !chapterOpen && (
@@ -5409,7 +5471,9 @@ function Home() {
         <CommandInput placeholder="Search chapters, sections, actions…" />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
-          {chapters.map((chapter, chapterIndex) => (
+          {navigableChapterIndices.map((chapterIndex) => {
+            const chapter = chapters[chapterIndex];
+            return (
             <CommandGroup
               key={chapter.name}
               heading={
@@ -5433,7 +5497,8 @@ function Home() {
                 </CommandItem>
               ))}
             </CommandGroup>
-          ))}
+            );
+          })}
           <CommandGroup heading="Actions">
             <CommandItem
               value="draft current section"
@@ -5753,11 +5818,13 @@ function Home() {
             ))}
           </div>
           <div className="space-y-4">
-            {chapters.map((chapter, index) => (
+            {navigableChapterIndices.map((index) => {
+              const chapter = chapters[index];
+              return (
               <div key={chapter.name}>
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-medium">
-                    Chapter {index + 1} · {chapter.name}
+                    Chapter {chapterOrdinal(index) + 1} · {chapter.name}
                   </span>
                   <span className="tabular text-muted-foreground">
                     {chapterCompletion(index)}%
@@ -5765,7 +5832,8 @@ function Home() {
                 </div>
                 <Progress value={chapterCompletion(index)} className="mt-1.5 h-1" />
               </div>
-            ))}
+              );
+            })}
           </div>
         </DialogContent>
       </Dialog>

@@ -337,6 +337,9 @@ def _extract_labeled_fields(text: str, section_id: str) -> dict[str, str]:
         "admissionDateTime": ["date of admission", "admission date", "date and time of admission"],
         "diagnosis": ["diagnosis", "admitting diagnosis"],
         "informant": ["informant"],
+        "familyHistoryPresent": ["known history", "family history", "hereditary or chronic disease"],
+        "familyConditions": ["family conditions", "hereditary conditions", "chronic conditions", "conditions found in the family"],
+        "familySurgery": ["family surgery", "family surgical history", "significant family surgical history"],
         "pseudonym": ["pseudonym"],
         "chiefComplaint": ["chief complaint", "presenting complaint"],
         "presentingSymptoms": ["presenting symptoms", "symptoms"],
@@ -349,10 +352,11 @@ def _extract_labeled_fields(text: str, section_id: str) -> dict[str, str]:
         for field in fields
         for alias in aliases.get(field, [re.sub(r"(?<!^)([A-Z])", r" \1", field)])
     }
-    labels = "|".join(re.escape(label) for label in sorted(label_to_field, key=len, reverse=True))
-    if not labels:
+    if not label_to_field:
         return result
-    pattern = re.compile(rf"^\s*({labels})\s*[:\-|]\s*(.+?)\s*$", re.IGNORECASE)
+    # Match the source label first, then normalise it for lookup. This keeps
+    # plural labels such as "Family Conditions" matchable after normalisation.
+    pattern = re.compile(r"^\s*([^:|\-]+?)\s*[:\-]\s*(.+?)\s*$", re.IGNORECASE)
     for line in text.splitlines():
         match = pattern.match(line)
         if match:
@@ -399,7 +403,7 @@ def _extract_narrative_fields(text: str, section_id: str) -> dict[str, str]:
 
     if section_id == "1.2":
         result = {}
-        if re.search(r"\bno\s+known\s+history\b", text, re.IGNORECASE):
+        if re.search(r"\bno\s+known\s+history\b|\bknown\s+history\s*[:\-]\s*no\b", text, re.IGNORECASE):
             result["familyHistoryPresent"] = "No"
         elif re.search(r"\bknown\s+history\b", text, re.IGNORECASE):
             result["familyHistoryPresent"] = "Yes"

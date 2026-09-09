@@ -82,6 +82,7 @@ function strOrNull(value: unknown): string | null {
 
 const FILE_KINDS: OrderFileKind[] = ["guidelines", "clinical", "reference", "correction"];
 const MAX_ORDER_FILES = 10;
+const MAX_CORRECTION_WORDS = 7000;
 
 /** Decode the client's base64 payload; null when it isn't valid base64. */
 function decodeBase64(raw: unknown): Buffer | null {
@@ -248,9 +249,11 @@ studentRouter.post(
     const college = str(req.body?.college);
     const program = str(req.body?.program);
     const notes = strOrNull(req.body?.notes);
-    const correctionScope = req.body?.correctionScope === "chapter" || req.body?.correctionScope === "full"
-      ? req.body.correctionScope
-      : null;
+    if (req.body?.correctionScope && req.body.correctionScope !== "chapter") {
+      res.status(400).json({ error: "Corrections are limited to one chapter at a time." });
+      return;
+    }
+    const correctionScope = req.body?.correctionScope === "chapter" ? "chapter" : null;
 
     if (!title || title.length < 4) {
       res.status(400).json({ error: "Please give your project a title." });
@@ -300,18 +303,44 @@ studentRouter.post(
       return;
     }
     let correctionText: string | null = null;
+    let correctionImportCoverage: {
+      expected: string[];
+      detected: string[];
+      missing: string[];
+      complete: boolean;
+    } | null = null;
     if (correctionScope) {
       const correction = staged.find((file) => file.kind === "correction");
       if (correction) {
         const temporary = await storeOrderUpload(0, correction.content, correction.filename);
         try {
-          correctionText = (await draftWorker.extract(temporary.storedPath)).text.trim() || null;
+          // Extract text from the uploaded document
+          const extracted = await draftWorker.extract(temporary.storedPath);
+          correctionText = extracted.text.trim() || null;
+          if (!correctionText) {
+            res.status(422).json({ error: "The uploaded document has no readable text. Please upload an editable text document or a text-based PDF." });
+            return;
+          }
+
+          const correctionWordCount = correctionText.split(/\s+/).filter(Boolean).length;
+          if (correctionWordCount > MAX_CORRECTION_WORDS) {
+            res.status(413).json({
+              error: `A correction upload must contain one chapter of no more than ${MAX_CORRECTION_WORDS.toLocaleString()} words. This file contains about ${correctionWordCount.toLocaleString()} words.`,
+            });
+            return;
+          }
+
+          if (correctionText.length > 100) {
+            try {
+              const imported = await draftWorker.importStudyWithFields(correctionText);
+              correctionImportCoverage = imported.coverage ?? null;
+            } catch (err) {
+              req.log?.warn?.({ err }, "structured correction import failed");
+              // Continue without structured import - raw text will be used
+            }
+          }
         } finally {
           await removeOrderArtifacts(0);
-        }
-        if (!correctionText) {
-          res.status(422).json({ error: "The uploaded document has no readable text. Please upload an editable text document or a text-based PDF." });
-          return;
         }
       }
     }
@@ -966,7 +995,19 @@ studioRouter.post(
         chapters = importedChapters
           .filter((chapter) => Array.isArray(chapter.sections) && chapter.sections.length > 0)
           .map((chapter) => ({
-            name: chapter.name,
+            name: chapter.sections[0]?.sectionId?.startsWith("1.")
+              ? "Assessment"
+              : chapter.sections[0]?.sectionId?.startsWith("2.")
+                ? "Analysis of Data"
+                : chapter.sections[0]?.sectionId?.startsWith("3.")
+                  ? "Planning"
+                  : chapter.sections[0]?.sectionId?.startsWith("4.")
+                    ? "Implementation"
+                    : chapter.sections[0]?.sectionId?.startsWith("5.")
+                      ? "Evaluation"
+                      : chapter.sections[0]?.sectionId?.startsWith("6.")
+                        ? "Summary and Conclusion"
+                        : chapter.name,
             intro: "",
             introReferences: [],
             sections: chapter.sections
@@ -976,7 +1017,15 @@ studioRouter.post(
                 notes: "",
                 draft: typeof section.draft === "string" ? section.draft.trim() : "",
                 references: [],
-                data: section.fields && typeof section.fields === "object" ? section.fields : {},
+                data: section.fields && typeof section.fields === "object"
+                  ? Object.fromEntries(
+                      Object.entries(section.fields).flatMap(([key, value]) =>
+                        typeof value === "string" || typeof value === "number"
+                          ? [[key, String(value)]]
+                          : [],
+                      ),
+                    )
+                  : {},
                 rowData: [],
               })),
           }))
@@ -1026,7 +1075,14 @@ studioRouter.post(
       study.id,
       "The study was created from your order — your materials are attached and ready.",
     );
-    res.status(201).json({ study: { id: study.id }, produced: true, importCoverage });
+    res.status(201).json({
+      study: { id: study.id },
+      produced: true,
+      importCoverage,
+      correctionText: order.correctionText
+        ? { text: order.correctionText, hasDocuments: files.length > 0 }
+        : null,
+    });
   }),
 );
 

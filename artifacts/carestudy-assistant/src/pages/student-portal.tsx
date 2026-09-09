@@ -144,7 +144,7 @@ const FILE_KIND_HINTS: Record<studentApi.OrderFile["kind"] | "correction", strin
   reference:
     "Textbooks, fact sheets, formularies, or references.",
   correction:
-    "The chapter or full study to be corrected.",
+    "One chapter to be corrected. Upload only the chapter you want reviewed.",
 };
 
 function formatBytes(bytes: number): string {
@@ -485,7 +485,7 @@ function OrdersList() {
           <DialogHeader>
             <DialogTitle>Make a correction</DialogTitle>
             <DialogDescription>
-              Upload your prepared chapter or full study and describe the changes required.
+              Upload one prepared chapter and describe the changes required.
             </DialogDescription>
           </DialogHeader>
           <NewOrderPage correctionMode onClose={() => setCorrectionOpen(false)} />
@@ -643,7 +643,7 @@ function NewOrderPage({
   const [college, setCollege] = useState(student?.college ?? "");
   const [program, setProgram] = useState(student?.program ?? "");
   const [notes, setNotes] = useState("");
-  const [correctionScope, setCorrectionScope] = useState<"chapter" | "full" | null>(null);
+  const [correctionScope, setCorrectionScope] = useState<"chapter" | null>(null);
   const [correctionFile, setCorrectionFile] = useState<File | null>(null);
   const [filesByKind, setFilesByKind] = useState<Record<FileKind, File[]>>({
     guidelines: [],
@@ -723,11 +723,11 @@ function NewOrderPage({
             return;
           }
           if (correctionMode && !correctionScope) {
-            toast.error("Please choose whether you are correcting a chapter or the full study.");
+            toast.error("Please choose the chapter correction option.");
             return;
           }
           if (correctionMode && !correctionFile) {
-            toast.error("Please upload the chapter or full study to correct.");
+            toast.error("Please upload the chapter to correct.");
             return;
           }
           if (correctionMode && !notes.trim()) {
@@ -806,7 +806,7 @@ function NewOrderPage({
         {correctionMode && <Card className="border-primary/20 bg-primary/[0.025]">
           <CardHeader className="px-4 py-3">
             <CardTitle className="text-base">Request a correction</CardTitle>
-            <CardDescription>Upload a prepared chapter or the full study, then describe exactly what should change.</CardDescription>
+            <CardDescription>Upload one prepared chapter, then describe exactly what should change.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 px-4 pb-4">
             <div className="space-y-1.5">
@@ -820,18 +820,22 @@ function NewOrderPage({
                 required={Boolean(correctionScope)}
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {(["chapter", "full"] as const).map((scope) => (
-                <Button key={scope} type="button" size="sm" variant={correctionScope === scope ? "default" : "outline"} onClick={() => setCorrectionScope(correctionScope === scope ? null : scope)}>
-                  {scope === "chapter" ? "Correct a chapter" : "Correct the full study"}
-                </Button>
-              ))}
-            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant={correctionScope === "chapter" ? "default" : "outline"}
+              onClick={() => setCorrectionScope(correctionScope === "chapter" ? null : "chapter")}
+            >
+              Correct a chapter
+            </Button>
             {correctionScope && (
               <div className="space-y-2 rounded-lg border border-dashed p-4">
                 <Label htmlFor="correction-file" className="text-xs">{FILE_KIND_LABELS.correction}</Label>
                 <Input id="correction-file" type="file" accept=".pdf,.docx,.epub,.md,.markdown,.txt" onChange={(event) => setCorrectionFile(event.target.files?.[0] ?? null)} required />
                 {correctionFile && <p className="text-xs text-muted-foreground">{correctionFile.name} · {formatBytes(correctionFile.size)}</p>}
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  Keep the upload to one chapter, preferably no more than about 7,000 words (roughly 15 to 20 pages).
+                </p>
               </div>
             )}
           </CardContent>

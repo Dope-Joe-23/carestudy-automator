@@ -284,7 +284,7 @@ export function placeOrder(input: {
   college: string;
   program: string;
   notes?: string;
-  correctionScope?: "chapter" | "full";
+  correctionScope?: "chapter";
   files: OrderFileInput[];
 }): Promise<{ order: Order; files: OrderFile[] }> {
   return requestJson("/orders", {

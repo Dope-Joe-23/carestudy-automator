@@ -127,7 +127,7 @@ function OrderRow({ order }: { order: StudioOrder }) {
         missing: CANONICAL_SECTION_IDS.filter((id) => !uniqueDetected.includes(id)),
       };
     },
-    enabled: Boolean(order.producedStudyId) && !productionReport,
+    enabled: Boolean(order.correctionScope && order.producedStudyId) && !productionReport,
   });
 
   const extractionSummary = productionReport ?? existingCoverageQuery.data;
@@ -183,8 +183,8 @@ function OrderRow({ order }: { order: StudioOrder }) {
     navigate("/studio");
   };
 
-  // Turn the order into a studio study: create the study, attach every
-  // attached document as a clinical upload, and index it for drafting.
+  // Ordinary orders create a blank study workspace with their materials
+  // attached. Correction orders additionally extract the uploaded study.
   const produce = useMutation({
     mutationFn: async () => produceOrder(order.id),
     onSuccess: async (result) => {
@@ -255,7 +255,16 @@ function OrderRow({ order }: { order: StudioOrder }) {
               </div>
             ) : (
               <div className="flex flex-col gap-1.5">
-                <Button size="sm" onClick={() => produce.mutate()} disabled={produce.isPending}>
+                <Button
+                  size="sm"
+                  onClick={() => produce.mutate()}
+                  disabled={produce.isPending}
+                  title={
+                    order.correctionScope
+                      ? "Extract the uploaded study into the care study workspace"
+                      : "Create a study workspace from the order materials"
+                  }
+                >
                   {produce.isPending ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
@@ -265,7 +274,9 @@ function OrderRow({ order }: { order: StudioOrder }) {
                     ? order.correctionScope
                       ? 'Extracting document…'
                       : 'Creating study…'
-                    : 'Start producing'
+                    : order.correctionScope
+                      ? 'Extract uploaded study'
+                      : 'Create study workspace'
                   }
                 </Button>
                 {produce.isPending && order.correctionScope && (
