@@ -1349,56 +1349,63 @@ def _suggest_potential_problems(condition: str, actual_problems: List[str]) -> s
     if not condition and not actual_problems:
         return "(Assess for potential complications based on the patient's condition.)"
 
-    potentials = []
+    problems_text = str(actual_problems).lower() if actual_problems else ""
 
+    potentials: List[str] = []
     condition_lower = condition.lower()
+
+    def _add_potential(label: str, text: str) -> None:
+        # Dedupe on the diagnosis label so 'Risk for Deficit Fluid Volume' can
+        # only appear once no matter how many rules fire for it.
+        if label.lower() not in {p.split(" (due to")[0].split(" (if ")[0].strip().lower() for p in potentials}:
+            potentials.append(text)
 
     # Condition-based risks
     if "hypertension" in condition_lower or "high blood pressure" in condition_lower:
         if "dizziness" not in actual_problems and "dizziness" not in str(actual_problems).lower():
-            potentials.append("Risk for Falls (due to potential orthostatic hypotension from antihypertensive medications)")
-        if "headache" not in actual_problems and "stroke" not in str(actual_problems).lower():
-            potentials.append("Risk for Cerebrovascular Accident (stroke) due to uncontrolled blood pressure")
-        potentials.append("Risk for Decreased Cardiac Output (if blood pressure remains uncontrolled)")
-        potentials.append("Risk for Impaired Renal Function (hypertension is a risk factor for kidney damage)")
+            _add_potential("Risk for Falls", "Risk for Falls (due to potential orthostatic hypotension from antihypertensive medications)")
+        if "headache" not in actual_problems and "stroke" not in problems_text:
+            _add_potential("Risk for Cerebrovascular Accident", "Risk for Cerebrovascular Accident (stroke) due to uncontrolled blood pressure")
+        _add_potential("Risk for Decreased Cardiac Output", "Risk for Decreased Cardiac Output (if blood pressure remains uncontrolled)")
+        _add_potential("Risk for Impaired Renal Function", "Risk for Impaired Renal Function (hypertension is a risk factor for kidney damage)")
 
     if "diabetes" in condition_lower or "diabetic" in condition_lower:
-        potentials.append("Risk for Hypoglycemia (related to medication and dietary management)")
-        potentials.append("Risk for Impaired Skin Integrity (due to decreased wound healing)")
-        potentials.append("Risk for Infection (diabetes increases infection risk)")
+        _add_potential("Risk for Hypoglycemia", "Risk for Hypoglycemia (related to medication and dietary management)")
+        _add_potential("Risk for Impaired Skin Integrity", "Risk for Impaired Skin Integrity (due to decreased wound healing)")
+        _add_potential("Risk for Infection", "Risk for Infection (diabetes increases infection risk)")
 
     if "asthma" in condition_lower:
-        potentials.append("Risk for Ineffective Breathing Pattern (due to potential asthma exacerbation)")
-        potentials.append("Risk for Activity Intolerance (due to impaired oxygen exchange)")
+        _add_potential("Risk for Ineffective Breathing Pattern", "Risk for Ineffective Breathing Pattern (due to potential asthma exacerbation)")
+        _add_potential("Risk for Activity Intolerance", "Risk for Activity Intolerance (due to weakness from illness)")
 
     if "pneumonia" in condition_lower:
-        potentials.append("Risk for Ineffective Airway Clearance (due to retained secretions)")
-        potentials.append("Risk for Impaired Gas Exchange (if condition worsens)")
+        _add_potential("Risk for Ineffective Airway Clearance", "Risk for Ineffective Airway Clearance (due to retained secretions)")
+        _add_potential("Risk for Impaired Gas Exchange", "Risk for Impaired Gas Exchange (if condition worsens)")
 
     if "malaria" in condition_lower:
-        potentials.append("Risk for Deficit Fluid Volume (due to fever, sweating, and reduced intake)")
-        potentials.append("Risk for Activity Intolerance (due to weakness from illness)")
+        _add_potential("Risk for Deficit Fluid Volume", "Risk for Deficit Fluid Volume (due to fever, sweating, and reduced intake)")
+        _add_potential("Risk for Activity Intolerance", "Risk for Activity Intolerance (due to weakness from illness)")
 
     if "sickle cell" in condition_lower or "sickle" in condition_lower:
-        potentials.append("Risk for Pain (vaso-occlusive crisis)")
-        potentials.append("Risk for Impaired Skin Integrity (due to poor circulation)")
-        potentials.append("Risk for Infection (functional asplenia)")
+        _add_potential("Risk for Pain", "Risk for Pain (vaso-occlusive crisis)")
+        _add_potential("Risk for Impaired Skin Integrity", "Risk for Impaired Skin Integrity (due to poor circulation)")
+        _add_potential("Risk for Infection", "Risk for Infection (functional asplenia)")
 
-    # Problem-based risks
-    if "palpitation" in str(actual_problems).lower() or "chest pain" in str(actual_problems).lower():
-        if "Decreased Cardiac Output" not in str(potentials):
-            potentials.append("Risk for Decreased Cardiac Output (if symptoms indicate cardiac strain)")
+    # Problem-based risks (each guard also dedupes against condition-based
+    # risks, since e.g. fever can trigger 'Risk for Deficit Fluid Volume' twice)
+    if "palpitation" in problems_text or "chest pain" in problems_text:
+        _add_potential("Risk for Decreased Cardiac Output", "Risk for Decreased Cardiac Output (if symptoms indicate cardiac strain)")
 
-    if "fever" in str(actual_problems).lower() or "high temperature" in str(actual_problems).lower():
-        potentials.append("Risk for Deficit Fluid Volume (due to increased fluid loss from fever)")
+    if "fever" in problems_text or "high temperature" in problems_text:
+        _add_potential("Risk for Deficit Fluid Volume", "Risk for Deficit Fluid Volume (due to increased fluid loss from fever)")
 
-    if "immobility" in str(actual_problems).lower() or "difficulty walking" in str(actual_problems).lower():
-        potentials.append("Risk for Impaired Skin Integrity (due to prolonged pressure)")
-        potentials.append("Risk for Deep Vein Thrombosis (due to decreased mobility)")
+    if "immobility" in problems_text or "difficulty walking" in problems_text:
+        _add_potential("Risk for Impaired Skin Integrity", "Risk for Impaired Skin Integrity (due to prolonged pressure)")
+        _add_potential("Risk for Deep Vein Thrombosis", "Risk for Deep Vein Thrombosis (due to decreased mobility)")
 
-    if "nausea" in str(actual_problems).lower() or "vomiting" in str(actual_problems).lower():
-        potentials.append("Risk for Deficit Fluid Volume (due to active fluid loss)")
-        potentials.append("Risk for Imbalanced Nutrition: Less Than Body Requirements")
+    if "nausea" in problems_text or "vomiting" in problems_text:
+        _add_potential("Risk for Deficit Fluid Volume", "Risk for Deficit Fluid Volume (due to active fluid loss)")
+        _add_potential("Risk for Imbalanced Nutrition: Less Than Body Requirements", "Risk for Imbalanced Nutrition: Less Than Body Requirements")
 
     if not potentials:
         potentials.append("(Assess for potential complications based on the patient's specific condition and risk factors.)")

@@ -23,6 +23,7 @@ they do for generate.py. Non-protocol diagnostics go to stderr, never stdout.
 """
 import json
 import os
+import re
 import sys
 from typing import Dict, List, Optional
 
@@ -34,7 +35,6 @@ from reference_chunker import chunk_reference_text, ref_chunks_to_dicts  # noqa:
 from retrieval import SimpleIndex  # noqa: E402
 from import_worker import import_study, import_study_with_fields  # noqa: E402
 from nanda_mapper import build_chapter2_analysis_from_chapter1  # noqa: E402
-from import_worker import import_study, import_study_with_fields  # noqa: E402
 
 # Per-study retrieval indexes, keyed by study id and cached in memory so each
 # draft doesn't reload the pickled index from disk. Lives at the project root
@@ -266,13 +266,12 @@ def _parse_assistant_result(raw: str) -> dict:
     return {"message": message_text, "edits": edits}
 
 
-def assist_with_study(study: dict, message: str) -> dict:
-    """Answer an editorial request against the entire current study snapshot."""
+def _anthropic_client():
+    """Build an Anthropic client from the environment, or raise if unconfigured."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
     if not api_key and not auth_token:
-        raise RuntimeError("No AI API key is configured for the study assistant.")
-
+        raise RuntimeError("No AI API key is configured.")
     import anthropic
 
     client_kwargs: dict = {
@@ -282,19 +281,92 @@ def assist_with_study(study: dict, message: str) -> dict:
         client_kwargs["auth_token"] = auth_token
     else:
         client_kwargs["api_key"] = api_key
-    client = anthropic.Anthropic(**client_kwargs)
+    return anthropic.Anthropic(**client_kwargs)
+
+
+def _candidate_models() -> List[str]:
+    """Models to try in order: the configured primary, then any fallbacks."""
     primary_model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
     configured_fallbacks = [
         candidate.strip()
         for candidate in os.environ.get("ANTHROPIC_FALLBACK_MODELS", "").split(",")
         if candidate.strip()
     ]
+    base_url = os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com"
     fallbacks = configured_fallbacks or (
         ["openrouter/free"]
-        if "openrouter.ai" in client_kwargs["base_url"] and primary_model != "openrouter/free"
+        if "openrouter.ai" in base_url and primary_model != "openrouter/free"
         else []
     )
-    candidate_models = list(dict.fromkeys([primary_model, *fallbacks]))
+    return list(dict.fromkeys([primary_model, *fallbacks]))
+
+
+def _chat_model(system: str, prompt: str, max_tokens: int = 3500, label: str = "request") -> str:
+    """Send one prompt to the configured model, with fallbacks and retries.
+
+    Returns the response text. Raises RuntimeError when every candidate model
+    fails or returns empty, so callers can fall back to local logic.
+    """
+    import time
+
+    client = _anthropic_client()
+    max_retries = 2
+    model_errors: list[str] = []
+    for candidate_model in _candidate_models():
+        last_exc: Exception | None = None
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = client.messages.create(
+                    model=candidate_model,
+                    max_tokens=max_tokens,
+                    system=system,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                answer = _response_text(response)
+                if answer:
+                    return answer
+                # Empty but successful response - retry once before moving on
+                if attempt < max_retries:
+                    wait = 2 ** attempt
+                    print(
+                        f"[worker] {label} model {candidate_model} returned empty (attempt {attempt}/{max_retries}), retrying in {wait}s",
+                        file=sys.stderr, flush=True,
+                    )
+                    time.sleep(wait)
+                    continue
+                stop_reason = getattr(response, "stop_reason", None)
+                content_types = [
+                    getattr(block, "type", None)
+                    for block in (getattr(response, "content", None) or [])
+                ]
+                model_errors.append(
+                    f"{candidate_model}: returned empty response after {max_retries} attempts"
+                    f" (stop_reason={stop_reason!r}, content_types={content_types!r})"
+                )
+                print(
+                    f"[worker] {label} model {candidate_model} returned empty after {max_retries} attempts, moving on",
+                    file=sys.stderr, flush=True,
+                )
+                break
+            except Exception as exc:
+                last_exc = exc
+                print(
+                    f"[worker] {label} model {candidate_model} failed (attempt {attempt}/{max_retries}): {exc}",
+                    file=sys.stderr, flush=True,
+                )
+                if attempt < max_retries:
+                    wait = 2 ** attempt
+                    time.sleep(wait)
+        if last_exc is not None:
+            model_errors.append(f"{candidate_model}: {type(last_exc).__name__}: {last_exc}")
+    detail = "; ".join(model_errors) if model_errors else "all models returned empty responses"
+    raise RuntimeError(
+        f"The AI models returned no usable response for the {label}. Please try again. [{detail}]"
+    )
+
+
+def assist_with_study(study: dict, message: str) -> dict:
+    """Answer an editorial request against the entire current study snapshot."""
     # Browser JSON can contain lone UTF-16 surrogates from pasted content.
     # Escape them before the SDK encodes the prompt as UTF-8.
     safe_message = message.encode("utf-8", "replace").decode("utf-8")
@@ -318,63 +390,144 @@ def assist_with_study(study: dict, message: str) -> dict:
         "- If asked to review: list the top 3-5 issues as bullet points, not prose.\n"
         "- Never use markdown formatting in the message field."
     )
-    import time
+    answer = _chat_model(system, prompt, max_tokens=3500, label="study review")
+    result = _parse_assistant_result(answer)
+    if result["message"]:
+        return result
+    raise RuntimeError("The AI models returned no usable study review. Please try again.")
 
-    max_retries = 2
-    model_errors: list[str] = []
-    for candidate_model in candidate_models:
-        last_exc: Exception | None = None
-        for attempt in range(1, max_retries + 1):
-            try:
-                response = client.messages.create(
-                    model=candidate_model,
-                    max_tokens=3500,
-                    system=system,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                answer = _response_text(response)
-                if answer:
-                    result = _parse_assistant_result(answer)
-                    if result["message"]:
-                        return result
-                # Empty but successful response - retry once before moving on
-                if attempt < max_retries:
-                    wait = 2 ** attempt
-                    print(
-                        f"[worker] study assistant model {candidate_model} returned empty (attempt {attempt}/{max_retries}), retrying in {wait}s",
-                        file=sys.stderr, flush=True,
-                    )
-                    time.sleep(wait)
-                    continue
-                stop_reason = getattr(response, "stop_reason", None)
-                content_types = [
-                    getattr(block, "type", None)
-                    for block in (getattr(response, "content", None) or [])
-                ]
-                model_errors.append(
-                    f"{candidate_model}: returned empty response after {max_retries} attempts"
-                    f" (stop_reason={stop_reason!r}, content_types={content_types!r})"
-                )
-                print(
-                    f"[worker] study assistant model {candidate_model} returned empty after {max_retries} attempts, moving on",
-                    file=sys.stderr, flush=True,
-                )
-                break
-            except Exception as exc:
-                last_exc = exc
-                print(
-                    f"[worker] study assistant model {candidate_model} failed (attempt {attempt}/{max_retries}): {exc}",
-                    file=sys.stderr, flush=True,
-                )
-                if attempt < max_retries:
-                    wait = 2 ** attempt
-                    time.sleep(wait)
-        if last_exc is not None:
-            model_errors.append(f"{candidate_model}: {type(last_exc).__name__}: {last_exc}")
-    detail = "; ".join(model_errors) if model_errors else "all models returned empty responses"
-    raise RuntimeError(
-        f"The AI models returned no usable study review. Please try again. [{detail}]"
+
+_CHAPTER2_SYSTEM = (
+    "You are a nursing tutor at a Ghana NMC-accredited college helping a student "
+    "write Chapter 2 of a care study. You receive the patient's Chapter 1 assessment "
+    "data and a rule-based draft of suggested problems, strengths, and NANDA-I "
+    "diagnoses. Refine the draft so it is specific to THIS patient, using only the "
+    "findings present in the data — never invent clinical findings. Keep NMC format. "
+    "Actual (problem-focused) diagnoses use PES format: 'Diagnosis related to ... as "
+    "evidenced by ...'. Risk diagnoses must be written ONLY as 'Risk for X (reason)' — "
+    "never add 'related to' or 'as evidenced by' to a risk diagnosis. Remove duplicate "
+    "diagnoses. Return ONLY a JSON object with exactly this shape — every value a real, "
+    "complete plain string; never fill a value with ellipses, placeholders, or the template "
+    "itself:\n"
+    '{"section_23": {"actualProblems": "<bulleted list>", "potentialProblems": "<bulleted list>", '
+    '"problemPriority": "<numbered list>"}, "section_24": {"generalStrengths": "<bulleted list>", '
+    '"specificStrengths": "<bulleted list>"}, "section_25": {"nursingDiagnoses": "<bulleted list>", '
+    '"diagnosisPriority": "<comma-separated>"}}'
+)
+
+
+def _chapter2_with_llm(chapter1_fields: Dict[str, str], condition: str, rules_result: dict) -> dict:
+    """One model call that personalises the rule-based chapter2 draft."""
+    fields_text = json.dumps(chapter1_fields, ensure_ascii=True, indent=2)
+    rules_text = json.dumps(rules_result, ensure_ascii=True, indent=2)
+    prompt = (
+        f"PATIENT CONDITION: {condition or '(not stated)'}\n\n"
+        f"CHAPTER 1 ASSESSMENT DATA:\n{fields_text}\n\n"
+        f"RULE-BASED DRAFT TO REFINE:\n{rules_text}\n\n"
+        "Refine this draft for this specific patient:\n"
+        "- section_23.actualProblems: bulleted list ('- ' per line) of the health problems "
+        "evident in the data, written in clinical terms.\n"
+        "- section_23.potentialProblems: bulleted list ('- ' per line) of risk diagnoses "
+        "grounded in the patient's condition and problems. No duplicates.\n"
+        "- section_23.problemPriority: bulleted numbered list with priority in parentheses, "
+        "e.g. '- 1. Hyperthermia (high priority)'.\n"
+        "- section_24.generalStrengths / specificStrengths: bulleted lists ('- ' per line) "
+        "of strengths evident in the data; specific strengths map to the identified problems.\n"
+        "- section_25.nursingDiagnoses: bulleted PES statements ('- Diagnosis related to ... "
+        "as evidenced by ...') ordered by priority; risk diagnoses written only as "
+        "'Risk for X (reason)'.\n"
+        "- section_25.diagnosisPriority: comma-separated '1. Diagnosis, 2. Diagnosis, ...' in the same order.\n"
+        "Return only the JSON object."
     )
+    # Generous headroom: router models in 'thinking' mode can spend thousands
+    # of tokens reasoning before any text appears (seen with openrouter/free).
+    answer = _chat_model(_CHAPTER2_SYSTEM, prompt, max_tokens=8000, label="chapter2 recommendations")
+    return _merge_chapter2_result(answer, rules_result)
+
+
+_CHAPTER2_FIELDS = {
+    "section_23": ("actualProblems", "potentialProblems", "problemPriority"),
+    "section_24": ("generalStrengths", "specificStrengths"),
+    "section_25": ("nursingDiagnoses", "diagnosisPriority"),
+}
+
+
+# Values the model must never be credited with: template ellipses echoed back,
+# or bullet/number scaffolding with no actual content behind it.
+_CHAPTER2_PLACEHOLDER_RE = re.compile(r"^[\s.·…\-–—*•]*$")
+
+
+def _is_usable_chapter2_value(value: object) -> bool:
+    """True when a model-supplied field holds real content, not a placeholder."""
+    if not isinstance(value, str) or not value.strip():
+        return False
+    for line in value.splitlines():
+        stripped = line.strip().lstrip("-*•–— ").lstrip("0123456789. ")
+        if stripped and not _CHAPTER2_PLACEHOLDER_RE.match(stripped):
+            return True
+    return False
+
+
+def _merge_chapter2_result(raw: str, rules_result: dict) -> dict:
+    """Validate the model's chapter2 JSON, falling back per-field to the rules."""
+    candidate = raw.strip()
+    if candidate.startswith("```"):
+        end = candidate.rfind("```")
+        candidate = candidate[3:end if end != -1 else None].strip()
+        if candidate.lower().startswith("json"):
+            candidate = candidate[4:].strip()
+
+    parsed = None
+    try:
+        parsed = json.loads(candidate)
+    except (json.JSONDecodeError, ValueError):
+        pass
+    if parsed is None:
+        first_brace = candidate.find("{")
+        last_brace = candidate.rfind("}")
+        if first_brace != -1 and last_brace > first_brace:
+            try:
+                parsed = json.loads(candidate[first_brace:last_brace + 1])
+            except (json.JSONDecodeError, ValueError):
+                pass
+    if not isinstance(parsed, dict):
+        raise ValueError("model response was not a JSON object")
+
+    merged: dict = {}
+    usable = False
+    for section, fields in _CHAPTER2_FIELDS.items():
+        model_section = parsed.get(section)
+        rule_section = rules_result.get(section) or {}
+        merged[section] = {}
+        for field in fields:
+            value = model_section.get(field) if isinstance(model_section, dict) else None
+            if _is_usable_chapter2_value(value):
+                merged[section][field] = value.strip()
+                usable = True
+            else:
+                merged[section][field] = rule_section.get(field, "")
+    if not usable:
+        raise ValueError("model response contained no usable chapter2 fields")
+    return merged
+
+
+def generate_chapter2_recommendations(chapter1_fields: Dict[str, str], condition: str) -> dict:
+    """Personalised Chapter 2 recommendations via LLM, grounded in the rule mapper.
+
+    The deterministic nanda_mapper output is used twice: as grounding material for
+    the model prompt, and as a field-by-field fallback whenever the model call
+    fails, times out, or returns an unusable shape — so the frontend always gets
+    the same Chapter2Recommendations shape.
+    """
+    rules_result = build_chapter2_analysis_from_chapter1(chapter1_fields, condition)
+    try:
+        return _chapter2_with_llm(chapter1_fields, condition, rules_result)
+    except Exception as exc:
+        print(
+            f"[worker] chapter2 recommendations: model call failed, using rule-based output: {exc}",
+            file=sys.stderr, flush=True,
+        )
+        return rules_result
 
 
 def main() -> None:
@@ -469,7 +622,7 @@ def main() -> None:
                 if not isinstance(chapter1_fields, dict) or not isinstance(condition, str):
                     emit({"id": req.get("id"), "error": "chapter2_recommendations requires chapter1Fields and condition"})
                     continue
-                result = build_chapter2_analysis_from_chapter1(
+                result = generate_chapter2_recommendations(
                     {str(key): str(value) for key, value in chapter1_fields.items()},
                     condition.strip(),
                 )
