@@ -1,0 +1,70 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Ibuprofen
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Ibuprofen
+
+Tablet: 200 mg; 400 mg.
+
+Uses: pain and inflammation in rheumatic disease and other musculoskeletal
+
+disorders including juvenile arthritis; mild to moderate pain including
+
+dysmenorrhoea and headache; pain in children; acute migraine attack
+
+(section 7.1).
+
+Contraindications:  hypersensitivity (including asthma, angioedema, urticaria, or
+
+rhinitis) to acetylsalicylic acid or any other NSAIM; active peptic ulceration.
+
+Precautions: renal impairment (Appendix 4); hepatic impairment (Appendix 5);
+
+preferably avoid if history of peptic ulceration; cardiac disease; elderly;
+
+pregnancy (Appendix 2) and breastfeeding (Appendix 3); coagulation
+
+defects; allergic disorders; interactions : Appendix 1.
+
+Dose:
+
+Mild to moderate pain, pyrexia, inflammatory musculoskeletal disorders, by
+
+mouth with or after food, ADULT , 1.2–1.8 g daily in 3–4 divided doses,
+
+increased if necessary to maximum 2.4 g daily (3.2 g daily in inflammatory
+
+disease); maintenance dose of 0.6–1.2 g daily may be sufficient.
+
+Juvenile arthritis, by mouth with or after food, CHILD , over 7 kg, 30–40 mg/kg
+
+daily in 3–4 divided doses.
+
+Pain in CHILD  (not recommended for children under 7 kg), by mouth  with or
+
+after food, 20–40 mg/kg daily in divided doses; or CHILD  1–2 years, 50 mg
+
+3–4 times daily; CHILD  3–7 years, 100 mg 3–4 times daily; CHILD  8–12 years,
+
+200 mg 3–4 times daily.
+
+Adverse effects:  gastrointestinal disturbances including nausea, diarrhoea,
+
+dyspepsia, ulceration, and haemorrhage; hypersensitivity reactions including
+
+rash, angioedema and bronchospasm; headache, dizziness, nervousness,
+
+depression, drowsiness, insomnia, vertigo, tinnitus, photosensitivity,
+
+haematuria; fluid retention (rarely precipitating congestive heart failure in
+
+the elderly), raised blood pressure, renal failure; rarely hepatic damage,
+
+alveolitis, pulmonary eosinophilia, pancreatitis, visual disturbances,
+
+erythema multiforme (Stevens-Johnson syndrome), toxic dermal necrolysis
+
+(Lyell syndrome), colitis and aseptic meningitis.

@@ -52,11 +52,41 @@ DRUGS = [
     ("formulary_artemether_lumefantrine.txt", "Artemether + lumefantrine", ["Artemether + lumefantrine"], None),
     ("formulary_folic_acid.txt", "Folic acid", ["Folic acid"], None),
     ("formulary_insulin.txt", "Insulin (medication)", ["Insulin injection (soluble)", "Intermediate-acting insulin"], "18.5 Insulins and other antidiabetic agents"),
+    # --- Commonly prescribed in Ghanaian hospitals (malaria, bacterial
+    # infections, pain, hypertension, asthma, anaemia, eclampsia) ---
+    ("formulary_artesunate.txt", "Artesunate", ["Artesunate"], None),
+    ("formulary_quinine.txt", "Quinine", ["Quinine"], None),
+    ("formulary_metronidazole.txt", "Metronidazole", ["Metronidazole"], None),
+    ("formulary_gentamicin.txt", "Gentamicin", ["Gentamicin"], None),
+    ("formulary_ciprofloxacin.txt", "Ciprofloxacin", ["Ciprofloxacin"], None),
+    ("formulary_cloxacillin.txt", "Cloxacillin", ["Cloxacillin"], None),
+    ("formulary_doxycycline.txt", "Doxycycline", ["Doxycycline"], None),
+    ("formulary_cotrimoxazole.txt", "Sulfamethoxazole + trimethoprim", ["Sulfamethoxazole + trimethoprim"], None),
+    ("formulary_ibuprofen.txt", "Ibuprofen", ["Ibuprofen"], None),
+    # Diclofenac and omeprazole have no monograph in the 2008 formulary (the
+    # NSAIM chapter explicitly notes diclofenac is not on the WHO Model List).
+    ("formulary_metoclopramide.txt", "Metoclopramide", ["Metoclopramide"], None),
+    ("formulary_nifedipine.txt", "Nifedipine", ["Nifedipine"], None),
+    ("formulary_atenolol.txt", "Atenolol", ["Atenolol"], None),
+    ("formulary_enalapril.txt", "Enalapril", ["Enalapril"], None),
+    ("formulary_hydrochlorothiazide.txt", "Hydrochlorothiazide", ["Hydrochlorothiazide"], None),
+    ("formulary_methyldopa.txt", "Methyldopa", ["Methyldopa"], None),
+    ("formulary_salbutamol.txt", "Salbutamol", ["Salbutamol"], None),
+    ("formulary_dexamethasone.txt", "Dexamethasone", ["Dexamethasone"], None),
+    ("formulary_prednisolone.txt", "Prednisolone", ["Prednisolone"], None),
+    ("formulary_hydrocortisone.txt", "Hydrocortisone", ["Hydrocortisone"], None),
+    ("formulary_diazepam.txt", "Diazepam", ["Diazepam"], None),
+    ("formulary_carbamazepine.txt", "Carbamazepine", ["Carbamazepine"], None),
+    ("formulary_phenytoin.txt", "Phenytoin", ["Phenytoin"], None),
+    ("formulary_magnesium_sulfate.txt", "Magnesium sulfate", ["Magnesium sulfate"], None),
+    ("formulary_ferrous_salt.txt", "Ferrous salt (iron)", ["Ferrous salt"], None),
+    ("formulary_morphine.txt", "Morphine", ["Morphine"], None),
 ]
 
 DOSAGE_RE = re.compile(
     r"^(Tablet|Injection|Oral|Powder|Solution|Capsule|Eye|Ear|Nasal|Suspension|"
-    r"Suppository|Ointment|Cream|Inhalation|Lotion|Gel|Pessary|Spray|Granules|Liquid|Drops)"
+    r"Suppository|Ointment|Cream|Inhalation|Lotion|Gel|Pessary|Spray|Granules|Liquid|Drops|"
+    r"Immediate|Modified|Sustained|Extended)"
 )
 NAME_RE = re.compile(r"^[A-Za-z][A-Za-z +/\-()]{2,45}$")
 # Running chapter header at the top of every page, e.g. "6. Anti-infective medicines".

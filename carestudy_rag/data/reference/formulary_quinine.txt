@@ -1,0 +1,88 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Quinine
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Quinine
+
+Injection: 300 mg quinine hydrochloride/ml in 2-ml ampoule.
+
+Tablet: 300 mg (quinine sulfate) or 300 mg (quinine bisulfate).
+
+Uses: treatment  of multidrug-resistant P. falciparum  malaria, alone or in
+
+combination with other antimalarial drugs.
+
+Contraindications:  haemoglobinuria; optic neuritis; tinnitus; myasthenia gravis
+
+Precautions: atrial fibrillation, conduction defects, or heart block (monitor for
+
+signs of cardiac toxicity and blood glucose and electrolyte concentrations
+
+during intravenous use); pregnancy (but in acute malaria, benefit is usually
+
+considered to out-weigh risk, Appendix 2) and breastfeeding (Appendix 3);
+
+renal impairment (Appendix 4); G6PD deficiency;  interactions:  Appendix 1.
+
+Dose:
+
+NOTE. 100 mg of quinine (anhydrous base) or 169 mg quinine bisulfate or 122 mg
+
+quinine dihydrochloride or 121 mg quinine sulfate.
+
+The 300 mg quinine bisulfate tablets provide less quinine than the 300 mg quinine
+
+sulfate or dihydrochloride tablets.
+
+Treatment of multidrug-resistant P. falciparum malaria, by mouth , ADULT, 600 mg
+
+(quinine sulfate) every 8 hours for 3, 7, or 10 days; CHILD, 10 mg/kg
+
+(quinine sulfate) every 8 hours for 3, 7, or 10 days; duration of treatment
+
+depends on local susceptibility of P. falciparum  and whether or not additional
+
+antimalarials are used.
+
+PATIENT ADVICE. If all or part of a dose is vomited within one hour of
+
+administration, the same amount must be readministered immediately.
+
+Treatment of multidrug-resistant P. falciparum  malaria (in patients unable to
+
+take quinine by mouth), by slow intravenous infusion  (over 4 hours), ADULT,
+
+initially 20 mg/kg (quinine dihydrochloride), followed by 10 mg/kg (quinine
+
+dihydrochloride) every 8 hours; CHILD, initially 20 mg/kg (quinine
+
+dihydrochloride), followed by 10 mg/kg (quinine dihydrochloride) every
+
+12 hours; initial dose should be halved in patients who have received
+
+quinine, quinidine or mefloquine during the previous 12–24 hours.
+
+DILUTION AND ADMINISTRATION. According to manufacturer’s directions;
+
+intravenous injection of quinine is so hazardous that it has been superseded by infusion;
+
+where facilities for intravenous infusion are unavailable, an appropriate dilution may be
+
+administered by intramuscular injection.
+
+Adverse effects:  cinchonism (tinnitus, headache, blurred vision, temporary
+
+blindness, altered auditory acuity, nausea, diarrhoea, hot and flushed skin,
+
+rash, and confusion); hypersensitivity reactions including angioedema; rarely
+
+haemorrhage and asthma; hypoglycaemia (especially after parenteral
+
+administration); renal damage (culminating in acute renal failure and anuria);
+
+blood disorders; cardiovascular, gastrointestinal, and central nervous system
+
+effects; very toxic in overdosage (immediate medical attention required).

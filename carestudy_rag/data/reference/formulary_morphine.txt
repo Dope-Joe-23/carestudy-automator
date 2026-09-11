@@ -1,0 +1,114 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Morphine
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Morphine
+
+Injection: 10 mg (morphine hydrochloride or morphine sulfate) in 1-ml
+
+ampoule.
+
+Oral liquid: 10 mg (morphine hydrochloride or morphine sulfate)/5 ml.
+
+Tablet: 10 mg (morphine sulfate).
+
+Tablet (prolonged-release): 10 mg; 30 mg; 60 mg (morphine sulfate).
+
+Drug subject to international control under the Single Convention on Narcotic Drugs
+
+(1961).
+
+Uses: severe pain (acute and chronic); myocardial infarction, acute pulmonary
+
+oedema; adjunct during major surgery and postoperative analgesia.
+
+Contraindications: avoid in acute respiratory depression, acute alcoholism, and
+
+where risk of paralytic ileus; also avoid in raised intracranial pressure or
+
+head injury (affects pupillary responses vital for neurological assessment);
+
+avoid injection in phaeochromocytoma.
+
+Precautions:  renal impairment (Appendix 4) and hepatic impairment
+
+(Appendix 5); reduce dose or avoid in elderly and debilitated patients;
+
+dependence (severe withdrawal symptoms can develop if withdrawn
+
+abruptly); hypothyroidism; convulsive disorders; decreased respiratory
+
+reserve and acute asthma; hypotension; prostatic hypertrophy; pregnancy
+
+(Appendix 2) and breastfeeding (Appendix 3); overdosage: section 4.2;
+
+interactions: Appendix 1.
+
+Dose:
+
+Acute pain, by subcutaneous injection  (not suitable for oedematous patients) or by
+
+intramuscular injection, ADULT , 10 mg every 4 hours if necessary (15 mg for
+
+heavier well-muscled patients); INFANT  up to 1 month, 150 micrograms/kg,
+
+1–12 months, 200 micrograms/kg; CHILD  1–5 years, 2.5–5 mg, 6–12 years,
+
+5–10 mg.
+
+Chronic pain, by mouth  (immediate-release tablets) or by subcutaneous injection  (not
+
+suitable for oedematous patients) or by intramuscular injection, ADULT ,
+
+5–20 mg regularly every 4 hours; dose may be increased according to need;
+
+oral dose should be approximately double corresponding intramuscular
+
+dose; by mouth  (sustained-release tablets), titrate dose first using immediate-
+
+release preparation, then every 12 hours according to daily morphine
+
+requirement (see note above).
+
+Myocardial infarction, by slow intravenous injection  (2 mg/minute), ADULT , 10 mg
+
+followed by a further 5–10 mg if necessary; elderly or debilitated patients,
+
+reduce dose by half.
+
+Acute pulmonary oedema, by slow intravenous injection  (2 mg/minute), ADULT ,
+
+5–10 mg.
+
+NOTE. The doses stated above refer equally to morphine sulfate and morphine
+
+hydrochloride. Sustained-release capsules designed for once daily administration are
+
+also available [not included on the 15th WHO Model List]; consult manufacturer’s
+
+literature. Dosage requirements should be reviewed if the brand of controlled-release
+
+preparation is altered.
+
+PATIENT ADVICE. Sustained-release tablets should be taken at regular intervals and
+
+not on an as-needed basis for episodic or breakthrough pain. Sustained-release tablets
+
+should not be crushed.
+
+Adverse effects: nausea, vomiting (particularly in initial stages), constipation;
+
+drowsiness; also dry mouth, anorexia, spasm of urinary and biliary tract;
+
+bradycardia, tachycardia, palpitation, euphoria, decreased libido, rash,
+
+urticaria, pruritus, sweating, headache, facial flushing, vertigo, postural
+
+hypotension, hypothermia, hallucinations, confusion, dependence, miosis;
+
+larger doses produce respiratory depression, hypotension, and muscle
+
+rigidity.

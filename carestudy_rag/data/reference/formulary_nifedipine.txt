@@ -1,0 +1,136 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Nifedipine
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Nifedipine
+
+Immediate release capsule: 10 mg.
+
+Uses: uncomplicated premature labour between 24–33 weeks gestation.
+
+Contraindications:  cardiogenic shock; advanced aortic stenosis; within
+
+1 month of myocardial infarction; unstable or acute attacks of angina;
+
+porphyria.
+
+Precautions: stop if ischaemic pain occurs shortly after starting treatment;
+
+poor cardiac reserve; heart failure or significantly impaired left ventricular
+
+function; severe hypotension; hepatic impairment (reduce dose;
+
+Appendix 5); diabetes mellitus; breastfeeding (Appendix 3); avoid grapefruit
+
+juice (may affect nifedipine metabolism); interactions: Appendix 1.
+
+Dose:
+
+Premature labour, sublingually  (immediate-release capsules), ADULT, initially
+
+10 mg every 15 minutes if necessary, up to a maximum of 40 mg in the first
+
+hour, then 60–160 mg daily in 3–4 divided doses by mouth  (sustained-release
+
+tablets), adjusted to uterine activity.
+
+Adverse effects: headache, flushing, dizziness, lethargy; tachycardia,
+
+palpitations; exaggerated fall in blood pressure and reflex tachycardia (may
+
+lead to myocardial or cerebrovascular ischaemia); gravitational oedema; rash
+
+(erythema multiforme reported), pruritus, urticaria; nausea, constipation or
+
+diarrhoea; increased frequency of micturition; eye pain, visual disturbances;
+
+gum hyperplasia; asthenia, paraesthesia, myalgia, tremor, gynaecomastia;
+
+depression, telangiectasis, cholestasis, and jaundice reported.
+
+SECTION 23:
+
+Peritoneal dialysis solution
+
+Solutions for peritoneal dialysis are preparations for intraperitoneal use which
+
+contain electrolytes in a similar concentration to that found in plasma, and also
+
+glucose or another suitable osmotic agent. Peritoneal dialysis solutions always
+
+contain sodium, chloride, and hydrogen carbonate (or a precursor); they may
+
+also contain calcium, magnesium, and rarely potassium.
+
+In renal failure, haemodialysis is the preferred method to correct the
+
+accumulation of toxins, electrolytes, and fluid. Peritoneal dialysis is less
+
+efficient than haemodialysis, but it is preferred in children, diabetic patients,
+
+and patients with unstable cardiovascular disease; it is also used in patients
+
+who can manage their condition, or those who live far from a dialysis centre. It
+
+is unsuitable for patients who have had significant abdominal surgery.
+
+In peritoneal dialysis, the solution is infused into the peritoneal cavity, where
+
+exchange of electrolytes takes place by diffusion and convection, and excess
+
+fluid is removed by osmosis, using the peritoneal membrane as an osmotic
+
+membrane. There are 2 forms of peritoneal dialysis:
+
+- continuous ambulatory peritoneal dialysis  (CAPD), in which dialysis is performed manually
+
+by the patient several times each day;
+
+- automated peritoneal dialysis  (APD), in which dialysis is performed by machine
+
+overnight.
+
+The main complication of peritoneal dialysis is peritonitis, which often results
+
+from poor exchange technique; infections of the catheter exit site may also
+
+occur, again because of poor technique. With long-term dialysis progressive
+
+structural changes to the peritoneal membrane occur, ultimately resulting in
+
+dialysis failure.
+
+Intraperitoneal dialysis solution (of appropriate composition)
+
+Parenteral solution.
+
+Intraperitoneal dialysis solution is a complementary list preparation.
+
+Uses: to correct electrolyte imbalance and fluid overload, and to remove
+
+metabolites, in renal failure.
+
+Contraindications:  abdominal sepsis; previous abdominal surgery; severe
+
+inflammatory bowel disease.
+
+Precautions: care is required with technique to reduce risk of infection; warm
+
+dialysis solution to body temperature before use; some drugs may be
+
+removed by dialysis.
+
+Dose:
+
+Individualized according to clinical condition, and based on blood results.
+
+Adverse effects: infection including peritonitis; hernia; haemoperitoneum;
+
+hyperglycaemia, protein malnutrition; blocked catheter.
+
+SECTION 24:
+
+Psychotherapeutic medicines

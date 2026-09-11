@@ -1,0 +1,60 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Ferrous salt (iron)
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Ferrous salt
+
+Oral liquid: equivalent to 25 mg iron (as sulfate)/ml.
+
+Tablet: equivalent to 60 mg iron.
+
+Uses: iron-deficiency anaemia.
+
+Contraindications:  haemosiderosis, haemochromatosis; any form of anaemia
+
+not caused by iron deficiency; patients receiving repeated blood
+
+transfusions; parenteral iron therapy.
+
+Precautions:  should not be administered for longer than 6 months; pregnancy;
+
+peptic ulcer, regional enteritis, ulcerative colitis, intestinal strictures,
+
+diverticula; interactions: Appendix 1.
+
+NOTE: Overdosage: see section 4.2.
+
+Dose:
+
+Iron-deficiency anaemia, by mouth , ADULT, elemental iron, 100–200 mg daily in
+
+divided doses.
+
+Prevention of iron-deficiency anaemia (in those at particular risk), by mouth ,
+
+ADULT  (woman), elemental iron 60 mg daily; CHILD  under 5 years,
+
+elemental iron, 2 mg/kg daily (maximum, 30 mg), CHILD  over 5 years,
+
+elemental iron, 30 mg daily; in women and children over 5 years, folic acid
+
+may also be given.
+
+PATIENT ADVICE. Although iron preparations are best absorbed on an empty
+
+stomach, they may be taken after food to reduce gastrointestinal adverse effects; they
+
+may discolour stools. Liquid preparations containing iron salts should be well diluted
+
+with water (and if possible swallowed through a drinking straw to prevent discoloration
+
+of the teeth).
+
+Adverse effects:  constipation, diarrhoea, dark stools, nausea, epigastric pain,
+
+gastrointestinal irritation; long-term or excessive administration may cause
+
+haemosiderosis.

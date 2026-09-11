@@ -1,0 +1,66 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Magnesium sulfate
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Magnesium sulfate
+
+Injection: 500 mg/ml in 2-ml ampoule; 500 mg/ml in 10-ml ampoule.
+
+Uses: prevention of recurrent seizures in eclampsia; prevention of seizures in
+
+pre-eclampsia.
+
+Precautions:  see note above; myasthenia gravis; hepatic impairment
+
+(Appendix 5); renal impairment (Appendix 4); pregnancy (Appendix 2);
+
+interactions : Appendix 1.
+
+Dose:
+
+Prevention of recurrent seizures in eclampsia, by intravenous injection , ADULT  and
+
+ADOLESCENT, initially 4 g over 5–15 minutes followed either by intravenous
+
+infusion , 1 g/hour for at least 24 hours after the last seizure or delivery
+
+(whichever occurs later) or  by deep intramuscular injection, 5 g into each buttock,
+
+then 5 g every 4 hours into alternate buttocks for at least 24 hours after the
+
+last seizure or delivery (whichever occurs later); recurrence of seizures may
+
+require an additional  intravenous injection  of 2 g (4 g if body weight over
+
+70 kg).
+
+Prevention of seizures in pre-eclampsia, by intravenous infusion , ADULT  and
+
+ADOLESCENT, initially 4 g over 5–15 minutes followed either by intravenous
+
+infusion , 1 g/hour for 24 hours or  by deep intramuscular injection, 5 g into each
+
+buttock, then 5 g every 4 hours into alternate buttocks for 24 hours; if
+
+seizure occurs, give an additional dose by intravenous injection  of 2 g.
+
+DILUTION AND ADMINISTRATION. According to manufacturer’s directions. For
+
+intravenous injection, the concentration of magnesium sulfate should not exceed 20%
+
+(dilute 1 part of magnesium sulfate injection, 50%, with at least 1.5 parts of water for
+
+injection); for intramuscular injection, mix magnesium sulfate injection, 50%, with 1 ml
+
+lidocaine injection, 2%.
+
+Adverse effects: generally those associated with hypermagnesaemia (see also
+
+notes above), including nausea, vomiting, thirst, flushing of skin,
+
+hypotension, arrhythmias, coma, respiratory depression, drowsiness,
+
+confusion, loss of tendon reflexes, and muscle weakness.

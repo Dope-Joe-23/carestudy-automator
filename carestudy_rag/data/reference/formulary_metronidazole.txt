@@ -1,0 +1,150 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Metronidazole
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Metronidazole
+
+Injection: 500 mg in 100-ml vial.
+
+Oral liquid: 200 mg (as benzoate)/5 ml.
+
+Suppository: 500 mg; 1 g.
+
+Tablet: 200-500 mg.
+
+Metronidazole has high activity against anaerobic bacteria and protozoa (see also
+
+section 6.5.1). Metronidazole by the rectal route is an effective alternative to the
+
+intravenous route when oral administration is not possible.
+
+Metronidazole is a representative antibacterial and antiprotozoal drug. Various
+
+medicines can serve as alternatives.
+
+Uses:  anaerobic bacterial infections, including gingivitis and other oral
+
+infections, pelvic inflammatory disease (with doxycycline and either
+
+ciprofloxacin or ceftriaxone; section 6.2.1), tetanus, septicaemia, peritonitis,
+
+brain abscess, necrotizing pneumonia, antibiotic-associated colitis, leg ulcers
+
+and pressure sores and surgical prophylaxis; bacterial vaginosis; skin and
+
+soft tissue infections, animal bites (with doxycycline); tissue nematode
+
+infections in particular, dracunculiasis (section 6.1.1); trichomonal vaginitis,
+
+amoebiasis, and giardiasis (section 6.5.1); Helicobacter pylori eradication
+
+(section 17.1); Crohn disease (section 17.3).
+
+Contraindications: chronic alcohol dependence.
+
+Precautions:  disulfiram-like reaction with alcohol; hepatic impairment and
+
+hepatic encephalopathy (Appendix 5); pregnancy (Appendix 2) and
+
+breastfeeding (Appendix 3); clinical and laboratory monitoring
+
+recommended in courses lasting longer than 10 days; interactions:
+
+Appendix 1.
+
+Dose:
+
+Anaerobic infections (usually treated for 7 days), by mouth , ADULT, 800 mg
+
+initially, then 400 mg every 8 hours or 500 mg every 8 hours; CHILD,
+
+7.5 mg/kg every 8 hours.
+
+Anaerobic infections, by intravenous infusion  over 20 minutes, ADULT, 500 mg
+
+every 8 hours; CHILD, 7.5 mg/kg every 8 hours.
+
+Anaerobic infections, by rectum , ADULT  and CHILD  over 10 years, 1 g every
+
+8 hours for 3 days, then 1 g every 12 hours; CHILD  up to 1 year, 125 mg
+
+every 8 hours for 3 days, then every 12 hours; CHILD  1–5 years, 250 mg;
+
+CHILD  5–10 years, 500 mg.
+
+Bacterial vaginosis, by mouth , ADULT, 2 g as a single dose or 400–500 mg twice
+
+daily for 5–7 days.
+
+Pelvic inflammatory disease, by mouth , ADULT, 400–500 mg twice daily for
+
+14 days.
+
+Leg ulcers and pressure sores, by mouth , ADULT  400 mg every 8 hours for 7 days.
+
+Acute ulcerative gingivitis, by mouth , ADULT,  200–250 mg every 8 hours for
+
+3 days; CHILD  1–3 years, 50 mg every 8 hours for 3 days; CHILD  3–7 years,
+
+100 mg every 12 hours for 3 days; CHILD  7–10 years, 100 mg every 8 hours
+
+for 3 days.
+
+Acute oral infections, by mouth , ADULT, 200 mg every 8 hours for 3–7 days;
+
+CHILD  1–3 years, 50 mg every 8 hours for 3–7 days; CHILD  3–7 years,
+
+100 mg every 12 hours for 3-7 days; CHILD  7–10 years, 100 mg every 8
+
+hours for 3-7 days.
+
+Antibiotic-associated colitis, by mouth , ADULT,  800 mg initially, then 400 mg
+
+3 times daily for 10 days.
+
+Surgical prophylaxis, by mouth , ADULT, 400–500 mg 2 hours before surgery; up
+
+to 3 further doses of 400–500 mg may be given every 8 hours for high-risk
+
+procedures; CHILD, 7.5 mg/kg 2 hours before surgery; up to 3 further doses
+
+of 7.5 mg/kg may be given every 8 hours for high-risk procedures.
+
+Surgical prophylaxis, by rectum , ADULT, 1 g 2 hours before surgery; up to
+
+3 further doses of 1 g may be given every 8 hours for high-risk procedures;
+
+CHILD  5–10 years, 500 mg 2 hours before surgery; up to 3 further doses of
+
+500 mg may be given every 8 hours for high-risk procedures.
+
+Surgical prophylaxis by intravenous infusion  (if rectal administration inappropriate),
+
+ADULT, 500 mg at induction; up to 3 further doses of 500 mg may be given
+
+every 8 hours for high-risk procedures; CHILD, 7.5 mg/kg at induction; up
+
+to 3 further doses of 7.5 mg/kg may be given every 8 hours for high-risk
+
+procedures.
+
+PATIENT ADVICE. Tablets should be swallowed whole with water, with or after
+
+food; suspension best taken one hour before food (or on an empty stomach).
+
+Adverse effects:  nausea, vomiting, unpleasant metallic taste, furred tongue,
+
+and gastrointestinal disturbances; rarely headache, drowsiness, dizziness,
+
+ataxia, darkening of urine, erythema multiforme, pruritus, urticaria,
+
+angioedema, and anaphylaxis; abnormal liver function tests, hepatitis,
+
+jaundice, thrombocytopenia, aplastic anaemia, myalgia, arthralgia; peripheral
+
+neuropathy, epileptiform seizures, and leukopenia on prolonged or high
+
+dosage regimens.

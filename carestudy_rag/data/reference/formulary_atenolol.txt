@@ -1,0 +1,80 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Atenolol
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Atenolol
+
+Tablet: 50 mg; 100 mg.
+
+Atenolol is a representative beta-adrenoceptor antagonist (beta-blocker). Various
+
+medicines can serve as alternatives.
+
+Uses: angina and myocardial infarction (see also section 12.5); arrhythmias
+
+(section 12.2); hypertension (section 12.3); migraine prophylaxis
+
+(section 7.2).
+
+Contraindications: history of asthma or bronchospasm (unless no alternative,
+
+in which case use with extreme caution and under specialist supervision);
+
+uncontrolled heart failure, Prinzmetal angina, marked bradycardia,
+
+hypotension, sick sinus syndrome, second- and third-degree atrioventricular
+
+block, cardiogenic shock; metabolic acidosis; severe peripheral arterial
+
+disease; phaeochromocytoma (unless used with an alpha-blocker).
+
+Precautions: avoid abrupt withdrawal especially in ischaemic heart disease;
+
+history of obstructive airway disease (use with caution and monitor lung
+
+function (see also Contraindications above); pregnancy (Appendix 2) and
+
+breastfeeding (Appendix 3); first-degree atrioventricular block; portal
+
+hypertension (liver function deteriorates); renal impairment (reduce dose;
+
+Appendix 4); diabetes mellitus (small decrease in glucose tolerance, which
+
+can mask symptoms of hypoglycaemia); history of hypersensitivity
+
+[increased reaction to allergens, also reduced response to epinephrine
+
+(adrenaline)]; myasthenia gravis; interactions:  Appendix 1.
+
+Dose:
+
+Angina, by mouth , ADULT, 50 mg once daily, increased if necessary to 50 mg
+
+twice daily or 100 mg once daily.
+
+Unstable angina and acute myocardial infarction (early intervention within
+
+12 hours), by intravenous injection  over 5 minutes, ADULT, 5 mg, then  by mouth,
+
+50 mg after 15 minutes, followed by 50 mg after 12 hours, then 100 mg
+
+daily.
+
+Adverse effects:  gastrointestinal disturbances including nausea, vomiting,
+
+diarrhoea, constipation, and abdominal cramp; fatigue; cold hands and feet;
+
+exacerbation of intermittent claudication and Raynaud phenomenon;
+
+bronchospasm; bradycardia, heart failure, conduction disorders,
+
+hypotension; sleep disturbances including nightmares; depression,
+
+confusion; hypoglycaemia or hyperglycaemia; exacerbation of psoriasis; rash,
+
+dry eyes, and oculomucocutaneous syndrome (reversible on withdrawal)
+
+rarely reported.

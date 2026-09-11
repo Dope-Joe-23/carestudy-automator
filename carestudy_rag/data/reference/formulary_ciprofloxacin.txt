@@ -1,0 +1,162 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Ciprofloxacin
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Ciprofloxacin
+
+Tablet: 250 mg (as hydrochloride).
+
+Ciprofloxacin is active against both Gram-positive and Gram-negative bacteria. It is
+
+particularly active against salmonella, shigella, campylobacter, neisseria, Bacillus anthracis,
+
+and Pseudomonas ssp .. It is also active against chlamydia and some mycobacteria. Most
+
+anaerobic organisms are, however, not susceptible. Ciprofloxacin is used with
+
+doxycycline and metronidazole to treat pelvic inflammatory disease.
+
+Ciprofloxacin is a representative quinolone antibacterial. Various medicines can serve as
+
+alternatives.
+
+Uses: gastroenteritis (including cholera, shigellosis, travellers’ diarrhoea,
+
+campylobacter, and salmonella enteritis); typhoid; gonorrhoea; chancroid;
+
+pelvic inflammatory disease (with doxycycline and metronidazole);
+
+legionnaires’ disease; meningitis (including meningococcal meningitis
+
+prophylaxis); respiratory tract infections (including pseudomonal infections
+
+in cystic fibrosis, but not pneumococcal pneumonia); urinary tract
+
+infections; bone and joint infections; septicaemia; anthrax; skin infections;
+
+otitis externa; prophylaxis in surgery.
+
+Contraindications: history of tendon disorders related to quinolone use (see
+
+below).
+
+Precautions:  history of epilepsy or conditions that predispose to seizures,
+
+G6PD deficiency, myasthenia gravis (risk of exacerbation), pregnancy
+
+(Appendix 2) and breastfeeding (Appendix 3), children or adolescents (see
+
+below); avoid exposure to excessive sunlight (discontinue if photosensitivity
+
+occurs); rarely tendon damage (see below); renal impairment (Appendix 4);
+
+avoid excessive alkalinity of urine and ensure adequate fluid intake (risk of
+
+crystalluria); interactions : Appendix 1.
+
+USE IN CHILDREN. Ciprofloxacin causes arthropathy in the weight-bearing joints of
+
+immature animals and is therefore generally not recommended for use in children and
+
+growing adolescents. However, the significance of this effect in humans is uncertain
+
+and in some specific circumstances, short-term use of ciprofloxacin in children may be
+
+justified. For example, ciprofloxacin is used to treat pseudomonal infections in cystic
+
+fibrosis (for children over 5 years), and for treatment and prophylaxis of inhalational
+
+anthrax.
+
+TENDON DAMAGE. Tendon damage (including rupture) has been reported rarely in
+
+patients receiving quinolones. Tendon rupture may occur within 48 hours of starting
+
+treatment. Health-care workers should be aware that:
+
+- quinolones are contraindicated in patients with a history of tendon disorders related
+
+to quinolone use;
+
+- elderly patients are more prone to tendinitis;
+
+- the risk of tendon rupture is increased by the concomitant use of corticosteroids;
+
+- if tendinitis is suspected, the quinolone should be discontinued immediately.
+
+SKILLED TASKS. May impair ability to perform skilled tasks, for example, operating
+
+machinery or driving.
+
+Dose:
+
+Infections due to susceptible organisms, by mouth , ADULT, 250–750 mg twice
+
+daily.
+
+Shigellosis,  by mouth, ADULT, 500 mg twice daily for 3 days.
+
+Cholera, by mouth , ADULT, 1 g as a single dose.
+
+Acute uncomplicated cystitis,  by mouth , ADULT, 100 mg twice daily for 3 days.
+
+Gonorrhoea and gonococcal conjunctivitis, by mouth , ADULT, 500 mg as a
+
+single dose.
+
+Chancroid, by mouth , ADULT, 500 mg twice daily for 3 days.
+
+Pelvic inflammatory disease, by mouth , ADULT, 500 mg twice daily.
+
+Pseudomonal lower respiratory tract infection in cystic fibrosis, by mouth ,
+
+ADULT, 750 mg twice daily; CHILD  5–17 years, (see also Precautions), up to
+
+20 mg/kg twice daily (maximum, 1.5 g daily).
+
+Surgical prophylaxis, by mouth , ADULT, 750 mg, 60–90 minutes before
+
+procedure.
+
+Prophylaxis of meningococcal meningitis, by mouth , ADULT, 500 mg as a single
+
+dose.
+
+Adverse effects: nausea, vomiting, dyspepsia, abdominal pain, flatulence,
+
+diarrhoea (rarely antibiotic-associated colitis); pancreatitis, dysphagia, tremor,
+
+hyperglycaemia, headache, dizziness, sleep disorders, rash (rarely erythema
+
+multiforme (Stevens-Johnson syndrome) and toxic epidermal necrolysis),
+
+pruritus; vasculitis, erythema nodosum, petechiae, haemorrhagic bullae; less
+
+frequently anorexia and increased blood urea and creatinine; drowsiness,
+
+restlessness, asthenia, depression, confusion, hallucinations, convulsions,
+
+paraesthesia, hypoesthesia, movement disorders; photosensitivity,
+
+hypersensitivity reactions (including fever, urticaria, angioedema, arthralgia,
+
+myalgia, and anaphylaxis); blood disorders (including eosinophilia,
+
+leukopenia, thrombocytopenia); disturbances in vision, taste, hearing, and
+
+smell, tinnitus; tenosynovitis; tachycardia, hypotension, oedema, syncope,
+
+hot flushes and sweating; also isolated reports of tendon inflammation and
+
+damage (especially in the elderly and in those taking corticosteroids; see also
+
+above), haemolytic anaemia, renal failure, interstitial nephritis, and hepatic
+
+dysfunction (including hepatitis and cholestatic jaundice); discontinue if
+
+psychiatric, neurological, or hypersensitivity reactions (including severe rash)
+
+occur.

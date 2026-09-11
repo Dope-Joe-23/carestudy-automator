@@ -1,0 +1,94 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Enalapril
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Enalapril
+
+Tablet: 2.5 mg.
+
+Enalapril is a representative angiotensin-converting enzyme (ACE) inhibitor. Various
+
+medicines can serve as alternatives.
+
+Uses:  hypertension; heart failure (section 12.4).
+
+Contraindications:  hypersensitivity to ACE inhibitors (including angioedema);
+
+renovascular disease; pregnancy (Appendix 2).
+
+Precautions:  concomitant use of diuretics (see note below); hypotension with
+
+first doses, especially in patients on diuretics, on a low-sodium diet, on
+
+dialysis, if dehydrated, or with heart failure; peripheral vascular disease or
+
+generalized atherosclerosis (risk of clinically silent renovascular disease);
+
+severe or symptomatic aortic stenosis (use with great care); monitor renal
+
+function before and during treatment; renal impairment (reduce dose; see
+
+also Appendix 4); hepatic impairment (Appendix 5); possibly increased risk
+
+of agranulocytosis in collagen vascular disease; history of idiopathic or
+
+hereditary angioedema (use with care or avoid); breastfeeding (Appendix 3);
+
+interactions: Appendix 1.
+
+USE WITH DIURETICS. Because of the risk of very rapid falls in blood pressure in
+
+volume-depleted patients; treatment should be initiated with very low doses. High-dose
+
+diuretic therapy (for example, with furosemide at doses greater than 80 mg daily)
+
+should be discontinued, or the dose significantly reduced, at least 24 hours before
+
+starting enalapril (may not be possible in heart failure due to the risk of pulmonary
+
+oedema). If high-dose diuretic therapy cannot be stopped, medical supervision is
+
+advised for at least 2 hours after administration or until blood pressure is stable.
+
+ANAPHYLACTOID REACTIONS. Avoid enalapril during dialysis with high-flux
+
+polyacrilonitrile membranes and during low-density lipoprotein apheresis with dextran
+
+sulfate; also withhold before desensitization with wasp or bee venom.
+
+Dose:
+
+Hypertension  by mouth , ADULT, initially 5 mg once daily (lower if used in
+
+addition to a diuretic or in renal impairment); increased if necessary; usual
+
+maintenance dose, 20 mg once daily; maximum, 40 mg once daily.
+
+Adverse effects:  dizziness, headache; less commonly, nausea, diarrhoea,
+
+hypotension (severe in rare cases), dry cough, fatigue, asthenia, muscle
+
+cramps, rash, and renal impairment; rarely vomiting, dyspepsia, abdominal
+
+pain, constipation, peptic ulcer, glossitis, stomatitis, ileus, anorexia,
+
+pancreatitis, liver damage, chest pain, palpitations, arrhythmias, Raynaud
+
+syndrome, angioedema, bronchospasm, rhinorrhoea, dry mouth, sore throat,
+
+pulmonary infiltrates, paraesthesia, vertigo, nervousness, depression,
+
+confusion, drowsiness, insomnia, dream abnormalities, pruritus, urticaria,
+
+alopecia, flushing, impotence, gynaecomastia, Stevens-Johnson syndrome,
+
+toxic epidermal necrolysis, exfoliative dermatitis, pemphigus, taste
+
+disturbances, tinnitus, and blurred vision; electrolyte disturbances and
+
+hypersensitivity-like reactions (including fever, myalgia, arthralgia,
+
+eosinophilia, and photosensitivity) also reported.

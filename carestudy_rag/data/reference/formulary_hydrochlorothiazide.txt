@@ -1,0 +1,64 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Hydrochlorothiazide
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Hydrochlorothiazide
+
+Tablet (scored): 25 mg.
+
+Hydrochlorothiazide is a representative thiazide diuretic. Various medicines can serve
+
+as alternatives.
+
+Uses: alone in mild hypertension, and in combination with other drugs in
+
+moderate to severe hypertension; heart failure (section 12.4); oedema
+
+(section 16).
+
+Contraindications: severe renal or severe hepatic impairment; hyponatraemia,
+
+hypercalcaemia, refractory hypokalaemia, symptomatic hyperuricaemia;
+
+Addison disease.
+
+Precautions:  renal impairment (Appendix 4); hepatic impairment (Appendix 5);
+
+pregnancy (Appendix 2) and breastfeeding (Appendix 3); the elderly;
+
+electrolytes may need to be monitored with high doses or in renal
+
+impairment; may aggravate diabetes mellitus and gout; may exacerbate
+
+systemic lupus erythematosus; porphyria;  interactions: Appendix 1.
+
+Dose:
+
+Hypertension, by mouth , ADULT, 12.5 mg daily, increased to 25–50 mg daily if
+
+necessary.
+
+Adverse effects: fluid and electrolyte imbalance leading to dry mouth, thirst,
+
+gastrointestinal disturbances (including nausea, and vomiting), weakness,
+
+lethargy, drowsiness, seizures, headache, muscle pains or cramps,
+
+hypotension (including postural hypotension), oliguria, and arrhythmias;
+
+hypokalaemia, hypomagnesaemia, hyponatraemia, hypochloraemic alkalosis,
+
+hypercalcaemia; hyperglycaemia, hyperuricaemia, gout; rash,
+
+photosensitivity; altered plasma lipid concentration; rarely impotence
+
+(reversible); blood disorders (including neutropenia, thrombocytopenia);
+
+pancreatitis, intrahepatic cholestasis; acute renal failure; hypersensitivity
+
+reactions including pneumonitis, pulmonary oedema, and severe skin
+
+reactions.

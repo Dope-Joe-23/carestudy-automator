@@ -1,0 +1,60 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Artesunate
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Artesunate
+
+Injection: ampoules, containing 60 mg anhydrous artesunic acid with a
+
+separate ampoule of 5% sodium bicarbonate solution.
+
+Tablet: 50 mg.
+
+Uses: treatment of uncomplicated malaria caused by P. falciparum  in
+
+combination with other antimalarials (see also introductory note above);
+
+treatment of severe malaria in areas where quinine is ineffective.
+
+Contraindications: first trimester of pregnancy (Appendix 2).
+
+Precautions: risk of recurrence if used alone in non-immune patients.
+
+SKILLED TASKS. Dizziness may impair ability to perform skilled tasks, for example,
+
+operating machinery or driving.
+
+Dose:
+
+Treatment of uncomplicated falciparum malaria (in combination with other
+
+antimalarial drugs):
+
+by mouth , ADULT  and CHILD  over 5 months, 4 mg/kg daily for 3 days;
+
+by intravenous  or intramuscular injection , ADULT, initially 2.4 mg/kg, then
+
+repeated at 12-hour intervals for 2 further doses, then once daily.
+
+RECONSTITUTION. Artesunic acid should be dissolved in sodium bicarbonate 5%
+
+solution for injection (to form sodium artesunate), and then further diluted in 5 ml of
+
+glucose 5% solution for injection before administration; solutions should be freshly
+
+prepared prior to administration. Consult manufacturer’s literature for further
+
+information.
+
+Adverse effects: headache, nausea, vomiting, abdominal pain, diarrhoea,
+
+dizziness, tinnitus, neutropenia, elevated liver enzyme values; ECG
+
+abnormalities including prolongation of the QT interval; temporary
+
+suppression of reticulocyte response and induction of blackwater fever,
+
+reported; neurotoxicity (in animal studies).

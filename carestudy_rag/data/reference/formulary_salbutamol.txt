@@ -1,0 +1,98 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Salbutamol
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Salbutamol
+
+Inhalation (aerosol): 100 micrograms (as sulfate) per dose.
+
+Injection: 50 micrograms (as sulfate)/ml in 5-ml ampoule.
+
+Oral liquid: 2 mg/5 ml.
+
+Respirator solution for use in nebulizers: 5 mg (as sulfate)/ml.
+
+Tablet: 2 mg; 4 mg (as sulfate).
+
+Salbutamol is a representative beta 2-adrenoceptor agonist. Various drugs can serve as
+
+alternatives.
+
+Uses: prophylaxis and treatment of asthma.
+
+Precautions:  hyperthyroidism, myocardial insufficiency, arrhythmias,
+
+susceptibility to QT-interval prolongation, hypertension; pregnancy (high
+
+doses should be given by inhalation because parenteral use can affect the
+
+myometrium and possibly cause cardiac problems; see also introductory
+
+note above and Appendix 2); breastfeeding (Appendix 3); diabetes mellitus,
+
+especially intravenous administration (ketoacidosis reported; monitor blood
+
+glucose); interactions:  Appendix 1.
+
+Dose:
+
+Chronic asthma (when inhalation is ineffective), by mouth , ADULT, 2–4 mg,
+
+3–4 times daily; in some patients up to a maximum of 8 mg 3–4 times daily;
+
+CHILD  under 2 years, 100 micrograms/kg 4 times daily; CHILD  2–6 years,
+
+1–2 mg 3–4 times daily; CHILD  6–12 years, 2 mg 3–4 times daily.
+
+Severe acute bronchospasm,  by slow intravenous injection , ADULT, 250 micrograms,
+
+repeated if necessary.
+
+Relief of acute bronchospasm, by aerosol inhalation , ADULT, 100–200 micrograms
+
+(1–2 puffs); CHILD, 100 micrograms (1 puff) increased to 200 micrograms
+
+(2 puffs) if necessary; by intramuscular or  subcutaneous injection , ADULT,
+
+500 micrograms repeated every 4 hours if necessary.
+
+Prophylaxis of exercise-induced bronchospasm, by aerosol inhalation , ADULT,
+
+200 micrograms (2 puffs); CHILD, 100 micrograms (1 puff) increased to
+
+200 micrograms (2 puffs) if required.
+
+Chronic asthma (as adjunct in stepped treatment), by aerosol inhalation , ADULT,
+
+100–200 micrograms (1–2 puffs) up to 3–4 times daily; CHILD,
+
+100 micrograms (1 puff) 3–4 times daily, increased to 200 micrograms
+
+(2 puffs) 3–4 times daily if necessary.
+
+Severe acute asthma, chronic bronchospasm (unresponsive to conventional
+
+treatment), by inhalation of nebulized solution , ADULT  and CHILD  over 18
+
+months, 2.5 mg repeated up to 4 times daily; may be increased to 5 mg if
+
+necessary (medical assessment should be considered since alternative
+
+therapy may be indicated); CHILD under 18 months, clinical efficacy
+
+uncertain (transient hypoxaemia may occur—consider oxygen
+
+supplementation).
+
+Adverse effects:  hypokalaemia after high doses (see introductory note above);
+
+arrhythmias, tachycardia, palpitations, fine tremor (usually hands), muscle
+
+cramps, headache, insomnia, behavioural disturbances in children;
+
+paradoxical bronchospasm, urticaria, and angioedema also reported; slight
+
+pain on intramuscular injection.

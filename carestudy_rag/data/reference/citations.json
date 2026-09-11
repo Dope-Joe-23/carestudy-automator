@@ -64,70 +64,6 @@
     "venue": "Fact sheet",
     "url": "https://www.who.int/news-room/fact-sheets/detail/anaemia"
   },
-  "formulary_ceftriaxone.txt": {
-    "title": "Ceftriaxone",
-    "author": "World Health Organization",
-    "year": 2008,
-    "citeKey": "WHO Model Formulary",
-    "venue": "WHO Model Formulary 2008",
-    "url": "https://www.who.int/publications/i/item/9789241547659"
-  },
-  "formulary_paracetamol.txt": {
-    "title": "Paracetamol",
-    "author": "World Health Organization",
-    "year": 2008,
-    "citeKey": "WHO Model Formulary",
-    "venue": "WHO Model Formulary 2008",
-    "url": "https://www.who.int/publications/i/item/9789241547659"
-  },
-  "formulary_amoxicillin.txt": {
-    "title": "Amoxicillin",
-    "author": "World Health Organization",
-    "year": 2008,
-    "citeKey": "WHO Model Formulary",
-    "venue": "WHO Model Formulary 2008",
-    "url": "https://www.who.int/publications/i/item/9789241547659"
-  },
-  "formulary_metformin.txt": {
-    "title": "Metformin",
-    "author": "World Health Organization",
-    "year": 2008,
-    "citeKey": "WHO Model Formulary",
-    "venue": "WHO Model Formulary 2008",
-    "url": "https://www.who.int/publications/i/item/9789241547659"
-  },
-  "formulary_furosemide.txt": {
-    "title": "Furosemide",
-    "author": "World Health Organization",
-    "year": 2008,
-    "citeKey": "WHO Model Formulary",
-    "venue": "WHO Model Formulary 2008",
-    "url": "https://www.who.int/publications/i/item/9789241547659"
-  },
-  "formulary_artemether_lumefantrine.txt": {
-    "title": "Artemether + lumefantrine",
-    "author": "World Health Organization",
-    "year": 2008,
-    "citeKey": "WHO Model Formulary",
-    "venue": "WHO Model Formulary 2008",
-    "url": "https://www.who.int/publications/i/item/9789241547659"
-  },
-  "formulary_folic_acid.txt": {
-    "title": "Folic acid",
-    "author": "World Health Organization",
-    "year": 2008,
-    "citeKey": "WHO Model Formulary",
-    "venue": "WHO Model Formulary 2008",
-    "url": "https://www.who.int/publications/i/item/9789241547659"
-  },
-  "formulary_insulin.txt": {
-    "title": "Insulin (medication)",
-    "author": "World Health Organization",
-    "year": 2008,
-    "citeKey": "WHO Model Formulary",
-    "venue": "WHO Model Formulary 2008",
-    "url": "https://www.who.int/publications/i/item/9789241547659"
-  },
   "medlineplus_appendicitis.txt": {
     "title": "Appendicitis",
     "author": "MedlinePlus",
@@ -351,5 +287,269 @@
     "citeKey": "Open RN",
     "venue": "Nursing Fundamentals (2nd ed.), WisTech Open",
     "url": "https://wtcs.pressbooks.pub/nursingfundamentals/"
+  },
+  "formulary_ceftriaxone.txt": {
+    "title": "Ceftriaxone",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_paracetamol.txt": {
+    "title": "Paracetamol",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_amoxicillin.txt": {
+    "title": "Amoxicillin",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_metformin.txt": {
+    "title": "Metformin",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_furosemide.txt": {
+    "title": "Furosemide",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_artemether_lumefantrine.txt": {
+    "title": "Artemether + lumefantrine",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_folic_acid.txt": {
+    "title": "Folic acid",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_insulin.txt": {
+    "title": "Insulin (medication)",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_artesunate.txt": {
+    "title": "Artesunate",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_quinine.txt": {
+    "title": "Quinine",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_metronidazole.txt": {
+    "title": "Metronidazole",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_gentamicin.txt": {
+    "title": "Gentamicin",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_ciprofloxacin.txt": {
+    "title": "Ciprofloxacin",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_cloxacillin.txt": {
+    "title": "Cloxacillin",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_doxycycline.txt": {
+    "title": "Doxycycline",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_cotrimoxazole.txt": {
+    "title": "Sulfamethoxazole + trimethoprim",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_ibuprofen.txt": {
+    "title": "Ibuprofen",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_metoclopramide.txt": {
+    "title": "Metoclopramide",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_nifedipine.txt": {
+    "title": "Nifedipine",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_atenolol.txt": {
+    "title": "Atenolol",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_enalapril.txt": {
+    "title": "Enalapril",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_hydrochlorothiazide.txt": {
+    "title": "Hydrochlorothiazide",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_methyldopa.txt": {
+    "title": "Methyldopa",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_salbutamol.txt": {
+    "title": "Salbutamol",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_dexamethasone.txt": {
+    "title": "Dexamethasone",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_prednisolone.txt": {
+    "title": "Prednisolone",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_hydrocortisone.txt": {
+    "title": "Hydrocortisone",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_diazepam.txt": {
+    "title": "Diazepam",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_carbamazepine.txt": {
+    "title": "Carbamazepine",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_phenytoin.txt": {
+    "title": "Phenytoin",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_magnesium_sulfate.txt": {
+    "title": "Magnesium sulfate",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_ferrous_salt.txt": {
+    "title": "Ferrous salt (iron)",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
+  },
+  "formulary_morphine.txt": {
+    "title": "Morphine",
+    "author": "World Health Organization",
+    "year": 2008,
+    "citeKey": "WHO Model Formulary",
+    "venue": "WHO Model Formulary 2008",
+    "url": "https://www.who.int/publications/i/item/9789241547659"
   }
 }

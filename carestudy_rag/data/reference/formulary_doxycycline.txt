@@ -1,0 +1,74 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Doxycycline
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Doxycycline
+
+Capsule or tablet: 100 mg (hydrochloride).
+
+Doxycycline is a tetracycline and is a broad-spectrum antibiotic that is effective for
+
+conditions caused by chlamydia, rickettsia, brucella, and the spirochaete, Borrelia
+
+burgdorferi  (Lyme disease). It is the preferred tetracycline since it has a more favourable
+
+pharmacokinetic profile than other tetracyclines, including tetracycline. It is deposited
+
+in growing bone and teeth causing staining and occasionally dental hypoplasia. It should
+
+not be given to children under 8 years or pregnant women; in some countries, use in
+
+children under 12 years is contraindicated.
+
+Uses:  supplement to quinine or artesunate treatment for multidrug-resistant
+
+P. falciparum  malaria; short-term prophylaxis of multidrug-resistant
+
+P. falciparum  malaria; see also notes above; bacterial infections
+
+(section 6.2.2).
+
+Contraindications: pregnancy (Appendix 2); children under 8 years; porphyria;
+
+systemic lupus erythematosus.
+
+Precautions:  avoid exposure to sunlight or sunlamps (photosensitivity
+
+reported); renal impairment (Appendix 4); hepatic impairment (Appendix 5);
+
+breastfeeding (Appendix 3); interactions: Appendix 1.
+
+Dose:
+
+Supplement to malaria treatment (see note above), by mouth , ADULT  and CHILD
+
+over 8 years, 100 mg twice daily for 7–10 days.
+
+Short-term prophylaxis of malaria, by mouth , ADULT, 100 mg daily for up to
+
+8 weeks; CHILD  over 8 years, 1.5 mg/kg daily for up to 8 weeks; doxycycline
+
+should be started on the day before exposure and continued for 4 weeks
+
+after last risk of exposure.
+
+PATIENT ADVICE. Capsules should be swallowed whole with plenty of fluid while
+
+sitting or standing to prevent oesophageal irritation. May be given with food or milk to
+
+counter gastric irritation.
+
+Adverse effects: gastrointestinal disturbances; anorexia; flushing, tinnitus;
+
+photosensitivity; hypersensitivity reactions (including rash, exfoliative
+
+dermatitis, Stevens-Johnson syndrome, urticaria, angioedema, anaphylaxis
+
+and pericarditis); headache and visual disturbances; hepatotoxicity, blood
+
+disorders, pancreatitis and antibiotic-associated colitis reported; staining of
+
+growing teeth and occasional dental hypoplasia.

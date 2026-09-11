@@ -1,0 +1,116 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Gentamicin
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Gentamicin
+
+Injection: 10 mg; 40 mg (as sulfate)/ml in 2-ml vial.
+
+Aminoglycosides including gentamicin are bactericidal and active against some Gram-
+
+positive and many Gram-negative organisms including Pseudomonas aeruginosa .
+
+Aminoglycosides are not absorbed from the gut and must therefore be given by
+
+injection for systemic infections. Excretion is mainly by the kidney and accumulation
+
+occurs in renal impairment.
+
+Gentamicin should only be prescribed and administered by trained health personnel.
+
+Care must be taken to ensure correct dosage and duration of treatment are not
+
+exceeded, because most adverse effects are dose related. The most important adverse
+
+effects are ototoxicity and nephrotoxicity and they are most common in the elderly and
+
+in patients with renal impairment. These groups and, if possible, all patients should be
+
+monitored for ototoxicity by audiometry. If there is impairment of renal function, the
+
+dose interval must be increased; in severe renal impairment, the dose should also be
+
+reduced. Serum concentration monitoring avoids both excessive and subtherapeutic
+
+concentrations and can prevent toxicity and ensure efficacy. If possible serum
+
+concentrations should be monitored in all patients, but
+
+must  be measured in infants,
+
+the elderly, in obesity, in cystic fibrosis, in high-dosage regimens, in renal impairment,
+
+or if treatment lasts for longer than 7 days.
+
+Loading and maintenance doses of gentamicin are based on the patient’s weight and
+
+renal function (for example, using a nomogram) with adjustments based on plasma
+
+gentamicin concentration. High doses are used occasionally for serious infections.
+
+Gentamicin is a representative aminoglycoside antibiotic. Various medicines can serve
+
+as alternatives.
+
+Uses:  pneumonia; cholecystitis; peritonitis; septicaemia; acute pyelonephritis;
+
+prostatitis; otitis externa; skin and soft tissue infections; pelvic inflammatory
+
+disease (with clindamycin); endocarditis; meningitis; listeriosis; tularaemia;
+
+brucellosis; plague; surgical prophylaxis; eye infections (section 21.1).
+
+Contraindications:  myasthenia gravis.
+
+Precautions:  renal impairment (reduce dose; Appendix 4); neonates, infants,
+
+and the elderly (adjust dosage and monitor renal, auditory, and vestibular
+
+function, and serum gentamicin concentrations); avoid prolonged use;
+
+conditions characterized by muscular weakness; obesity (use ideal body
+
+weight to calculate dose and monitor serum gentamicin concentration
+
+closely); pregnancy (Appendix 2) and breastfeeding (Appendix 3);
+
+interactions : Appendix 1.
+
+Dose:
+
+Infections due to susceptible organisms, by  intramuscular injection or by  slow
+
+intravenous injection  (over at least 3 minutes) or by intravenous infusion , ADULT,
+
+3–5 mg/kg daily in divided doses every 8 hours; NEONATE  up to 2 weeks,
+
+3 mg/kg every 12 hours; CHILD  2 weeks–12 years, 2 mg/kg every 8 hours.
+
+Pelvic inflammatory disease (with clindamycin), by intravenous injection , ADULT,
+
+1.5 mg/kg every 8 hours.
+
+Endocarditis (as part of combination therapy),  by intramuscular injection  or by
+
+intravenous injection  (over at least 3 minutes), ADULT, 1 mg/kg every 8 hours.
+
+Surgical prophylaxis (with clindamycin), by intravenous injection , ADULT, 5 mg/kg
+
+as a single dose at induction.
+
+NOTE.  One hour (peak) concentrations should not exceed 5–10 mg/litre
+
+(3–5 mg/litre for endocarditis); pre-dose (trough) concentration should be less than
+
+2 mg/litre (less than 1 mg/litre in endocarditis).
+
+DILUTION AND ADMINISTRATION. According to manufacturer’s directions.
+
+Adverse effects:  vestibular and auditory damage, nephrotoxicity; rarely,
+
+hypomagnesaemia on prolonged therapy; antibiotic-associated colitis,
+
+stomatitis; also nausea, vomiting, rash, and blood disorders.

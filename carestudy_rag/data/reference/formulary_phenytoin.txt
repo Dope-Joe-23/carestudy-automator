@@ -1,0 +1,136 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Phenytoin
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Phenytoin
+
+Capsule: 25 mg; 50 mg; 100 mg (sodium salt).
+
+Injection: 50 mg/ml in 5-ml vial (sodium salt).
+
+Oral liquid: 25–30 mg/5 ml.
+
+Tablet: 25 mg; 50 mg; 100 mg (sodium salt).
+
+Tablet (chewable): 50 mg.
+
+NOTE. The presence of both the 25 mg/5 ml and the 30 mg/5 ml strengths of the
+
+oral liquid on the same market should be avoided to prevent confusion in prescribing
+
+and dispensing.
+
+Uses: generalized tonic–clonic seizures; partial seizures; status epilepticus.
+
+Contraindications:  porphyria; avoid parenteral use in sinus bradycardia, sino-
+
+atrial block, second- and third-degree heart block, Stokes-Adams syndrome.
+
+Precautions:  hepatic impairment (reduce dose; Appendix 5); pregnancy
+
+(increased risk of birth defects and neonatal bleeding, see note above;
+
+Appendix 2) and breastfeeding (see note above; Appendix 3); diabetes
+
+mellitus; monitor blood counts; hypotension and heart failure (especially
+
+with parenteral use); in case of intravenous administration, resuscitation
+
+facilities must be available and the injection solution alkaline (irritant to
+
+tissues); interactions : Appendix 1.
+
+BLOOD OR SKIN DISORDERS. Patients or their carers should be told how to
+
+recognize signs of blood or skin disorders and advised to seek immediate medical
+
+attention if symptoms such as sore throat, rash, mouth ulcers, bruising, or bleeding
+
+develop. Leukopenia which is severe, progressive or associated with clinical symptoms
+
+requires withdrawal (if necessary under cover of a suitable alternative antiepileptic).
+
+SKILLED TASKS. May impair ability to perform skilled tasks, for example, operating
+
+machinery or driving; see also note above.
+
+Dose:
+
+Generalized tonic–clonic  seizures, partial seizures,  by mouth , ADULT, initially
+
+3–4 mg/kg daily (as a single dose or in 2 divided doses), increased gradually
+
+at intervals of 2 weeks as necessary (with plasma phenytoin concentration
+
+monitoring); to a usual maintenance dose of 200–500 mg daily; CHILD,
+
+initially 3–5 mg/kg daily in 2 divided doses, increased gradually according to
+
+clinical response and plasma phenytoin concentration, to a usual
+
+maintenance dose of 4–8 mg/kg daily (maximum, 300 mg daily).
+
+NOTE. Plasma concentration for optimum response 10–20 mg/litre
+
+(40–80 micromol/litre).
+
+PATIENT ADVICE. Preferably taken with or after food.
+
+Status epilepticus,
+
+by slow intravenous injection  or by intravenous infusion  (with blood pressure and
+
+ECG monitoring), ADULT, 15 mg/kg at a rate of not more than
+
+50 mg/minute, as a loading dose; maintenance doses of about 100 mg;
+
+by mouth  or by slow intravenous injection  should be given thereafter at intervals
+
+of 6–8 hours, with monitoring of plasma concentrations; rates and dose
+
+reduced according to weight; CHILD, 15 mg/kg as a loading dose at rate of
+
+1 mg/kg/minute (not exceeding 50 mg/minute); NEONATE,
+
+15–20 mg/kg as a loading dose at rate of 1–3 mg/kg/minute.
+
+DILUTION AND ADMINISTRATION. According to manufacturer’s directions.
+
+Adverse effects: gastric intolerance, headache, sleeplessness, agitation (during
+
+initial phase); sedation, confusion, blurred vision, ataxia, nystagmus,
+
+diplopia, slurred speech, cerebellar-vestibular symptoms, behavioural
+
+disorders, hallucinations, hyperglycaemia (may be signs of overdosage);
+
+gingival hyperplasia, acne, coarse facies, hirsutism, fever, hepatitis,
+
+neurological changes including peripheral neuropathy, choreiform
+
+movements, impaired cognition, and increased seizure frequency;
+
+osteomalacia, rickets (associated with reduced plasma calcium levels);
+
+lymph-node enlargement; vertigo; rash (discontinue; if mild re-introduce
+
+cautiously, but discontinue if recurrence); very rarely Stevens-Johnson
+
+syndrome (erythema multiforme), systemic lupus erythematosus, and toxic
+
+epidermal necrolysis; rarely blood disorders including megaloblastic anaemia
+
+(may be treated with folic acid), leukopenia, thrombocytopenia, and
+
+agranulocytosis with or without bone marrow depression; with intravenous
+
+administration, cardiovascular and central nervous system depression
+
+(particularly if administered too rapidly) with arrhythmias, hypotension and
+
+cardiovascular collapse, and alterations in respiratory function (including
+
+respiratory collapse).

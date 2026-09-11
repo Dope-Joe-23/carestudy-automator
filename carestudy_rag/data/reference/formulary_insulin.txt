@@ -2,7 +2,7 @@ SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential M
 TITLE: Insulin (medication)
 URL: https://www.who.int/publications/i/item/9789241547659
 LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
-RETRIEVED: 2026-08-14
+RETRIEVED: 2026-09-11
 
 
 18.5 Insulins and other antidiabetic agents

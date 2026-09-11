@@ -1,0 +1,64 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Methyldopa
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Methyldopa
+
+Tablet: 250 mg.
+
+Uses: hypertension in pregnancy.
+
+Contraindications: depression; active liver disease; phaeochromocytoma,
+
+porphyria.
+
+Precautions: history of hepatic impairment (Appendix 5); renal impairment
+
+(Appendix 4); blood counts and liver-function tests advised; history of
+
+depression; positive direct Coomb test in up to 20% of patients (affects
+
+blood cross-matching); interference with laboratory tests; pregnancy
+
+(Appendix 2) and breastfeeding (Appendix 3); interactions: Appendix 1.
+
+SKILLED TASKS. May impair ability to perform skilled tasks, for example, operating
+
+machinery or driving.
+
+Dose:
+
+Hypertension in pregnancy, by mouth , ADULT, initially 250 mg 2–3 times daily;
+
+gradually increased at intervals of 2 or more days, if necessary; maximum,
+
+3 g daily.
+
+Adverse effects: sedation, dizziness, lightheadedness, postural hypotension,
+
+weakness, fatigue, headache, fluid retention and oedema, sexual dysfunction;
+
+impaired concentration and memory, depression, mild psychosis, disturbed
+
+sleep and nightmares; drug fever, influenza-like syndrome; nausea, vomiting,
+
+constipation, diarrhoea, dry mouth, stomatitis, sialadenitis; liver function
+
+impairment, hepatitis, jaundice, rarely fatal hepatic necrosis; bone marrow
+
+depression, haemolytic anaemia, leukopenia, thrombocytopenia,
+
+eosinophilia; parkinsonism; rash including toxic epidermal necrolysis; nasal
+
+congestion; black or sore tongue; bradycardia, exacerbation of angina;
+
+myalgia, arthralgia, paraesthesia, Bell palsy; pancreatitis; hypersensitivity
+
+reactions including lupus erythematosus-like syndrome, myocarditis,
+
+pericarditis; gynaecomastia, hyperprolactinaemia, amenorrhoea; urine
+
+darkens on standing.

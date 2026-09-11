@@ -1,0 +1,92 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Metoclopramide
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Metoclopramide
+
+Injection: 5 mg (hydrochloride)/ml in 2-ml ampoule.
+
+Tablet: 10 mg (hydrochloride).
+
+Uses:  nausea and vomiting in gastrointestinal disorders, in migraine
+
+(section 7.1), and following surgery and treatment with cytotoxics
+
+(section 8.2) or radiotherapy; gastro–oesophageal reflux disease
+
+(section 17.1); premedication; aid to gastrointestinal intubation;
+
+gastroparesis.
+
+NOTE. In children (and in some countries, patients under 20 years) use is restricted to
+
+treatment of severe intractable vomiting of known cause, management of radio- and
+
+chemotherapy-induced nausea and vomiting, as an aid to gastrointestinal intubation,
+
+and as premedication.
+
+Contraindications: gastrointestinal obstruction, haemorrhage or perforation;
+
+3–4 days after gastrointestinal surgery; convulsive disorders;
+
+phaeochromocytoma.
+
+Precautions: the elderly, children and young adults; hepatic impairment
+
+(Appendix 5); renal impairment (Appendix 4); may mask underlying
+
+disorders such as cerebral irritation; avoid for 3–4 days after gastrointestinal
+
+surgery; pregnancy (Appendix 2) and breastfeeding (Appendix 3); Parkinson
+
+disease; epilepsy; depression; porphyria;  interactions:  Appendix 1.
+
+Dose:
+
+Nausea and vomiting, gastro-oesophageal reflux disease, gastroparesis, by mouth,
+
+by intramuscular injection, or by slow intravenous injection  (over 1–2 minutes),
+
+ADULT, 10 mg 3 times daily; YOUNG ADULT 15–19 years (under 60 kg), 5 mg
+
+3 times daily; CHILD  up to 1 year (up to 10 kg), 1 mg twice daily; CHILD
+
+1–3 years (10–14 kg), 1 mg 2–3 times daily; CHILD  3–5 years (15–19 kg),
+
+2 mg 2–3 times daily; CHILD  5–9 years (20–29 kg), 2.5 mg 3 times daily;
+
+CHILD  9–14 years (30 kg and over), 5 mg 3 times daily (usual maximum
+
+500 micrograms/kg daily, particularly for children and young adults).
+
+Premedication, by slow intravenous injection , ADULT, 10 mg as a single dose.
+
+Aid to gastrointestinal intubation, by mouth, by intramuscular injection, or  by slow
+
+intravenous injection , ADULT, 10–20 mg as a single dose 5–10 minutes before
+
+examination; YOUNG ADULT  (15–19 years), 10 mg; CHILD  under 3 years,
+
+1 mg; CHILD  3–5 years, 2 mg; CHILD  5–9 years, 2.5 mg; CHILD  9–14 years,
+
+5 mg.
+
+NOTE. High dose metoclopramide with cytotoxic chemotherapy, see section 8.2.
+
+Adverse effects:  extrapyramidal symptoms (especially in children and young
+
+adults; see introductory note above); tardive dyskinesias on prolonged use;
+
+hyperprolactinaemia; drowsiness, restlessness, dizziness, headache,
+
+diarrhoea, depression, hypotension and hypertension reported; rarely
+
+neuroleptic malignant syndrome; rash, pruritus, oedema; cardiac conduction
+
+abnormalities following intravenous administration; rarely
+
+methaemoglobinaemia (more severe in G6PD deficiency).

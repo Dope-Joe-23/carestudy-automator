@@ -48,6 +48,34 @@ Model List of Essential Medicines. The 2008 edition is the latest published.
 - Artemether + lumefantrine -> formulary_artemether_lumefantrine.txt
 - Folic acid -> formulary_folic_acid.txt
 - Insulin (soluble + intermediate, with section 18.5 introduction) -> formulary_insulin.txt
+- Artesunate -> formulary_artesunate.txt
+- Quinine -> formulary_quinine.txt
+- Metronidazole -> formulary_metronidazole.txt
+- Gentamicin -> formulary_gentamicin.txt
+- Ciprofloxacin -> formulary_ciprofloxacin.txt
+- Cloxacillin -> formulary_cloxacillin.txt
+- Doxycycline -> formulary_doxycycline.txt
+- Sulfamethoxazole + trimethoprim (cotrimoxazole) -> formulary_cotrimoxazole.txt
+- Ibuprofen -> formulary_ibuprofen.txt
+- Metoclopramide -> formulary_metoclopramide.txt
+- Nifedipine -> formulary_nifedipine.txt
+- Atenolol -> formulary_atenolol.txt
+- Enalapril -> formulary_enalapril.txt
+- Hydrochlorothiazide -> formulary_hydrochlorothiazide.txt
+- Methyldopa -> formulary_methyldopa.txt
+- Salbutamol -> formulary_salbutamol.txt
+- Dexamethasone -> formulary_dexamethasone.txt
+- Prednisolone -> formulary_prednisolone.txt
+- Hydrocortisone -> formulary_hydrocortisone.txt
+- Diazepam -> formulary_diazepam.txt
+- Carbamazepine -> formulary_carbamazepine.txt
+- Phenytoin -> formulary_phenytoin.txt
+- Magnesium sulfate -> formulary_magnesium_sulfate.txt
+- Ferrous salt (oral iron) -> formulary_ferrous_salt.txt
+- Morphine -> formulary_morphine.txt
+
+Note: diclofenac and omeprazole have no monograph in the 2008 formulary
+(diclofenac is explicitly noted as not on the 15th WHO Model List).
 
 MedlinePlus health topics
 ========================================

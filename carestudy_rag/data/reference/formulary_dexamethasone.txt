@@ -1,0 +1,54 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Dexamethasone
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Dexamethasone
+
+Injection: 4 mg dexamethasone phosphate (as disodium salt) in 1-ml
+
+ampoule.
+
+Uses:  adjunct in the emergency treatment of anaphylaxis; short-term
+
+suppression of inflammation in allergic disorders; for other indications, see
+
+section 18.1.
+
+Contraindications:  untreated systemic infection (unless condition life-
+
+threatening); administration of live virus vaccines.
+
+Precautions: increased susceptibility to, and severity of, infection; activation or
+
+exacerbation of tuberculosis, amoebiasis and strongyloidiasis; risk of severe
+
+chickenpox in non-immune patients (varicella-zoster immunoglobulin
+
+required if exposed to chickenpox); avoid exposure to measles (normal
+
+immunoglobulin possibly required if exposed); diabetes mellitus; peptic
+
+ulcer; hypertension; corneal perforation; for further precautions relating to
+
+long-term use of corticosteroids see section 18.1.
+
+Dose:
+
+Allergy (short-term use), by mouth , ADULT, usual range 0.5–10 mg daily as a
+
+single dose in the morning; CHILD, 10–100 micrograms/kg daily.
+
+Anaphylaxis (adjunct), by slow intravenous injection or  infusion  (as dexamethasone
+
+phosphate), ADULT, 0.5–24 mg; CHILD, 200–400 micrograms/kg.
+
+Adverse effects: nausea, dyspepsia, malaise, hiccups; hypersensitivity reactions
+
+including anaphylaxis; perineal irritation after intravenous administration;
+
+for adverse effects associated with low-dose, long-term corticosteroid
+
+treatment see section 18.1.

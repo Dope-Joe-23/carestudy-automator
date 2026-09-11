@@ -1,0 +1,66 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Cloxacillin
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Cloxacillin
+
+Capsule: 500 mg; 1 g (as sodium salt).
+
+Powder for injection: 500 mg (as sodium salt) in vial.
+
+Powder for oral liquid: 125 mg (as sodium salt)/5 ml.
+
+Cloxacillin is a representative penicillinase-resistant penicillin. Various medicines (such
+
+as dicloxacillin) can serve as alternatives.
+
+Uses:  infections due to beta-lactamase-producing staphylococci including
+
+impetigo, cellulitis, and other soft-tissue infections; pyomyositis;
+
+staphylococcal endocarditis, septicaemia, pneumonia, septic arthritis, and
+
+osteomyelitis; otitis externa.
+
+Contraindications:  hypersensitivity to penicillins (see introductory note above).
+
+Precautions: history of allergy to penicillins (see introductory note above);
+
+renal impairment (Appendix 4) and hepatic impairment (Appendix 5); heart
+
+failure; pregnancy (Appendix 2) and breastfeeding (Appendix 3);
+
+interactions : Appendix 1.
+
+Dose:
+
+Infections due to susceptible beta-lactamase-producing staphylococci, ADULT,
+
+by mouth , 500 mg 4 times daily, doubled in severe infection; by intramuscular
+
+injection , 250 mg every 4–6 hours, doubled in severe infection; by slow
+
+intravenous injection  or by intravenous infusion , 1–2 g every 6 hours; CHILD  up to
+
+2 years, quarter the adult dose; CHILD  2–10 years, half the adult dose.
+
+RECONSTITUTION AND ADMINISTRATION. According to manufacturer’s
+
+directions.
+
+Adverse effects:  nausea and vomiting, diarrhoea; hypersensitivity reactions
+
+including urticaria, fever, joint pain, rash, angioedema, anaphylaxis, serum
+
+sickness-like reactions, haemolytic anaemia, and interstitial nephritis (see
+
+also introductory note above); neutropenia, thrombocytopenia, coagulation
+
+disorders; rarely antibiotic-associated colitis; hepatitis and cholestatic
+
+jaundice (may be delayed in onset); electrolyte disturbances; pain,
+
+inflammation, phlebitis, or thrombophlebitis at injection sites.

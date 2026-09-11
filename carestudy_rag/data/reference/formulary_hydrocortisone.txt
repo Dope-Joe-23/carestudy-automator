@@ -1,0 +1,34 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Hydrocortisone
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Hydrocortisone
+
+Powder for injection: 100 mg (as sodium succinate) in vial.
+
+Uses:  adjunct in the emergency treatment of anaphylaxis; inflammatory skin
+
+conditions (section 13.3); inflammatory bowel disease (section 17.3);
+
+adrenocortical insufficiency (section 18.1).
+
+Contraindications:  not relevant to emergency use but for contraindications
+
+relating to long-term use, see section 18.1.
+
+Precautions: not relevant to emergency use but for precautions relating to low-
+
+dose, long-term use, see section 18.1.
+
+Dose:
+
+Anaphylaxis (adjunct), by slow intravenous injection  as a single dose, see Steps in
+
+the Management of Anaphylaxis.
+
+Adverse effects:  for adverse effects associated with long-term corticosteroid
+
+treatment, see section 18.1.

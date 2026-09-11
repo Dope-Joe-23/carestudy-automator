@@ -1,0 +1,56 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Prednisolone
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Prednisolone
+
+Tablet: 5 mg; 25 mg.
+
+Prednisolone is a representative corticosteroid. Various medicines can serve as
+
+alternatives.
+
+Uses: short-term suppression of inflammation in allergic disorders; longer-
+
+term suppression (section 18.1); malignant disease (section 8.3);
+
+inflammation of the eye (section 21.2).
+
+Contraindications: untreated systemic infection; administration of live virus
+
+vaccines.
+
+Precautions:  increased susceptibility to, and severity of, infection; activation or
+
+exacerbation of tuberculosis, amoebiasis, and strongyloidiasis; risk of severe
+
+chickenpox in non-immune patients (varicella-zoster immunoglobulin required
+
+if exposed to chickenpox); avoid exposure to measles (normal immunoglobulin
+
+possibly required if exposed); diabetes mellitus; peptic ulcer; hypertension;
+
+corneal perforation; for further precautions, in particular, those relating to low-
+
+dose long-term use of corticosteroids, see section 18.1.
+
+Dose:
+
+Allergy (short-term use), by mouth , ADULT  and CHILD , initially up to 10–20 mg
+
+daily as a single dose in the morning (in severe allergy, up to 60 mg daily as
+
+a short course of 5–10 days).
+
+Adverse effects: nausea, dyspepsia, malaise, hiccups; hypersensitivity reactions
+
+including anaphylaxis; for adverse effects associated with long-term
+
+corticosteroid treatment, see section 18.1.
+
+SECTION 4:
+
+Antidotes and other substances used in poisonings

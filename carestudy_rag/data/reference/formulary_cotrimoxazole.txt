@@ -1,0 +1,108 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Sulfamethoxazole + trimethoprim
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Sulfamethoxazole + trimethoprim
+
+Injection: 80 mg + 16 mg/ml in 5-ml and 10-ml ampoules.
+
+Oral liquid: 200 mg + 40 mg/5 ml.
+
+Tablet: 100 mg + 20 mg; 400 mg + 80 mg.
+
+Also known as Co-trimoxazole.
+
+Sulfamethoxazole is used in combination with trimethoprim because of their synergistic
+
+activity. In some countries, indications for the use of this combination have been
+
+restricted. The treatment of Pneumocystis carinii  ( Pneumocystis jiroveci ) infections must only
+
+be undertaken with specialist supervision where there are appropriate monitoring
+
+facilities (section 6.5.4).
+
+Uses:  urinary tract infections; respiratory tract infections including bronchitis,
+
+pneumonia, and infections in cystic fibrosis; typhoid fever; melioidosis;
+
+listeriosis; brucellosis; granuloma inguinale; neonatal chlamydial
+
+conjunctivitis; otitis media; skin infections, animal bites; Pneumocystis carinii
+
+(Pneumocystis jiroveci ) pneumonia (section 6.5.4).
+
+Contraindications:  hypersensitivity to sulfonamides or trimethoprim;
+
+porphyria.
+
+Precautions:  renal impairment (avoid if severe; Appendix 4); hepatic
+
+impairment (avoid if severe; Appendix 5); maintain adequate fluid intake (to
+
+avoid crystalluria); blood disorders (avoid unless under specialist
+
+supervision; monitor blood counts and discontinue immediately if blood
+
+disorder develops); rash (discontinue immediately); predisposition to folate
+
+deficiency or hyperkalaemia, the elderly; asthma; G6PD deficiency;
+
+pregnancy (Appendix 2) and breastfeeding (Appendix 3); avoid in infants
+
+under 6 weeks; interactions: Appendix 1.
+
+Dose:
+
+Infections due to susceptible organisms (which are not susceptible to other
+
+antibacterials),
+
+by mouth , ADULT, sulfamethoxazole 800 mg + trimethoprim 160 mg every
+
+12 hours, increased to sulfamethoxazole 1.2 g + trimethoprim 240 mg every
+
+12 hours in more severe infections; CHILD  6 weeks–5 months,
+
+sulfamethoxazole 100 mg + trimethoprim 20 mg every 12 hours; CHILD
+
+6 months–5 years, sulfamethoxazole 200 mg + trimethoprim 40 mg every
+
+12 hours; CHILD  6–12 years, sulfamethoxazole 400 mg + trimethoprim
+
+80 mg every 12 hours;
+
+by intravenous infusion , ADULT,  sulfamethoxazole 800 mg + trimethoprim 160 mg
+
+every 12 hours, increased to sulfamethoxazole 1.2 g + trimethoprim 240 mg,
+
+every 12 hours in more severe infections; CHILD, sulfamethoxazole
+
+30 mg/kg daily + trimethoprim 6 mg/kg daily in 2 divided doses.
+
+DILUTION AND ADMINISTRATION. According to manufacturer’s directions.
+
+Adverse effects:  nausea, diarrhoea; headache; hyperkalaemia; hypersensitivity
+
+reactions including rash and very rarely, Stevens-Johnson syndrome, toxic
+
+epidermal necrolysis, and photosensitivity (discontinue immediately); less
+
+commonly vomiting; very rarely glossitis, stomatitis, anorexia, liver damage
+
+(including jaundice and hepatic necrosis), pancreatitis, antibiotic-associated
+
+colitis, myocarditis, cough and shortness of breath, pulmonary infiltrates,
+
+aseptic meningitis, depression, convulsions, peripheral neuropathy, ataxia,
+
+tinnitus, vertigo, hallucinations, hypoglycaemia, blood disorders (including
+
+leukopenia, thrombocytopenia, megaloblastic anaemia, and eosinophilia),
+
+hyponatraemia, renal disorders (including interstitial nephritis), arthralgia,
+
+myalgia, vasculitis, and systemic lupus erythematosus.

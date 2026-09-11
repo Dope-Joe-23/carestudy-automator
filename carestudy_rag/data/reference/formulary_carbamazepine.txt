@@ -1,0 +1,112 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Carbamazepine
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Carbamazepine
+
+Oral liquid: 100 mg/5 ml.
+
+Tablet (chewable): 100 mg; 200 mg.
+
+Tablet (scored): 100 mg; 200 mg.
+
+Uses:  generalized tonic–clonic  and partial seizures; trigeminal neuralgia;
+
+bipolar disorders (section 24.2.2).
+
+Contraindications: atrioventricular conduction abnormalities; history of bone
+
+marrow depression; porphyria.
+
+Precautions:  hepatic impairment (Appendix 5); renal impairment (Appendix 4);
+
+cardiac disease (see also Contraindications); skin reactions (see Adverse
+
+effects); history of blood disorders (monitor blood counts before and
+
+during treatment); glaucoma; pregnancy ( important  see note above;
+
+Appendix 2) and breastfeeding (see note above; Appendix 3); avoid sudden
+
+withdrawal (see note above); interactions : Appendix 1.
+
+BLOOD, HEPATIC, OR SKIN DISORDERS. Patients or their carers should be told
+
+how to recognize signs of blood, liver, or skin disorders, and advised to seek immediate
+
+medical attention if symptoms such as fever, sore throat, rash, mouth ulcers, bruising,
+
+or bleeding develop. Leukopenia which is severe, progressive, and associated with
+
+clinical symptoms requires withdrawal (if necessary under cover of a suitable alternative
+
+antiepileptic).
+
+SKILLED TASKS. May impair ability to perform skilled tasks, for example, operating
+
+machinery or driving; see also note above.
+
+Dose:
+
+Generalized tonic–clonic seizures, partial seizures, by mouth , ADULT, initially
+
+100–200 mg 1–2 times daily, increased gradually according to response to
+
+usual maintenance dose of 0.8–1.2 g daily in divided doses; in some cases,
+
+up to 1.6–2 g daily may be needed (in the ELDERLY, reduce the initial dose);
+
+CHILD  12–18 years, initially 100–200 mg 1–2 times daily, increased gradually
+
+to usual maintenance dose of 400–600 mg 2–3 times daily; CHILD  1 month–
+
+12 years, initially 5 mg/kg at night or 2.5 mg/kg twice daily, increased by
+
+2.5–5 mg/kg every 3–7 days if necessary; usual maintenance dose of
+
+5 mg/kg 2–3 times daily; in some cases, up to 20 mg/kg daily may be
+
+needed.
+
+Trigeminal neuralgia, by mouth , ADULT, initially 100 mg 1–2 times daily,
+
+increased gradually according to response; usual dose, 200 mg 3–4 times
+
+daily (up to 1.6 g daily may be needed in some patients).
+
+NOTE. Plasma concentration for optimum response, 4–12 mg/litre
+
+(17–50 micromol/litre).
+
+Adverse effects:  dizziness, drowsiness, headache, ataxia, blurred vision,
+
+diplopia (may be associated with high plasma levels); gastrointestinal
+
+intolerance including nausea and vomiting, anorexia, abdominal pain, dry
+
+mouth, diarrhoea or constipation; commonly, mild transient generalized
+
+erythematous rash (withdraw if rash worsens or is accompanied by other
+
+symptoms); leukopenia and other blood disorders (including
+
+thrombocytopenia, agranulocytosis, and aplastic anaemia); cholestatic
+
+jaundice, hepatitis, acute renal failure, Stevens-Johnson syndrome (erythema
+
+multiforme), toxic epidermal necrolysis, alopecia, thromboembolism,
+
+arthralgia, fever, proteinuria, lymph node enlargement, arrhythmias, heart
+
+block and heart failure, dyskinesias, paraesthesia, depression, impotence,
+
+male infertility, gynaecomastia, galactorrhoea, aggression, activation of
+
+psychosis, photosensitivity, pulmonary hypersensitivity, hyponatraemia,
+
+oedema, and disturbances of bone metabolism with osteomalacia also
+
+reported; confusion and agitation in the elderly.

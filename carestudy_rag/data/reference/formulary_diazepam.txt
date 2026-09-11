@@ -1,0 +1,82 @@
+SOURCE: WHO Model Formulary 2008 (companion to the WHO Model List of Essential Medicines)
+TITLE: Diazepam
+URL: https://www.who.int/publications/i/item/9789241547659
+LICENSE: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo/)
+RETRIEVED: 2026-09-11
+
+
+Diazepam
+
+Injection: 5 mg/ml in 2-ml ampoule.
+
+Tablet: 5 mg.
+
+Drug subject to international control under the Convention on Psychotropic
+
+Substances (1971).
+
+Diazepam is a representative benzodiazepine. Various drugs can serve as alternatives.
+
+Uses:  premedication before major or minor surgery; sedation with amnesia for
+
+endoscopic procedures and surgery under local anaesthesia; in combination
+
+with pethidine [not included on the 15th WHO Model List], when
+
+anaesthetic not available, for emergency reduction of fractures; epilepsy
+
+(section 5); anxiety disorders (section 24.3).
+
+Contraindications:  central nervous system depression or coma; shock;
+
+respiratory depression; acute pulmonary insufficiency; sleep apnoea; acute
+
+alcohol intoxication; severe hepatic impairment; marked neuromuscular
+
+respiratory weakness including unstable myasthenia gravis.
+
+Precautions:  respiratory disease; muscle weakness and myasthenia gravis;
+
+history of alcohol or drug abuse; marked personality disorder; elderly or
+
+debilitated patients (adverse effects more common in these groups); hepatic
+
+impairment (Appendix 5) or renal failure (Appendix 4); pregnancy
+
+(Appendix 2) and breastfeeding (Appendix 3); close observation required
+
+until full recovery after sedation; porphyria; interactions : Appendix 1.
+
+SKILLED TASKS. Warn patient not to perform skilled tasks, for example, operating
+
+machinery or driving, for 24 hours.
+
+Dose:
+
+Premedication, by mouth  2 hours before surgery, ADULT  and CHILD  over
+
+12 years, 5–10 mg.
+
+Sedation, by slow intravenous injection immediately before procedure, ADULT  and
+
+CHILD  over 12 years, 200 micrograms/kg.
+
+ADMINISTRATION.  Absorption following intramuscular injection is slow and erratic;
+
+this route should only be used if neither oral nor intravenous administration are
+
+possible. Slow intravenous injection into large vein reduces risk of thrombophlebitis.
+
+Resuscitation equipment must be available.
+
+Adverse effects:  central nervous system effects common and include
+
+drowsiness, sedation, confusion, amnesia, vertigo, and ataxia; hypotension,
+
+bradycardia, or cardiac arrest, particularly in elderly or severely ill patients;
+
+also paradoxical reactions, including irritability, excitability, hallucinations,
+
+and sleep disturbances; pain and thromboembolism on intravenous
+
+injection.
