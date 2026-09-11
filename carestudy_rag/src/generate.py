@@ -375,11 +375,11 @@ def is_admission_section(heading: str) -> bool:
 def is_analysis_list_section(heading: str) -> bool:
     """Whether a Chapter 2 problems/strengths/diagnoses section is list-only."""
     normalized = heading.strip().lower()
+    # The Studio sends headings without the "2.3"-style numeric prefix
+    # (e.g. "Patient Health Problems"), so match both forms.
     return (
-        normalized.startswith("2.3")
-        or normalized.startswith("2.4")
-        or normalized.startswith("2.5")
-        or "health problems identified" in normalized
+        normalized.startswith(("2.3", "2.4", "2.5"))
+        or "health problems" in normalized
         or "patient/family strengths" in normalized
         or "nursing diagnoses" in normalized
     )

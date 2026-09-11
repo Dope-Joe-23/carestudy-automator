@@ -514,6 +514,7 @@ _SECTION_CLASSIFICATION: dict = {
     "comparison of data with standards": "allows_inference",
     "pharmacology of drugs prescribed": "allows_inference",
     "health problems identified": "allows_inference",
+    "patient health problems": "allows_inference",
     "patient/family strengths": "allows_inference",
     "nursing diagnoses": "allows_inference",
     "nursing diagnoses (nanda-i)": "allows_inference",
@@ -614,6 +615,7 @@ WORD_COUNT_RANGES: dict = {
     "pharmacology of drugs prescribed": (200, 700),
     # 2.3 Health Problems Identified: bulleted list of problems from Chapter 1 data
     "health problems identified": (100, 300),
+    "patient health problems": (100, 300),
     # 2.4 Patient/Family Strengths: bulleted list, mapped to problems
     "patient/family strengths": (100, 300),
     # 2.5 Nursing Diagnoses (NANDA-I): bulleted list in NANDA format
