@@ -218,15 +218,45 @@ def generate_viva_bank(title: dict, chapters: list) -> dict:
         "following the rules in the system prompt. Output the JSON only."
     )
 
-    response = client.messages.create(
-        model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
-        max_tokens=4000,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": prompt}],
+    # Same candidate chain as the drafting path: configured primary first, then
+    # explicit fallbacks (or openrouter/free on OpenRouter when unset).
+    primary_model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+    configured_fallbacks = [
+        candidate.strip()
+        for candidate in os.environ.get("ANTHROPIC_FALLBACK_MODELS", "").split(",")
+        if candidate.strip()
+    ]
+    using_openrouter = "openrouter.ai" in client_kwargs["base_url"]
+    fallback_models = configured_fallbacks or (
+        ["openrouter/free"] if using_openrouter and primary_model != "openrouter/free" else []
     )
-    raw = "".join(block.text for block in response.content if block.type == "text")
+    candidate_models = list(dict.fromkeys([primary_model, *fallback_models]))
+
+    # Thinking models (openrouter/free) can spend thousands of tokens reasoning
+    # before emitting text; without headroom they stop at max_tokens with no
+    # usable output (seen: stop_reason='max_tokens', content=['thinking']).
+    raw = ""
+    for candidate_model in candidate_models:
+        try:
+            response = client.messages.create(
+                model=candidate_model,
+                max_tokens=8000,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            raw = "".join(block.text for block in response.content if block.type == "text")
+        except Exception as exc:
+            print(f"[viva] model {candidate_model} failed: {exc}", file=sys.stderr, flush=True)
+            continue
+        if raw.strip():
+            break
+        print(f"[viva] model {candidate_model} returned empty, trying next", file=sys.stderr, flush=True)
+
     if not raw.strip():
-        raise RuntimeError("The AI model returned an empty response — please try again.")
+        raise RuntimeError(
+            "The AI models returned no usable response for the viva bank "
+            f"(tried: {', '.join(candidate_models)}). Please try again."
+        )
     return _parse_bank(raw)
 
 

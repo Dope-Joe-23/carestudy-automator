@@ -878,8 +878,10 @@ def draft_section(
     )
     candidate_models = list(dict.fromkeys([model, *fallback_models]))
     # The literature review is a long structured essay; a chapter intro is
-    # deliberately short — give each only as much room as it needs.
-    max_tokens = 800 if chapter_intro else (4500 if is_lit else 1500)
+    # deliberately short — give each only as much room as it needs. Thinking
+    # models (openrouter/free) can burn 1-3k tokens reasoning before any text
+    # appears, so keep headroom above the target length everywhere.
+    max_tokens = 2500 if chapter_intro else (8000 if is_lit else 6000)
 
     def call_model(candidate_model: str) -> str:
         """One model call; returns the concatenated text blocks ('' when empty)."""
