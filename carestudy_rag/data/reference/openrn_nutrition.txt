@@ -1,0 +1,541 @@
+SOURCE: Open RN Nursing Fundamentals, chapter 14 — Nutrition
+TITLE: Nutrition
+URL: https://wtcs.pressbooks.pub/nursingfundamentals/
+LICENSE: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+RETRIEVED: 2026-09-11
+
+
+14.1 Nutrition Introduction
+Learning Objectives
+Describe risk factors for nutritional deficiencies
+Identify cues related to nutrition balance
+Identify diagnostic tests and lab values indicative of a disturbance in nutrition, fluid, and electrolyte disturbances
+Identify essential nutrients
+Identify supplements to enhance nutrition alterations
+Contribute to a plan of care for clients with an alteration in nutrition
+Nurses promote healthy nutrition to prevent disease, assist clients to recover from illness and surgery, and teach clients how to optimally manage chronic illness with healthy food choices. Healthy nutrition helps to prevent obesity and chronic diseases, such as diabetes mellitus and cardiovascular disease. By proactively encouraging healthy eating habits, nurses provide the tools for clients to maintain their health, knowing it is easier to stay healthy than to become healthy after disease sets in. When clients are recovering from illness or surgery, nurses use strategies to promote good nutrition even when a client has a poor appetite or nausea. If a client develops chronic disease, the nurse provides education about prescribed diets that can help manage the disease, such as a low carbohydrate diet for clients with diabetes or a low fat, low salt, low cholesterol diet for clients with cardiovascular disease.
+Nurses also advocate for clients with conditions that can cause nutritional deficits. For example, a nurse may be the first to notice that a client is having difficulty swallowing at mealtime and advocates for a swallow study to prevent aspiration. A nurse may also notice other psychosocial risk factors that place a client at risk for poor nutrition in their home environment and make appropriate referrals to enhance their nutritional status. Nurses also administer alternative forms of nutrition, such as enteral (tube) feedings or parenteral (intravenous) feedings.
+This chapter will review basic information about the digestive system, essential nutrients, nutritional guidelines, and then discuss the application of the nursing process to address clients’ nutritional status.
+
+14.2 Nutrition Basic Concepts
+Before discussing assessments and interventions related to promoting good nutrition, let’s review the structure and function of the digestive system, essential nutrients, and nutritional guidelines.
+Digestive System
+The digestive system breaks down food and then absorbs nutrients into the bloodstream via the small intestine and large intestine. Because good health depends on good nutrition, any disorder affecting the functioning of the digestive system can significantly impact overall health and well-being and increase the risk of chronic health conditions.
+Structure and Function
+The gastrointestinal system (also referred to as the digestive system) is responsible for several functions, including digestion, absorption, and immune response. Digestion begins in the upper gastrointestinal tract at the mouth, where chewing of food occurs, called mastication. Mastication results in mechanical digestion when food is broken down into small chunks and swallowed. Masticated food is formed into a bolus as it moves toward the pharynx in the back of the throat and then into the esophagus. Coordinated muscle movements in the esophagus called peristalsis move the food bolus into the stomach where it is mixed with acidic gastric juices and further broken down into chyme through a chemical digestion process. As chyme is moved out of the stomach and into the duodenum of the small intestine, it is mixed with bile from the gallbladder and pancreatic enzymes from the pancreas for further digestion.
+Absorption is a second gastrointestinal function. After chyme enters the small intestine, it comes into contact with tiny fingerlike projections along the inside of the intestine called villi. Villi increase the surface area of the small intestine and allow nutrients, such as protein, carbohydrates, fat, vitamins, and minerals, to absorb through the intestinal wall and into the bloodstream. Absorption of nutrients is essential for metabolism to occur because nutrients fuel bodily functions and create energy. Peristalsis moves leftover liquid from the small intestine into the large intestine, where additional water and minerals are absorbed. Waste products are condensed into feces and excreted from the body through the anus. for labeled parts of the gastrointestinal system.
+In addition to digestion and absorption, the gastrointestinal system is also involved in immune function. Good bacteria in the stomach create a person’s gut biome. Gut biome contributes to a person’s immune response through antibody production in response to foreign materials, chemicals, bacteria, and other substances. For example, clients may develop Clostridium difficile (C-diff) after taking antibiotics that kill these beneficial bacteria in the gut. Read additional details about our microbiome and immune response in the “Infection” chapter of this book.
+Figure 14.1 The Gastrointestinal System
+Essential Nutrients
+Nutrients from food and fluids are used by the body for growth, energy, and bodily processes. Essential nutrients refer to nutrients that are necessary for bodily functions but must come from dietary intake because the body is unable to synthesize them. Essential nutrients include vitamins, minerals, some amino acids, and some fatty acids. Essential nutrients can be further divided into macronutrients and micronutrients.
+Macronutrients
+Macronutrients make up most of a person’s diet and provide energy, as well as essential nutrient intake. Macronutrients include carbohydrates, proteins, and fats. However, too many macronutrients without associated physical activity cause excess nutrition that can lead to obesity, cardiovascular disease, diabetes mellitus, kidney disease, and other chronic diseases. Too few macronutrients result in undernutrition, which contributes to nutrient deficiencies and malnourishment.
+Carbohydrates
+Carbohydrates are sugars and starches and are an important energy source that provides 4 kcal/g of energy. Simple carbohydrates are small molecules (called monosaccharides or disaccharides) and break down quickly. As a result, simple carbohydrates are easily digested and absorbed into the bloodstream, so they raise blood glucose levels quickly. Examples of simple carbohydrates include table sugar, syrup, soda, and fruit juice. Complex carbohydrates are larger molecules (called polysaccharides) that break down more slowly, which causes slower release into the bloodstream and a slower increase in blood sugar over a longer period of time. Examples of complex carbohydrates include whole grains, beans, and vegetables.
+Foods can also be categorized according to their glycemic index, a measure of how quickly glucose levels increase in the bloodstream after carbohydrates are consumed. The glycemic index was initially introduced as a way for people with diabetes mellitus to control their blood glucose levels. For example, processed foods, white bread, white rice, and white potatoes have a high glycemic index. They quickly raise blood glucose levels after being consumed and also cause the release of insulin, which can result in more hunger and overeating. However, foods such as fruit, green leafy vegetables, raw carrots, kidney beans, chickpeas, lentils, and bran breakfast cereals have a low glycemic index. These foods minimize blood sugar spikes and insulin release after eating, which leads to less hunger and overeating. Eating a diet of low glycemic foods has been linked to a decreased risk of obesity and diabetes mellitus. See Figure 14.2 for an image of the glycemic index of various foods.
+Figure 14.2 Glycemic Index
+Proteins
+Proteins are peptides and amino acids that provide 4 kcal/g of energy. Proteins are necessary for tissue repair and function, growth, energy, fluid balance, clotting, and the production of white blood cells. Protein status is also referred to as nitrogen balance. Nitrogen is consumed in dietary intake and excreted in the urine and feces. If the body excretes more nitrogen than it takes in through the diet, this is referred to as a negative nitrogen balance. Negative nitrogen balance is seen in clients with starvation or severe infection. Conversely, if the body takes in more nitrogen through the diet than what is excreted, this is referred to as a positive nitrogen balance. During positive nitrogen balance, excess protein is converted to fat tissue for storage.
+Proteins are classified as complete, incomplete, or partially complete. Complete proteins must be ingested in the diet. They have enough amino acids to perform necessary bodily functions, such as growth and tissue maintenance. Examples of foods containing complete proteins are soy, quinoa, eggs, fish, meat, and dairy products. Incomplete proteins do not contain enough amino acids to sustain life. Examples of incomplete proteins include most plants, such as beans, peanut butter, seeds, grains, and grain products. Incomplete proteins must be combined with other types of proteins to add to amino acids and form complete protein combinations. For example, vegetarians must be careful to eat complementary proteins, such as grains and legumes, or nuts and seeds and legumes, to create complete protein combinations during their daily food intake. Partially complete proteins have enough amino acids to sustain life, but not enough for tissue growth and maintenance. Because of the similarities, most sources consider partially complete proteins to be in the same category as incomplete proteins. See Figure 14.3 for an image of protein-rich foods.
+Figure 14.3 Protein-Rich Foods
+Fats
+Fats consist of fatty acids and glycerol and are essential for tissue growth, insulation, energy, energy storage, and hormone production. Fats provide 9 kcal/g of energy. While some fat intake is necessary for energy and uptake of fat-soluble vitamins, excess fat intake contributes to heart disease and obesity. Due to its high-energy content, a little fat goes a long way.
+Fats are classified as saturated, unsaturated, and trans fatty acids. Saturated fats come from animal products, such as butter and red meat (e.g., steak). Saturated fats are solid at room temperature. Recommended intake of saturated fats is less than 10% of daily calories because saturated fat raises cholesterol and contributes to heart disease.
+Unsaturated fats come from oils and plants, although chicken and fish also contain some unsaturated fats. Unsaturated fats are healthier than saturated fats. Examples of unsaturated fats include olive oil, canola oil, avocados, almonds, and pumpkin seeds. Fats containing omega-3 fatty acids are considered polyunsaturated fats and help lower LDL cholesterol levels. Fish and other seafood are excellent sources of omega-3 fatty acids.
+Trans fats are fats that have been altered through a hydrogenation process, so they are not in their natural state. During the hydrogenation process, fat is changed to make it harder at room temperature and have a longer shelf life. Trans fats are found in processed foods, such as chips, crackers, and cookies, as well as in some margarines and salad dressings. Minimal trans-fat intake is recommended because it increases cholesterol and contributes to heart disease.
+Micronutrients
+Micronutrients include vitamins and minerals.
+Vitamins
+Vitamins are necessary for many bodily functions, including growth, development, healing, vision, and reproduction. Most vitamins are considered essential because they are not manufactured by the body and must be ingested in the diet. Vitamin D is also manufactured through exposure to sunlight.
+Vitamin toxicity can be caused by overconsumption of certain vitamins, such as vitamins A, D, C, B6, and niacin. Conversely, vitamin deficiencies can be caused by various factors, including poor food intake due to poverty, malabsorption problems with the gastrointestinal tract, drug and alcohol abuse, proton pump inhibitors, and prolonged parenteral nutrition. Deficiencies can take years to develop, so it is usually a long-term problem for clients.
+Vitamins are classified as water soluble or fat soluble. Water-soluble vitamins are not stored in the body and include vitamin C and B-complex vitamins: B1 (thiamine), B2 (riboflavin), B3 (niacin), B6 (pyridoxine), B12 (cyanocobalamin), and B9 (folic acid). Additional water-soluble vitamins include biotin and pantothenic acid. Excess amounts of these vitamins are excreted through the kidneys in urine, so toxicity is rarely an issue, though excess intake of vitamin B6, C, or niacin can result in toxicity. See Table 14.2a for a list of selected water-soluble vitamins, their sources, and their function. , , , , , ,
+Table 14.2a Selected Water-Soluble Vitamins
+Water-Soluble Vitamin
+Sources
+Functions
+Deficiency
+C (Ascorbic Acid)
+Citrus fruits, broccoli, greens, sweet peppers, tomatoes, lettuce, potatoes, tropical fruits, and strawberries.
+Infection prevention, wound healing, collagen formation, iron absorption, amino acid metabolism, antioxidant, and bone growth in children.
+Early signs: weakness, weight loss, myalgias, and irritability. Late signs: scurvy; swollen, spongy gums; loose teeth; bleeding gums and skin; poor wound healing; edema; leg pain; anorexia; irritability; and poor growth in children.
+B1 (Thiamine)
+Nuts, liver, whole grains, pork, and legumes.
+Nerve function; metabolism of carbohydrates, fat, amino acids, glucose, and alcohol; appetite and digestion.
+Fatigue, memory deficits, insomnia, chest pain, abdominal pain, anorexia, numbness of extremities, muscle wasting, heart failure, and shock in severe cases.
+B2 (Riboflavin)
+Eggs, liver, leafy greens, milk, and whole grains.
+Protein and carbohydrate metabolism, healthy skin, and normal vision.
+Pallor, lip fissures, and seborrheic dermatitis.
+B3 (Niacin)
+Fish, chicken, eggs, dairy, mushrooms, peanut butter, whole grains, and red meat.
+Glycogen metabolism, cell metabolism, tissue regeneration, fat synthesis, nerve function, digestion, and skin health.
+Pellagra characterized by skin lesions at pressure points/sun-exposed skin, glossitis, or swollen tongue; constipation progressing to bloody diarrhea; abdominal pain; abdominal distention; nausea; psychosis; and encephalopathy.
+B6 (Pyridoxine)
+Organ meats, fish, and various fruits and vegetables.
+Protein metabolism and red blood cell formation.
+Rare due to presence in most foods. Peripheral neuropathy, seizures refractory to antiseizure medications, anemia, glossitis, or swollen tongue; seborrheic dermatitis; depression; and confusion.
+B9 (Folic Acid)
+Liver, legumes, leafy greens, seeds, orange juice, and enriched refined grains.
+Coenzyme in protein metabolism and cell growth, red blood cell formation, and prevention of fetal neural tube defects in utero.
+Glossitis, or swollen tongue; confusion; depression; diarrhea; anemia; and fetal neural tube defects.
+B12 (Cyanocobalamin)
+Meat, organ meat, dairy, seafood, poultry, and eggs.
+Mature red blood cell formation, DNA/RNA synthesis, new cell formation, and nerve function.
+Pernicious anemia from lack of intrinsic factor in intestines. Early signs: weight loss, abdominal pain, peripheral neuropathy, weakness, hyporeflexia, and ataxia. Late signs: irritability, depression, paranoia, and confusion.
+Fat-soluble vitamins are absorbed with fats in the diet and include vitamins A, D, E, and K. They are stored in fat tissue and can build up in the liver. They are not excreted easily by the kidneys due to storage in fatty tissue and the liver, so overconsumption can cause toxicity, especially with vitamins A and D. See Table 14.2b for a list of selected fat-soluble vitamins, their sources, their function, and manifestations of deficiencies and toxicities. , , , , , ,
+Table 14.2b Selected Fat-Soluble Vitamins
+Fat-Soluble Vitamin
+Source
+Function
+Deficiency
+Toxicity
+A (Retinol)
+Retinol: fortified milk and dairy, egg yolks, and fish liver oil.
+Beta carotene: green leafy vegetables and dark orange fruits and vegetables.
+Eyesight, epithelial, bone and tooth development, normal cellular proliferation, and immunity.
+Night blindness, rough scaly skin, dry eyes, and poor tooth/bone development. Causes poor growth and infections common with mortality >50%.
+Dry, itchy skin; headache; nausea; blurred vision; and yellowing skin, or carotenosis.
+D
+Milk, dairy, sun exposure, egg yolks, fatty fish, and liver.
+Changed to active form with sun exposure. Needed for calcium/phosphorus absorption, immunity, and bone strength.
+Rickets, poor dentition, tetany, osteomalacia, muscle aches and weakness, bone pain, poor calcium absorption leading to hypocalcemia and subsequent hyperparathyroidism and tetany.
+Hypercalcemia resulting in nausea, vomiting, anorexia, renal failure, weakness, pruritus, and polyuria.
+E
+Green leafy vegetables, whole grains, liver, egg yolks, nuts, and plant oils.
+Anticoagulant, antioxidant, and cellular protection.
+Red blood cell breakdown leading to anemia, neuron degeneration, neuropathy, and retinopathy.
+Rare. Occasionally muscle weakness, fatigue, GI upset with diarrhea, and hemorrhagic stroke.
+K
+Green leafy vegetables and green vegetables.
+Produced by bacteria in intestines.
+Needed for producing clotting factors in the liver.
+Rare in adults. Prolonged clotting times, hemorrhaging, especially in newborns causing morbidity and mortality, and jaundice.
+Rare, but can interfere with effectiveness of certain anticoagulant medications, such as warfarin.
+Minerals
+Minerals are inorganic materials essential for hormone and enzyme production, as well as for bone, muscle, neurological, and cardiac function. Minerals are needed in varying amounts and are obtained from a well-rounded diet. In some cases of deficiencies, mineral supplements may be prescribed by a health care provider. Deficiencies can be caused by malnutrition, malabsorption, or certain medications, such as diuretics.
+Minerals are classified as either macrominerals or trace minerals. Macrominerals are needed in larger amounts and are typically measured in milligrams, grams, or milliequivalents. Macrominerals include sodium, potassium, calcium, magnesium, chloride, and phosphorus. Macrominerals are discussed in further detail in the “Electrolytes” section of the “Fluids and Electrolytes” chapter of this book.
+Trace minerals are needed in tiny amounts. Trace minerals include zinc, iron, chromium, copper, fluorine, iodine, manganese, molybdenum, and selenium. See Table 14.2c for a list of selected macrominerals and Table 14.2d for a list of trace minerals. ,
+Table 14.2c Macrominerals
+Macromineral
+Source
+Function
+Sodium
+Table salt, spinach, and milk.
+Water balance.
+Potassium
+Legumes, potatoes, bananas, and whole grains.
+Muscle contraction, cardiac muscle function, and nerve function.
+Calcium
+Dairy, eggs, and green leafy vegetables.
+Bone and teeth development, nerve function, muscle contraction, immunity, and blood clotting.
+Magnesium
+Raw nuts, spinach, tomatoes, and beans. Cooked spinach has higher magnesium content.
+Cell energy, muscle function, cardiac function, and glucose metabolism.
+Chloride
+Table salt.
+Fluid and electrolyte balance and digestion.
+Phosphorus
+Red meat, poultry, rice, oats, dairy, and fish.
+Bone strength and cellular function.
+Table 14.2d Trace Minerals
+Trace Mineral
+Source
+Function
+Zinc
+Eggs, spinach, yogurt, whole grains, fish, and brewer’s yeast.
+Immune function, healing, and vision.
+Iron
+Red meat, organ meats, spinach, shrimp, tuna, salmon, kidney beans, peas, and lentils. Nonanimal forms are harder to absorb, so more is needed.
+Hemoglobin production and collagen production.
+Chromium
+Whole grains, meat, and brewer’s yeast.
+Glucose metabolism.
+Copper
+Shellfish, fruits, nuts, and organ meats.
+Hemoglobin production, collagen, elastin, neurotransmitter production, and melanin production.
+Fluorine
+Fluoridated water and toothpaste.
+Retention of calcium in bones and teeth.
+Iodine
+Iodized salt and seafood.
+Energy production and thyroid function.
+Manganese
+Whole grain and nuts.
+Not fully understood.
+Molybdenum
+Organ meats, green leafy vegetables, legumes, whole grains, and dairy.
+Not fully understood; detoxification.
+Selenium
+Broccoli, cabbage, garlic, whole grains, brewer’s yeast, celery, onions, and organ meats.
+Not fully understood.
+Nutritional Guidelines
+Nutritional guidelines are developed by governmental agencies to provide guidance to the population on how to best meet nutritional needs. These guidelines may vary by country. The National Academies of Sciences, Engineering, and Medicine set the Dietary Reference Intakes (DRIs) for the United States and Canada. Dietary Reference Intakes (DRIs) are a set of reference values used to plan and assess nutrient intakes of healthy people, including proteins, carbohydrates, fats, vitamins, minerals, and fiber. Nutrients included in the DRIs are obtained through a typical diet, although some foods may be fortified with certain nutrients that are commonly deficient in diets.
+Choose MyPlate Food Guide
+The U.S. Department of Agriculture (USDA) issues dietary guidelines for appropriate serving sizes of each food group and number of servings recommended each day. The “Choose MyPlate” food guide is an easy-to-understand visual representation of how a healthy plate of food should be divided based on food groups. See Figure 14.4 for a Choose MyPlate image. A little more than half of the plate should be grains and vegetables, with a focus on whole grains and a variety of vegetables. About one quarter of the plate should be fruits, with an emphasis on whole fruits. About one quarter of the plate should be protein, with an emphasis on consuming a variety of low-fat protein sources. All of these groups combined should make up no more than 85% of daily caloric intake based on a 2,000-calorie diet. Fats, oils, and added sugars are not included, but should make up no more than 15% of daily caloric intake. Foods should be selected that are as nutrient-dense as possible. Nutrient-dense foods mean there is a high proportion of nutritional value relative to calories contained in the food, such as fruits and vegetables. Conversely, calorie-dense foods should be minimized because they have a large amount of calories with few nutrients. For example, candy and soda are calorie-dense with few nutrients and should be minimized. , See Figure 14.5 for an image of MyPlate
+Figure 14.4 MyPlate Food Guide
+Read more about USDA MyPlate guidelines at https://www.myplate.gov/.
+MyPlate information and images are also available in several other languages so that education can be tailored to the client’s preferred language. For example, Figure 14.5 shows MyPlate in Vietnamese. This image would be accompanied with written information about food groups that include the client’s typical dietary choices.
+Figure 14.5 MyPlate in Vietnamese
+Vegetable Group
+For a well-rounded diet, a variety of vegetables should be consumed, including vegetables from all five vegetable groups: dark green leafy vegetables; red and orange vegetables; beans, peas, and lentils (formerly called the legumes group); starchy vegetables; and other vegetables. Vegetables can be fresh, frozen, canned, or dried. Dark green leafy vegetables include kale, Swiss chard, spinach, broccoli, and salad greens. Red and orange vegetables include carrots, bell peppers, sweet potatoes, tomatoes, tomato juice, and squash. The beans, peas, and lentils group includes dried beans, black beans, chickpeas, kidney beans, split peas, and black-eyed peas. (Note that this group does not include green beans or green peas.) This vegetable group also supplies some protein and can be included in the protein group as well. Starchy vegetables include root vegetables, such as potatoes, as well as corn. The “other vegetables” category includes any vegetable that doesn’t fit in the other four categories, such as asparagus, avocados, brussels sprouts, cabbage, cucumbers, snow peas, and mushrooms, and a variety of others.
+Daily serving suggestions of vegetables for individuals with a 2,000 calorie diet are 2 ½ cup equivalents of vegetables per day. For example, a “one cup equivalent” equals 1 cup raw or cooked vegetables, one cup 100% vegetable juice, ½ cup of dried vegetables, or 2 cups of leafy green vegetables. Approximately 90% of Americans do not meet the recommended daily intake of vegetables. See Figure 14.6 for an image of vegetables.
+Figure 14.6 Vegetables
+Grain Group
+Grains are classified as whole grains or refined grains. Whole grains include the entire grain kernel and supply more fiber than refined grains. Examples of whole grains include amaranth, whole barley, popcorn, oats, whole grain cornmeal, brown or wild rice, and whole grain cereal or crackers. Refined grains have been processed to remove parts of the grain kernel and supply little fiber. As a result, they quickly increase blood glucose levels. Examples of refined grains include white bread, white rice, Cream of Wheat, pearled barley, white pasta, and refined-grain cereals or crackers. Some grains are fortified to ensure adequate intake of folic acid. See Figure 14.7 for an image of whole grain whole wheat bread.
+The daily serving suggestions of grains for an individual with a 2,000-calorie diet are six-ounce equivalents per day, split equally between whole and refined grains. For example, a “one ounce equivalent” of grains equals ½ cup of cooked rice, pasta, or cereal or 1 cup of flaked cereal. Most Americans consume adequate amounts of total grains, although roughly 98% are deficient in recommended whole grain amounts, and 74% consume more than the recommended refined grain amounts.
+Figure 14.7 Whole Grain, Whole Wheat Bread
+Fruit Group
+Fruits can be frozen, canned, or dried, in addition to 100% fruit juice. A few examples of fruits include apples, oranges, bananas, melons, peaches, apricots, pineapples, and rhubarb. Daily serving suggestions of fruits for an individual with a 2,000-calorie diet are 2 cup equivalents per day. For example, “one cup equivalent” equals 1 cup of raw or cooked fruit, 8 ounces of 100% fruit juice, or ½ cup of dried fruit. Approximately 80% of Americans do not consume the recommended daily intake of fruits. See Figure 14.8 for an image of fruits.
+Figure 14.8 Fruits
+Dairy Group
+Dairy products can be liquid, dried, semi-solid, or solid depending on the type of product. Dairy products include milk, lactose-free milk, fortified soy milk, buttermilk, cheese, yogurt, and kefir. Sour cream and cream cheese are not considered dairy items in terms of nutritional benefits. Daily serving suggestions of dairy products for an individual with a 2,000-calorie diet are 3 cup equivalents per day. For example, “one cup equivalent” equals 1 cup of milk, soy milk, or yogurt; 1 ½ ounces of natural cheese, or 2 ounces of processed cheese. Approximately 90% of Americans consume less than the recommended daily intake of dairy products. See Figure 14.9 for an image of dairy products.
+Figure 14.9 Dairy Products
+Protein Group
+Proteins are categorized by the type of protein source. The meats, poultry, and eggs category consists of any type of animal or poultry meat, organ meat, or poultry egg. Lean meats should be selected to minimize fat and calorie intake from high-fat meats.
+The seafood category includes any type of fish, clams, crab, lobster, oyster, and scallops. It is important to choose fish with low mercury levels to prevent negative effects of a buildup of mercury in the body. In general, large, fatty ocean fish, such as tuna, have higher levels of mercury due to their diet and storage of mercury in their fatty tissues.
+The nuts, seeds, and soy products category includes tree nuts, peanuts, nut butters, seeds, or seed butters. Soy products include tofu and any other products made from soy. Unsalted nuts should be selected to avoid excess salt intake.
+Protein is also contained in other food groups, such as dairy or the vegetable category of peas, beans, and lentils. Daily serving suggestions of proteins for individuals with a 2,000-calorie diet are 5 ½ ounce equivalents per day. Servings should total up to 26-ounce equivalents per week of meats, eggs, and poultry; 8-ounce equivalents per week of seafood; and 5-ounce equivalents per week of nuts, seeds, or soy products. A “one ounce equivalent” of protein equals 1 ounce of lean meat, one egg, ¼ cup cooked beans, or 1 tablespoon of peanut butter. Most Americans consume adequate amounts of protein, but many consume proteins high in saturated fat and sodium that contribute to diseases such as coronary artery disease.
+Oil/Fat Group
+Examples of oils are vegetable oil, canola oil, olive oil, butter, lard, and coconut oil. Daily serving suggestions of fats or oils for individuals with a 2,000-calorie diet are 27 grams per day. While it is important to limit oils and fats due to their calorie-dense nature, some fat and oil intake is essential for nutrient absorption and overall health. It is best to select healthy unsaturated fats, such as avocados, nuts, or olive oil.
+Gender
+A person’s gender affects their calorie and nutrient requirements. Males typically have higher calorie and protein needs related to increased muscle mass. Females typically require fewer calories to maintain their body weight due to a higher proportion of adipose (fat tissue) than muscle. Menstruating females also have higher iron requirements to offset losses that occur during menstruation.
+Read Nutrition and Food Safety Information and Resources for Healthcare Professionals from the U.S. Food and Drug Administration.
+Factors Affecting Nutritional Status
+Now that we have discussed basic nutritional concepts and dietary guidelines, let’s discuss factors that can affect a person’s nutritional status. Many things that can cause altered nutrition, such as physiological factors, cultural and religious beliefs, economic resources, drug and nutrient disorders, surgery, altered metabolic states, alcohol and drug abuse, and psychological states.
+Physiological Factors
+Nutritional intake is affected by several physiological factors. Appetite is controlled by the hypothalamus, a tiny gland deep within the brain that triggers feelings of hunger or fullness depending on hormone and neural signals being sent and received. See Figure 14.10 for an image of the hypothalamus indicated by the red arrow. Hunger causes a feeling of emptiness in the abdomen and is often accompanied by audible noises coming from the abdomen as the stomach contracts due to emptiness. Hunger can cause feelings of discomfort, nausea, and tiredness. Satiety is a feeling of fullness that often comes after eating, although it can also be caused by impairments of the hypothalamus. Electrolyte imbalances and fluid volume imbalances can also trigger hunger and thirst by sending signals to the hypothalamus.
+Figure 14.10 Hypothalamus
+The five senses play an important role in food intake. For example, food with a pleasing aroma may induce mouth watering and hunger, whereas food or environments with displeasing aromas often suppress the appetite. Texture and taste of foods also play a role in stimulation of appetite.
+Poor dentition or poor oral care has a negative effect on appetite, so adequate oral care is crucial for clients prior to eating. Additionally, the condition of a client’s teeth and gums, the fit of dentures, and gastrointestinal function also play an important role in nutrition. Loose teeth, swollen gums, or poor-fitting dentures can make eating difficult.
+Difficulty swallowing, called dysphagia, can make it dangerous for the client to swallow food because it can result in pneumonia from aspiration of food into the lungs. Special soft diets or enteral or parenteral nutrition are typically prescribed for clients with dysphagia. Nurses collaborate with speech therapists when assessing and managing dysphagia.
+A poorly functioning gastrointestinal tract makes nutrient absorption difficult and can result in malnourishment. Diseases that cause inflammation of the gastrointestinal tract impair absorption of nutrients. Examples of these conditions include esophagitis, gastritis, inflammatory bowel disease, and cholecystitis. Clients with these disorders should select nutrient-dense foods and may require prescribed supplements to increase nutrient intake.
+Cultural and Religious Beliefs
+Cultural and religious beliefs often influence food selection and food intake. It is important for nurses to conduct a thorough client assessment, including food preferences, to ensure adequate nutritional intake during hospitalization. The nurse should not assume a particular diet based on a client’s culture or religion, but instead should determine their individual preferences through the assessment interview.
+Cultural beliefs affect types of food eaten and when they are eaten. Some foods may be restricted due to beliefs or religious rituals, whereas other foods may be viewed as part of the healing process. For example, some cultures do not eat pork because it is considered unclean, and others eat “kosher” food that prescribes how food is prepared. Some religions fast during religious holidays from sunrise to sunset, where others avoid eating meat during the time of Lent. ,
+Read more about the impact of religious and cultural beliefs on food intake in the “Spirituality” chapter of this book.
+Economic Resources
+If a client has inadequate financial resources, food security and food choices are often greatly impacted. Healthy, nutrient-dense, fresh foods typically cost more than prepackaged, heavily processed foods. Poor economic status is correlated with the consumption of calorie-dense, nutrient-poor food choices, putting these individuals at risk for inadequate nutrition and obesity. Social programs such as Meals on Wheels, free or reduced-cost school breakfast and lunch programs, and government subsidies based on income help reduce food insecurity and promote the consumption of healthy, nutrient-dense foods. Nurses refer at-risk clients to social workers and case managers for assistance in applying for these social programs.
+Drug and Nutrient Interactions
+Some prescription drugs affect nutrient absorption. For example, some medications such as proton pump inhibitors (omeprazole) alter the pH of stomach acid, resulting in poor absorption of nutrients. Other medications, such as opioids, often decrease a person’s appetite or cause nausea, resulting in decreased calorie and nutrient intake.
+Surgery
+Surgery can affect a client’s nutritional status due to several factors. Food and drink are typically withheld for a period of time prior to surgery to prevent aspiration of fluid into the lungs during anesthesia. Anesthesia and pain medication used during surgery slow peristalsis, and it often takes time to return to normal. Slow peristalsis can cause nausea, vomiting, and constipation. Until the client is able to pass gas and bowel sounds return, the client is typically ordered to have nothing by mouth (NPO). If a client experiences prolonged NPO status, such as after significant abdominal surgery, intravenous fluids and nutrition may be required.
+Surgery also stimulates the physiological stress response and increases metabolic demands, causing the need for increased calories. The stress response can also cause elevated blood glucose levels due to the release of corticosteroids, even if the client has not been previously diagnosed with diabetes mellitus. For this reason, nurses often monitor post-op clients’ bedside blood glucose levels carefully.
+Bowel resection surgery in particular has a negative impact on nutrient absorption. Because all or parts of the intestine are removed, there is decreased absorption of nutrients, which can result in nutrient deficiencies. Many clients who have experienced bowel resection require nutrient supplementation.
+Bariatric surgery is used to treat obesity and reduce obesity-related cardiovascular risk factors. Bariatric procedures alter the anatomy and physiology of the gastrointestinal tract, which makes clients susceptible to nutritional deficiencies. Read more about bariatric surgery and long-term nutritional issues in the following box.
+Read more about bariatric surgery and long-term nutritional issues.
+Altered Metabolic States
+Metabolic demands impact nutrient intake. In conditions where metabolic demands are increased, such as during growth spurts in childhood or adolescence, nutritional intake should be increased. Disease states, such as cancer, hyperthyroidism, and AIDS, can increase metabolism and require an increased amount of nutrients. However, cancer treatment, such as radiation and chemotherapy, often causes nausea, vomiting, and decreased appetite, making it difficult for clients to obtain adequate nutrients at a time when they are needed in high amounts due to increased metabolic demand.
+Other diseases like diabetes mellitus cause complications with nutrient absorption due to insulin. Insulin is necessary for the metabolism of fats, proteins, and carbohydrates, but in clients with diabetes mellitus, insulin production is insufficient or their body is not able to effectively use circulating insulin. This lack of insulin can result in impaired nutrient metabolism.
+Alcohol and Drug Misuse
+Alcohol and drug misuse can affect nutritional status. Alcohol is calorie-dense and nutrient-poor. With alcohol use, the consumption of water, food, and other nutrients often decreases as clients “drink their calories.” This may result in decreased protein intake and body protein deficiency. Nutrient digestion and absorption can also decrease with alcohol consumption if the stomach lining becomes eroded or scarred. This can cause hemoglobin, hematocrit, albumin, folate, thiamine, vitamin B12, and vitamin C deficiencies, as well as decreased calcium, magnesium, and phosphorus levels.
+Misuse of stimulants, such as methamphetamine and cocaine, causes an increased metabolic rate and decreased appetite and contributes to weight loss and malnourishment.
+Psychological State
+Various psychological states have a direct effect on appetite and a client’s desire to eat. Acute and chronic stress stimulates the hypothalamus and increases production of glucocorticoids and glucose. This can increase the person’s appetite, causing increased calorie intake, fat storage, and subsequent weight gain. When a person feels stressed, their food choices are often nutrient-poor and calorie-dense, which further increases weight gain and nutrient deficiencies. In other individuals, the stress response causes loss of appetite, weight loss, and nutrient deficiencies.
+Depression can cause loss of appetite or overeating. Many people eat calorie-dense “comfort foods” as a coping mechanism. Additionally, many antidepressants can cause weight gain as a side effect.
+LibreTexts. (2024). Anatomy and physiology (boundless). LibreTexts: Medicine. https://med.libretexts.org/Bookshelves/Anatomy_and_Physiology/Anatomy_and_Physiology_(Boundless) ↵
+Texas Heart Institute. (n.d.). Minerals: What they do, where to get them. https://www.texasheart.org/heart-health/heart-information-center/topics/minerals-what-they-do-where-to-get-them/ ↵
+Texas Heart Institute. (n.d.). Trace elements: What they do and where they get them. https://www.texasheart.org/heart-health/heart-information-center/topics/trace-elements/ ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+“MyPlate_blue.png” by USDA is licensed under CC0 ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+USDA MyPlate. (n.d.). What’s on your plate? U.S. Department of Agriculture. https://www.myplate.gov/ ↵
+“MyPlate_blue.png” by USDA is licensed under CC0 ↵
+“MyPlate_Vietnamese.png” by USDA is licensed under CC0 ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+“Food-healthy-vegetables-potatoes_(23958160949).jpg” by www.Pixel.la Free Stock Photos is licensed under CC0 ↵
+“front_en.3.400.jpg” by openfoodfacts-contributors is licensed under CC BY-SA 3.0 ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+“Culinary_fruits_cropped_top_view.jpg” by Bill Ebbesen is licensed under CC BY 3.0 ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+“Good_Dairy_Sources.png” by Brookepinsent is licensed under CC BY-SA 4.0 ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+“Hypothalamus.jpg” by Methoxyroxy~commonswiki is in the Public Domain ↵
+Fialkowski Revilla, M. K., Titchenal, A., Calabrese, A., Gibby, C., & Meinke, B. (2017). Human nutrition [deprecated]. University of Hawai’i at Mānoa Food Science and Human Nutrition Program. https://pressbooks-dev.oer.hawaii.edu/humannutrition/ ↵
+Fialkowski Revilla, M. K., Titchenal, A., Calabrese, A., Gibby, C., & Meinke, B. (2017). Human nutrition [deprecated]. University of Hawai’i at Mānoa Food Science and Human Nutrition Program. https://pressbooks-dev.oer.hawaii.edu/humannutrition/ ↵
+Dindyal, S., & Dindyal, S. (n.d.). How personal factors, including culture and ethnicity, affect the choices and selection of food we make. Internet Scientific Publications, 1(3). https://ispub.com/IJTWM/1/2/11779 ↵
+Stewardship. (n.d.). What is Lent? When does Lent start? What to do during Lent? https://www.stewardship.org.uk/blogs/what-is-lent ↵
+Alkerwi, A., Vernier, C., Sauvageot, N., Crichton, G., & Elias, M. (2015). Demographic and socioeconomic disparity in nutrition: Application of a novel correlated component regression approach. BMJ Open, 5(5). https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4431064/ ↵
+Lupoli, R., Lembo, E., et al. (2017). Bariatric surgery and long-term nutritional issues. World Journal of Diabetes, 8(11), 464-474. https://doi.org/10.4239/wjd.v8.i11.464 ↵
+Lupoli, R., Lembo, E., et al. (2017). Bariatric surgery and long-term nutritional issues. World Journal of Diabetes, 8(11), 464-474. https://doi.org/10.4239/wjd.v8.i11.464 ↵
+Gramlich, L., Tandon, P., & Rahman, A. (2019). Nutritional status in patients with sustained heavy alcohol use. UpToDate. https://www.uptodate.com ↵
+Ulrich-Lai, Y. M., Fulton, S., Wilson, M., Petrovich, G., & Rinaman, L. (2015). Stress exposure, food intake and emotional state. Stress (Amsterdam, Netherlands), 18(4), 381–399. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4843770/ ↵
+definition
+
+14.3 Applying the Nursing Process
+Now that we have discussed basic nutritional concepts, dietary guidelines, and factors affecting nutritional status, let’s apply the nursing process to this information when caring for clients.
+Assessment
+A thorough nutritional assessment provides information about an individual’s nutritional status, as well as risk factors for nutritional imbalances. Assessment starts with reviewing the client’s medical record and initiating a client interview, followed by a physical exam and review of lab and diagnostic test results.
+Subjective Assessment
+Subjective assessments include questions regarding normal eating patterns and risk factor identification. Subjective assessment data is obtained by interviewing the client as a primary source or a family member or caregiver as a secondary source. While a wealth of subjective information can be obtained through a chart review, it is important to verify this information with either the client or family member because details may be recorded inaccurately or may have changed over time. Subjective information to obtain when completing a nutritional assessment includes age, sex, history of illness or chronic disease, surgeries, dietary intake including a 24-hour diet recall or food diary, food preferences, cultural practices related to diet, normal snack and meal timings, food allergies, special diets, and food shopping or preparation activities.
+Read more information about common cultural dietary preferences and restrictions in the “Common Religions and Spiritual Practices” section of the “Spirituality” chapter.
+A detailed nutritional assessment can also provide important clues for identification of risk factors for nutritional deficits or excesses. For example, a history of anorexia or bulimia will put the client at risk for vitamin, mineral, and electrolyte disturbances, as well as potential body image disturbances. Swallowing impairments place the client at risk for decreased intake that may be insufficient to meet metabolic demands. Use of recreational drugs or alcohol places the client at risk for insufficient nutrient intake and impaired nutrient absorption. Use of nutritional supplements places the client at risk for excess nutrient absorption and potential toxicity. Recognizing and identifying risks to nutritional status help the nurse anticipate problems that may arise and identify complications as they occur. Ideally, the nurse will recognize subtle cues of impending or actual dysfunction and prevent bigger problems from happening.
+Objective Assessment
+Objective assessment data is information derived from direct observation by the nurse and is obtained through inspection, auscultation, and palpation. The nurse should consider nutritional status while performing a physical examination.
+The nurse begins the physical examination by making general observations about the client’s status. A well-nourished client has normal skin color and hair texture for their ethnicity, healthy nails, a BMI within normal range according to their height, and appears energetic.
+Height and weight should be accurately measured and documented. Height and weight in infants and children are plotted on a growth chart to give a percentile ranking across the United States. The infant or child should show a trend of consistent height and weight increase.
+Height and weight in adults are often compared to a Body Mass Index (BMI) graph. BMI can also be calculated using the following formulas:
+BMI = weight (kilograms)/height(meters)
+BMI = weight (pounds) x 703)/height(inches)
+To calculate BMI using a BMI table, the client’s height is plotted on the horizontal axis and their weight is plotted on the perpendicular axis. The BMI is measured where the lines intersect. See Figure 14.11 for an image of a BMI table. BMI is interpreted using the following ranges:
+Less than 18.5: Underweight
+18.5-24.9: Desirable range
+25-29.9: Overweight
+Equal or greater than 30: Obese
+Figure 14.11 BMI Table
+After completing the subjective and objective assessment, the data should be analyzed for expected and unexpected findings. See Table 14.3a for a comparison of expected versus unexpected assessment findings related to nutritional status on assessment, including those that require notification of the health care provider in bold font.
+Table 14.3a Expected Versus Unexpected Findings During Nutritional Assessment
+Assessment
+Expected Findings
+Unexpected Findings
+*Bolded items are critical conditions that require immediate health care provider notification.
+General Appearance
+Energetic; normal skin, hair, and nails; and normal weight related to height.
+Lethargic, skin ulcerations, rashes, bruising, thinning or loss of hair, spooning of nails, obese, or underweight.
+Eyes
+Normal vision and normal eye moisture.
+Impaired night vision or dry eyes.
+Mouth
+Moist mucous membranes, intact oral mucosa, and intact smooth tongue.
+Dry/sticky mucous membranes, oral ulcerations, glossitis, or swollen tongue, coughing while swallowing or inability to swallow, or swollen throat.
+Extremities/Integumentary
+Normal skin, nontenting, good skin turgor, and supple texture.
+Tenting, poor skin turgor, dry skin, edema, or shiny skin.
+Neurological
+Normal sensation and normal cognition.
+Numbness or tingling, tetany, dementia, or acute confusion.
+Cardiac
+Normal heart tones, capillary refill < 3 seconds, normal pulses, and normal EKG tracing.
+Bounding pulses, S3 heart tone, jugular venous distention, abnormal EKG tracing, or cardiac arrhythmias.
+Respiratory
+Clear lung sounds throughout, normal respiratory rate, and no shortness of breath.
+Crackles in lung fields, pink frothy sputum, shortness of breath, or respiratory distress.
+Gastrointestinal
+Normal stool quality and frequency for the client, bowel sounds present × 4 quadrants, and absence of nausea/vomiting.
+Constipation, diarrhea, nausea, or vomiting.
+Urinary
+Clear urine, normal urine specific gravity, and urine output >30 mL/hr.
+Decreased urine output <30 mL/hr or <0.5 mL/kg/hr, concentrated urine, or burning with urination.
+Weight
+Normal BMI of 18.5–24.9, weight loss or gain of 0.5 to 1 pound per week is realistic, and <5% weight loss over 6 months.
+BMI <18.5 or >25, weight gain or loss of >1 kg over 24 hours, or severe weight loss of >10% over 6 months.
+Review how to perform a physical examination on the body systems listed in the previous table in Open RN Nursing Skills, 2e.
+Diagnostic and Lab Work
+Diagnostic and lab work results can provide important clues about a client’s overall nutritional status and should be used in conjunction with a thorough subjective and objective assessment to provide an accurate picture of the client’s overall health status. Common lab tests include hemoglobin (hgb), hematocrit (HCT), white blood cells (WBC), albumin, prealbumin, and transferrin.
+Anemia is a medical condition diagnosed by low hemoglobin levels. Hemoglobin is important for oxygen transport throughout the body. Anemia can be caused acutely by hemorrhage, but it is often the result of chronic iron deficiency, vitamin B12 deficiency, or folate deficiency. Iron supplements, B12 injections, folate supplements, and increased iron or folate intake in the diet can help increase hemoglobin levels.
+Albumin and prealbumin are proteins in the bloodstream. They maintain oncotic pressure so that fluid does not leak out of blood vessels into the extravascular space. (Read more about oncotic pressure in the “Fluids and Electrolytes” chapter.) Albumin and prealbumin levels are used as markers of malnutrition, but these levels can also be affected by medical conditions such as liver failure, kidney failure, inflammation, and zinc deficiency. Low albumin levels can indicate prolonged protein deficiency intake over several weeks, whereas prealbumin levels reflect protein intake over the previous few weeks. For this reason, prealbumin is often used to monitor the effectiveness of parenteral nutrition therapy. ,
+Transferrin is a protein required for iron transport on red blood cells. Transferrin levels increase during iron deficiency anemia and decrease with renal or liver failure and infection.
+A client’s amount of muscle wasting due to malnutrition is measured by a 24-hour urine creatinine level. If insufficient calories are consumed, the body begins to break down its own tissues in a process called catabolism. Blood urea nitrogen and creatinine are released as a by-product. A 24-hour urine collection measures these by-product levels to assess the degree of catabolism occurring.
+White blood cells will decrease with malnourishment, specifically with protein and vitamins C, D, and E and B-complex deficiencies. Low white blood cell counts place the client at risk for infection because adequate white blood cells are necessary for a fully functioning immune system.
+See Table 14.3b for a description of selected lab values associated with nutritional status. As always, refer to agency lab reference ranges when providing client care.
+Table 14.3b Selected Lab Values Associated with Nutritional Status , ,
+Lab
+Normal Range
+Nursing Considerations
+*Bolded items are critical conditions and require immediate health care provider notification.
+Hemoglobin (Hgb)
+Females: 12–16 g/dL.
+Males: 14–17.4 g/dL.
+Hemoglobin measures the oxygen-carrying capacity of blood. Decreased levels occur due to hemorrhage or deficiencies in iron, folate, or B12.
+10–14: mild anemia.
+6–10: moderate anemia.*
+Less than 6: severe anemia.*
+Hematocrit (Hct)
+37–50%.
+Hematocrit is normally three times the client’s hemoglobin level during normal fluid status. Increased levels occur with dehydration, and decreased levels occur with fluid overload or hemorrhage.
+White blood cells (WBC)
+5,000–10,000 mm .
+Increased levels occur due to infection. Decreased levels occur due to prolonged stress, poor nutrition, and vitamins C, D, and E and B-complex deficiencies.
+Less than 4000: at risk for infection or sepsis.
+Greater than 11,000: infection present.
+Magnesium
+1.6–2.6 mEq/L.
+Decreased level with poor nutrition or alcohol abuse. Increased levels due to kidney dysfunction.
+Critical values can cause cardiac complications such as arrhythmias or asystole: less than 1.2 mg/dL or greater than 4.9 mg/dL.
+Albumin
+3.4–5.4 g/dL.
+Increased with dehydration.
+Decreased level due to zinc deficiency, corticosteroid use, protein deficiency over several weeks, or conditions resulting in muscle wasting/muscle loss.
+Prealbumin
+15–36 mg/dL.
+Increased levels with corticosteroid or contraceptive use.
+Decreased levels due to inflammation, poor immunity, and protein depletion over a few weeks.
+Transferrin
+250–450 mcg/dL.
+Increased levels due to dehydration and iron deficiency.
+Decreased levels due to anemia; vitamin B12, folate, and zinc deficiency; protein depletion; and conditions resulting in muscle wasting/muscle loss.
+24-hour urine creatinine
+Males: 0.8–1.8 g/24 hrs.
+Females: 0.6–1.6 g/24 hrs.
+Increased levels with renal disease and muscle breakdown.
+Decreased levels with progressive malnutrition as muscles atrophy.
+Various diagnostic tests may be ordered by the health care provider based on the client’s medical conditions and circumstances. For example, a swallow study is a diagnostic test used for clients having difficulty swallowing. An abdominal X-ray is used to determine the correct placement of a feeding tube or to note any excess air or stool in the colon. A barium swallow is used in conjunction with a CT scan to note any blockages in the intestines.
+Life Span and Cultural Considerations
+Newborns and Infants
+A crucial amount of growth and development happens between birth to age two. For proper growth, development, and brain function, this age group requires nutrient-dense food choices, primarily because they eat so little compared to adults, but also because of their rapid growth rate that is higher than any other time of development. Ideally, newborns through age six months should be fed exclusively human breast milk if possible, to develop immunity. Vitamin D and iron supplementation may be needed. For the first two to three days after birth, human milk contains colostrum, a thick yellowish-white fluid rich in proteins and immunoglobulin A (IgA). Colostrum is lower in carbohydrates and fat than mature breast milk. Colostrum helps protect the newborn from infection and builds normal intestinal bacteria. As breast milk matures after two to three days postpartum, it becomes lower in proteins and IgA and higher in carbohydrates and fat. Human donor milk may be used in some situations when the mother cannot breastfeed. If human donor milk is given, it should be sourced through an accredited human milk bank and pasteurized to minimize risk of spreading infectious diseases.
+There are many reasons infants may not be breastfed, including insufficient breast milk production, a personal choice not to breastfeed, or adoption of the newborn. If breastfeeding or donor milk is not an option, an iron-fortified commercial infant formula should be used exclusively through at least six months of age. Homemade or non-FDA approved infant formulas or toddler formulas should not be used because they may not meet the high nutritional needs of infants. Infants fed 100% commercial infant formula will not need vitamin D supplementation.
+After about six months of age, infants should begin to be introduced to additional nutrient-dense complementary foods that are developmentally appropriate. Foods should be introduced one at a time to monitor for food sensitivities. Introducing food at this time is to provide a varied diet, additional nutrients, and an introduction to different flavors and textures of food. Research shows that introduction to certain allergy-risk foods, such as peanut butter prior to one year of age, helps decrease the risk of developing a peanut allergy later in life. It is important to strictly avoid honey and other unpasteurized food and drink before one year of age to prevent botulism and other bacteria due to immature gut immunity. Additionally, cow’s milk, fortified soy drinks, and fruit or vegetable juices should not be introduced before one year of age
+Children and Adolescents
+Growth rate continues to be rapid from ages one through five, requiring adequate nutrition to meet these growth and metabolic demands. Caloric and nutritional intake requirements increase proportionately with age, but unfortunately, the quality of diet tends to decrease proportionately with age. This is in part due to younger children being dependent on adults for nutritional choices and intake while older children and adolescents begin to make their own food choices as they enter school. Poverty can also negatively impact nutritional intake in children and adolescents. School lunch and breakfast programs help mitigate the effects of poverty on nutrition by providing free to low-cost, nutritionally balanced meals.
+Healthy dietary habits formed in childhood through adolescence help prevent obesity, cardiovascular disease, diabetes mellitus, and other chronic diseases later in life. It is important to provide children with a variety of different foods prepared in different ways to increase the likelihood of children accepting and growing accustomed to different foods. It is common for children to become picky in their food choices or decide to only eat one or a few different food items over a period of time. Allowing children to help select and prepare food can increase their acceptance of different food choices.
+Adults
+The adult life stage is ages 19 through 59. A major limiting factor to healthy nutrition in adults is development of poor nutritional habits early in life. These unhealthy diet habits can be very difficult to change due to food preferences, as well as lack of knowledge about proper nutrition. Metabolic rate and caloric needs decrease with increasing age. Females tend to require less caloric intake than males, though caloric and nutritional needs increase with pregnancy and breastfeeding. Without appropriate dietary intake or activity, weight gain will occur that can lead to obesity and other chronic diseases. Over 50% of Americans have one or more chronic diseases that are associated with poor diet and physical inactivity.
+Education regarding a healthy diet, including appropriate calorie, saturated fat, sugar, and sodium intakes, helps improve health in adults. Roughly 73% of males and 70% of females in America exceed the recommended daily intake of saturated fat, and up to 97% of males and 82% of females exceed the recommended daily intake of sodium. Approximately 97% of males and 90% of women in America do not consume the recommended intake of dietary fiber, including underconsumption of fruits, vegetables, and whole grains, which contributes to diet-related chronic diseases.
+Alcohol consumption can be problematic for maintaining a healthy diet. Chronic alcohol abuse can interfere with vitamin and mineral absorption and result in general malnourishment. Alcohol should be limited to one drink per day or less for women and two drinks or less per day for men. Alcohol should be avoided by those who are pregnant, breastfeeding, younger than 21 years old, have a chemical dependency, or have other underlying health conditions such as diabetes mellitus.
+Pregnancy and Lactation
+A well-balanced, healthy diet is essential during pregnancy and lactation to prevent maternal, fetal, and newborn problems. Nutritional requirements, such as calories, vitamins, and minerals, increase during pregnancy and lactation. Increased caloric needs should be met with nutrient-dense foods rather than calorie-dense foods that are higher in fats and sugars. Prenatal vitamins and mineral supplements are often prescribed during pregnancy and lactation, in addition to a nutrient-rich diet, to help ensure women meet requirements for folic acid, iron, iodine, choline, and vitamin D. Folic acid is necessary to prevent neural tube defects in the fetus during the first trimester of pregnancy. Iron requirements increase during pregnancy to support fetal development and prevent anemia. Iodine requirements increase during pregnancy and lactation for fetal neurocognitive development. Choline requirements also increase due to the need to replace maternal stores, as well as for fetal brain and spinal cord development.
+Older Adults
+People aged 65 years and older are considered older adults. Older adults are more likely to suffer from chronic illness and disease. Older adults have lower calorie needs than younger people, though they still need a diet full of nutrient-dense foods because their nutrient needs increase. Caloric needs decrease due to decreased activity, decreased metabolic rates, and decreased muscle mass. Chronic disease and medication can contribute to decreased nutrient absorption. Protein and vitamin B12 are commonly under consumed in older adults. Protein is necessary to prevent loss of muscle mass. Vitamin B12 deficiency can be a problem for older adults because absorption of vitamin B12 decreases with age and with certain medications. Adequate hydration is also a concern for older adults because feelings of thirst decrease with age, leading to poor fluid intake. Additionally, older adults may be concerned with bladder dysfunction so they may consciously choose to limit fluid intake. Loneliness, ability to chew and swallow, and poverty can also decrease dietary intake in older adults. Meals on Wheels, local senior centers, and other community programs can provide socialization and well-balanced meals to older adults.
+The Mini-Nutritional Assessment Short-Form is a screening tool used to identify older adults who are malnourished or at risk of malnutrition. Use the following box to download this tool.
+Download the Mini-Nutritional Assessment Short-Form from The Hartford Institute for Geriatric Nursing.
+Diagnosis
+After the assessment stage is conducted, data is analyzed, and pertinent information is clustered together, nursing diagnoses are selected based on defining characteristics. When creating a care plan for a client, review a current nursing care planning source for current NANDA-I approved nursing diagnoses and interventions related to nutritional imbalances. Examples of NANDA-I nursing diagnoses related to nutrition include Imbalanced Nutrition: Less than Body Requirements, Overweight, Obesity, Risk for Overweight, Readiness for Enhanced Nutrition, and Impaired Swallowing. See Table 14.3c for additional information related to the diagnosis Imbalanced Nutrition: Less than Body Requirements.
+Table 14.3c Sample NANDA-I Nursing Diagnosis Related to Nutrition
+NANDA-I Diagnosis
+Definition
+Selected Defining Characteristics
+Imbalanced Nutrition: Less than Body Requirements
+Intake of nutrients insufficient to meet metabolic needs.
+Abdominal cramping.
+Abdominal pain.
+Body weight below ideal weight range for age and gender.
+Diarrhea.
+Food intake less than recommended daily allowance (RDA).
+Hyperactive bowel sounds.
+Lethargy.
+Pale mucous membranes.
+Weight loss with adequate food intake.
+A sample nursing diagnosis written in PES format is, “Imbalanced Nutrition: Less than Body Requirements related to insufficient dietary intake as evidenced by body weight 20% below ideal weight range and food intake less than recommended daily allowance.”
+Outcome Identification
+Goals for clients experiencing altered nutritional status depend on the selected nursing diagnosis and specific client situation. Typically, goals relate to resolution of the nutritional imbalance and are broad in nature. An overall goal related to nutritional imbalances is, “The client will weigh within normal range for their height and age.”
+Outcome criteria are specific, measurable, achievable, realistic, and time-oriented. A sample SMART goal is, “The client will select three dietary modifications to meet their long-term health goals using USDA MyPlate guidelines by discharge.”
+Planning Interventions
+After SMART outcome criteria are customized to the client’s situation, nursing interventions are selected to help them achieve their identified outcomes. Interventions are specific to the alteration in nutritional status and should accommodate the client’s cultural and religious beliefs. The box below outlines selected interventions related to nutrition therapy.
+Nutrition Therapy
+Identify nutritional risks
+Monitor food/fluid ingested and calculate daily caloric intake, as appropriate
+Monitor appropriateness of prescribed diet to meet daily nutritional needs, as appropriate
+Initiate prescribed number of calories and types of nutrients needed to meet requirements, as appropriate
+Determine food preferences with consideration of the client’s cultural and religious preferences
+Offer nutritional supplements, as appropriate
+Offer mealtime assistance to support dietary intake, as appropriate
+Determine need for enteral tube or parenteral feedings
+Manage enteral feeding or parenteral nutrition, as indicated
+Structure the environment to create a pleasant and relaxing meal atmosphere
+Present food in an attractive, pleasing manner, giving consideration to color, texture, and variety
+Encourage the client to share mealtimes with others, as appropriate
+Encourage adequate dental and mouth care
+Assist the client to a sitting position before eating or feeding
+Monitor laboratory values, as appropriate
+Instruct the client and family about nutritional information and prescribed diets
+Refer for diet teaching and planning, as appropriate
+Provide written examples of prescribed diet
+Check medications and alter where possible to minimize adverse effects
+Encourage physical activity to maintain or improve muscle mass and function
+Clients may be prescribed special diets due to medical conditions or altered nutrition states. See Table 14.3d for commonly prescribed special diets.
+Table 14.3d Commonly Prescribed Special Diets
+Diet
+Description
+Example
+Indication
+NPO
+Nothing by mouth—no food or drink allowed.
+Note: Oral care is very important during NPO status.
+Oral care only.
+Before and after surgery or procedures, when peristalsis is absent, during severe nausea or vomiting episodes, or for changes in mental status.
+Clear Liquids
+Fluids or solids that are liquid at room temperature, without residue, clear, or see-through.
+Water, apple juice, clear soda, Jello, popsicles, and broth.
+After surgery when peristalsis is slow and diet is being advanced from NPO status.
+Full Liquids
+Fluids with residue.
+Creamed soups, pudding, milk, orange juice, and creamed cereals.
+Next step after clear liquids as diet is being advanced.
+Mechanical Soft
+Chopped, ground, pureed foods that break apart easily without a knife.
+Soft cheeses, cottage cheese, ground meat, broiled or baked fish, cooked vegetables, and fruit.
+Poor or absent dentition; dysphagia.
+Pureed
+Spoon thick with consistency of baby food.
+Applesauce, pudding, mashed potatoes, pureed meats, vegetables, and fruit.
+Dysphagia.
+Restrictive
+Depends on the disease process.
+Diabetic: controlled amount of carbohydrates.
+Cardiac: low fat and no added salt.
+Renal: low-sodium and low-potassium containing foods.
+Diabetes mellitus.
+Heart disease.
+Renal failure or dialysis.
+“Thickened liquids” are typically prescribed for clients with difficulty swallowing (dysphagia). Three consistencies of thickened liquids are as follows:
+Nectar-thick liquids: Easily pourable liquid comparable to apricot nectar or thick cream soups.
+Honey-thick liquids: Slightly thicker liquid that is less pourable and drizzles from a cup or bowl.
+Pudding-thick liquids: Liquids that hold their own shape. They are not pourable and usually require a spoon to eat.
+Nurses often thicken liquids in the client’s room using a commercial thickener. Most commercial thickeners include directions for achieving the consistency prescribed.
+Enteral Nutrition
+Enteral nutrition is administered directly to a client’s gastrointestinal tract while bypassing chewing and swallowing. Enteral feedings are prescribed for clients when chewing and/or swallowing are impaired or when there is poor nutritional intake and/or malnutrition.
+Examples of enteral tube access are nasogastric tubes (NG), orogastric tubes (OG), percutaneous endoscopic gastrostomy (PEG) tubes, or percutaneous endoscopic jejunostomy (PEJ) tubes. See Figure 14.12 for an illustration of common enteral tube placement. Nasogastric tubes enter the nare and travel through the esophagus and into the stomach. Liquid tube feedings are infused through this tube and directly into the stomach. Orogastric tubes work in the same manner except they are inserted through the mouth into the esophagus and then into the stomach. Orogastric tubes are typically used with mechanically intubated and sedated clients and should never be used in conscious clients because they can induce a gag reflex and cause vomiting. PEG tubes are inserted through the abdominal wall directly into the stomach, bypassing the esophagus. PEG tubes are used when there is an obstruction to the esophagus, the esophagus has been removed, or if long-term enteral feedings are expected. PEJ tubes are inserted through the abdominal wall directly into the jejunum, bypassing the esophagus and stomach. PEJ tubes are used when all or part of the stomach has been removed or if the provider determines PEJ placement would best suit the client’s needs.
+Figure 14.12 Enteral Tube Access
+There are several safety considerations for nurses to implement when enteral nutrition is being administered to prevent aspiration and dehydration. Tube placement must be verified after insertion, as well as before every medication or feeding is administered, to prevent inadvertent administration into the lungs if the tube has migrated out of position. Follow agency policy regarding checking placement. The American Association of Critical‐Care Nursing recommends that the position of a feeding tube should be checked and documented every four hours and prior to the administration of enteral feedings and medications by measuring the visible tube length and comparing it to the length documented during X-ray verification. Older methods of checking tube placement included observing aspirated GI contents or the administration of air with a syringe while auscultating (commonly referred to as the “whoosh test”). However, research has determined these methods are unreliable and should no longer be used to verify placement. ,
+In addition to verifying tube placement before administering feedings or medications, nurses perform additional interventions to prevent aspiration. The American Association of Critical‐Care Nurses recommends the following guidelines to reduce the risk for aspiration:
+Maintain the head of the bed at 30°- 45° unless contraindicated
+Use sedatives as sparingly as possible
+Assess feeding tube placement at four‐hour intervals
+Observe for change in the amount of external length of the tube
+Assess for gastrointestinal intolerance at four‐hour intervals ,
+Measurement of gastric residual volume (GRV) is often performed when a client is receiving enteral feeding by using a 60-mL syringe to aspirate stomach contents through the tube. GRVs in the range of 200–500 mL have traditionally triggered nursing interventions, such as slowing or stopping the feeding, to reduce the client’s risk of aspiration. However, according to recent research, it is not appropriate to stop enteral nutrition for GRVs less than 500 mL in the absence of other signs of intolerance because of the impact on the client’s overall nutritional status. Additionally, the aspiration of gastric residual volumes can contribute to tube clogging. Follow agency policy regarding measuring gastric residual volume and implementing interventions to prevent aspiration. ,
+Clients receiving enteral nutrition should be monitored daily for signs of tube feeding intolerance, such as abdominal bloating, nausea, vomiting, diarrhea, cramping, and constipation. If cramping occurs during bolus feedings, it can be helpful to administer the enteral nutritional formula at room temperature to prevent symptoms. Notify the provider of signs of intolerance with anticipated prescription changes regarding the type of formula or the rate of administration.
+Electrolytes and blood glucose levels should also be monitored for signs of imbalances. Carbohydrates in tube feedings are absorbed quickly, so blood glucose levels are monitored, and elevated levels are typically treated with sliding scale insulin according to health care provider orders.
+Read about “Enteral Tube Management” in Open RN Nursing Skills, 2e.
+Parenteral Nutrition
+Parenteral nutrition is nutrition delivered through a central intravenous line, generally the subclavian or internal jugular vein, to clients who require nutritional supplementation but are not candidates for enteral nutrition. Parenteral nutrition is an intravenous solution containing glucose, amino acids, minerals, electrolytes, and vitamins. A lipid solution is typically given in a separate infusion in a hospital setting. This combination of solutions is called total parenteral nutrition because it supplies complete nutritional support. Parenteral nutrition is administered via an IV pump.
+Because parenteral nutrition consists of concentrated glucose, amino acids, and minerals, it is very irritating to the blood vessels. For this reason, a large central vein must be used for administration. The client’s lab work must also be closely monitored for signs of nutrient excesses. See Figure 14.13 for an image of home parenteral nutrition formula. In this image are three compartments: one with glucose, one with amino acids, and one with lipids. The three compartments are kept separate to enable storage at room temperature but are mixed together before use.
+Parenteral nutrition is typically used when the client’s intestines or stomach is not working properly and must be bypassed, such as during paralytic ileus where peristalsis has completely stopped, or after postoperative bowel surgeries, such as bowel resection. It may also be prescribed for severe malnutrition, severe burns, metastatic cancer, liver failure, or hyperemesis with pregnancy.
+Figure 14.13 Total Parenteral Nutrition
+Implementing Interventions
+When implementing interventions to promote good nutrition, it is vital to consider the client’s cultural and religious beliefs. Encourage clients to make healthy food selections based on their food preferences.
+If a client has nutritional deficit, perform nursing interventions prior to mealtime to promote their appetite. For example, if the client has symptoms of pain or nausea, administer medications prior to mealtime to manage these symptoms. Do not perform procedures that may affect the client’s appetite, such as wound dressing changes, immediately prior to mealtime. Manage the environment prior to the food arriving and remove any unpleasant odors or sights. For example, empty the trash can of used dressings or incontinence products. If the client is out of the room when the meal tray arrives and the food becomes cold, reheat the food or order a new meal tray.
+When assisting clients to eat, help them to wash their hands and use the restroom if needed. Assist them to sit in a chair or sit in high Fowler’s position in bed. Set the meal tray on an overbed table and open containers as needed. Encourage the client to feed themselves as much as possible to promote independence. If a client has vision impairments, explain the location of the food using the clock method. For example, “Your vegetables are at 9 o’clock, your potatoes are at 12 o’clock, and your meat is at 3 o’clock.” When feeding a client, ask them what food they would like to eat first. Allow them to eat at their own pace with time between bites for thorough chewing and swallowing. If any signs of difficulty swallowing occur, such as coughing or gagging, stop the meal and notify the provider of suspected swallowing difficulties.
+Evaluation
+It is always important to evaluate the effectiveness of interventions implemented. Evaluation helps the nurse and care team determine if the interventions are appropriate for the client or if they need to be revised. Table 14.3e provides a list of assessment findings indicating that alterations of nutritional status are improving with the planned interventions.
+Table 14.3e Evaluation of Alterations in Nutritional Status
+Imbalance
+How Do We Know It Is Improved?
+Imbalanced Nutrition: Less than Body Requirements
+Stable or increasing weight; sufficient daily calories; well-balanced meal intake; improved energy; and improved appearance of hair, nails, skin, or vision.
+Imbalanced Nutrition: More than Body Requirements
+Stable or decreasing weight, <5% body weight loss over six months, and well-balanced meal intake.
+“Bmi-chart_colored.gif” by Cbizzy2313 is licensed under CC BY-SA 4.0 ↵
+Hood, W. A. (2020). Nutritional status assessment in adults technique. Medscape. https://emedicine.medscape.com/article/2141861-technique ↵
+Hood, W. A. (2020). Nutritional status assessment in adults technique. Medscape. ↵
+U.S. National Library of Medicine. (2022). Prealbumin blood test: Medlineplus medical test. MedlinePlus. https://medlineplus.gov/lab-tests/prealbumin-blood-test/ ↵
+Simons, S. R., & Abdallah, L. M. (2012). Bedside assessment of enteral tube placement: Aligning practice with evidence. American Journal of Nursing, 112(2), 40-46. https://doi.org/10.1097/01.naj.0000411178.07179.68 ↵
+Hood, W. A. (2020). Nutritional status assessment in adults laboratory medicine. Medscape. https://emedicine.medscape.com/article/2141861-labs ↵
+Hood, W. A. (2020). Nutritional status assessment in adults laboratory medicine. Medscape. ↵
+Ignatavicius, D. D., Workman, M. L., & Rebar, C. (2018). Medical-surgical nursing: Concepts for interprofessional collaborative care (9th ed.). Elsevier. ↵
+University of Rochester Medical Center. (n.d.). Health Encyclopedia. ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+Jozsa, F., & Thistle, J. (2023). Anatomy, colostrum. StatPearls [Internet]. https://www.ncbi.nlm.nih.gov/books/NBK513256/ ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+U.S. Department of Agriculture and U.S. Department of Health and Human Services. (2020). Dietary guidelines for Americans, 2020-2025 (9th ed.). https://www.dietaryguidelines.gov/ ↵
+The Hartford Institute for Geriatric Nursing, New York University, Rory Meyers School of Nursing. (n.d.). Assessment tools for best practices of care for older adults. https://hign.org/consultgeri-resources/try-this-series ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021-2023, Twelfth Edition. Thieme Publishers New York. ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021–2023 (12th ed.). Thieme Publishers New York. ↵
+Ackley, B., Ladwig, G., Makic, M.B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier, pp. 651-657. ↵
+Ackley, B., Ladwig, G., Makic, M.B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier, pp. 651-657. ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+“Types and Placement of Enteral Tubes” by Meredith Pomietlo for Chippewa Valley Technical College is licensed under CC BY 4.0 ↵
+Simons, S. R., & Abdallah, L. M. (2012). Bedside assessment of enteral tube placement: Aligning practice with evidence. American Journal of Nursing, 112(2), 40-46. https://doi.org/10.1097/01.naj.0000411178.07179.68 ↵
+Boullata, J. I., Carrera, A. L., Harvey, L., Escuro, A. A., Hudson, L., Mays, A., McGinnis, C., Wessel, J. J., Bajpai, S., Beebe, M. L., Kinn, T. J., Klang, M. G., Lord, L., Martin, K., Pompeii‐Wolfe, C., Sullivan, J., Wood, A., Malone, A., & Guenter, P. (2017). ASPEN safe practices for enteral nutrition therapy. Journal of Parenteral and Enteral Nutrition, 41(1), 15-103. https://doi.org/10.1177/0148607116673053 ↵
+Simons, S. R., & Abdallah, L. M. (2012). Bedside assessment of enteral tube placement: Aligning practice with evidence. American Journal of Nursing, 112(2), 40-46. https://doi.org/10.1097/01.naj.0000411178.07179.68 ↵
+Boullata, J. I., Carrera, A. L., Harvey, L., Escuro, A. A., Hudson, L., Mays, A., McGinnis, C., Wessel, J. J., Bajpai, S., Beebe, M. L., Kinn, T. J., Klang, M. G., Lord, L., Martin, K., Pompeii‐Wolfe, C., Sullivan, J., Wood, A., Malone, A., & Guenter, P. (2017). ASPEN safe practices for enteral nutrition therapy. Journal of Parenteral and Enteral Nutrition, 41(1), 15-103. https://doi.org/10.1177/0148607116673053 ↵
+Simons, S. R., & Abdallah, L. M. (2012). Bedside assessment of enteral tube placement: Aligning practice with evidence. American Journal of Nursing, 112(2), 40-46. https://doi.org/10.1097/01.naj.0000411178.07179.68 ↵
+Boullata, J. I., Carrera, A. L., Harvey, L., Escuro, A. A., Hudson, L., Mays, A., McGinnis, C., Wessel, J. J., Bajpai, S., Beebe, M. L., Kinn, T. J., Klang, M. G., Lord, L., Martin, K., Pompeii‐Wolfe, C., Sullivan, J., Wood, A., Malone, A., & Guenter, P. (2017). ASPEN safe practices for enteral nutrition therapy. Journal of Parenteral and Enteral Nutrition, 41(1), 15-103. https://doi.org/10.1177/0148607116673053 ↵
+“Tpn_3bag.jpg” by Tristanb in English Wikipedia is licensed under CC BY-SA 3.0 ↵
+definition

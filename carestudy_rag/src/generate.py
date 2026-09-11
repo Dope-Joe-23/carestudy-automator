@@ -173,8 +173,13 @@ FORMAT_ANALYSIS_LIST = (
     "problems, potential problems, and priority in bullets. Section 2.4 must "
     "list general and specific patient/family strengths in bullets. Section 2.5 "
     "must list nursing diagnoses and their priority in bullets. Keep each problem, "
-    "strength, or diagnosis as a separate bullet. Do not merge the items into a "
-    "prose paragraph, even when the source notes are written as prose."
+    "strength, or diagnosis as its own separate bullet — one symptom, problem, "
+    "strength, or diagnosis per bullet, never several grouped into one line. "
+    "Phrase every problem and symptom bullet as a statement about the patient, "
+    "e.g. \"Patient has headache\", \"Patient complains of general body weakness\", "
+    "\"Patient is at risk for deficient fluid volume\", \"Patient maintains adequate "
+    "fluid intake\". Do not merge the items into a prose paragraph, even when the "
+    "source notes are written as prose."
 )
 
 CHAPTER_INTRO_FORMAT = (
@@ -935,13 +940,15 @@ def draft_section(
             print(f"[generate] meta-response rewrite failed, keeping original draft: {exc}", file=sys.stderr)
 
     # Prose enforcement: if the model still dumped the data as bullets/labels,
-    # run one corrective rewrite. The literature review is excluded — its format
-    # instruction explicitly wants bulleted enumerations, not prose. On failure
-    # the original draft is kept rather than lost — the student can still edit
-    # it by hand — and an empty rewrite never clobbers a real draft.
+    # run one corrective rewrite. The literature review and Chapter 2 analysis
+    # sections are excluded — their format instructions explicitly want bulleted
+    # lists, not prose. On failure the original draft is kept rather than lost —
+    # the student can still edit it by hand — and an empty rewrite never
+    # clobbers a real draft.
     if (
         not tabular
         and not is_lit
+        and not is_analysis_list_section(heading)
         and _looks_like_data_dump(draft)
     ):
         try:

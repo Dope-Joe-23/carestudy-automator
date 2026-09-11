@@ -1,0 +1,340 @@
+SOURCE: Open RN Nursing Fundamentals, chapter 15 — Fluids and Electrolytes
+TITLE: Fluids and Electrolytes
+URL: https://wtcs.pressbooks.pub/nursingfundamentals/
+LICENSE: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+RETRIEVED: 2026-09-11
+
+
+15.1 Fluids and Electrolytes Introduction
+Learning Objectives
+Describe risk factors for fluid and electrolyte disturbances
+Identify cues related to fluid/electrolyte balance
+Identify diagnostic tests and lab values indicative of a disturbance in fluid and electrolyte disturbances
+Identify essential nutrients
+Identify supplements to enhance nutrition alterations
+Contribute to a plan of care for clients with an alteration in nutrition and fluid and electrolyte disturbances
+The human body maintains a delicate balance of fluids and electrolytes to help ensure proper functioning and homeostasis. When fluids or electrolytes become imbalanced, individuals are at risk for organ system dysfunction. If an imbalance goes undetected and is left untreated, organ systems cannot function properly and ultimately death will occur. Nurses must be able to recognize subtle changes in fluid or electrolyte balances in their clients so they can intervene promptly. Timely assessment and intervention prevent complications and save lives.
+
+15.2 Basic Fluid and Electrolyte Concepts
+Before learning about how to care for clients with fluid and electrolyte imbalances, it is important to understand the physiological processes of the body’s regulatory mechanisms. The body is in a constant state of change as fluids and electrolytes are shifted in and out of cells within the body in an attempt to maintain a nearly perfect balance. A slight change in either direction can have significant consequences on various body systems.
+Body Fluids
+Body fluids consist of water, electrolytes, blood plasma and component cells, proteins, and other soluble particles called solutes. Body fluids are found in two main areas of the body called intracellular and extracellular compartments. See Figure 15.1 for an illustration of intracellular and extracellular compartments.
+Figure 15.1 Intracellular and Extracellular Compartments
+Intracellular fluids (ICF) are found inside cells and are made up of protein, water, electrolytes, and solutes. The most abundant electrolyte in intracellular fluid is potassium. Intracellular fluids are crucial to the body’s functioning. In fact, intracellular fluid accounts for 60% of the volume of body fluids and 40% of a person’s total body weight!
+Extracellular fluids (ECF) are fluids found outside of cells. The most abundant electrolyte in extracellular fluid is sodium. The body regulates sodium levels to control the movement of water into and out of the extracellular space due to osmosis.
+Extracellular fluids can be further broken down into various types. The first type is known as intravascular fluid found in the vascular system and consists of arteries, veins, and capillary networks. Intravascular fluid is whole blood volume and includes red blood cells, white blood cells, plasma, and platelets. Intravascular fluid is the most important component of the body’s overall fluid balance.
+Loss of intravascular fluids causes the nursing diagnosis Deficient Fluid Volume, also referred to as hypovolemia. Intravascular fluid loss can be caused by several factors, such as excessive diuretic use, severe bleeding, vomiting, diarrhea, and inadequate oral fluid intake. If intravascular fluid loss is severe, the body cannot maintain adequate blood pressure and perfusion of vital organs. This can result in hypovolemic shock and cellular death when critical organs do not receive an oxygen-rich blood supply needed to perform cellular function.
+A second type of extracellular fluid is interstitial fluid. Interstitial fluid refers to fluid outside of blood vessels and between the cells. For example, if you have ever cared for a client with heart failure and noticed increased swelling in the feet and ankles, you have seen an example of excess interstitial fluid referred to as edema.
+The remaining extracellular fluid, also called transcellular fluid, refers to fluid in areas such as cerebrospinal, synovial, intrapleural, and the gastrointestinal system.
+Fluid Movement
+Fluid movement occurs inside the body due to osmotic pressure, hydrostatic pressure, and osmosis. Proper fluid movement depends on intact and properly functioning vascular tissue lining, normal levels of protein content within the blood, and adequate hydrostatic pressures inside the blood vessels. Intact vascular tissue lining prevents fluid from leaking out of the blood vessels. Protein content of the blood (in the form of albumin) causes oncotic pressure that holds water inside the vascular compartment. For example, clients with decreased protein levels (i.e., low serum albumin) experience edema due to the leakage of intravascular fluid into interstitial areas because of decreased oncotic pressure.
+Hydrostatic pressure is defined as pressure that a contained fluid exerts on what is confining it. In the intravascular fluid compartment, hydrostatic pressure is the pressure exerted by blood against the capillaries. Hydrostatic pressure opposes oncotic pressure at the arterial end of capillaries, where it pushes fluid and solutes out into the interstitial compartment. On the venous end of the capillary, hydrostatic pressure is reduced, which allows oncotic pressure to pull fluids and solutes back into the capillary. See Figure 15.2 for an illustration of hydrostatic pressure and oncotic pressure in a capillary.
+Figure 15.2 Hydrostatic Pressure
+Filtration occurs when hydrostatic pressure pushes fluids and solutes through a permeable membrane so they can be excreted. An example of this process is fluid and waste filtration through the glomerular capillaries in the kidneys. This filtration process within the kidneys allows excess fluid and waste products to be excreted from the body in the form of urine.
+Fluid movement is also controlled through osmosis. Osmosis is water movement through a semipermeable membrane, from an area of lesser solute concentration to an area of greater solute concentration, in an attempt to equalize the solute concentrations on either side of the membrane. Only fluids and some particles dissolved in the fluid are able to pass through a semipermeable membrane; larger particles are blocked from getting through. Because osmosis causes fluid to travel due to a concentration gradient and no energy is expended during the process, it is referred to as passive transport. See Figure 15.3 for an illustration of osmosis where water has moved to the right side of the membrane to equalize the concentration of solutes on that side with the left side.
+Figure 15.3 Osmosis
+Osmosis causes fluid movement between the intravascular, interstitial, and intracellular fluid compartments based on solute concentration. For example, recall a time when you have eaten a large amount of salty foods. The sodium concentration of the blood becomes elevated. Due to the elevated solute concentration within the bloodstream, osmosis causes fluid to be pulled into the intravascular compartment from the interstitial and intracellular compartments to try to equalize the solute concentration. As fluid leaves the cells, they shrink in size. The shrinkage of cells is what causes many symptoms of dehydration, such as dry, sticky mucous membranes. Because the brain cells are especially susceptible to fluid movement due to osmosis, a headache may occur if adequate fluid intake does not occur.
+Solute Movement
+Solute movement is controlled by diffusion, active transport, and filtration. Diffusion is the movement of molecules from an area of higher concentration to an area of lower concentration to equalize the concentration of solutes throughout an area. (Note that diffusion is different from osmosis because osmosis is the movement of fluid whereas diffusion is the movement of solutes.) See Figure 15.4 for an image of diffusion. Because diffusion travels down a concentration gradient, the solutes move freely without energy expenditure. An example of diffusion is the movement of inhaled oxygen molecules from alveoli to the capillaries in the lungs so that they can be distributed throughout the body.
+Figure 15.4 Diffusion
+Active transport, unlike diffusion, involves moving solutes and ions across a cell membrane from an area of lower concentration to an area of higher concentration. Because active transport moves solutes against a concentration gradient to prevent an overaccumulation of solutes in an area, energy is required for this process to take place. An example of active transport is the sodium-potassium pump, which uses energy to maintain higher levels of sodium in the extracellular fluid and higher levels of potassium in the intracellular fluid. See Figure 15.5 for an image of diffusion and the sodium-potassium pump regulating sodium and potassium levels in the extracellular and intracellular compartments. Recall that sodium (Na+) is the primary electrolyte in the extracellular space and potassium (K+) is the primary electrolyte in the intracellular space.
+Figure 15.5 Sodium-Potassium Pump
+Fluid and Electrolyte Regulation
+The body must carefully regulate intravascular fluid accumulation and excretion to prevent fluid volume excesses or deficits and maintain adequate blood pressure. Water balance is regulated by several mechanisms including antidiuretic hormone (ADH), thirst, and the Renin-Angiotensin-Aldosterone System (RAAS).
+Fluid intake is regulated by thirst. As fluid is lost and the sodium level increases in the intravascular space, serum osmolality increases. Serum osmolality is a measure of the concentration of dissolved solutes in the blood. Osmoreceptors in the hypothalamus sense increased serum osmolarity levels and trigger the release of ADH (antidiuretic hormone) in the kidneys to retain fluid. The osmoreceptors also produce the feeling of thirst to stimulate increased fluid intake. However, individuals must be able to mentally and physically respond to thirst signals to increase their oral intake. They must be alert, fluids must be accessible, and the person must be strong enough to reach for fluids. When a person is unable to respond to thirst signals, dehydration occurs. Older individuals are at increased risk of dehydration due to age-related impairment in thirst perception. The average adult intake of fluids is about 2,500 mL per day from both food and drink. An increased amount of fluids is needed if the client has other medical conditions causing excessive fluid loss, such as sweating, fever, vomiting, diarrhea, and bleeding.
+The Renin-Angiotensin-Aldosterone System (RAAS) plays an important role in regulating fluid output and blood pressure. See Figure 15.6 for an illustration of the Renin-Angiotensin-Aldosterone System (RAAS). When there is decreased blood pressure (which can be caused by fluid loss), specialized kidney cells make and secrete renin into the bloodstream. Renin acts on angiotensinogen released by the liver and converts it to angiotensin I, which is then converted to angiotensin II. Angiotensin II does a few important things. First, angiotensin II causes vasoconstriction to increase blood flow to vital organs. It also stimulates the adrenal cortex to release aldosterone. Aldosterone is a steroid hormone that triggers increased sodium reabsorption by the kidneys and subsequent increased serum osmolality in the bloodstream. As you recall, increased serum osmolality causes osmosis to move fluid into the intravascular compartment in an effort to equalize solute particles. The increased fluids in the intravascular compartment increase circulating blood volume and help raise the person’s blood pressure. An easy way to remember this physiological process is “aldosterone saves salt” and “water follows salt.”
+Figure 15.6 Renin Angiotensin Aldosterone System (RAAS)
+Fluid output occurs mostly through the kidneys in the form of urine. Fluid is also lost through the skin as perspiration, through the gastrointestinal tract in the form of stool, and through the lungs during respiration. Forty percent of daily fluid output occurs due to these “insensible losses” through the skin, gastrointestinal tract, and lungs and cannot be measured. The remaining 60% of daily fluid output is in the form of urine. Normally, the kidneys produce about 1,500 mL of urine per day when fluid intake is adequate. Decreased urine production is an early sign of dehydration or kidney dysfunction. It is important for nurses to assess urine output in clients at risk. If a client demonstrates less than 30 mL/hour (or 0.5 mL/kg/hour) of urine output over eight hours, the provider should be notified for prompt intervention. See Figure 15.7 for an illustration of an average adult’s daily water balance of 2,500 mL fluid intake balanced with 2,500 mL fluid output.
+Figure 15.7 Water Balance
+Fluid Imbalance
+Two types of fluid imbalances are excessive fluid volume (also referred to as hypervolemia) and deficient fluid volume (also referred to as hypovolemia). These imbalances primarily refer to imbalances in the extracellular compartment but can cause fluid movement in the intracellular compartments based on the sodium level of the blood.
+Excessive Fluid Volume
+Excessive fluid volume (also referred to as hypervolemia) occurs when there is increased fluid retained in the intravascular compartment. Clients at risk for developing excessive fluid volume are those with the following conditions:
+Heart Failure
+Kidney Failure
+Cirrhosis
+Pregnancy
+Symptoms of fluid overload include pitting edema, ascites, and dyspnea and crackles from fluid in the lungs. Edema is swelling in dependent tissues due to fluid accumulation in the interstitial spaces. Ascites is fluid retained in the abdomen.
+Treatment depends on the cause of the fluid retention. Sodium and fluids are typically restricted, and diuretics are often prescribed to eliminate the excess fluid. For more information about the nursing care of clients with excessive fluid volume, see the “Applying the Nursing Process” section.
+Deficient Fluid Volume
+Deficient fluid volume (also referred to as hypovolemia or dehydration) occurs when loss of fluid is greater than fluid input. Common causes of deficient fluid volume are diarrhea, vomiting, excessive sweating, fever, and poor oral fluid intake. Individuals who have a higher risk of dehydration include the following:
+Older adults
+Infants and children
+Clients with chronic diseases such as diabetes mellitus and kidney disease
+Clients taking diuretics and other medications that cause increased urine output
+Individuals who exercise or work outdoors in hot weather
+In adults, symptoms of dehydration are as follows:
+Feeling very thirsty
+Dry mouth
+Headache
+Dry skin
+Urinating and sweating less than usual
+Dark, concentrated urine
+Feeling tired
+Changes in mental status
+Dizziness due to decreased blood pressure
+Elevated heart rate
+In infants and young children, additional symptoms of dehydration include the following:
+Crying without tears
+No wet diapers for three hours or more
+Being unusually sleepy or drowsy
+Irritability
+Eyes that look sunken
+Sunken fontanel
+Dehydration can be mild and treated with increased oral intake such as water or sports drinks. Severe cases can be life-threatening and require the administration of intravenous fluids.
+For more information about water balance and fluid movement, review the following video.
+Video Review of Fluid and Electrolytes
+“Cellular_Fluid_Content.jpg” by Welcome1To1The1Jungle is licensed under CC BY 3.0 ↵
+Encyclopædia Britannica, inc. (n.d.). Fluid. Encyclopædia Britannica. https://www.britannica.com/science/fluid-biology ↵
+Forciea, B. (2017, April 21). Fluids and electrolytes: Water [Video]. YouTube. All rights reserved. Video used with permission. https://youtu.be/VMxmDeduKR0 ↵
+definition
+
+15.6 Applying the Nursing Process
+The nursing process is used continuously when caring for individuals who have fluid, electrolyte, or acid-base imbalances, or at risk for developing them because their condition can change rapidly. This systematic approach to nursing care ensures that subtle cues or changes are not overlooked and that appropriate outcomes and interventions are implemented according to the client’s current condition.
+Assessment
+A thorough assessment provides valuable information about a client’s current fluid, electrolyte, and acid-base balance, as well as risk factors for developing imbalances. Performing a chart review or focused health history is a good place to start collecting data, with any identified gaps or discrepancies verified during the physical assessment. It is also important to consider pertinent life span or cultural considerations that impact a client’s fluid and electrolyte status.
+Subjective Assessment
+Subjective assessment data is information obtained from the client as a primary source or family members or friends as a secondary source. This information must be obtained by interviewing the client or someone accompanying the client. Some of this information can be obtained through a chart review but should be verified with the client or family member for accuracy.
+Subjective data to obtain includes age; history of chronic disease, surgeries, or traumas; dietary intake; activity level; prescribed medications and compliance with taking medications; pain; and bowel and bladder functioning. Subjective assessment data is helpful to determine normal pattern identification and risk identification. For example, a history of kidney disease or heart failure places the client at risk for fluid volume excess, whereas diuretic use places the client at risk for fluid volume deficit and electrolyte and acid-base imbalances. A history of diabetes mellitus also places a client at risk for fluid, electrolyte, and acid-base imbalances. Recognizing these risks helps nurses be prepared for complications that may arise and allows the nurse to recognize subtle cues as problems develop.
+Objective Assessment
+Objective assessment data is information that the nurse directly observes. This data is obtained through a physical examination using inspection, auscultation, and palpation. A complete head-to-toe assessment should be performed to avoid missing clues to the client’s condition.
+Focused assessments such as trends in weight, 24-hour intake and output, vital signs, pulses, lung sounds, skin, and mental status are used to determine fluid balance, electrolyte, and acid-base status.
+Accurate daily weights can provide important clues to fluid balance. Weights must be taken on the same scale, at the same time of day, with the client wearing similar clothing in order to be accurate. A one-kilogram change in weight in 24 hours is considered significant because this represents a one-liter fluid gain or loss and should be reported to the provider.
+Accurate measurement of 24-hour intake and output helps validate weight findings. Averaged urine output of less than 30 mL/hour or 0.5mL/kg/hr should be reported to the provider.
+Vital signs should be analyzed. An elevated blood pressure and bounding pulses are often seen with fluid volume excess. Decreased blood pressure with an elevated heart rate and a weak or thready pulse are hallmark signs of fluid volume deficit. Systolic blood pressure less than 100 mm Hg in adults, unless other parameters are provided, should be reported to the health care provider.
+Lung crackles can signify fluid volume excess and are often first auscultated in the lower posterior lung fields.
+Tight, edematous, shiny skin can indicate fluid volume excess. See Figure 15.15 for an image of edema. Conversely, skin tenting, dry mucous membranes, or dry skin indicate fluid volume deficit. Keep in mind that clients with edema may also be experiencing intravascular fluid volume deficit if too much fluid has leaked into the interstitial space, resulting in signs of hypotension, tachycardia, and weak, thready pulses.
+New mental status changes such as confusion or decreased level of consciousness can indicate fluid, electrolyte, or acid-base imbalance, especially hypo- or hypernatremia, acid-base imbalances, or fluid volume deficit.
+Cardiac arrhythmias can be seen with acid-base imbalances and electrolyte imbalances, especially with hypo- or hyperkalemia and alkalosis. See Table 15.6a for a comparison of expected and unexpected findings and those that require notification of a health care provider.
+Figure 15.15 Edema
+Table 15.6a Expected Findings Versus Unexpected Findings Indicating a Fluid Imbalance
+Assessment
+Expected Findings
+Unexpected Findings Indicating Excessive Fluid Volume
+*Bolded items are critical conditions that require immediate health care provider notification.
+Unexpected Findings Indicating Deficient Fluid Volume
+*Bolded items are critical conditions that require immediate health care provider notification.
+Vital Signs
+Blood pressure, heart rate, and oxygen saturation levels within normal limits.
+Elevated blood pressure, increased respiratory rate, or decreased oxygen saturation.
+Decreased blood pressure or elevated heart rate.
+Neurological
+Alert and oriented.
+Headache.
+Headache, confusion, decreased level of consciousness, dizziness, or weakness.
+Cardiac
+Normal heart rate and rhythm, capillary refill <3 seconds, and normal pulses.
+Bounding pulses, S3 heart sound, or jugular venous distention.
+Weak, thready pulses; sluggish capillary refill; or chest pain.
+Respiratory
+Clear lung sounds throughout, normal respiratory rate, and no shortness of breath.
+Crackles in lung fields, pink frothy sputum, shortness of breath, or respiratory distress.
+Shortness of breath possible.
+Gastrointestinal
+Bowel sounds present × 4 quadrants and normal stool consistency and frequency for the client.
+Constipation with dry, hard stools.
+Urinary
+Clear urine, normal urine specific gravity, and urine output greater than 30 mL/hr.
+Decreased urine output <30 mL/hr or <0.5 mL/kg/hr concentrated urine.
+Decreased urine output <30 mL/hr or <0.5 mL/kg/hr concentrated urine, or elevated urine specific gravity.
+Integumentary
+Normal skin turgor and moist mucous membranes.
+Tight, edematous, or shiny skin.
+Tenting, or poor skin turgor; dry, sticky mucous membranes; or dry skin.
+Weight
+<1 kg change in weight over 24 hours.
+>1 kg increase over 24 hours.
+>1 kg decrease over 24 hours.
+Review additional information about assessing body systems in Open RN Nursing Skills,2e.
+Diagnostic and Lab Work
+Diagnostic tests and lab work provide important information about fluid status, electrolyte, and acid-base balance and should be used in conjunction with a thorough subjective and objective assessment to form a complete picture of the client’s overall status. It is important to cluster diagnostic and lab assessment data with subjective and objective assessment data to ensure a complete assessment picture. This will help ensure correct information is reported to the provider as necessary.
+Lab work provides important clues to overall fluid status. Common lab tests used to evaluate fluid status include serum osmolarity, urine specific gravity, hematocrit, and blood urea nitrogen (BUN).
+Serum osmolarity (often interchanged with the term serum osmolality) measures the concentration of particles in the blood with a normal range of 275 to 295 mmol/kg. Normal value ranges may vary slightly among different laboratories. In healthy people, when serum osmolality in the blood becomes high, the body releases antidiuretic hormone (ADH). This hormone causes the kidneys to reabsorb water, resulting in dilution of the blood and the return of serum osmolarity to normal range. An elevated serum osmolarity level means the blood is more concentrated than normal and often indicates deficient fluid volume deficit. A decreased serum osmolarity means the blood is more dilute than normal and may indicate a fluid volume excess.
+Urine osmolarity measures the concentration of particles in the urine. An increased urine osmolarity result means the urine is concentrated and can indicate fluid volume deficit. A decreased urine osmolarity result means the urine is dilute and can indicate excess fluid intake. Urine specific gravity is a urine test that commonly measures hydration status by measuring the concentration of particles in urine. Normal urine specific gravity levels are between 1.010 and 1.020. A urine specific gravity above 1.020 indicates concentrated urine and can indicate a fluid volume deficit, similarly to an elevated urine osmolarity. A urine specific gravity below 1.010 indicates dilute urine, which can occur with excessive fluid intake.
+When a condition called “Excessive Fluid Volume” occurs, it is often the result of altered physiological mechanisms, which impact the kidney’s ability to increase urine output to eliminate excessive fluid volume, causing urine output to decrease. As a result, the serum osmolarity decreases as fluid is retained but the urine specific gravity is elevated because urine is concentrated.
+Hematocrit (HCT) is a blood test that measures how much of your blood is made up of red blood cells compared to the liquid component of blood called plasma. It is often part of a complete blood count (CBC), a routine test that measures different components of your blood. The normal hematocrit for men is 42 to 52%; for women it is 37 to 47%, but these ranges may vary slightly across laboratories.
+In addition to measuring red blood cells, hematocrit levels can also be used to evaluate fluid balance. When deficient fluid volume is occurring, the plasma component of the blood also decreases, causing an elevated concentration of red blood cells (and an elevated hematocrit). In this case, drinking more fluid or receiving intravenous fluids will bring the hematocrit level back to normal range. Conversely, if a client is experiencing “Excessive Fluid Volume,” the plasma component of the blood is increased, causing dilution of the red blood cells and a decreased hematocrit level. , See Figure 15.16 for an illustration of normal hematocrit, elevated hematocrit, and decreased hematocrit due to fluid imbalance.
+Figure 15.16 Effects of Fluid Imbalance on Hematocrit
+Blood Urea Nitrogen (BUN) measures the amount of urea nitrogen in your blood. BUN and serum creatinine levels are used to evaluate kidney function, with increased levels indicating worsening kidney function. In general, the normal BUN range is 7 to 20 mg/dL, but normal ranges vary depending on the reference range used by the lab and the client’s age. Clients with “Deficient Fluid Volume” can also have elevated BUN levels for the same reason that hematocrit is affected; as plasma levels decrease, the blood becomes more concentrated.
+In addition to monitoring lab work for results indicating fluid imbalance, electrolytes, specifically sodium, potassium, calcium, phosphorus, and magnesium, should be monitored closely for clients at risk. Refer to Table 15.4 in the “Electrolytes” section for an overview of electrolyte imbalances, common symptoms, and common treatments.
+Additional diagnostic tests used to evaluate for signs of fluid and electrolyte imbalances are the chest X-ray and the electrocardiogram. A chest X-ray evaluates for fluid in the lungs, a common complication of excessive fluid volume. An electrocardiogram (ECG) evaluates for arrhythmias (e.g., electrical conduction disturbances) in the heart resulting from electrolyte imbalances.
+Arterial blood gases (ABGs) are used to closely monitor critically ill clients, such as clients in diabetic ketoacidosis or in severe respiratory distress. ABG results provide important clues about respiratory status, oxygenation, and metabolic processes occurring in the body. See Table 15.6b for a summary of laboratory findings associated with fluid, electrolyte, and acid-base imbalances.
+Table 15.6b Lab Values Associated with Fluid and Electrolyte Imbalances
+Lab Value
+Normal Ranges
+Serum osmolarity
+275–295 mmol/kg.
+Urine specific gravity
+1.010–1.020.
+Hematocrit
+Men: 42–52%.
+Women: 37–47%.
+BUN
+7–20 mg/dL.
+Serum sodium
+135–145 mEq/L.
+Serum potassium
+3.5–5 mEq/L.
+Serum magnesium
+1.5–2.4 mEq/L.
+Serum calcium
+8.5–10.3 mg/dL.
+Serum phosphorus
+2.5–4 mg/dL.
+ABG
+pH: 7.35–7.45.
+PaO2: 80–100 mmHg.
+HCO3: 22–26 mEq/L.
+PaCO2: 35–45 mmHg.
+Life Span Considerations
+There are several life span considerations when assessing for fluid, electrolyte, and acid-base balance.
+Newborns and Infants
+Newborns and infants have a large proportion of water weight compared to adults, with approximately 75% of weight being water. During the first week after birth, a newborn’s weight decreases partly because extracellular fluid is lost in urine along with sodium. Additionally, compensatory mechanisms such as the Renin-Angiotensin-Aldosterone System are less developed, and newborn kidneys are less able to concentrate urine, resulting in a decreased ability to retain sodium. Newborns and infants also have a greater body surface area, making them more susceptible to insensible fluid losses through the skin and lungs via evaporation. This causes increased risk of developing hyponatremia and fluid volume deficit. In contrast, newborns are less able to excrete potassium, placing them at risk for hyperkalemia. Episodes of vomiting and diarrhea also place infants at an increased risk of quickly developing fluid and electrolyte disturbances.
+When monitoring urine output in infants, parents are often asked about the number of wet diapers in a day. Nurses may also weigh diapers for hospitalized infants for more accurate measurement of urine output.
+Children and Adolescents
+Children and adolescents are at risk for dehydration when physically active in hot environments due to excessive sweating. Illnesses causing diarrhea, vomiting, or fever can also quickly cause fluid deficit if there is little fluid intake to replace the water and sodium lost. For this reason, it is important to educate parents regarding the importance of fluid intake when their child is sweating or ill.
+Older Adults
+Older adults are at risk for fluid and electrolyte imbalances for a variety of reasons, including surgery, chronic diseases such as heart and kidney disease, diuretic use, and decreased mobility that limits the ability to obtain hydration. They also have a decreased thirst reflex, which contributes to decreased fluid consumption. Kidney function naturally decreases with age, resulting in decreased sodium and water retention, as well as decreased potassium excretion. These factors place older clients at risk for fluid volume deficit and electrolyte abnormalities.
+Diagnoses
+There are many nursing diagnoses applicable to fluid, electrolyte, and acid-base imbalances. Review a nursing care planning resource for current NANDA-I approved nursing diagnoses, related factors, and defining characteristics. See Table 15.6c for commonly used NANDA-I diagnoses associated with clients with fluid and electrolyte imbalances.
+Table 15.6c Common NANDA-I Nursing Diagnoses Related to Fluid and Electrolyte Imbalances
+NANDA-I Diagnosis
+Definition
+Selected Defining Characteristics
+Excess Fluid Volume
+Surplus retention of fluid.
+Adventitious breath sounds.
+Elevated blood pressure.
+Altered respiratory pattern.
+Altered mental status.
+Anxiety.
+Decreased hematocrit, serum osmolarity, and BUN.
+Edema.
+Fluid intake exceeds output.
+Hepatomegaly.
+Jugular vein distension.
+Pulmonary congestion.
+Weight gain over short period of time.
+Deficient Fluid Volume
+Decreased intravascular, interstitial, and/or intracellular fluid. This refers to dehydration, water loss alone without change in sodium.
+Altered mental status.
+Decreased skin turgor.
+Decreased blood pressure.
+Decreased urine output.
+Dry skin and mucous membranes.
+Increased heart rate.
+Increased serum osmolarity, hematocrit, and BUN.
+Increased urine concentration.
+Sudden weight loss.
+Thirst.
+Weakness.
+Risk for Imbalanced Fluid Volume
+Susceptible to a decrease, increase, or rapid shift from one to the other of intravascular, interstitial, and/or intracellular fluid, which may compromise health.
+Altered fluid intake.
+Excessive sodium intake.
+Ineffective medication self-management.
+Malnutrition.
+Risk for Electrolyte Imbalance
+Susceptible to changes in serum electrolyte levels, which may compromise health.
+Diarrhea.
+Vomiting.
+Excessive fluid volume.
+Insufficient fluid volume.
+Excess Fluid Volume Example
+A client with heart failure has been hospitalized with an acute exacerbation with dyspnea and increased edema in the lower extremities. A sample PES statement is, “Fluid Volume Excess related to a compromised regulatory mechanism as evidenced by edema, crackles in lower posterior lungs, and weight gain of 2 kg in 24 hours.”
+Deficient Fluid Volume Example
+An elderly client develops severe diarrhea due to food poisoning and is admitted to the hospital with dehydration. A sample PES statement is, “Deficient Fluid Volume related to insufficient fluid intake as evidenced by blood pressure 90/60, dry mucous membranes, decreased urine output, and an increase in hematocrit.”
+Risk for Imbalanced Fluid Volume Example
+A client who is ten weeks pregnant has developed severe vomiting due to severe morning sickness. A sample PES statement is, “Risk for Imbalanced Fluid Volume as evidenced by vomiting.” The nurse plans to educate the client about tips to stay hydrated despite vomiting, as well as when to contact the provider if signs of dehydration develop.
+Risk for Electrolyte Imbalance Example
+A client with chronic kidney disease is prescribed a diuretic to control fluid retention. A sample PES statement is, “Risk for Electrolyte Imbalance as evidenced by insufficient knowledge about modifiable risk factors related to diuretic use.” The nurse plans to educate the client about signs and symptoms of fluid and electrolyte imbalance and when to contact the provider.
+Note: Recall that risk diagnoses do not contain related factors in PES statements because a vulnerability for a potential problem is being identified for the client. Instead, the phrase “as evidenced by” is used to refer to the evidence of risk that exists. Read more about formulating PES statements in the “Nursing Process” chapter.
+Outcome Identification
+Goals for a client experiencing fluid, electrolyte, or acid-base imbalances depend on the chosen nursing diagnosis and specific client situation. Typically, goals should relate to resolution of the imbalance. For example, if the nursing diagnosis is Excess Fluid Volume, then an appropriate goal would pertain to resolution of the fluid volume excess. Remember that goals are broad, and outcomes should be narrowly focused and written in SMART format (Specific, Measurable, Achievable, Realistic, and Time Oriented).
+For the nursing diagnosis of Excess Fluid Volume, an overall goal is, “The client will achieve fluid balance.” Fluid balance for a client with Excess Fluid Volume is indicated by body weight returning to baseline with no peripheral edema, neck vein distention, or adventitious breath sounds. An example of a SMART outcome is, “The client will maintain clear lung sounds with no evidence of dyspnea over the next 24 hours.”
+For clients experiencing Electrolyte Imbalances, an appropriate goal is, “The client will maintain serum sodium, potassium, calcium, phosphorus, magnesium, and/or pH levels within normal range.” An additional goal is, “The client will maintain a normal sinus heart rhythm with regular rate,” because many electrolyte imbalances impact the electrical conduction system of the heart, and this is a life-threatening complication.
+Planning Interventions
+Evidence-based interventions should be planned according to the client’s history and specific fluid, electrolyte, or acid-base imbalance present. Refer to a nursing care planning resource for evidence-based interventions for specific nursing diagnoses. Table 15.6d lists selected interventions for key imbalances. , , ,
+Table 15.6d Interventions for Imbalances
+Nursing Diagnosis
+Interventions
+Excess Fluid Volume
+Weigh daily at consistent times and monitor trends. Notify the health care provider for weight gain >1 kg in 24 hours.
+Measure fluid intake and output and monitor 24-hour trends. Notify the health care provider for urine output less than 30 mL/hour, 0.5 mL/kg/hour, or as ordered.
+Monitor hemodynamic status, including blood pressure, heart rate, and other hemodynamic data available, such as MAP and cardiac output.
+Monitor respiratory status for signs of pulmonary edema, such as increasing anxiety, dyspnea, orthopnea, respiratory rate, and decreasing oxygen saturation (SpO2). Monitor lung sounds for new or worsening fine crackles and notify the provider of abnormal changes in condition.
+Monitor for worsening peripheral edema and notify the provider as indicated. If edema is present, implement interventions such as elevation and compression to manage edema as well as interventions to promote skin integrity.
+Monitor lab results relevant to fluid status such as serum osmolarity, urine specific gravity, hematocrit, and BUN.
+Elevate the head of the bed to improve ventilation as appropriate.
+Administer prescribed diuretics to eliminate excess fluid as appropriate and monitor for effect. Monitor for side effects of diuretics such as orthostatic hypotension and electrolyte imbalances.
+Implement prescribed fluid restrictions. For comfort, provide ice chips as appropriate.
+Restrict dietary intake of sodium as prescribed.
+Educate the client and family members about medications, fluid restrictions, sodium restrictions, and monitoring at home for sudden weight changes, worsening edema, or worsening dyspnea.
+Deficient Fluid Volume
+Recognize and address factors that cause deficient fluid volume, such as diarrhea, vomiting, fever, diuretic therapy, or uncontrolled diabetes mellitus. Administer medications such as antidiarrheals and antiemetics as appropriate.
+Monitor for signs of deficient fluid volume in clients at risk, including poor skin turgor, delayed capillary refill, weak/thready pulse, severe thirst, dry mucous membranes, and decreased urinary output.
+Weigh daily at consistent times and monitor trends.
+Measure fluid intake and output and monitor 24-hour trends. Notify the health care provider for urine output less than 30 mL/hour or 0.5 mL/kg/hour because this may indicate kidney injury in addition to deficient fluid volume.
+Monitor hemodynamic status, including blood pressure, heart rate, and other hemodynamic data available, such as MAP and cardiac output, every 15 minutes to one hour for unstable clients and every 4 hours for stable clients.
+Monitor for dizziness upon standing and orthostatic blood pressure. Check orthostatic blood pressures with the client lying and standing. To perform this procedure, have the client lie down for five minutes. Measure the blood pressure (BP) and pulse rate. Have the client stand. Repeat the BP and pulse rate measurements after standing one to three minutes. A decrease in systolic blood pressure >20 mmHg or a decrease in diastolic blood pressure >10 mmHg, or if the client reports feeling light-headed or dizzy, is considered abnormal. Orthostatic hypotension should be reported to the provider and safety measures implemented to prevent falls.
+Monitor lab results relevant to fluid status such as serum osmolarity, urine specific gravity, hematocrit, and BUN.
+Encourage oral fluid intake, as tolerated. Offer beverages the client prefers every 1–2 hours while awake and keep within easy reach, unless contraindicated.
+Minimize intake of drinks with diuretic or laxative effects, such as coffee, tea, alcohol, or prune juice.
+Administer prescribed IV fluids and monitor the client’s response. Generally, isotonic fluids are prescribed for extracellular rehydration and hypotonic fluids are prescribed for intracellular rehydration. Monitor for the potential development of excessive fluid volume or pulmonary edema during IV rehydration.
+Recognize and report signs of impending hypovolemic shock, including elevated pulse and respirations; decreased blood pressure below baseline; cold, clammy skin; weak, thready pulse; and confusion. Clients progressing towards hypovolemic shock require emergent care.
+Educate the client and family members about signs of dehydration to watch for at home. Remind older adults that thirst sensation often decreases with age.
+Risk for Electrolyte Imbalance
+Recognize potential causes of altered electrolyte levels, such as diuretic therapy, kidney disease, gastrointestinal fluid loss, drainage from wounds or burns, and excessive perspiration. Notify the health care provider of suspected electrolyte imbalances and address causes.
+Monitor mental status, vital signs, and heart rhythm at least every eight hours or more frequently as needed. Electrolyte imbalances can cause confusion, cardiac dysrhythmias, muscle weakness, edema, and respiratory failure.
+Monitor associated laboratory results and report abnormal findings to the provider.
+Administer oral and IV electrolyte supplements as prescribed for electrolyte deficiencies.
+Limit dietary intake of specific electrolyte excesses.
+Administer electrolyte-binding medications, such as Kayexalate for hyperkalemia, as prescribed.
+Administer IV fluids to promote renal excretion of excess electrolyte levels, as prescribed.
+Educate the client and family members about dietary choices corresponding to the specific electrolyte imbalance. Provide information about monitoring for potential electrolyte imbalances at home resulting from their medications.
+Read more about diuretic medications that affect fluid and electrolyte balance in the “Cardiovascular and Renal System” chapter in Open RN Nursing Pharmacology, 2e.
+Read about intravenous fluids used to treat Fluid Volume Deficit in the “IV Therapy Management” chapter in Open RN Nursing Skills, 2e.
+Implement Interventions Safely
+Clients with fluid and electrolyte imbalances can quickly move from one imbalance to another based on treatments received. It is vital to reassess a client before implementing interventions to ensure current status warrants the prescribed intervention. For example, a client admitted with Fluid Volume Deficit received intravenous fluids (IV) over the past 24 hours. When the nurse prepares to administer the next bag of IV fluids, she notices the client has developed pitting edema in his lower extremities. She listens to his lungs and discovers crackles. The nurse notifies the prescribing provider, and the order for intravenous fluids is discontinued and a new order for diuretic medication is received.
+Assessments for new or worsening imbalances should be performed prior to implementing interventions :
+Monitor daily weights for sudden changes. A weight change of greater than 1 kg in 24 hours (using the same scale and type of clothing) should be reported to the provider.
+Monitor location and extent of edema using the 1+ to 4+ scale to quantify edema.
+Monitor intake and output over a 24-hour period; note trends of decreasing urine output in relation to fluid intake indicating potential development of Fluid Volume Excess.
+Monitor lab work such as serum osmolarity, serum sodium, BUN, and hematocrit for abnormalities. (For example, a client receiving IV fluids may develop Fluid Volume Excess, resulting in decreased levels of serum osmolarity, serum sodium, BUN, and hematocrit. Conversely, a client receiving IV diuretics can quickly become dehydrated, resulting in elevated levels of serum osmolarity, serum sodium, BUN, and hematocrit.)
+For clients receiving intravenous fluids, monitor for the development of excessive fluid volume. Monitor lung sounds for crackles and ask about the presence of dyspnea. Report new abnormal findings to the provider.
+For clients receiving diuretic therapy, monitor for fluid volume deficit and electrolyte imbalances such as hypokalemia and hyponatremia.
+Implement fall precautions for clients with orthostatic hypotension, restlessness, anxiety, or confusion related to fluid imbalances.
+Evaluation
+The effectiveness of interventions implemented to maintain fluid balance must be continuously evaluated. Evaluation helps the nurse determine whether goals and outcomes are met and if interventions are still appropriate for the client. If outcomes and goals are met, the plan of care can likely be discontinued. If outcomes and goals are not met, they may need to be revised. It is also possible that interventions may need to be added or revised to help the client meet their goals and outcomes. Table 15.6e provides a list of assessment findings indicating imbalances are improved.
+Table 15.6e Evaluating for Improvement of Imbalances
+Imbalance
+Signs and Symptoms of Improvement
+Fluid Volume Excess
+Decreased crackles, decreased edema, decreased shortness of breath, and/or improved jugular venous distention.
+Fluid Volume Deficit
+Increased blood pressure, decreased heart rate, normal skin turgor, and/or moist mucous membranes.
+Electrolyte Imbalances
+Electrolyte levels return to normal and/or absence of signs or symptoms of deficit or excess.
+Acid-Base Imbalance
+ABGs return to normal or baseline, resolution of vomiting or diarrhea, and/or no respiratory distress.
+“Combinpedal.jpg” by James Heilman, MD is licensed under CC BY-SA 3.0 ↵
+El-Sharkawy, A. M., Sahota, O., Maughan, R. J., & Lobo, D. N. (2014). The pathophysiology of fluid and electrolyte balance in the older adult surgical patient. Clinical Nutrition, 33(1), 6–13. ↵
+U.S. National Library of Medicine. (2023). Osmolality blood test: Medlineplus Medical Encyclopedia. MedlinePlus. https://medlineplus.gov/ency/article/003463.htm ↵
+RnCeus.com. (n.d.). Serum and urine osmolality. https://www.rnceus.com/renal/renalosmo.html ↵
+Flasar, C. (2008). What is urine specific gravity? Nursing2008, 38(7), 14. https://doi.org/10.1097/01.nurse.0000325315.41513.a0 ↵
+U.S. National Library of Medicine. (2024). Hematocrit test: MedlinePlus Medical Test. MedlinePlus. https://medlineplus.gov/lab-tests/hematocrit-test/ ↵
+Billett, H. H. (1990). Hemoglobin and hematocrit. In Walker H. K., Hall W. D., Hurst J. W. (Eds.), Clinical methods: The history, physical, and laboratory examinations (3rd ed.). Butterworths. https://www.ncbi.nlm.nih.gov/books/NBK259/ ↵
+“1901_Composition_of_Blood.jpg” by Arabic is licensed under CC BY 3.0 ↵
+Ringer, S. (2020). Fluid and electrolyte therapy in newborns. UpToDate. https://www.uptodate.com/contents/fluid-and-electrolyte-therapy-in-newborns ↵
+Iglesia, I., Guelinckx, I., De Miguel-Etayo, P. M., González-Gil, E. M., Salas-Salvadó, J., Kavouras, S. A., Gandy, J., Martínez, H., Bardosono, S., Abdollahi, M., Nasseri, E., Jarosz, A., Ma, G., Carmuega, E., Thiébaut, I., & Moreno, L. A. (2015). Total fluid intake of children and adolescents: cross-sectional surveys in 13 countries worldwide. European Journal of Nutrition, 54, 57–67. https://doi.org/10.1007/s00394-015-0946-6 ↵
+El-Sharkawy, A. M., Sahota, O., Maughan, R. J., & Lobo, D. N. (2014). The pathophysiology of fluid and electrolyte balance in the older adult surgical patient. Clinical Nutrition, 33(1), 6-13. https://doi.org/10.1016/j.clnu.2013.11.010 ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021–2023 (12th ed.). Thieme Publishers New York. ↵
+Ackley, B., Ladwig, G., Makic, M. B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier. pp. 360-363, 406-416. ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+Ackley, B., Ladwig, G., Makic, M. B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier. pp. 360-363, 406-416. ↵
+Fluid overload. (2021). Lippincott advisor. http://advisor.lww.com ↵
+Dehydration. (2021). Lippincott advisor. http://advisor.lww.com ↵
+Electrolyte imbalance. (2021). Lippincott advisor. http://advisor.lww.com ↵
+Centers for Disease Control and Prevention. (2017). Measuring orthostatic blood pressure. ↵
+Ackley, B., Ladwig, G., Makic, M. B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier. pp. 360-363, 406-416. ↵
+definition

@@ -1,0 +1,270 @@
+SOURCE: Open RN Nursing Fundamentals, chapter 12 — Sleep and Rest
+TITLE: Sleep and Rest
+URL: https://wtcs.pressbooks.pub/nursingfundamentals/
+LICENSE: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+RETRIEVED: 2026-09-11
+
+
+12.1 Sleep & Rest Introduction
+Learning Objectives
+Identify factors putting clients at risk for sleep and rest problems across the life span
+Identify cues related to sleep and rest problems
+Identify nonpharmacological interventions to promote sleep and rest
+Contribute to a plan of care for clients with sleep and rest alterations
+Maslow’s Hierarchy of Needs indicates sleep as one of our physiological requirements. Getting enough quality sleep at the right times according to our circadian rhythms can protect mental and physical health, safety, and quality of life. Conversely, chronic sleep deficiency increases the risk of heart disease, kidney disease, high blood pressure, diabetes, and stroke, as well as weakening the immune system. This chapter will review the physiology of sleep and common sleep disorders, as well as interventions to promote good sleep.
+Trossman, S. (2018). Nurses offer strategies to promote patients’ rest and sleep. American Nurse. https://www.myamericannurse.com/strategies-promote-patients-rest-sleep/ ↵
+
+12.2 Basic Concepts
+What Causes Sleep?
+There are two internal biological mechanisms that work together to regulate wakefulness and sleep referred to as circadian rhythms and sleep-wake homeostasis.
+Circadian rhythms direct a wide variety of body functions, including wakefulness, core temperature, metabolism, and the release of hormones. They control the timing of sleep, causing a person to feel sleepy at night and creating a tendency to wake in the morning without an alarm. See Figure 12.1 for an illustration of circadian rhythms. Circadian rhythms are based roughly on a 24-hour clock and use environmental cues, such as light and temperature to determine the time of day.
+Sleep-wake homeostasis keeps track of a person’s need for sleep. A pressure to sleep builds with every hour that a person is awake, reaching a peak in the evening when most people fall asleep. The homeostatic sleep drive also regulates sleep intensity, causing a person to sleep longer and more deeply after a period of sleep deprivation. Adenosine is linked to this drive for sleep. While awake, the level of adenosine in the brain continues to rise, with increased levels signaling a shift toward sleep. While sleeping, the body breaks down adenosine. When it gets dark, the body also releases a hormone called melatonin. Melatonin signals the body that it’s time to prepare for sleep and creates a feeling of drowsiness. The amount of melatonin in the bloodstream peaks as the evening wears on. A third hormone, cortisol, is released in the early morning hours and naturally prepares the body to wake up.
+Factors that influence a person’s sleep and wakefulness include medical conditions, medications, stress, sleep environment, and foods and fluids consumed, but the greatest influence is exposure to light. Specialized cells in the retina process light and provide messages to the brain to align the body clock with periods of day or night. Exposure to bright artificial light in the late evening can disrupt this process, making it hard to fall asleep. Examples of bright artificial light include the light from a TV screen, computer, or smartphone. Exposure to light can also make it difficult to return to sleep after being awakened.
+Figure 12.1 Circadian Rhythms
+Night shift workers often have trouble falling asleep when they go to bed and may have trouble staying awake at work because their natural circadian rhythm and sleep-wake cycle are disrupted. Jet lag also disrupts circadian rhythms. When flying to a different time zone, a mismatch is created between a person’s internal clock and the actual time of day.
+The rhythm and timing of the body clock change with age. For example, teenagers fall asleep later at night than younger children and adults because melatonin is released and peaks later in the 24-hour cycle for teens. As a result, it’s natural for many teens to prefer later bedtimes at night and sleep later in the morning than adults.
+Individuals also need more sleep early in life, when they’re growing and developing. For example, newborns may sleep more than 16 hours a day, and preschool-aged children need to take naps. Young children tend to sleep more in the early evening whereas older adults tend to go to bed earlier and wake up earlier.
+Sleep Phases and Stages
+When sleeping, individuals cycle through two phases of sleep: rapid eye movement (REM) and non-REM sleep. A full sleep cycle takes 80 to 100 minutes to complete, and most people typically cycle through four to six cycles per night. It is common to wake up briefly between cycles.
+Restoration takes place mostly during slow-wave non-REM sleep, during which the body’s temperature, heart rate, and brain oxygen consumption decrease. Brain activity decreases, so this stage is also referred to as slow-wave sleep and is observed during sleep studies. Non-REM sleep has these three stages:
+Stage 1: The transition between wakefulness and sleep.
+Stage 2: The initiation of the sleep phase.
+Stage 3: The deep sleep or slow-wave sleep stage based on a pattern that appears during measurements of brain activity. Individuals spend the most amount of sleep time in this stage during the early part of the night. (Note that the previously considered fourth stage of non-REM sleep is now included within Stage 3).
+During REM sleep, a person’s heart rate and respiratory rate increase. Eyes twitch as they rapidly move back and forth and the brain is active. Brain activity measured during REM sleep is similar to activity during waking hours. Dreaming occurs during REM sleep, and muscles normally become limp to prevent acting out one’s dreams. People typically experience more REM sleep as the night progresses. However, hot and cold environments can affect a person’s REM sleep because the body does not regulate temperature well during REM sleep. See Figure 12.2 for an image illustrating stages of sleep with increased REM sleep through the night indicated in solid red lines.
+Figure 12.2 Stages of Sleep
+The patterns and types of sleep change as people mature. For example, newborns spend more time in REM sleep. The amount of slow-wave sleep peaks in early childhood and then drops sharply in the teenage years. Slow-wave sleep continues to decrease through adulthood, and older people may not have any slow-wave sleep at all.
+Why Is Sleep Important?
+Sleep plays a vital role in good health and well-being. Getting enough quality sleep at the right times protects mental health and physical health. Lack of sleep affects daytime performance, quality of life, and safety. The way a person feels while awake depends on what happens while they are sleeping. During sleep, the body is working to support healthy brain function and maintain physical health. In children and teens, sleep also helps support growth and development.
+Healthy Brain Function and Emotional Well-Being
+Sleep helps the brain work properly. While sleeping, the brain is forming new pathways to help a person learn and remember information. Studies show that a good night’s sleep improves learning and problem-solving skills. Sleep also helps a person pay attention, make decisions, and be creative. Conversely, sleep deficiency alters activity in some parts of the brain, causing difficulty in making decisions, solving problems, controlling emotions and behavior, and coping with change. Sleep deficiency has also been linked to depression, suicide, and risk-taking behavior.
+Physical Health
+Sleep also plays an important role in physical health. For example, sleep is involved in healing and repairing the heart and blood vessels. Ongoing sleep deficiency is linked to an increased risk of heart disease, kidney disease, high blood pressure, diabetes, and stroke. Sleep helps maintain a healthy balance of the hormones that cause hunger (ghrelin) or a feeling of fullness (leptin). When a person doesn’t get enough sleep, the level of ghrelin increases and the level of leptin decreases, causing a person to feel hungry when sleep deprived. The way the body responds to insulin is also affected, causing increased blood sugar.
+Sleep supports healthy growth and development. Deep sleep triggers the body to release hormones that promote normal growth in children and teens. See Figure 12.3. of a sleeping child. These hormones also boost muscle mass and help repair cells and tissues.
+Figure 12.3 Sleeping Child
+Daytime Performance
+Getting enough quality sleep at the right times also enhances functioning throughout the day. People who are sleep deficient are less productive at work and school. They take longer to finish tasks, have a slower reaction time, and make more mistakes. After several nights of losing sleep, even a loss of just one or two hours per night, the ability to function declines. See Figure 12.4 for an image of a student demonstrating sleep deficiency while studying.
+Figure 12.4 Sleep Deficiency
+Lack of sleep can lead to microsleep. Microsleep refers to brief moments of sleep that occur when one is normally awake. You can’t control microsleep, and you might not be aware of it. For example, have you ever driven somewhere and then not remembered part of the trip? If so, you may have experienced microsleep. Even if you’re not driving, microsleep can affect how you function. If you’re listening to a lecture, for example, you might miss some of the information or feel as if you don’t understand the point. In reality, you may have slept through part of the lecture and not been aware of experiencing microsleep.
+Effects of Sleep Deficiency
+The damage from sleep deficiency can occur in an instant. For example, drowsy drivers may feel capable of driving. Yet, studies show that sleep deficiency harms one’s driving ability as much as, or more than, being drunk. It is estimated that driver sleepiness is a factor in about 100,000 car accidents each year, resulting in about 1,500 deaths.
+Drivers aren’t the only ones affected by sleep deficiency. It can affect people in all lines of work, including health care workers, pilots, students, mechanics, and assembly line workers. As a result, sleep deficiency is harmful not only on a personal level, but also can cause large-scale damage. For example, sleep deficiency has played a role in human errors linked to tragic accidents, such as nuclear reactor meltdowns, grounding of large ships, and aviation accidents.
+Sleep deficiency can also cause long-term harm. It increases the risk of obesity. For example, one study of teenagers showed that with each hour of sleep lost, the odds of becoming obese went up. Sleep deficiency increases the risk of obesity in other age groups as well. Sleep also affects how your body reacts to insulin, the hormone that controls your blood glucose (sugar) level. Sleep deficiency results in a higher than normal blood sugar level, which may increase your risk for diabetes. Ongoing sleep deficiency can also change the way in which your immune system responds. For example, if you’re sleep deficient, you may have trouble fighting common infections. In addition, children and teens who are sleep deficient may have problems getting along with others. They may feel angry and impulsive, have mood swings, feel sad or depressed, or lack motivation. They also may have problems paying attention, and they may get lower grades and feel stressed.
+If a person routinely loses sleep or chooses to sleep less than needed, the sleep loss adds up. The total sleep lost is called sleep debt. For example, if you lose 2 hours of sleep each night, you’ll have a sleep debt of 14 hours after a week. See Figure 12.5 of an individual feeling the effects of sleep debt on awakening.
+Figure 12.5 Sleep Debt
+Some people nap as a way to deal with sleepiness. Naps can provide a short-term boost in alertness and performance. However, napping doesn’t provide restorative sleep. Some people sleep more on their days off than on workdays. They also may go to bed later and get up later on days off. Although extra sleep on days off might help a person feel better, it can upset the body’s sleep–wake rhythm. See Figure 12.6 of an adult napping during the day.
+Figure 12.6 Napping
+Sleep deficiency can affect people even when they sleep the total number of hours recommended for their age group. For example, people whose sleep is out of sync with their body clocks (such as shift workers) or whose sleep is routinely interrupted (such as caregivers or emergency responders) often need to pay special attention to their sleep needs. Individuals should also talk to a health care provider if they sleep more than eight hours a night, but don’t feel well-rested. This can indicate a sleep disorder or other health problem.
+Sleep Disorders
+There are several sleep disorders that can cause sleep deficiency, such as insomnia, sleep apnea, and narcolepsy.
+Insomnia
+Insomnia is a common sleep disorder that causes trouble falling asleep, staying asleep, or getting good quality sleep. Insomnia interferes with daily activities and causes the person to feel unrested or sleepy during the day. Short-term insomnia may be caused by stress or changes in one’s schedule or environment. It can last for a few days or weeks. Chronic insomnia occurs three or more nights a week, lasts more than three months, and cannot be fully explained by another health problem or a medication. Chronic insomnia raises the risk of high blood pressure, coronary heart disease, diabetes, and cancer.
+Symptoms of insomnia include the following:
+Lying awake for a long time before falling asleep. This is more common in younger adults.
+Sleeping for only short periods due to waking up often during the night or being awake for most of the night. This is the most common symptom and typically affects older adults.
+Waking up too early in the morning and not being able to get back to sleep.
+Having poor-quality of sleep that causes one to wake up feeling unrested. The person often feels sleepy during the day and has difficulty focusing on tasks. Insomnia can also cause irritability, anxiousness, and depression.
+See Figure 12.7 for an illustration of insomnia.
+Figure 12.7 Insomnia
+To diagnose insomnia, the health care provider asks about a person’s sleep habits and may request the person to keep a sleep diary for one to two weeks. A sleep diary records the time a person goes to sleep, wakes up, and takes naps each day. Timing of activities such as exercising and drinking caffeine or alcohol are also recorded, as well as feelings of sleepiness throughout the day. A sleep study is a diagnostic test that monitors and records data during a client’s full night if sleep. It may be ordered to test for other sleep problems, such as circadian rhythm disorders, sleep apnea, and narcolepsy.
+Treatment
+Lifestyle changes often help improve short-term insomnia. The client should be educated about healthy sleep habits, such as the following:
+Make your bedroom sleep friendly. Sleep in a cool, quiet place. Avoid artificial light from the TV or electronic devices, as this can disrupt your sleep-wake cycle.
+Go to sleep and wake up around the same times each day, even on the weekends. If you can, avoid night shifts, irregular schedules, or other things that may disrupt your sleep schedule.
+Avoid caffeine, nicotine, and alcohol before bedtime. Although alcohol can make it easier to fall asleep, it triggers sleep that tends to be lighter than normal. This makes it more likely that you will wake up during the night. The effect of caffeine can last as long as eight hours.
+Get regular physical activity during the daytime (at least five to six hours before going to bed). Exercising close to bedtime can make it harder to fall asleep.
+Avoid daytime naps, especially in the afternoon. This may help you sleep longer at night.
+Eat meals on a regular schedule and avoid late-night dinners to maintain a regular sleep-wake cycle.
+Limit how much fluid you drink close to bedtime. This may help you sleep longer without having to use the bathroom.
+Learn new ways to manage stress. Follow a routine that helps you wind down and relax before bed. For example, read a book, listen to soothing music, or take a hot bath. Your doctor may also recommend massage therapy, meditation, or yoga to help you relax. Acupuncture may also help improve insomnia, especially in older adults.
+Avoid certain over-the-counter and prescription medicines that can disrupt sleep (for example, some cold and allergy medicines).
+A type of counseling called cognitive behavioral therapy for insomnia is usually the first treatment recommended for chronic insomnia. Several prescription medications may also be prescribed to treat insomnia. Some are meant for short-term use while others are meant for long-term use. Some insomnia medications can be habit-forming, and they all can cause dizziness, drowsiness, or worsening of depression or suicidal thoughts. Common medications prescribed to treat insomnia are as follows:
+Benzodiazepines, such as lorazepam can be habit-forming and should be taken for only a few weeks. They can interfere with REM sleep.
+Benzodiazepine-receptor agonists, such as zolpidem. Side effects may include anxiety. Rare side effects may include a severe allergic reaction or unintentionally doing activities while asleep such as walking, eating, or driving.
+Melatonin-receptor agonists, such as ramelteon. Rare side effects may include doing activities while asleep, such as walking, eating, or driving, or a severe allergic reaction.
+Orexin-receptor antagonists, such as suvorexant. This medicine is not recommended for people who have narcolepsy. Rare side effects may include doing activities while asleep, such as walking, eating, or driving, or not being able to move or speak for several minutes while going to sleep or waking up.
+Some clients use over-the-counter (OTC) products as sleep aids. Many contain antihistamines that cause sleepiness. However, they can be unsafe for some people and may not be the best treatment for insomnia. Melatonin supplements are lab-made versions of the sleep hormone melatonin. Many people take melatonin supplements to improve their sleep. However, research has not proven that melatonin is an effective treatment for insomnia. Side effects of melatonin may include daytime sleepiness, headaches, upset stomach, and worsening depression. It can also affect the body’s control of blood pressure, causing high or low blood pressure.
+Obstructive Sleep Apnea
+Obstructive sleep apnea (OSA) is a common sleep condition that occurs when the upper airway becomes repeatedly blocked during sleep, reducing or completely stopping airflow. If the brain does not send the signals needed to breathe, the condition may be called central sleep apnea.
+Obstructive sleep apnea can be caused by a person’s physical structure or other medical conditions. Risk factors include obesity (causing fat deposits in the neck), large tonsils (that narrow the airway), thyroid disorders, neuromuscular disorders, heart or kidney failure (causing fluid buildup in the neck that narrows the airway), genetic syndromes (such as cleft lip or Down’s syndrome), and premature birth (before 37 weeks’ gestation).
+Common signs and symptoms of obstructive sleep apnea include the following:
+Reduced or absent breathing, known as apnea events
+Frequent loud snoring
+Gasping for air during sleep
+Excessive daytime sleepiness and fatigue
+Decreases in attention, vigilance, concentration, motor skills, and verbal and visuospatial memory
+Dry mouth or headaches when waking
+Sexual dysfunction or decreased libido
+Waking up often during the night to urinate
+Obstructive sleep apnea is diagnosed by a health care provider based on the person’s medical history, a physical exam, and results from a sleep study. During sleep studies, the number of episodes of slowed or stopped breathing events are recorded, along with documentation of oxygen levels in the blood during these events.
+Treatment
+A breathing device, such as a CPAP machine, is a common treatment for clients with obstructive sleep apnea. CPAP stands for continuous positive airway pressure therapy. It uses mild air pressure to keep the airways open. See Figure 12.8 for an illustration of a CPAP.
+Figure 12.8 CPAP
+Read more about CPAP devices in the “Oxygen Therapy” chapter in Open RN Nursing Skills, 2e.
+A mouthpiece may be prescribed for clients with mild obstructive sleep apnea or if the apnea occurs only when lying on their back. Mouthpieces, or oral appliances, are custom-fit devices that are worn while sleeping. See Figure 12.9 for examples of mouthpieces used to treat sleep apnea. Mouthpieces are custom-fit by a dentist or an orthodontist to the client’s mouth and jaw. There are two types of mouthpieces that work differently to open the upper airway. Mandibular repositioning mouthpieces are devices that cover the upper and lower teeth and hold the jaw in a position that prevents it from blocking the upper airway. Tongue-retaining devices are mouthpieces that hold the tongue in a forward position to prevent it from blocking the upper airway.
+Figure 12.9 Mouthpieces Used to Treat Sleep Apnea
+Narcolepsy
+Narcolepsy is an uncommon sleep disorder that causes periods of extreme daytime sleepiness and sudden, brief episodes of deep sleep during the day. Signs and symptoms of narcolepsy include extreme daytime sleepiness; falling asleep without warning, called sleep attacks; difficulty focusing or staying awake; and waking frequently at night. Individuals may experience hallucinations while falling asleep or waking up or sleep paralysis, a feeling of being awake but being unable to move for several minutes. Narcolepsy is diagnosed based on medical history, family history, a physical exam, and a sleep study. The sleep study looks at daytime naps to identify disturbed sleep or a quick onset of rapid eye movement (REM) sleep. Treatment for narcolepsy combines medications and behavior changes. Medications used to treat narcolepsy include stimulants such as modafinil, CNS depressants such as sodium oxybate, and sedatives to improve nighttime sleep. Daytime sleepiness is often improved by promoting good quality sleep at night with scheduled naps during the day.
+“The_master_circadian_clock_in_the_human_brain.jpg” by Ian B. Hickie, Sharon L. Naismith, Rébecca Robillard, Elizabeth M. Scott, and Daniel F. Hermens is licensed under CC BY 3.0 ↵
+National Institute of Neurological Disorders and Stroke. (2024). Understanding sleep. U.S. Department of Health & Human Services. https://www.ninds.nih.gov/Disorders/Patient-Caregiver-Education/Understanding-Sleep ↵
+National Institute of Neurological Disorders and Stroke. (2024). Understanding sleep. U.S. Department of Health & Human Services. https://www.ninds.nih.gov/Disorders/Patient-Caregiver-Education/Understanding-Sleep ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Institute of Neurological Disorders and Stroke. (2024). Understanding sleep. U.S. Department of Health & Human Services. https://www.ninds.nih.gov/Disorders/Patient-Caregiver-Education/Understanding-Sleep ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). How sleep works. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/how-sleep-works ↵
+National Heart, Lung, and Blood Institute. (2022). How sleep works. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/how-sleep-works ↵
+National Heart, Lung, and Blood Institute. (2022). How sleep works. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/how-sleep-works ↵
+“The_master_circadian_clock_in_the_human_brain.jpg” by Ian B. Hickie, Sharon L. Naismith, Rébecca Robillard, Elizabeth M. Scott, and Daniel F. Hermens is licensed under CC BY 3.0 ↵
+National Heart, Lung, and Blood Institute. (2022). How sleep works. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/how-sleep-works ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+“6041578611_f2c9e4d164_k.jpg” by rachel CALAMUSA is licensed under CC BY-SA 2.0 ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+“Study_sleep.jpg” by Nic Ashman, Chippewa Valley Technical College is licensed under CC BY 4.0 ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+“8609141689_ff923d2934_k.jpg” by Navy_NADAP is licensed under CC BY-NC-ND 2.0 ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+“Sleeping_man_J2.jpg” by Jamain is licensed under CC BY-SA 3.0 ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Insomnia. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/insomnia ↵
+National Heart, Lung, and Blood Institute. (2022). Insomnia. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/insomnia ↵
+“Depiction_of_a_person_suffering_from_Insomnia_(sleeplessness).png” by https://www.myupchar.com/en is licensed under CC BY-SA 4.0 ↵
+National Heart, Lung, and Blood Institute. (2022). Insomnia. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/insomnia ↵
+National Heart, Lung, and Blood Institute. (2022). Insomnia. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/insomnia ↵
+National Heart, Lung, and Blood Institute. (2022). Insomnia. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/insomnia ↵
+National Heart, Lung, and Blood Institute. (2022). Insomnia. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/insomnia ↵
+National Heart, Lung, and Blood Institute. (2022). Insomnia. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/insomnia ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep apnea. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-apnea ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep apnea. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-apnea ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep apnea. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-apnea ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep apnea. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-apnea ↵
+“Depiction_of_a_Sleep_Apnea_patient_using_a_CPAP_machine.png” by https://www.myupchar.com/en is licensed under CC BY-SA 4.0 ↵
+“Orthoapnea_,_oral_appliance.jpg” by Orthoapnea is licensed under CC BY-SA 3.0 and “3D_printed_mouthpeace.jpg” by unknown author is licensed under CC BY 3.0 ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep apnea. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-apnea ↵
+National Heart, Lung, and Blood Institute. (2022). Narcolepsy. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/narcolepsy ↵
+definition
+
+12.3 Applying the Nursing Process
+Since the days of Florence Nightingale, sleep has been recognized as beneficial to health and of great importance during nursing care due to its restorative function. It is common for sleep disturbances and changes in sleep pattern to occur in connection with hospitalization, especially among surgical clients. Clients in medical and surgical units often report disrupted sleep, not feeling refreshed by sleep, wakeful periods during the night, and increased sleepiness during the day. Illness and the stress of being hospitalized are causative factors, but other reasons for insufficient sleep in hospitals may be due to an uncomfortable bed, being too warm or too cold, environmental noise such as IV pump alarms, disturbance from health care personnel and other clients, and pain. The presence of intravenous catheters, a urinary catheter, and drainage tubes can also impair sleep. Increased daytime sleepiness, a consequence of poor-quality sleep at night, can cause decreased mobility and slower recovery from surgery. Research indicates that postoperative sleep disturbances can last for months. Therefore, it is important to provide effective nursing interventions to promote sleep.
+Assessment
+Begin a focused assessment on a client’s sleep patterns by asking an open-ended question such as, “Do you feel rested upon awakening?” From there, five key sleep characteristics should be assessed: sleep duration, sleep quality, sleep timing, daytime alertness, and the presence of a sleep disorder. Examples of focused interview questions are included in Table 12.3a. These questions have been selected from sleep health questionnaires from the National Sleep Foundation’s Sleep Health Index and the National Healthy Sleep Awareness Project.
+Table 12.3a Focused Interview Questions Regarding Sleep
+Questions
+Normal Findings
+How many hours do you sleep on an average night?
+7–8 hours for adults. See Table 12.3b for recommended sleep by age range.
+During the past month, how would you rate your sleep quality overall?
+Very good or fairly good.
+Do you go to bed and wake up at the same time every day, even on weekends?
+Yes, they generally maintain a consistent sleep schedule.
+How likely is it for you to fall asleep during the daytime without intending to? Do you struggle to stay awake while you are doing things?
+Unlikely.
+How often do you have trouble going to sleep or staying asleep?
+Never, rarely, or sometimes.
+During the past two weeks, how many times did you have loud snoring while sleeping?
+Note: It is helpful to ask the client’s sleep partner this question.
+Never.
+It is also helpful to determine the effects of caffeine intake and medications on a client’s sleep pattern. If a client provides information causing a concern for impaired sleep patterns or a sleep disorder, it is helpful to encourage them to create a sleep diary to share with a health care provider. Use the following information to view a sample sleep diary.
+Download a Sleep Diary from the National Heart, Lung, and Blood Institute.
+Additional subjective assessment questions can be used to gather information about a clients typical sleep routine so that it can be mirrored during inpatient care, when feasible.
+Nurses also perform objective assessments of a client’s sleep patterns during inpatient care. The number of hours slept, wakefulness during the night, and episodes of loud snoring or apnea should be documented. Note physical (e.g., sleep apnea, pain, and urinary frequency) or psychological (e.g., fear or anxiety) circumstances that interrupt sleep, as well as sleepiness and napping during the day.
+Concerns about signs of sleep disorders should be communicated to the health care provider for follow-up.
+Life Span Considerations
+The amount of sleep needed changes over the course of a person’s lifetime. Although sleep needs vary from person to person, Table 12.3b shows general recommendations for different age groups based on recommendations from the American Academy of Sleep Medicine (AASM) and the American Academy of Pediatrics (AAP).
+Table 12.3b Recommended Amounts of Sleep by Age Group
+Age
+Recommended Amount of Sleep
+Infants aged 4–12 months
+12–16 hours a day, including naps.
+Children aged 1–2 years
+11–14 hours a day, including naps.
+Children aged 3–5 years
+10–13 hours a day, including naps.
+Children aged 6–12 years
+9–12 hours a day.
+Teens aged 13–18 years
+8–10 hours a day.
+Adults aged 18 years or older
+7–8 hours a day.
+If an older adult has Alzheimer’s disease, it often changes their sleeping habits. Some people with Alzheimer’s disease sleep too much; others don’t sleep enough. Some people wake up many times during the night; others wander or yell at night. The person with Alzheimer’s disease isn’t the only one who loses sleep. Caregivers may have sleepless nights, leaving them tired for the challenges they face. Educate caregivers about these steps to promote safety for their loved one and help them and the client sleep better at night:
+Make sure the floor is clear of objects.
+Lock up any medications.
+Attach grab bars in the bathroom.
+Place a gate across the stairs.
+Diagnostic Tests
+A sleep study may be ordered for a client suspected of having a sleep disorder. A sleep study monitors and records data during a client’s full night of sleep. A sleep study may be performed at a sleep center or at home with a portable diagnostic device. If done at a sleep center, the client will sleep in a bed at the sleep center for the duration of the study. Removable sensors are placed on the person’s scalp, face, eyelids, chest, limbs, and a finger to record brain waves, heart rate, breathing effort and rate, oxygen levels, and muscle movements before, during, and after sleep. There is a small risk of irritation from the sensors, but this will resolve after they are removed. See Figure 12.10 of an image of a client with sensors in place for a sleep study.
+Figure 12.10 Sleep Study
+Diagnoses
+NANDA-I nursing diagnoses related to sleep include Disturbed Sleep Pattern, Insomnia, Readiness for Enhanced Sleep, and Sleep Deprivation. When creating a nursing care plan for a client, review a nursing care planning source for current NANDA-I approved nursing diagnoses and interventions related to sleep. See Table 12.3c for the definition and selected defining characteristics of Sleep Deprivation.
+Table 12.3c Sample NANDA-I Nursing Diagnosis Related to Sleep Deprivation
+NANDA-I Diagnosis
+Definition
+Selected Defining Characteristics
+Sleep Deprivation
+Prolonged periods of time without sustained natural, periodic suspension of relative consciousness that provides rest.
+Anxiety.
+Apathy.
+Combativeness.
+Confusion.
+Decreased functional ability.
+Prolonged reaction time.
+Drowsiness.
+Fatigue.
+Hallucinations.
+Heightened sensitivity to pain.
+Irritable mood.
+Transient paranoia.
+A sample nursing diagnostic statement is, “Sleep Deprivation related to an overstimulating environment as evidenced by irritability, difficulty concentrating, and drowsiness.”
+Outcome Identification
+An overall goal related to sleep is, “The client will awaken refreshed once adequate time is spent sleeping.”
+A sample SMART outcome is, “The client will identify preferred actions to ensure adequate sleep by discharge.”
+Planning Interventions
+Evidence-based nursing interventions to enhance sleep are summarized in the following box.
+Sleep Enhancement Interventions
+Adjust the environment (e.g., light, noise, temperature, mattress, and bed) to promote sleep
+Encourage the client to establish a bedtime routine to facilitate wakefulness to sleep
+Facilitate maintenance of the client’s usual bedtime routines during inpatient care
+Encourage elimination of stressful situations before bedtime
+Instruct the client to avoid bedtime foods and beverages that interfere with sleep
+Encourage limitation of electronic devices before bedtime (e.g., phone, computer, television)
+Encourage the client to limit daytime sleep and participate in activity, as appropriate
+Bundle care activities to minimize the number of awakenings by staff to allow for sleep cycles of at least 90 minutes
+Consider sleep apnea as a possible cause and notify the provider for a possible referral for a sleep study when daytime drowsiness occurs despite adequate periods of undisturbed night sleep
+Educate the client regarding sleep-enhancing techniques
+Transforming Hospitals Into Restful Environments to Promote Healing
+Nurses nationwide have been researching innovative ways to transform hospitals into more restful environments that promote healing. As reported in the American Nurse, strategies include using red lights at night to reduce light exposure, reducing environmental noise, bundling care, offering sleep aids, and providing client education :
+Switching to Red Lights: Nurses can use red lights when providing care at night. Adult and pediatric clients were found to sleep better with reduced white lights.
+Reduce Environmental Noise: Clients were surveyed regarding factors that affected their ability to sleep, and results indicated bed noises, alarms, squeaking equipment, and sounds from other clients. Noise can be reduced by replacing the wheels on the trash cans and squeaky wheels on chairs, repairing malfunctioning motors on beds, switching automatic paper towel machines in the hallways with manual ones, and altering the times floors are buffed. Visitor rules can be implemented, such as no overnight stays in semiprivate rooms and overnight visitors in private rooms were asked to not use their cell phones, turn on the TV, or use bright lights at night.
+Bundling Care: Nurses reinforce bundling care by interdisciplinary team members to reduce sleep interruptions. For example, a “Quiet Time” policy can be set from midnight to 5 a.m. Quiet Time includes dimming lights, closing client room doors, and talking in lower voices.
+Offering Sleep Aids: Nurses can ask clients about what aids they use at home to help them sleep, such as extra pillows or listening to music. On admission, sleep kits can be provided with ear plugs and eye masks and at bedtime, warm washcloths can be offered to clients for comfort.
+Client Education: Clients and families can be provided with printed materials on the benefits of sleep and rest for optimal healing, participating in rehabilitative therapies, and prevention of delirium.
+Pharmacological Interventions
+See specific information about medications used to facilitate sleep in the previous “Sleep Disorders” section of this chapter.
+Implementing Interventions
+When implementing interventions to promote sleep, it is important to customize them according to the specific client’s needs and concerns. If medications are administered to promote sleep, fall precautions should be implemented, and the nurse should monitor for potential side effects, such as dizziness, drowsiness, worsening of depression or suicidal thoughts, or unintentionally walking or eating while asleep.
+Evaluation
+When evaluating the effectiveness of interventions, start by asking the client how rested they feel upon awakening. Determine the effectiveness of interventions based on the established SMART outcomes customized for each client situation.
+Hellström, A., Fagerström, C., & Willman, A. (2011). Promoting sleep by nursing interventions in health care settings: A systematic review. Worldviews on Evidence-Based Nursing, 8(3), 128–142. https://doi.org/10.1111/j.1741-6787.2010.00203.x ↵
+Chaput, J., & Shiau, J. (2019). Routinely assessing patients' sleep health is time well spent. Preventive Medicine Reports, 14. https://doi.org/10.1016/j.pmedr.2019.100851 ↵
+Chaput, J., & Shiau, J. (2019). Routinely assessing patients’ sleep health is time well spent. Preventive Medicine Reports, 14. ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+Ackley, B., Ladwig, G., Makic, M. B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier. pp. 843-846. ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/sleep-deprivation-and-deficiency ↵
+National Heart, Lung, and Blood Institute. (2022). Sleep deprivation and deficiency. U.S. Department of Health & Human Services. ↵
+National Institute on Aging. (2016). A good night’s sleep. U.S. Department of Health & Human Services. https://www.nia.nih.gov/health/good-nights-sleep#safe ↵
+National Heart, Lung, and Blood Institute. (2022). Insomnia. U.S. Department of Health & Human Services. https://www.nhlbi.nih.gov/health-topics/insomnia ↵
+“Wired_up_for_a_sleep_study_02A.jpg” by Joe Mabel is licensed under CC BY-SA 3.0 ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021-2023, Twelfth Edition. Thieme Publishers New York. ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021–2023 (12th ed.). Thieme Publishers New York. ↵
+Ackley, B., Ladwig, G., Makic, M. B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier. pp. 843-846. ↵
+Ackley, B., Ladwig, G., Makic, M. B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier. pp. 843-846. ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+Ackley, B., Ladwig, G., Makic, M. B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier. pp. 843-846. ↵
+Trossman, S. (2018). Nurses offer strategies to promote patients’ rest and sleep. American Nurse. https://www.myamericannurse.com/strategies-promote-patients-rest-sleep/ ↵

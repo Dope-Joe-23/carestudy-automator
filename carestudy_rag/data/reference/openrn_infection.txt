@@ -1,0 +1,244 @@
+SOURCE: Open RN Nursing Fundamentals, chapter 9 — Infection
+TITLE: Infection
+URL: https://wtcs.pressbooks.pub/nursingfundamentals/
+LICENSE: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+RETRIEVED: 2026-09-11
+
+
+9.1 Infection Introduction
+Learning Objectives
+Describe risk factors for infection
+Identify cues related to infection across the life span
+Identify practices that reduce the risk of infection transmission
+Identify basic diagnostic tests related to infection
+Differentiate factors related to infection among diverse clients
+Identify industry standards for transmission-based procedures
+Contribute to a plan of care for clients with an infection
+Have you ever wondered how nurses can be exposed to clients with communicable diseases day after day and not become ill? There are many factors that affect the body’s ability to defend against infection and place some individuals at greater risk of developing an infection. When an infection does occur, early recognition is important to prevent it from spreading within the individual, as well as to others. Protecting people from developing an infection, as well as preventing the spread of infection, is a major concern for nurses. This chapter will discuss the physiology of the inflammation and infectious processes and nursing interventions to prevent the spread of infection.
+
+9.2 Basic Concepts
+Normal Flora and Microbiome
+Microorganisms occur naturally and are present everywhere in our environment. Some microorganisms live on the skin, in the nasopharynx, and in the gastrointestinal tract, but don’t become an infection unless the host becomes susceptible. These microorganisms are called normal flora. Over the past several years, it has been discovered that every human being carries their own individual suite of microorganisms in and on their body referred to as their microbiome. A person’s microbiome is acquired at birth and evolves over their lifetime. It is different across body sites and between individuals. A person’s gut microbiome has recently been found to impact their immune system. ,
+Pathogens
+Microorganisms that cause disease are called pathogens. There are four common types of pathogens, including viruses, bacteria, fungi, and parasites.
+Viruses
+Viruses are made up of a piece of genetic code, such as DNA or RNA, and are protected by a coating of protein. After a host (i.e., the person) becomes infected by a virus, the virus invades the body’s cells and uses the components of the cell to replicate and produce more viruses. After the virus replication cycle is complete, the new viruses are released into the body, causing damage or destruction of the host’s cells.
+Antiviral medications can be used to treat some viral infections. Antibiotics do not kill viruses and are ineffective as a treatment for viral infections. See Figure 9.1 for an image of a virus.
+Figure 9.1 Coronavirus
+Read additional information about antiviral medications in the “Antivirals” section in the “Antimicrobial” chapter of Open RN Nursing Pharmacology, 2e
+Bacteria
+Bacteria are microorganisms made of a single cell. They are very diverse, have a variety of shapes and features, and have the ability to live in any environment, including your body. However, not all bacteria cause infections. Those that cause infection are called pathogenic bacteria. See Figure 9.2 for an image of a bacterium called Escherichia coli (E. coli).
+A client is susceptible to bacterial infections when their immune system is compromised by chronic diseases or certain types of medications. Antibiotics are used to treat bacterial infections. However, some strains of bacteria have become resistant to antibiotics, making them difficult to treat. For example, infections caused by methicillin-resistant Staphylococcus Aureus (MRSA) are resistant to many types of antibiotics and have the capability of producing severe and life-threatening infections. MRSA infections usually require IV antibiotics and may require treatment for long periods of time.
+Figure 9.2 E. coli Bacteria
+Read additional information about antibiotics in the “Antimicrobials” chapter of Open RN Nursing Pharmacology, 2e.
+Fungi
+There are millions of different fungal species on Earth. Fungi can be found everywhere in the environment, including indoors, outdoors, and on human skin, but only about 300 species cause infection when they overgrow. Candida albicans is a type of fungus that can cause oral thrush and vaginal yeast infections, especially in susceptible clients or those taking antibiotics. See Figure 9.3 for an image of oral thrush.
+Fungi cells contain a nucleus and other components protected by a membrane and a thick cell wall. This structure can make them harder to kill. Some new strains of fungal infections are proving to be especially dangerous, such as Candida auris, which is difficult to diagnose and treat and can cause outbreaks in health care facilities.
+Figure 9.3 Oral Thrush
+Read additional information about antifungal medications in the “Antifungals” section of the “Antimicrobials” chapter in Open RN Nursing Pharmacology, 2e.
+Parasites
+Parasites are organisms that behave like tiny animals, living in or on a host, and feeding at the expense of the host. Three main types of parasites can cause disease in humans. These include the following:
+Protozoa: Single-celled organisms that can live and multiply in your body
+Helminths: Multi-celled organisms that can live inside or outside your body and are commonly known as worms
+Ectoparasites: Multi-celled organisms that live on or feed off skin, including ticks and mosquitos
+Parasites can be spread several ways, including through contaminated soil, water, food, and blood, as well as through sexual contact and insect bites. See Figure 9.4 for an image of a helminth infection causing intestinal obstruction in a child. Parasites are treated with a class of medications called antihelmintics.
+Figure 9.4 Helminth Infection
+Read additional information about antihelmintic medications in the “Antihelmintics” section of the “Antimicrobials” chapter in Open RN Nursing Pharmacology, 2e.
+Davis, C. P. Normal flora. (1996). In S. Baron (Ed.), Medical Microbiology (4th ed.). University of Texas Medical Branch at Galveston. https://www.ncbi.nlm.nih.gov/books/NBK7617/ ↵
+Parker, N., Schneegurt, M., Tu, A.-­Hue T., Forster, B. M., & Lister, P. (2016). Microbiology. OpenStax. Access for free at https://openstax.org/books/microbiology/pages/1-introduction ↵
+Parker, N., Schneegurt, M., Tu, A.-­Hue T., Forster, B. M., & Lister, P. (2016). Microbiology. OpenStax. Access for free at https://openstax.org/books/microbiology/pages/1-introduction ↵
+“3D_medical_animation_corona_virus.jpg” by https://www.scientificanimations.com is licensed under CC BY-SA 4.0 ↵
+“E._coli_Bacteria_(16578744517).jpg” by NIAID is licensed under CC BY 2.0 ↵
+Parker, N., Schneegurt, M., Tu, A.-­Hue T., Forster, B. M., & Lister, P. (2016). Microbiology. OpenStax. Access for free at https://openstax.org/books/microbiology/pages/1-introduction ↵
+Parker, N., Schneegurt, M., Tu, A.-­Hue T., Forster, B. M., & Lister, P. (2016). Microbiology. OpenStax. Access for free at https://openstax.org/books/microbiology/pages/1-introduction ↵
+“Human_tongue_infected_with_oral_candidiasis.jpg” by James Heilman, MD is licensed under CC BY-SA 3.0 ↵
+Manoylov, M. K. (2020, November 6). What are cytokines? Live Science. https://www.livescience.com/what-are-cytokines.html ↵
+Parker, N., Schneegurt, M., Tu, A.-­Hue T., Forster, B. M., & Lister, P. (2016). Microbiology. OpenStax. Access for free at https://openstax.org/books/microbiology/pages/1-introduction ↵
+“Piece_of_intestine,_blocked_by_worms_(16424898321).jpg” by SuSanA Secretariat is licensed under CC BY 2.0 ↵
+definition
+
+9.7 Applying the Nursing Process
+Now that we have discussed the pathophysiology of our immune system and interventions to treat and prevent infection, let’s apply this information to using the nursing process when providing client care.
+Assessment
+When assessing an individual who is feeling ill but has not yet been diagnosed with an infection, general symptoms associated with the prodromal period of disease may be present due to the activation of the immune system. These symptoms include a feeling of malaise (not feeling well), headache, fever, and lack of appetite. As an infection moves into the acute phase of disease, more specific signs and symptoms related to the specific type of infection will occur.
+A fever is a common sign of inflammation and infection. A temperature of 38 degrees Celsius (100.4 degrees F) is generally considered a low-grade fever, and a temperature of 38.3 degrees Celsius (101 degrees F) is considered a fever. As discussed earlier in this chapter, fever is part of the nonspecific innate immune response and can be beneficial in destroying pathogens. However, extremely elevated temperatures can cause cell and organ damage, and prolonged fever can cause dehydration.
+Infection raises the metabolic rate, causing an increased heart rate. The respiratory rate may also increase as the body rids itself of carbon dioxide created during increased metabolism. However, be aware that an elevated heart rate above 90 and a respiratory rate above 20 are also criteria for systemic inflammatory response syndrome (SIRS) in clients with an existing infection.
+As an infection develops, the lymph nodes that drain that area often become enlarged and tender. The swelling indicates that the lymphocytes and macrophages in the lymph node are fighting the infection. If a skin infection is developing, general signs of inflammation, such as redness, warmth, swelling, and tenderness, will occur at the site. As white blood cells migrate to the site, purulent drainage may occur.
+Some viruses, bacteria, and toxins cause gastrointestinal inflammation, resulting in loss of appetite, nausea, vomiting, and diarrhea.
+See Table 9.7a for a comparison of expected findings on physical assessment versus unexpected findings indicating a new infectious process that requires notification of the health care provider.
+Table 9.7a Expected Versus Unexpected Findings on Assessment Related to Infection
+Assessment
+Expected Findings
+Unexpected Findings to Report to Health Care Provider
+Vital Signs
+Within normal range.
+New temperature over 100.4°F or 38°C.
+Neurological
+Within baseline level of consciousness.
+New or worsening confusion and/or worsening level of consciousness.
+Wound or Incision
+Progressive healing of a wound with no signs of infection.
+New or worsening redness, warmth, tenderness, or purulent drainage from a wound.
+Respiratory
+No cough or production of sputum.
+New or worsening cough and/or productive cough of purulent sputum. Adventitious breath sounds, such as crackles, rhonchi, or wheezing. New or worsening dyspnea.
+Genitourinary
+Urine clear, light yellow, and without odor.
+Malodorous, cloudy, bloody urine, with increased frequency, urgency, or pain with urination.
+Gastrointestinal
+Good appetite and food intake; feces formed and brown.
+Loss of appetite. Nausea and vomiting. Diarrhea. Discolored or unusually malodorous feces.
+*CRITICAL CONDITIONS requiring immediate notification of the provider and/or implementation of a sepsis protocol:
+Two or more of the following criteria in a client with an existing infection indicate SIRS:
+Body temperature over 38°C or under 36°C.
+Heart rate greater than 90 beats/minute.
+Respiratory rate greater than 20 breaths/minute or PaCO2 less than 32 mmHg.
+White blood cell count greater than 12,000 or less than 4,000 microliters or immature bands greater than 10%.
+Life Span Considerations
+Infants do not have well-developed immune systems, placing this group at higher risk of infection. Breastfeeding helps protect infants from some infectious diseases by providing passive immunity until their immune system matures. New mothers should be encouraged to breastfeed their newborns.
+On the other end of the continuum, the immune system gradually decreases in effectiveness with age, making older adults also more vulnerable to infection. Early detection of infection can be challenging in older adults because they may not have a fever or increased white blood cell count (WBC), but instead develop subtle changes like new mental status changes. For example, new, acute confusion is a classic sign of urinary tract infection on older adults. The most common infections in older adults are urinary tract infections (UTI), bacterial pneumonia, influenza, and skin infections.
+Diagnostic Tests
+Several types of diagnostic tests may be ordered by a health care provider when a client is suspected of having an infection, such as complete blood count with differential, Erythrocyte Sedimentation Rate (ESR), C-Reactive Protein (CRP), serum lactate levels, and blood cultures (if sepsis is suspected). Other cultures may be obtained based on the site of the suspected infection.
+CBC With Differential
+When an infection is suspected, a complete blood count with differential is usually obtained.
+A complete blood count (CBC) includes the red blood cell count (RBC), white blood cell count (WBC), platelets, hemoglobin, and hematocrit values. A differential provides additional information, including the relative percentages of each type of white blood cell. See Figure 9.22 for an illustration of a complete blood count with differential.
+Figure 9.22 Components of a Complete Blood Count with Differential
+When there is an infection or an inflammatory process somewhere in the body, the bone marrow produces more WBCs (also called leukocytes), releasing them into the blood where they move to the site of infection or inflammation. An increase in white blood cells is known as leukocytosis and is a sign of the inflammatory response. The normal range of WBC varies slightly from lab to lab but is generally 4,500-11,000 for adults, reported as 4.5-11.0 x 10 per liter (L).
+There are five types of white blood cells, each with different functions. The differential blood count gives the relative percentage of each type of white blood cell and also reveals abnormal white blood cells. The five types of white blood cells are as follows:
+Neutrophils
+Eosinophils
+Basophils
+Lymphocytes
+Monocytes
+Neutrophils make up the largest number of circulating WBCs. They move into an area of damaged or infected tissue where they engulf and destroy bacteria or sometimes fungi. An elevated neutrophil count is called neutrophilia, and decreased neutrophil count is called neutropenia.
+Eosinophils respond to infections caused by parasites, play a role in allergic reactions (hypersensitivities), and control the extent of immune responses and inflammation. Elevated levels of eosinophils are referred to as eosinophilia.
+Basophils make up the fewest number of circulating WBCs and are thought to be involved in allergic reactions.
+Lymphocytes include three types of cells, although the differential count does not distinguish among them:
+B lymphocytes (B cells) produce antibodies that target and destroy bacteria, viruses, and other “non-self” foreign antigens.
+T lymphocytes (T cells) mature in the thymus and consist of a few different types. Some T cells help the body distinguish between “self” and “non-self” antigens; some initiate and control the extent of an immune response, boosting it as needed and then slowing it as the condition resolves; and other types of T cells directly attack and neutralize virus-infected or cancerous cells.
+Natural killer cells (NK cells) directly attack and kill abnormal cells such as cancer cells or those infected with a virus.
+Monocytes, similar to neutrophils, move to an area of infection and engulf and destroy bacteria. They are associated with chronic rather than acute infections. They are also involved in tissue repair and other functions involving the immune system.
+Care must be taken when interpreting the results of a differential. A health care provider will consider an individual’s signs and symptoms and medical history, as well as the degree to which each type of cell is increased or decreased. A number of factors can cause a transient rise or drop in the number of any type of cell. For example, bacterial infections usually produce an increase in neutrophils, but a severe infection, like sepsis, can use up the available neutrophils, causing a low number to be found in the blood. Eosinophils are often elevated in parasitic and allergic responses. Acute viral infections often cause an increased level of lymphocytes (referred to as lymphocytosis).
+Erythrocyte Sedimentation Rate (ESR)
+An Erythrocyte Sedimentation Rate (ESR) is a test that indirectly measures inflammation. This test measures how quickly erythrocytes or red blood cells (RBCs) settle at the bottom of a test tube that contains a blood sample. When a sample of blood is placed in a tube, the red blood cells normally settle out relatively slowly, leaving a small amount of clear plasma. The red cells settle at a faster rate when there is an increased level of proteins, such as C-reactive protein (CRP), that increases in the blood in response to inflammation. The ESR test is not diagnostic; it is a nonspecific test indicating the presence or absence of an inflammatory condition.
+C-Reactive Protein (CRP)
+C-Reactive Protein (CRP) levels in the blood increase when there is a condition causing inflammation somewhere in the body. CRP is a nonspecific indicator of inflammation and one of the most sensitive acute phase reactants, meaning it is released into the blood within a few hours after the start of an infection or other causes of inflammation. The level of CRP can jump as much as a thousand-fold in response to a severe bacterial infection, and its rise in the blood can precede symptoms of fever or pain.
+Lactate
+Serum lactate levels are measured when sepsis is suspected in a client with an existing infection. Sepsis can quickly lead to septic shock and death due to multi-organ failure so early recognition is crucial.
+Lactate is one of the substances produced by cells as the body turns food into energy (i.e., cellular metabolism), with the highest level of production occurring in the muscles. Normally, the level of lactate in blood is low. Lactate is produced in excess by muscle cells and other tissues when there is insufficient oxygen at the cellular level, causing metabolism to change from aerobic (with oxygen) to anaerobic (without oxygen).
+Lactic acid can accumulate in the body and blood when it is produced faster than the liver can break it down, which can lead to lactic acidosis. Excess lactate may be produced due to several medical conditions that cause decreased transport of oxygen to the tissues, such as sepsis, hypovolemic shock, necrotic bowel, heart attack, heart failure, or respiratory distress.
+Blood Culture
+Blood cultures are ordered when sepsis is suspected. In many facilities, lab personnel draw the blood samples for blood cultures to avoid contamination of the sample. With some infections, pathogens are only found in the blood intermittently, so a series of three or more blood cultures, as well as blood draws from different veins, may be performed to increase the chance of finding the infection and to minimize false-positive cultures resulting from bacterial contamination of the site.
+Blood cultures are incubated for several days before being reported as negative. Some types of bacteria and fungi grow more slowly than others and/or may take longer to detect if initially present in low numbers.
+A positive result indicates bacteria have been found in the blood (bacteremia). Other types of pathogens, such as a fungus or a virus, may also be found in a blood culture. When a blood culture is positive, the specific microbe causing the infection is identified and susceptibility testing is performed to inform the health care provider which antibiotics or other medications are most likely to be effective for treatment.
+It is important for nurses to remember that when new orders for both antibiotics and a blood culture are received, antibiotics should not be administered until after the blood culture is drawn. Administering antibiotics before the blood culture is drawn will impact the results and adversely affect the treatment plan.
+Cultures and Other Diagnostic Tests
+Several types of swabs and cultures may be ordered based on the site of a suspected infection, such as a nasal swab, nasopharyngeal swab, sputum culture, urine culture, and wound culture. If a lower respiratory tract infection is suspected, a chest X-ray may be ordered.
+Read additional information about the following topics in Open RN Nursing Skills, 2e:
+“Specimen Collection“
+Collecting urine cultures in “Facilitation of Elimination“
+Collecting wound cultures in “Wound Care“
+Therapeutic Drug Monitoring
+When antibiotics are prescribed to treat an infection, some types of antibiotics require blood tests to ensure the dosage of the medication reaches and stays within therapeutic ranges in the blood. These tests are often referred to as peak and/or trough levels. A peak level refers to when the medication is at its highest concentration in the bloodstream. A trough level is when the medication is a the lowest concentration in the bloodstream, just prior to the next dose to be administered. The nurse must be aware of these orders because they impact the timing of administration of antibiotics.
+Read about therapeutic drug monitoring in the “Therapeutic Levels” section of the “Pharmacokinetics and Pharmacodynamics” chapter in Open RN Nursing Pharmacology, 2e.
+Diagnoses
+There are many NANDA-I nursing diagnoses applicable to infection. Nursing diagnoses associated with actual infections are customized based on the signs and symptoms of the specific infection (e.g., a client with pneumonia may have an actual nursing diagnosis of Ineffective Airway Clearance). Review a nursing care planning source for a list of current NANDA-I approved nursing diagnoses based on the type of infection occurring.
+Two common risk diagnoses are Risk for Infection for clients at risk for developing an infection and Risk for Shock for clients with an existing infection who are at risk for developing sepsis and septic shock. See Table 9.7b for the risk diagnoses of Risk for Infection and Risk for Shock.
+Table 9.7b NANDA-I Diagnoses Associated with Infection
+NANDA-I Diagnosis
+Definition
+Other
+Risk for Infection
+Susceptible to invasion and multiplication of pathogenic organisms, which may compromise health.
+Risk Factors
+Impaired skin integrity.
+Inadequate vaccination.
+Malnutrition.
+Obesity.
+Dysfunctional gastrointestinal motility.
+Smoking.
+Stasis of body fluid.
+Risk of Shock
+Susceptible to inadequate blood flow to the body’s tissues that may lead to life-threatening cellular dysfunction, which may compromise health.
+Risk Factors
+Deficient fluid volume.
+Hypoxia.
+Ineffective medication self-management.
+Unstable blood pressure.
+Associated Conditions
+Infections.
+Systemic inflammatory response syndrome (SIRS).
+Sepsis.
+Examples
+For example, a nurse caring for a client with an open wound assesses the wound regularly because clients with nonintact skin are always at increased risk for developing infection. A sample PES statement would be the following: “Risk for Infection as evidenced by alteration in skin integrity and insufficient knowledge to avoid exposure to pathogens.” The nurse plans to provide client education regarding care of the wound to prevent bacterial contamination during dressing changes.
+Whenever caring for a client with an existing infection, nurses know it is important to closely monitor for signs of developing SIRS and sepsis. A sample PES statement for a client with an existing infection is as follows: “Risk for Shock as evidenced by the associated condition of infection.”
+Note: Recall that in NANDA-I risk diagnoses, there are no etiological factors because a vulnerability reflects the potential for developing a problem. Read more about creating PES statements for risk diagnoses in the “Nursing Process” chapter.
+Outcomes
+An example of a broad goal for all clients is the following: “The client will remain free from infection during their health care stay.”
+An example of a SMART expected outcome to prevent infection is: “The client will demonstrate how to perform dressing changes using aseptic technique prior to discharge from the hospital.”
+Read more about creating SMART outcomes in the “Nursing Process” chapter.
+Planning Interventions
+When planning interventions for a client who is at risk for developing an infection, the nurse selects interventions such as those listed in the following box.
+Interventions for Infection Prevention
+Monitor aspects of preexisting conditions that increase a person’s risk for infection
+Monitor for early signs of localized and systemic infection for clients at risk
+Monitor white blood cell (WBC) results
+Inspect skin and mucous membranes for redness, warmth, tenderness, or drainage
+Obtain cultures as needed
+Monitor for malaise or decreased energy level
+Screen all visitors for communicable disease
+Maintain aseptic technique during nursing procedures
+Use sterile technique for invasive procedures or care of open wounds
+Use universal precautions with all clients to prevent the spread of infection
+Initiate and maintain transmission-based precautions for clients with communicable infection
+Promote sufficient nutritional intake
+Encourage fluid intake, as appropriate
+Encourage rest
+Ensure appropriate hygienic care, including proper hand hygiene, daily bathing, oral care, and perineal care performed by either the nurse or the client, as appropriate
+Moisturize dry skin to keep it intact
+Use strategies to prevent healthcare-acquired respiratory infection, such as incentive spirometry, coughing and deep breathing, positional changes, and early ambulation as appropriate
+Use strategies to prevent wound infection such as changing saturated dressings to reduce the potential reservoir of bacteria
+Teach the client and family members the importance of a nutritious diet, exercise, and adequate rest to promote healing and health at home
+Teach the client and family about signs and symptoms of infection and when to report them to the health care provider
+Encourage keeping recommended vaccinations up-to-date
+If a client smokes, encourage smoking cessation because smoking damages the mucociliary escalator and places the client at increased risk for infection
+Report signs and symptoms of suspected infection or sepsis to the health care provider
+Suspect an infection if an older adult client has new signs of lethargy or confusion
+If a client has an infection with a fever, the nursing diagnosis Hyperthermia may be applicable. See the following box for interventions for clients with fever/hyperthermia.
+Interventions for Hyperthermia
+Assess for associated symptoms such as diaphoresis, shaking chills (rigors)
+Monitor level of consciousness
+Adjust room temperature to the client’s comfort without inducing chilling
+Administer antipyretics, as appropriate (e.g., acetaminophen, ibuprofen)
+Apply external cooling methods as needed (cold packs or cool sponge bath)
+Encourage fluid intake
+Monitor for signs of dehydration
+Implementing Interventions
+When caring for a client with an active infection, transmission-based precautions may be required based on the specific type of pathogen. Antibiotics and/or other antimicrobials are administered as prescribed, and the client and family are instructed how to take prescribed antibiotics with measures to prevent antibiotic resistance (i.e., complete prescribed length of therapy even if they feel better in a few days).
+If cultures have been obtained, it is important to monitor and report new results to the provider to ensure the prescribed antibiotic therapy is appropriate based on susceptibility results.
+It is important to continually monitor clients with an existing infection for signs of SIRS/sepsis :
+Carefully monitor vital signs. Immediately notify the provider for two or more of the following indicators that suggest SIRS: heart rate greater than 90 beats per minute, temperature greater than 38 degrees C or less than 36 degrees C, systolic blood pressure less than 90 mm Hg, respiratory rate greater than 20, or a white blood cell count greater than 12,000 or less than 4,000. Anticipate new orders for a lactate level and blood cultures for early diagnosis of sepsis.
+Monitor for signs of new decreased mental status, especially in older adults, that can indicate decreased oxygenation or tissue perfusion associated with sepsis and septic shock.
+For clients presenting with early signs of shock, administer oxygen immediately to maintain oxygen saturation greater than 90%. Administer prescribed antibiotics within an hour after diagnosis for improved survival. Be aware that IV fluids and vasopressor medications may be required to treat shock.
+Read about different classes of antimicrobial agents in the “Antimicrobials” chapter in Open RN Nursing Pharmacology.
+Evaluation
+It is always important to evaluate the effectiveness of interventions used to prevent and treat infection. Evaluation helps the nurse determine whether the established outcomes have been met and if the planned interventions are still appropriate for the client at the time of implementation. If outcomes are not met, interventions may need to be added or revised to help the client meet their goals.
+Abad, C., Fearday, A., & Safdar, N. (2010). Adverse effects of isolation in hospitalised patients: A systematic review. The Journal of Hospital Infection, 76(2), 97-102. https://doi.org/10.1016/j.jhin.2010.04.027 ↵
+Centers for Disease Control and Prevention. (2023). Breastfeeding, Frequently asked questions (FAQs). https://www.cdc.gov/breastfeeding/php/faq/faq.html?CDC_AAref_Val=https://www.cdc.gov/breastfeeding/faq/index.htm ↵
+“Blausen_0425_Formed_Elements.png” by BruceBlaus.com staff is licensed under CC BY 3.0 ↵
+Centers for Disease Control and Prevention. (2023). Candida auris. https://www.cdc.gov/candida-auris/?CDC_AAref_Val=https://www.cdc.gov/fungal/candida-auris/index.html ↵
+Testing.com. (2022). White blood cell count (WBC). https://www.testing.com/tests/white-blood-cell-count-wbc/ ↵
+Testing.com. (2022). White blood cell count (WBC). https://www.testing.com/tests/white-blood-cell-count-wbc/ ↵
+Testing.com. (2022). White blood cell count (WBC). https://www.testing.com/tests/white-blood-cell-count-wbc/ ↵
+Testing.com. (2022). White blood cell count (WBC). https://www.testing.com/tests/white-blood-cell-count-wbc/ ↵
+Testing.com. (2022). White blood cell count (WBC). https://www.testing.com/tests/white-blood-cell-count-wbc/ ↵
+Testing.com. (2022). White blood cell count (WBC). https://www.testing.com/tests/white-blood-cell-count-wbc/ ↵
+Testing.com. (2022). ESR blood test (erythrocyte sedimentation rate). https://www.testing.com/tests/erythrocyte-sedimentation-rate-esr/ ↵
+Testing.com. (2022). C reactive protein (CRP blood test). https://www.testing.com/tests/c-reactive-protein-crp/ ↵
+Testing.com. (2022). Lactate. https://www.testing.com/tests/lactate/ ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021–2023 (12th ed.). Thieme Publishers New York. ↵
+Centers for Disease Control and Prevention. (2016). Standard precautions for all patient care. https://www.cdc.gov/infectioncontrol/basics/standard-precautions.html ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+Wilson, J., Bak, A., & Loveday, H. P. (2017). Applying human factors and ergonomics to the misuse of nonsterile clinical gloves in acute care. American Journal of Infection Control, 45(7), 779-786. https://doi.org/10.1016/j.ajic.2017.02.019. ↵
+Chakraborty, R. K. (2023). Systemic inflammatory response syndrome. StatPearls [Internet]. https://www.ncbi.nlm.nih.gov/books/NBK547669/ ↵
+definition

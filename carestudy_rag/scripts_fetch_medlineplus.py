@@ -42,6 +42,26 @@ TOPICS = [
     ("medlineplus_urinary_tract_infection.txt", "urinarytractinfections"),
     ("medlineplus_peptic_ulcer.txt", "pepticulcer"),
     ("medlineplus_myocardial_infarction.txt", "heartattack"),
+    # Symptom and medication topics — the common Chapter 1 presenting
+    # complaints that previously had no citable source for definitions.
+    ("medlineplus_fever.txt", "fever"),
+    ("medlineplus_headache.txt", "headache"),
+    ("medlineplus_fatigue.txt", "fatigue"),
+    ("medlineplus_nausea_vomiting.txt", "nauseaandvomiting"),
+    ("medlineplus_tachycardia.txt", "arrhythmia"),
+    ("medlineplus_appetite_loss.txt", "malnutrition"),
+    ("medlineplus_breathing_problems.txt", "breathingproblems"),
+    ("medlineplus_bleeding.txt", "bleeding"),
+    ("medlineplus_dizziness.txt", "dizzinessandvertigo"),
+    ("medlineplus_hypertension.txt", "highbloodpressure"),
+    ("medlineplus_hyperthermia.txt", "heatillness"),
+    ("medlineplus_pain.txt", "pain"),
+    ("medlineplus_diarrhea.txt", "diarrhea"),
+    ("medlineplus_abdominal_pain.txt", "abdominalpain"),
+    ("medlineplus_insomnia.txt", "sleepdisorders"),
+    # Drug topics were dropped: MedlinePlus drug pages 404 at the {slug}.html
+    # pattern, and the WHO Model Formulary already covers paracetamol and
+    # amoxicillin with in-text "(WHO, 2008)" citations.
 ]
 
 

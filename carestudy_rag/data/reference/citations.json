@@ -160,6 +160,126 @@
     "venue": "Health topic, National Library of Medicine (US)",
     "url": "https://medlineplus.gov/heartattack.html"
   },
+  "medlineplus_fever.txt": {
+    "title": "Fever: MedlinePlus",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/fever.html"
+  },
+  "medlineplus_headache.txt": {
+    "title": "Headache",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/headache.html"
+  },
+  "medlineplus_fatigue.txt": {
+    "title": "Fatigue: MedlinePlus",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/fatigue.html"
+  },
+  "medlineplus_nausea_vomiting.txt": {
+    "title": "Nausea | Vomiting",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/nauseaandvomiting.html"
+  },
+  "medlineplus_tachycardia.txt": {
+    "title": "Arrhythmia | Irregular Heartbeat",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/arrhythmia.html"
+  },
+  "medlineplus_appetite_loss.txt": {
+    "title": "Malnutrition: MedlinePlus",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/malnutrition.html"
+  },
+  "medlineplus_breathing_problems.txt": {
+    "title": "Breathing Problems | Shortness of Breath",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/breathingproblems.html"
+  },
+  "medlineplus_bleeding.txt": {
+    "title": "Hemorrhage | Bleeding",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/bleeding.html"
+  },
+  "medlineplus_dizziness.txt": {
+    "title": "Dizziness | Vertigo",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/dizzinessandvertigo.html"
+  },
+  "medlineplus_hypertension.txt": {
+    "title": "High Blood Pressure | Hypertension",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/highbloodpressure.html"
+  },
+  "medlineplus_hyperthermia.txt": {
+    "title": "Heat Illness: MedlinePlus",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/heatillness.html"
+  },
+  "medlineplus_pain.txt": {
+    "title": "Pain",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/pain.html"
+  },
+  "medlineplus_diarrhea.txt": {
+    "title": "Diarrhea",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/diarrhea.html"
+  },
+  "medlineplus_abdominal_pain.txt": {
+    "title": "Abdominal Pain",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/abdominalpain.html"
+  },
+  "medlineplus_insomnia.txt": {
+    "title": "Sleep Disorders",
+    "author": "MedlinePlus",
+    "year": 2026,
+    "citeKey": "MedlinePlus",
+    "venue": "Health topic, National Library of Medicine (US)",
+    "url": "https://medlineplus.gov/sleepdisorders.html"
+  },
   "openrn_nursing_process.txt": {
     "title": "Nursing process — Nursing Fundamentals",
     "author": "Open RN",
@@ -170,6 +290,62 @@
   },
   "openrn_nursing_diagnosis.txt": {
     "title": "Nursing diagnosis — Nursing Fundamentals",
+    "author": "Open RN",
+    "year": 2024,
+    "citeKey": "Open RN",
+    "venue": "Nursing Fundamentals (2nd ed.), WisTech Open",
+    "url": "https://wtcs.pressbooks.pub/nursingfundamentals/"
+  },
+  "openrn_infection.txt": {
+    "title": "Infection — Nursing Fundamentals",
+    "author": "Open RN",
+    "year": 2024,
+    "citeKey": "Open RN",
+    "venue": "Nursing Fundamentals (2nd ed.), WisTech Open",
+    "url": "https://wtcs.pressbooks.pub/nursingfundamentals/"
+  },
+  "openrn_oxygenation.txt": {
+    "title": "Oxygenation — Nursing Fundamentals",
+    "author": "Open RN",
+    "year": 2024,
+    "citeKey": "Open RN",
+    "venue": "Nursing Fundamentals (2nd ed.), WisTech Open",
+    "url": "https://wtcs.pressbooks.pub/nursingfundamentals/"
+  },
+  "openrn_comfort.txt": {
+    "title": "Comfort — Nursing Fundamentals",
+    "author": "Open RN",
+    "year": 2024,
+    "citeKey": "Open RN",
+    "venue": "Nursing Fundamentals (2nd ed.), WisTech Open",
+    "url": "https://wtcs.pressbooks.pub/nursingfundamentals/"
+  },
+  "openrn_sleep.txt": {
+    "title": "Sleep and Rest — Nursing Fundamentals",
+    "author": "Open RN",
+    "year": 2024,
+    "citeKey": "Open RN",
+    "venue": "Nursing Fundamentals (2nd ed.), WisTech Open",
+    "url": "https://wtcs.pressbooks.pub/nursingfundamentals/"
+  },
+  "openrn_nutrition.txt": {
+    "title": "Nutrition — Nursing Fundamentals",
+    "author": "Open RN",
+    "year": 2024,
+    "citeKey": "Open RN",
+    "venue": "Nursing Fundamentals (2nd ed.), WisTech Open",
+    "url": "https://wtcs.pressbooks.pub/nursingfundamentals/"
+  },
+  "openrn_fluids.txt": {
+    "title": "Fluids and Electrolytes — Nursing Fundamentals",
+    "author": "Open RN",
+    "year": 2024,
+    "citeKey": "Open RN",
+    "venue": "Nursing Fundamentals (2nd ed.), WisTech Open",
+    "url": "https://wtcs.pressbooks.pub/nursingfundamentals/"
+  },
+  "openrn_elimination.txt": {
+    "title": "Elimination — Nursing Fundamentals",
     "author": "Open RN",
     "year": 2024,
     "citeKey": "Open RN",

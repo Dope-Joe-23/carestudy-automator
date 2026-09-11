@@ -2,7 +2,7 @@ SOURCE: MedlinePlus health topic (U.S. National Library of Medicine)
 TITLE: Heart Attack | Myocardial Infarction
 URL: https://medlineplus.gov/heartattack.html
 LICENSE: Public domain (U.S. federal government work — https://medlineplus.gov/about/using/usingcontent/)
-RETRIEVED: 2026-08-14
+RETRIEVED: 2026-09-11
 
 
 Each year almost 800,000 Americans have a heart attack. A heart attack happens when blood flow to the heart suddenly becomes blocked. Without the blood coming in, the heart can't get oxygen. If not treated quickly, the heart muscle begins to die. But if you do get quick treatment, you may be able to prevent or limit damage to the heart muscle. That's why it's important to know the symptoms of a heart attack and call 911 if you or someone else is having them. You should call, even if you are not sure that it is a heart attack.

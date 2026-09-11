@@ -2,7 +2,7 @@ SOURCE: Open RN Nursing Fundamentals, chapter 4 — Nursing Process
 TITLE: Nursing process
 URL: https://wtcs.pressbooks.pub/nursingfundamentals/
 LICENSE: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
-RETRIEVED: 2026-08-14
+RETRIEVED: 2026-09-11
 
 
 4.1 Nursing Process Introduction
@@ -90,7 +90,7 @@ Description
 Corresponding Step of the Nursing Process
 Recognize Cues
 What data is clinically significant?
-Determining what client findings are significant, most important, and of immediate concern to the nurse (i.e., identifying “relevant cues”).
+Determining what client findings are significant, most important, and of immediate concern to the nurse; that is, identifying “relevant cues.”
 Assessment
 Analyze Cues
 What does the data mean?
@@ -129,19 +129,18 @@ Holistic Nursing Care
 Using the nursing process and clinical judgment while implementing evidence-based practices is referred to as the “science of nursing.” Before getting deeper into the science of nursing in the remainder of this chapter, it is important to discuss the “art of nursing” that relies on holistic care provided in a compassionate and caring manner using the nursing process.
 The American Nurses Association (ANA) defines nursing as, “Nursing integrates the art and science of caring and focuses on the protection, promotion, and optimization of health and human functioning; prevention of illness and injury; facilitation of healing; and alleviation of suffering through compassionate presence. Nursing is the diagnosis and treatment of human responses and advocacy in the care of individuals, families, groups, communities, and populations in the recognition of the connection of all humanity.”
 The ANA further describes nursing as a learned profession built on a core body of knowledge that integrates both the art and science of nursing. The art of nursing is defined as, “Unconditionally accepting the humanity of others, respecting their need for dignity and worth, while providing compassionate, comforting care.”
-Nurses care for individuals holistically, including their emotional, spiritual, psychosocial, cultural, and physical needs. They consider problems, issues, and needs that the person experiences as a part of a family and a community as they use the nursing process. Review a scenario illustrating holistic nursing care provided to a client and their family in the following box.
+Nurses care for individuals holistically, including their emotional, spiritual, psychosocial, cultural, and physical needs. They consider problems, issues, and needs that the person experiences as a part of a family and a community as they use the nursing process. Review a scenario illustrating holistic nursing care provided to a client and their family in the following box. Review how to provide culturally responsive care and reduce health disparities in the “Diverse Patients” chapter.
 Holistic Nursing Care Scenario
 A single mother brings her child to the emergency room for ear pain and a fever. The physician diagnoses the child with an ear infection and prescribes an antibiotic. The mother is advised to make a follow-up appointment with their primary provider in two weeks. While providing discharge teaching, the nurse discovers that the family is unable to afford the expensive antibiotic prescribed and cannot find a primary care provider in their community they can reach by a bus route. The nurse asks a social worker to speak with the mother about affordable health insurance options and available providers in her community and follows up with the prescribing physician to obtain a prescription for a less expensive generic antibiotic. In this manner, the nurse provides holistic care and advocates for improved health for the child and their family.
-Review how to provide culturally responsive care and reduce health disparities in the “Diverse Patients” chapter.
 Caring and the Nursing Process
-The American Nurses Association (ANA) states, “The act of caring is foundational to the practice of nursing.” Successful use of the nursing process requires the development of a care relationship with the client. A care relationship is a mutual relationship that requires the development of trust between both parties. This trust is often referred to as the development of rapport and underlies the art of nursing. While establishing a caring relationship, the whole person is assessed, including the individual’s beliefs, values, and attitudes, while also acknowledging the vulnerability and dignity of the client and family. Assessing and caring for the whole person takes into account the physical, mental, emotional, and spiritual aspects of being a human being. Caring interventions can be demonstrated in simple gestures such as active listening, making eye contact, using therapeutic touch, and providing emotional support while respecting their cultural beliefs associated with caring behaviors. See Figure 4.4 for an image of a nurse using touch as a therapeutic communication technique to communicate caring.
-Review more about the caring relationship and how to communicate with clients using therapeutic communication techniques like active listening in the “Communication” chapter.
+The American Nurses Association (ANA) states, “The act of caring is foundational to the practice of nursing.” Successful use of the nursing process requires the development of a care relationship with the client. A care relationship is a mutual relationship that requires the development of trust between both parties. This trust is often referred to as the development of rapport and underlies the art of nursing. While establishing a caring relationship, the whole person is assessed, including the individual’s beliefs, values, and attitudes, while also acknowledging the vulnerability and dignity of the client and family. Assessing and caring for the whole person takes into account the physical, mental, emotional, and spiritual aspects of being a human being. Caring interventions can be demonstrated in simple gestures such as active listening, making eye contact, using therapeutic touch, and providing emotional support while respecting their cultural beliefs associated with caring behaviors. See Figure 4.4 for an image of a nurse using touch as a therapeutic communication technique to communicate caring. Review more about the caring relationship and how to communicate with clients using therapeutic communication techniques like active listening in the “Communication” chapter.
 Dr. Jean Watson is a nurse theorist who has published many works on the art and science of caring in the nursing profession. Her theory of human caring sought to balance the cure orientation of medicine, giving nursing its unique disciplinary, scientific, and professional standing with itself and the public. Dr. Watson’s caring philosophy encourages nurses to be authentically present with their clients while creating a healing environment.
-Read more about Dr. Watson’s Caring Science and Human Caring Theory.
+Take a Closer Look
+Learn more about Jean Watson’s Caring Science Theory and how caring relationships, compassion, and holistic care support healing and patient well-being in nursing practice.
+Open the Caring Science & Theory resource
 Figure 4.4 Touch as a Therapeutic Communication Technique
 Now that we have discussed basic concepts related to the nursing process, as well as the science and art of nursing, let’s look more deeply at each component of the nursing process in the following sections.
 Klenke-Borgmann, L., Cantrell, M. A., & Mariani, B. (2020). Nurse educator’s guide to clinical judgment: A review of conceptualization, measurement, and development. Nursing Education Perspectives, 41(4), 215-221. doi: 10.1097/01.NEP.0000000000000669. PMID: 32569111. https://pubmed.ncbi.nlm.nih.gov/32569111/ ↵
-Klenke-Borgmann, L., Cantrell, M. A., & Mariani, B. (2020). Nurse educator’s guide to clinical judgment: A review of conceptualization, measurement, and development. Nursing Education Perspectives, 41(4), 215-221. ↵
 Powers, L., Pagel, J., & Herron, E. (2020). Nurse preceptors and new graduate success. American Nurse Journal, 15(7), 37-39. https://www.myamericannurse.com/nurse-preceptors-and-new-graduate-success/ ↵
 “The Detective” by paurian is licensed under CC BY 2.0 ↵
 “In the Quiet Zone…” by C.O.D. Library is licensed under CC BY-NC-SA 2.0 ↵
@@ -382,38 +381,41 @@ Assist with the collection of data.
 Assist with the development and revision of a nursing care plan.
 Reinforce the teaching provided by an RN provider and provide basic health care instruction.
 Participate with other health team members in meeting basic patient needs.”
-Read additional details about the scope of practice of registered nurses (RNs) and licensed practical nurses (LPNs) in Wisconsin’s Nurse Practice Act in Chapter N 6 Standards of Practice.
-Read more about the American Nurses Association’s Principles for Delegation.
+Take a Closer Look
+Learn more about nursing delegation standards, including the responsibilities of registered and practical nurses, safe delegation practices, supervision requirements, and accountability in patient care.
+Open the Wisconsin’s Nurse Practice Act in Chapter N 6 Standards of Practice
+Open the American Nurses Association’s Principles for Delegation
 Table 4.7 outlines general guidelines for delegating nursing tasks in the state of Wisconsin according to the role of the health care team member.
 Table 4.7 General Guidelines for Delegating Nursing Tasks
+Nursing Process Step
 RN
 LPN
 CNA
 Assessment
-Complete client assessment
-Assist with the collection of data for stable clients
-Collect measurements such as weight, input/output, and vital signs in stable clients
+Complete client assessment.
+Assist with the collection of data for stable clients.
+Collect measurements such as weight, input/output, and vital signs in stable clients.
 Diagnosis
-Analyze assessment data and create nursing diagnoses
-Not applicable
-Not applicable
+Analyze assessment data and create nursing diagnoses.
+Not applicable.
+Not applicable.
 Outcome Identification
-Identify SMART client outcomes
-Not applicable
-Not applicable
+Identify SMART client outcomes.
+Not applicable.
+Not applicable.
 Planning
-Plan nursing interventions
-Assist with the development of a nursing care plan
-Not applicable
+Plan nursing interventions.
+Assist with the development of a nursing care plan.
+Not applicable.
 Implementation of Interventions
-Implement independent, dependent, and collaborative nursing interventions; delegate interventions as appropriate, with supervision; document interventions performed
-Participate with other health team members in meeting basic client needs and document interventions provided
-Reinforce the teaching provided by an RN provider and provide basic health care instruction
-Implement and document delegated interventions associated with basic nursing care such as providing assistance in ambulating or tasks within their scope of practice
+Implement independent, dependent, and collaborative nursing interventions; delegate interventions as appropriate, with supervision; document interventions performed.
+Participate with other health team members in meeting basic client needs and document interventions provided.
+Reinforce the teaching provided by an RN provider and provide basic health care instruction.
+Implement and document delegated interventions associated with basic nursing care such as providing assistance in ambulating or tasks within their scope of practice.
 Evaluation
-Evaluate the attainment of outcomes and revise the nursing care plan as needed
-Contribute data regarding the achievement of client outcomes; assist in the revision of a nursing care plan
-Not applicable
+Evaluate the attainment of outcomes and revise the nursing care plan as needed.
+Contribute data regarding the achievement of client outcomes; assist in the revision of a nursing care plan.
+Not applicable.
 Documentation of Interventions
 As interventions are performed, they must be documented in the client’s record in a timely manner. As previously discussed in the “Ethical and Legal Issues” subsection of the “Basic Concepts” section, lack of documentation is considered a failure to communicate and a basis for legal action. A basic rule of thumb is if an intervention is not documented, it is considered not done in a court of law. It is also important to document administration of medication and other interventions in a timely manner to prevent errors that can occur due to delayed documentation time.
 Coordination of Care and Health Teaching/Health Promotion

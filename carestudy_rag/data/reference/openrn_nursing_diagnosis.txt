@@ -2,7 +2,7 @@ SOURCE: Open RN Nursing Fundamentals, chapter 4 — Nursing Process
 TITLE: Nursing diagnosis
 URL: https://wtcs.pressbooks.pub/nursingfundamentals/
 LICENSE: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
-RETRIEVED: 2026-08-14
+RETRIEVED: 2026-09-11
 
 
 4.4 Diagnosis
@@ -142,23 +142,22 @@ Signs and Symptoms (S): The nursing diagnoses of Activity Intolerance and Social
 Additional related factor: Fear of falling
 A correctly written syndrome diagnosis statement for Ms. J. would be written as follows:
 Risk for Frail Elderly Syndrome related to activity intolerance, social isolation, and fear of falling
-See Table 4.4a for a summary of the types of nursing diagnoses.
-Table 4.4a. Types of Nursing Diagnoses
+Table 4.4a Types of Nursing Diagnoses
 Diagnosis
 What Is It?
 Example of Nursing Diagnosis Statement
 Problem-Focused (Actual)
-Problem is present at the time of assessment
+Problem is present at the time of assessment.
 (PES) Fluid Volume Excess R/T excessive fluid intake AEB bilateral basilar crackles in the lungs, bilateral 2+ pitting edema in the ankles and feet, an increased weight of 10 pounds over 1 week, and the client reports, “My ankles feel swollen.”
 Health-Promotion
-A motivation/desire to increase well-being or a client’s strength
+A motivation/desire to increase well-being or a client’s strength.
 Enhanced Readiness for Health Promotion AEB expressed desire to “learn more about health so I can take better care of myself.”
 Risk
-Problem is likely to develop
-Risk for Falls AEB dizziness and decreased lower extremity strength
+Problem is likely to develop.
+Risk for Falls AEB dizziness and decreased lower extremity strength.
 Syndrome
-Cluster of nursing diagnoses that occur together and are best addressed together
-Risk for Frail Elderly Syndrome R/T activity intolerance, social isolation, and fear of falling
+Cluster of nursing diagnoses that occur together and are best addressed together.
+Risk for Frail Elderly Syndrome R/T activity intolerance, social isolation, and fear of falling.
 It can feel overwhelming for nursing students to determine which nursing diagnoses to use for their clients due to the complexity of nursing diagnoses. Rest assured, use of nursing diagnoses becomes easier with practice and exposure to client care plans. Refer to trustworthy sources, such as a nursing diagnosis handbook or reputable care-planning resources to become aware of current NANDA-I nursing diagnoses.
 Nursing diagnoses can be viewed to establish familiarity with them on the Nanda Diagnoses website, but be aware this is not an official NANDA nursing diagnosis site. Evidence-based care planning resources should be used when planning client care.
 Prioritization

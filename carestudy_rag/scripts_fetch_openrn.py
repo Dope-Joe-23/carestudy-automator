@@ -54,6 +54,58 @@ PROCESS_SECTIONS = [
 ]
 DIAGNOSIS_SECTIONS = ["4-4-diagnosis"]
 
+# Chapter 9 "Infection" — the physiologic basis of fever and infection care.
+INFECTION_SECTIONS = [
+    "9-1-infection-introduction",
+    "9-2-basic-concepts",
+    "9-7-applying-the-nursing-process",
+]
+
+# Chapter 8 "Oxygenation" — dyspnea, tachypnea, and oxygenation assessment.
+OXYGENATION_SECTIONS = [
+    "8-1-oxygenation-introduction",
+    "8-2-basic-oxygenation-concepts",
+    "8-3-applying-the-nursing-process",
+]
+
+# Chapter 11 "Comfort" — pain assessment and management.
+COMFORT_SECTIONS = [
+    "11-1-comfort-introduction",
+    "11-2-comfort-basic-concepts",
+    "11-3-pain-assessment-methods",
+    "11-4-pain-management",
+    "11-5-applying-the-nursing-process",
+]
+
+# Chapter 12 "Sleep and Rest" — sleep physiology and hygiene.
+SLEEP_SECTIONS = [
+    "12-1-sleep-and-rest-introduction",
+    "12-2-basic-concepts",
+    "12-3-applying-the-nursing-process",
+]
+
+# Chapter 14 "Nutrition" — intake and nutritional assessment.
+NUTRITION_SECTIONS = [
+    "14-1-nutrition-introduction",
+    "14-2-nutrition-basic-concepts",
+    "14-3-applying-the-nursing-process",
+]
+
+# Chapter 15 "Fluids and Electrolytes" — fluid balance, dehydration, and
+# fluid volume disturbances.
+FLUIDS_SECTIONS = [
+    "15-1-fluids-and-electrolytes-introduction",
+    "15-2-basic-fluid-and-electrolyte-concepts",
+    "15-6-applying-the-nursing-process",
+]
+
+# Chapter 16 "Elimination" — elimination assessment (fluid balance ties in).
+ELIMINATION_SECTIONS = [
+    "16-1-elimination-introduction",
+    "16-2-basic-concepts",
+    "16-9-applying-the-nursing-process",
+]
+
 
 class _TextExtractor(HTMLParser):
     """Pull readable text out of the chapter HTML (no dependencies)."""
@@ -127,10 +179,17 @@ def main() -> None:
     today = date.today().isoformat()
     book_url = BOOK + "/"
     jobs = [
-        ("openrn_nursing_process.txt", "Nursing process", PROCESS_SECTIONS),
-        ("openrn_nursing_diagnosis.txt", "Nursing diagnosis", DIAGNOSIS_SECTIONS),
+        ("openrn_nursing_process.txt", "Nursing process", PROCESS_SECTIONS, "chapter 4 — Nursing Process"),
+        ("openrn_nursing_diagnosis.txt", "Nursing diagnosis", DIAGNOSIS_SECTIONS, "chapter 4 — Nursing Process"),
+        ("openrn_infection.txt", "Infection", INFECTION_SECTIONS, "chapter 9 — Infection"),
+        ("openrn_oxygenation.txt", "Oxygenation", OXYGENATION_SECTIONS, "chapter 8 — Oxygenation"),
+        ("openrn_comfort.txt", "Comfort", COMFORT_SECTIONS, "chapter 11 — Comfort"),
+        ("openrn_sleep.txt", "Sleep and Rest", SLEEP_SECTIONS, "chapter 12 — Sleep and Rest"),
+        ("openrn_nutrition.txt", "Nutrition", NUTRITION_SECTIONS, "chapter 14 — Nutrition"),
+        ("openrn_fluids.txt", "Fluids and Electrolytes", FLUIDS_SECTIONS, "chapter 15 — Fluids and Electrolytes"),
+        ("openrn_elimination.txt", "Elimination", ELIMINATION_SECTIONS, "chapter 16 — Elimination"),
     ]
-    for out_file, title, slugs in jobs:
+    for out_file, title, slugs, chapter_label in jobs:
         print(f"Fetching {title} ({', '.join(slugs)}) ...")
         sections = []
         failed = False
@@ -147,7 +206,7 @@ def main() -> None:
 
         body = "\n\n".join(sections)
         header = (
-            "SOURCE: Open RN Nursing Fundamentals, chapter 4 — Nursing Process\n"
+            f"SOURCE: Open RN Nursing Fundamentals, {chapter_label}\n"
             f"TITLE: {title}\n"
             f"URL: {book_url}\n"
             "LICENSE: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)\n"

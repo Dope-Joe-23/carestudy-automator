@@ -68,6 +68,36 @@ organizations and are intentionally excluded.
   https://medlineplus.gov/pepticulcer.html
 - Heart attack (myocardial infarction) -> medlineplus_myocardial_infarction.txt
   https://medlineplus.gov/heartattack.html
+- Fever -> medlineplus_fever.txt
+  https://medlineplus.gov/fever.html
+- Headache -> medlineplus_headache.txt
+  https://medlineplus.gov/headache.html
+- Fatigue -> medlineplus_fatigue.txt
+  https://medlineplus.gov/fatigue.html
+- Nausea and vomiting -> medlineplus_nausea_vomiting.txt
+  https://medlineplus.gov/nauseaandvomiting.html
+- Arrhythmia (irregular heartbeat; covers tachycardia) -> medlineplus_tachycardia.txt
+  https://medlineplus.gov/arrhythmia.html
+- Malnutrition (covers appetite loss/anorexia) -> medlineplus_appetite_loss.txt
+  https://medlineplus.gov/malnutrition.html
+- Breathing problems (shortness of breath) -> medlineplus_breathing_problems.txt
+  https://medlineplus.gov/breathingproblems.html
+- Hemorrhage (bleeding) -> medlineplus_bleeding.txt
+  https://medlineplus.gov/bleeding.html
+- Dizziness and vertigo -> medlineplus_dizziness.txt
+  https://medlineplus.gov/dizzinessandvertigo.html
+- High blood pressure (hypertension) -> medlineplus_hypertension.txt
+  https://medlineplus.gov/highbloodpressure.html
+- Heat illness (hyperthermia) -> medlineplus_hyperthermia.txt
+  https://medlineplus.gov/heatillness.html
+- Pain -> medlineplus_pain.txt
+  https://medlineplus.gov/pain.html
+- Diarrhea -> medlineplus_diarrhea.txt
+  https://medlineplus.gov/diarrhea.html
+- Abdominal pain -> medlineplus_abdominal_pain.txt
+  https://medlineplus.gov/abdominalpain.html
+- Sleep disorders -> medlineplus_insomnia.txt
+  https://medlineplus.gov/sleepdisorders.html
 
 Open RN — Nursing Fundamentals
 ========================================
@@ -82,3 +112,10 @@ the diagnosis step in an openly licensed nursing textbook.
 
 - Nursing process (sections 4.1-4.3, 4.5-4.8) -> openrn_nursing_process.txt
 - Nursing diagnosis (section 4.4) -> openrn_nursing_diagnosis.txt
+- Infection (sections 9.1-9.2, 9.7) -> openrn_infection.txt
+- Oxygenation (sections 8.1-8.3) -> openrn_oxygenation.txt
+- Comfort/pain (sections 11.1-11.5) -> openrn_comfort.txt
+- Sleep and rest (sections 12.1-12.3) -> openrn_sleep.txt
+- Nutrition (sections 14.1-14.3) -> openrn_nutrition.txt
+- Fluids and electrolytes (sections 15.1-15.2, 15.6) -> openrn_fluids.txt
+- Elimination (sections 16.1-16.2, 16.9) -> openrn_elimination.txt

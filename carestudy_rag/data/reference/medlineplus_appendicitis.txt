@@ -2,7 +2,7 @@ SOURCE: MedlinePlus health topic (U.S. National Library of Medicine)
 TITLE: Appendicitis
 URL: https://medlineplus.gov/appendicitis.html
 LICENSE: Public domain (U.S. federal government work — https://medlineplus.gov/about/using/usingcontent/)
-RETRIEVED: 2026-08-14
+RETRIEVED: 2026-09-11
 
 
 The appendix is a small, tube-like organ attached to the first part of the large intestine. It is located in the lower right part of the abdomen. It has no known function. A blockage inside of the appendix causes appendicitis. The blockage leads to increased pressure, problems with blood flow, and inflammation. If the blockage is not treated, the appendix can burst and spread infection into the abdomen. This causes a condition called

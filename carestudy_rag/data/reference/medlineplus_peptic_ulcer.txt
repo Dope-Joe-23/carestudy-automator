@@ -2,7 +2,7 @@ SOURCE: MedlinePlus health topic (U.S. National Library of Medicine)
 TITLE: Stomach Ulcer | Peptic Ulcer
 URL: https://medlineplus.gov/pepticulcer.html
 LICENSE: Public domain (U.S. federal government work — https://medlineplus.gov/about/using/usingcontent/)
-RETRIEVED: 2026-08-14
+RETRIEVED: 2026-09-11
 
 
 A peptic ulcer is a sore in the lining of your stomach or your duodenum, the first part of your small intestine. A burning stomach pain is the most common symptom. The pain:

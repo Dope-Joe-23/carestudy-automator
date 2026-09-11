@@ -1,0 +1,644 @@
+SOURCE: Open RN Nursing Fundamentals, chapter 11 — Comfort
+TITLE: Comfort
+URL: https://wtcs.pressbooks.pub/nursingfundamentals/
+LICENSE: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+RETRIEVED: 2026-09-11
+
+
+11.1 Comfort Introduction
+Learning Objectives
+Identify cues related to alteration in comfort across the life span
+Identify standards of care for the client experiencing pain
+Identify interventions to increase client comfort
+Contribute to a plan of care for clients with comfort alterations
+Pain is a universal sensation that everyone experiences, and acute pain is a common reason why clients seek medical care. Nurses work with the interdisciplinary team to assess and manage pain in a multidimensional approach to provide comfort and prevent suffering. This chapter will review best practices and standards of care for the assessment and management of pain.
+
+11.2 Comfort Basic Concepts
+Definitions of Pain
+Pain has historically been defined as, “Whatever the client says it is, experienced whenever they say they are experiencing it.” In 2020 the International Association for the Study of Pain (IASP) released a revised definition of pain as, “An unpleasant sensory and emotional experience associated with, or resembling that associated with, actual or potential tissue damage,” along with these additional notes:
+Pain is always a personal experience that is influenced to varying degrees by biological, psychological, and social factors.
+Individuals learn the concept of pain throughout all stages of their life.
+A person’s report of an experience as pain should be respected.
+Although pain usually serves an adaptive role, it can have adverse effects on function, socialization, and psychological well-being.
+Verbal description is only one of several behaviors that express pain. The inability to communicate does not negate the possibility that a person is experiencing pain.
+Pain motivates the individual to withdraw from dangerous stimuli, to protect a damaged body part while it heals, and to avoid similar experiences in the future. Most pain resolves after the painful stimulus is removed and the body has healed, but sometimes pain persists despite removal of the stimulus and apparent healing of the body. Additionally, pain can occur in the absence of any detectable stimulus, damage, or disease.
+Physiology of Pain
+Let’s begin by reviewing the physiological processes of pain. A nociceptor is a type of sensory receptor that responds to potentially damaging stimuli by sending nerve signals to the spinal cord and brain in a process called nociception. There are several types and functions of nociceptors:
+Thermal nociceptors are activated by noxious heat or cold, such as a hot pan.
+Mechanical nociceptors are activated by excess pressure or mechanical deformation, such as a finger getting caught in a car door. They also respond to incisions that break the skin surface.
+Chemical nociceptors are activated by a wide variety of spices commonly used in cooking. For example, capsaicin is a compound in chili peppers that causes a burning sensation of the mucus membranes. It is also used in common over-the-counter creams for pain relief because when it is applied to the skin, it blocks the transmission of pain impulses.
+Noxious stimuli are detected by nociceptors and transduced into electrical energy. An action potential is created and transmitted along nociceptor fibers. There are two types of nociceptor fibers, A-Delta and C. A-Delta fibers are fast-conducting fibers and associated with the initial sharp, stinging, or pricking pain sensation. C fibers are slower-conducting fibers and are associated with the secondary sensation of diffuse, dull, burning, and aching pain. The pain impulse is transmitted along these nociceptor fibers to the dorsal horn in the spinal cord and then from the spinal cord to the thalamus, where pain messages are relayed to the cerebral cortex. In the cerebral cortex, pain impulses are perceived, and the conscious awareness of pain occurs. See Figure 11.1 for an illustration of how the pain signal is transmitted from the nociceptors to the spinal cord and then to the brain.
+Figure 11.1 Pain Transmission
+View supplementary TED Talk and Medline Plus videos on pain:
+Karen D. Davis: How does your brain respond to pain? | TED Talk
+A one-minute video review of how pain receptors work: Feeling Pain
+Types of Pain
+Pain can be divided into visceral, deep somatic, superficial, and neuropathic pain.
+Visceral structures are highly sensitive to stretch, ischemia, and inflammation. Visceral pain is diffuse, difficult to locate, and often referred to a distant, usually superficial, structure. It may be accompanied by nausea and vomiting and may be described as sickening, deep, squeezing, and dull.
+Deep somatic pain is initiated by stimulation of nociceptors in ligaments, tendons, bones, blood vessels, fascia, and muscles and is a dull, aching, poorly localized pain. Examples include sprains and broken bones.
+Superficial pain is initiated by the activation of nociceptors in the skin or other superficial tissue and is sharp, well-defined, and clearly located. Examples of injuries that produce superficial somatic pain include minor wounds and minor (first-degree) burns.
+Neuropathic pain is defined by the International Association for the Study of Pain (IASP) as pain caused by a lesion or disease of the somatosensory nervous system. It is typically described by clients as “burning” or “like pins and needles.” Neuropathic pain can be caused by several disease processes, such as diabetes mellitus, strokes, and HIV, and is generally undertreated because it typically does not respond to analgesics. Medications such as tricyclic antidepressants and gabapentin are typically used to manage this type of pain.
+Pain can radiate from one area to another. For example, back pain caused by a herniated disk can cause pain to radiate down an individual’s leg. Referred pain is different from radiating pain because it is perceived at a location other than the site of the painful stimulus. For example, pain from retained gas in the colon can cause pain to be perceived in the shoulder. See Figure 11.2 for an illustration of common sites of referred pain.
+Figure 11.2 Referred Pain
+Factors Affecting the Pain Experience
+There are many biological, psychological, and social factors that affect the perception of pain, making it a unique, individual experience. See Table 11.2a for a list of these factors. Nurses must consider these factors while assessing and providing holistic nursing care for clients experiencing pain.
+Table 11.2a Biological, Psychological, and Social Factors Affecting Pain
+Biological Factors
+Psychological Factors
+Social Factors
+Nociception.
+Brain function.
+Source of pain.
+Illness.
+Medical diagnosis.
+Age.
+Injury, past or present.
+Genetic sensitivity.
+Hormones.
+Inflammation.
+Obesity.
+Cognitive function.
+Mood/affect.
+Fatigue.
+Stress.
+Coping.
+Trauma.
+Sleep.
+Fear.
+Anxiety.
+Developmental stage.
+Meaning of pain.
+Memory.
+Attitude.
+Beliefs.
+Emotional status.
+Expectations.
+Culture.
+Values.
+Economic.
+Environment.
+Social support.
+Coping mechanisms.
+Spirituality.
+Ethnicity.
+Education.
+Acute vs. Chronic Pain
+Pain is differentiated between acute pain and chronic pain. Acute pain has limited duration and is associated with a specific cause. It usually causes a physiological response resulting in increased pulse, respirations, and blood pressure. Diaphoresis (sweating, especially to an unusual degree) may also occur. Examples of acute pain include postoperative pain; burns; acute musculoskeletal conditions like strains, sprains, and fractures; labor and delivery; and traumatic injury.
+Chronic pain is ongoing and persistent for longer than six months. It typically does not cause a change in vital signs or diaphoresis. It may be diffuse and not confined to a specific area of the body. Chronic pain often affects an individual’s psychological, social, and behavioral responses that can influence daily functioning. Chronic medical problems, such as osteoarthritis, spinal conditions, fibromyalgia, and peripheral neuropathy, are common causes of chronic pain. Chronic pain can continue even after the original injury or illness that caused it has healed or resolved. Some people suffer chronic pain even when there is no past injury or apparent body damage.
+People who have chronic pain often have physical effects that are stressful on the body. These effects include tense muscles, limited ability to move around, lack of energy, and appetite changes. Emotional effects of chronic pain include depression, anger, anxiety, and fear of reinjury. These effects can limit a person’s ability to return to their regular work or leisure activities. It is estimated that chronic pain affects 50 million U.S. adults, and 19.6 million of those adults experience high-impact chronic pain that interferes with daily life or work activities. See Figure 11.3 for an illustration of low back pain, an example of both acute and chronic pain that often affects daily functioning.
+Figure 11.3 Back Pain
+Read additional information about pain using the following:
+Overview of Pain – Brain, Spinal Cord, and Nerve Disorders
+Pain
+Assessing and Managing Acute Pain: A Call to Action
+Quick Facts: Chronic Pain
+Life Span and Cultural Considerations
+The pain experience varies across the life span. Newborns and infants can feel pain but are unable to verbalize it. Repetitive and prolonged pain may be associated with altered pain sensitivity and pain processing later in life. Toddlers and preschoolers often have difficulty describing, identifying, and locating pain. Instead, pain may be demonstrated behaviorally with crying, anger, physical resistance, or withdrawal. School-age children and adolescents may try to be “brave” and rationalize the pain; they are more responsive to explanations about pain.
+Older adults are at increased risk for undertreatment of pain. It is estimated that up to 70% of older adults in the community and up to 85% living in long-term care centers have significant pain due to chronic conditions such as osteoarthritis and peripheral neuropathy. Pain is often underassessed in older adults because they are less likely to report it and also because it can present atypically with confusion and agitation.
+Other special populations who are at increased risk for the undertreatment of pain include the following:
+Clients with a history of addictive disease
+Nonverbal, cognitively impaired, or unconscious clients
+Clients who endure pain without complaining due to cultural or religious beliefs
+Non-English-speaking clients where communicating is a barrier
+Uninsured or underinsured clients where cost of medications is a barrier
+Nurses must be especially vigilant of nonverbal signs of pain in these at-risk groups and implement appropriate assessment tools and interventions. Read an example of a client with untreated pain in the following box.
+A Story About Undertreated Pain
+A teenage boy from the Amish community was admitted to the hospital after he sustained several fractures when his buggy was hit by a motor vehicle. His parents stayed at his bedside throughout his hospital stay. The nurses noticed that although he denied pain, he grimaced and guarded the body parts that were injured. He moaned when repositioned and declined to get out of bed to begin physical therapy when it was prescribed for rehabilitation. However, despite these nonverbal indicators of pain, he continued to deny the existence of pain and refused all pain medication. One day, when his parents left the room briefly to get coffee, the nurse said to the client, “Most people in your situation experience severe pain. I can see that you are hurting by your expressions when you move. Can you help me to understand why you don’t want any pain medication?” A tear began to fall down the boy’s cheek. He explained that his community does not believe in complaining about pain and to be a man, he must learn how to tolerate suffering. The nurse explained, “It is important for you to attend physical therapy so that you can heal and go home. Can we bring you pain pills every day before physical therapy so that you can participate in the exercises, recover quickly, and go home?” The boy agreed to this plan. The nurse documented her findings and made notes in the care plan to administer the prescribed PRN pain medications one hour before physical therapy was scheduled. She also communicated her findings during the nurse handoff report. The boy was able to satisfactorily complete the prescribed physical therapy and was discharged home the following week.
+Use the following to read more information about treating pain:
+Treating pain in Special Populations
+The National Institute on Aging provides a wide range of information for older adults: Pain: You Can Get Help.
+Health in Aging offers additional information on pain management at Pain Management | Aging & Health AZ | American Geriatrics Society.
+Standards of Care
+Pain assessment and management standards were published in 2018 by The Joint Commission. The revised standards require hospitals to identify pain assessment and pain management, including safe opioid prescribing, as an organizational priority. Nurses are expected to implement these best practices. See Table 11.2b for a summary of associated requirements that must be incorporated into nursing care. If these components are not included when providing nursing care, the hospital may be cited by The Joint Commission and potentially lose Medicare funding.
+Table 11.2b The Joint Commission’s Pain Assessment and Management Requirements
+Requirement
+Rationale
+Clients are screened for pain during emergency department visits and at the time of admission.
+The misidentification and undertreatment of pain continue to occur in hospitals.
+When a client presents to the hospital for other medical issues, pain may be overlooked or missed. Screening clients for pain or the risk of pain at the time of admission and while taking vital signs helps to improve pain identification and treatment.
+Criteria to screen, assess, and reassess pain are used that are consistent with the client’s age, condition, and ability to understand.
+An accurate screening and assessment are required for satisfactory pain management, and the hospital is responsible for ensuring that appropriate screening and assessment tools are readily available and used appropriately.
+Clients are involved in the pain management treatment planning process by:
+Collaboratively developing realistic expectations and measurable goals for the degree, duration, and reduction of pain.
+Discussing the criteria used to evaluate treatment progress; for example, relief of pain and improved physical and psychosocial function.
+Receiving education on pain management, treatment options, and safe use of opioid and nonopioid medications when they are prescribed.
+Client involvement in planning pain management involves information sharing and collaboration between the client and provider to arrive at realistic expectations and clear goals. Numerous client factors may cause undertreatment or overtreatment of pain, such as pain expectations, knowledge of pain and its treatment, and underreporting of pain. Client involvement in the pain management planning process allows the provider to clarify the objectives of the process and guides clients in a manner that increases the likelihood of treatment adherence.
+Client’s pain is treated, or they are referred for treatment.
+Treatment strategies for pain may include nonpharmacologic, pharmacologic, or a combination of approaches.
+Referrals may be required for clients who present with complex pain management needs, such as a client with an opioid use disorder, a client who is at high risk for adverse events but requires treatment with opioids, or a client whose pain management needs exceed the expertise of the client’s provider.
+Nonpharmacologic pain treatment modalities are promoted.
+Nonpharmacologic modalities should be promoted by ensuring that client preferences are discussed and some nonpharmacologic treatment options provided. Nonpharmacologic strategies include, but are not limited to, physical modalities, such as acupuncture therapy, chiropractic therapy, osteopathic manipulative treatment, massage therapy, and physical therapy; relaxation therapy; and cognitive behavioral therapy.
+Clients identified as being high risk for adverse outcomes related to opioid treatment are monitored.
+The most dangerous adverse effect of opioid analgesics is respiratory depression.
+Equipment must be available to monitor clients deemed highest risk, such as clients with sleep apnea, those receiving continuous intravenous opioids, or those on supplemental oxygen.
+Clients experiencing opioid substance misuse are referred to opioid treatment programs.
+When clinicians encounter clients who are addicted to opioids, the clients should be referred for treatment. The U.S. Substance Abuse and Mental Health Services Administration provides a directory of opioid treatment programs.
+The hospital facilitates access to the Prescription Drug Monitoring Program databases.
+Prescription Drug Monitoring Programs (PDMP) aggregate prescribing and dispensing data submitted by pharmacies and health care providers. They are an effective tool for reducing prescription drug abuse and diversion. Read more about PDMP in the “Legal/Ethical” chapter of the Open RN Nursing Pharmacology, 2e textbook.
+Client’s pain is reassessed and responded to through the following:
+Evaluation and documentation of response to pain intervention(s).
+Progress toward pain management goals, including functional ability; for example, the ability to take a deep breath, turn in bed, or walk with improved pain control.
+Side effects of treatment.
+Reassessment should be completed in a timely manner to determine if the intervention is working or if the client is experiencing adverse effects. Only using a numerical pain scale to monitor a client’s pain is inadequate.
+The Joint Commission’s technical advisory panel stressed the importance of assessing how pain affects function and the ability to make progress towards treatment goals. For example, immediately after major abdominal surgery, the goal of pain control may be the client’s ability to take a breath without excessive pain. Over the next few days, the goal of pain control may be the ability to sit up in bed or walk to the bathroom without limitation due to pain.
+Clients and their family members are educated on discharge plans related to pain management, including the following:
+Pain management plan of care.
+Side effects of pain management treatment.
+Activities of daily living, including the home environment that might exacerbate pain or reduce effectiveness of the pain management plan of care, as well as strategies to address these issues.
+Safe use, storage, and disposal of opioids when prescribed.
+During the discharge process, clients and families need education on the importance of how to manage the client’s pain at home. Unmanaged pain may cause a client to regress in their recovery process or have uncontrolled pain at home leading to a readmission to the hospital. It is necessary to have a discussion with clients and their families regarding their home environment and activities of daily living that may increase the need for pain management. When a client is being discharged with an opioid medication, education on safe use, including when and how much medication to take, should be included in the discharge plan. Opioid disposal education is also critical to both reduce diversion and decrease the risk of accidental exposure to someone other than the person for whom the opioid was prescribed.
+Read The Joint Commission’s Pain Assessment and Management Standards for Hospitals.
+Read Pain Management Best Practices from the United States Department of Health & Human Services.
+Pain Management and the Opioid Crisis
+The American Nurses Association published a position statement in 2018 on the ethical responsibility of nurses to properly manage pain. In 2019 the U.S. Department of Health and Human Services published Pain Management Best Practices. Why is there continued emphasis on optimal pain management? Let’s review some trends related to pain management over the past few decades.
+Trends Related to Pain Management
+Pain assessment and pain management began to undergo significant changes in the 1990s when pain experts recognized that inadequate assessment and treatment of pain had become a public health issue. Recommendations for improving the quality of pain care were followed by initiatives that recognized clients’ reported pain as “the 5th vital sign.” Hospital administrators and regulators began to focus on pain scores, encouraging and incentivizing providers to aggressively treat pain to lower pain scores. These trends led to liberal prescribing of opioid pain medications for both acute and chronic pain.
+Unfortunately, this increase in prescription of opioid pain medication led to a rise in misuse and overdose deaths related to opioid pain medications. Organizations began to urge caution about the use of opioids for pain, including guidelines published in 2016 by the Centers for Disease Control (CDC) on prescribing opioids for pain. The 2016 CDC guideline led to limited prescriptions of opioids and unintended consequences, such as forced tapering of medications for established clients requiring chronic pain control and the transition of some clients desperate for pain control to using illicit drugs, such as heroin.
+In 2022, the CDC released new guidelines for prescribing opioids for pain. The CDC recommends that people experiencing pain receive appropriate pain treatment, with careful consideration of the benefits and risks of all treatment options in the context of the client’s circumstances. The guidelines are intended to improve communication with clients about the benefits and risks of pain treatments, including opioid therapy; improve the effectiveness and safety of pain treatment; mitigate pain; improve function and quality of life for clients with pain; and reduce risks associated with opioid pain therapy, including opioid use disorder, overdose, and death.
+In this manner, pain management and the opioid crisis have influenced each other and continue to evolve. It is imperative for nurses to ensure that clients with painful conditions can work with their health care providers to develop pain treatment plans that balance pain control, optimize function, and enhance quality of life while also minimizing risks for opioid misuse and harm.
+Associated Definitions
+When discussing pain management and the opioid crisis in the United States, it is important to understand the following terms:
+Opioid intoxication refers to significant behavioral or psychological changes (e.g., apathy, dysphoria, psychomotor agitation or retardation, or impaired judgment) that occur during or shortly after opioid use. Symptoms of opioid intoxication include drowsiness or coma, slurred speech, or impairment in attention or memory.
+Overdose is the biological response of the human body when too much of a substance is ingested.
+Tolerance refers to a diminished effect with continued use of the same amount of an opioid, or a need for increased amounts of opioids to achieve the desired effect or intoxication.
+Misuse refers to taking prescription pain medications in a manner or dose other than prescribed; taking someone else’s prescription, even if for a medical complaint such as pain; or taking a medication to feel euphoria (i.e., to get high).
+Substance use disorder is an neurobiological illness caused by repeated misuse of substances (including opioids, which is specifically referred to as opioid use disorder). When taken in excess, these substances have a common effect of directly activating the brain reward system and producing such an intense activation of the reward system that normal life activities may be neglected. A person diagnosed with opioid use disorder has at least two of the symptoms listed below in a given year :
+Opioids are taken in larger amounts or over a longer period of time than intended.
+There is a persistent desire or unsuccessful efforts to cut down or control opioid use.
+A great deal of time is spent in activities necessary to obtain the opioid, use the opioid, or recover from its effects.
+The person experiences craving, a strong desire or urge to use opioids.
+Recurrent opioid use results in the person’s failure to fulfill major role obligations at work, school, or home.
+Opioid use continues despite the person having persistent or recurrent social or interpersonal problems caused or exacerbated by the effects of opioids.
+Important social, occupational, or recreational activities are given up or reduced because of opioid use.
+Opioids are recurrently used in situations in which it is physically hazardous.
+Opioids are continued to be used despite the person having a persistent or recurrent physical or psychological problem that is likely to have been caused or exacerbated by the substance.
+The person experiences symptoms of tolerance to opioids.
+The person experiences withdrawal symptoms causing significant distress after stopping or reducing opioid use, with symptoms such as dysphoric mood, nausea, vomiting, muscle aches, rhinorrhea or lacrimation, pupillary dilation, piloerection, sweating, diarrhea, yawning, fever, or insomnia.
+Physical dependence refers to withdrawal symptoms that occur when an opioid is suddenly reduced or stopped because of physiological adaptations that occurwith chronic exposure to the medication. For example, if a client who receives hydromorphone daily suddenly has their prescription stopped, they will likely experience symptoms of withdrawal, such as sweating, goose bumps, vomiting, anxiety, insomnia, and muscle pain.
+Addiction is a term used in many countries to describe severe problems related to compulsive and habitual use of substances. However, it is no longer a diagnosis by the American Psychiatric Association because of its potentially negative connotation.
+Recognizing and Treating Opioid Overdose
+Five basic steps are recommended for nurses, first responders, health professionals, and other bystanders to rapidly recognize and treat opioid overdose to prevent death.
+Recognize Signs of Opioid Overdose:
+Signs of opioid overdose include unconsciousness or the inability to awaken; pinpoint pupils; slow, shallow breathing; breathing difficulty manifested by choking sounds or a gurgling/snoring noise from a person who cannot be awakened; fingernails or lips turning blue or purple; or respiratory arrest.
+If an opioid overdose is suspected, try to stimulate the person by calling their name or vigorously grinding one’s knuckles into their sternum.
+Obtain Emergency Assistance:
+If the person does not respond, call 911 or obtain emergency assistance.
+Provide Rescue Breathing, Chest Compressions, and Oxygen as Needed:
+Provide rescue breathing if the person is not breathing on their own. A barrier device is recommended to reduce the risk of disease transmission. Rescue breathing for adults involves the following steps:
+Be sure the person’s airway is clear.
+Place one hand on the person’s chin, tilt the head back, and pinch the nose closed.
+Place your mouth over the person’s mouth to make a seal and give two slow breaths.
+Watch for the person’s chest, but not the stomach, to rise.
+Follow up with one breath every five seconds.
+If the individual becomes pulseless, provide cardiopulmonary resuscitation (CPR).
+Administer oxygen as needed.
+Administer the First Dose of Naloxone:
+Naloxone should be administered to anyone suspected of an opioid overdose.
+Research has shown that women, older adults, and those without obvious signs of opioid use disorder are undertreated with naloxone and, as a result, have a higher death rate. Therefore, naloxone should be considered for women and the elderly who are found unresponsive.
+Naloxone can be used in life-threatening opioid overdose circumstances in pregnant women.
+Naloxone can be given intranasally, intramuscularly, subcutaneously, or intravenously. The nasal spray is a prefilled device that requires no assembly and delivers a single dose into one nostril. An auto-injector is injected into the outer thigh to deliver naloxone intramuscularly or subcutaneously.
+All naloxone products are effective in reversing opioid overdose, including fentanyl-involved opioid overdoses, although overdoses involving potent or large quantities of opioids may require additional doses of naloxone.
+Withdrawal triggered by naloxone can feel unpleasant; some people may awaken confused, agitated, or aggressive. Provide safety, reassurance, and explain what is happening.
+Administer a Second Dose of Naloxone if the Person Does Not Respond:
+If the person overdosing does not respond within 2 to 3 minutes after administering a dose of naloxone, administer a second dose of naloxone.
+People who have taken long-acting or potent opioids, such as fentanyl, may require additional intravenous bolus doses or an infusion of naloxone.
+The duration of effect of naloxone depends on dose, route of administration, and overdose symptoms. It is shorter than the effects of some opioids, so a second dose may be required.
+Monitor the Person’s Response:
+Most people respond to naloxone by returning to spontaneous breathing within two to three minutes. Continue resuscitation while waiting for the naloxone to take effect.
+The goal of naloxone therapy is to restore adequate spontaneous breathing but not necessarily achieve complete arousal.
+The individual should be monitored for recurrence of signs and symptoms of opioid toxicity for at least four hours from the last dose of naloxone. People who have overdosed on long-acting opioids like fentanyl patches require prolonged monitoring.
+Because naloxone has a relatively short duration of effect, overdose symptoms may return. Therefore, it is essential to get the person to an emergency department or other source of medical care as quickly as possible, even if the person revives after the initial dose of naloxone and seems to feel better.
+Substance Use Disorder Among Nurses and Nursing Students
+It is important to understand that substance use disorder is a neurobiological illness that can happen to anyone, including nurses and nursing students. The American Nursing Association released the following statements in 2016 :
+Health care facilities should provide education to nurses and other employees regarding alcohol and other drug use and establish policies, procedures, and practices to promote safe, supportive, drug-free workplaces.
+Health care facilities and schools of nursing should adopt alternative-to-discipline approaches to treating nurses and nursing students with substance use disorders, with stated goals of retention, rehabilitation, and reentry into safe, professional practice.
+Nurses and nursing students should be aware of the risks associated with substance use, impaired practice, and drug diversion and have the responsibility and means to report suspected or actual concerns.
+Read the American Nurses Association (ANA) statement on Substance Use Among Nurses and Nursing Students.
+Read the NCSBN brochure on Substance Use Disorder in Nursing. Many states offer assistance to nurses with substance use disorders to maintain their nursing license and employment status. See Wisconsin’s Professional Assistance Procedure (PAP) or New York’s Statewide Peer Assistance for Nurses program.
+Read more details about substance misuse disorder in the “Legal/Ethical” chapter in Open RN Nursing Pharmacology, 2e.
+Pasero, C., & MacCaffery, M. (2010). Pain assessment and pharmacological management (1st ed.). Mosby. ↵
+International Association for the Study of Pain. (2017). IASP terminology. https://www.iasp-pain.org/Education/Content.aspx?ItemNumber=1698 ↵
+LibreTexts. (2024). Anatomy and physiology (boundless). LibreTexts: Medicine. https://med.libretexts.org/Bookshelves/Anatomy_and_Physiology/Anatomy_and_Physiology_(Boundless) ↵
+Murnion, B. P. (2018). Neuropathic pain: Current definition and review of drug treatment. Australian Prescriber, 41(3), 60–63. https://doi.org/10.18773/austprescr.2018.022 ↵
+“1506_Referred_Pain_Chart.jpg” by OpenStax is licensed under CC BY 3.0. Access for free at https://cnx.org/contents/C650g-ah@2/Autonomic-Reflexes-and-Homeostasis ↵
+Pain Management Best Practices Inter-Agency Task Force. (2019, May 9). Pain management best practices. U.S. Department of Health and Human Services. https://www.hhs.gov/sites/default/files/pmtf-final-report-2019-05-23.pdf ↵
+Cleveland Clinic. (2020). Acute v. chronic pain. https://my.clevelandclinic.org/health/articles/12051-acute-vs-chronic-pain ↵
+Pain Management Best Practices Inter-Agency Task Force. (2019). Pain management best practices. U.S. Department of Health and Human Services. https://www.hhs.gov/sites/default/files/pmtf-final-report-2019-05-23.pdf ↵
+“Lower_back_pain.jpg” by Injurymap is licensed under CC BY 4.0 ↵
+American Association of Colleges of Nursing. (n.d.). End-of-Life-Care (ELNEC). https://www.aacnnursing.org/ELNEC ↵
+American Association of Colleges of Nursing. (n.d.). End-of-Life-Care (ELNEC). https://www.aacnnursing.org/ELNEC ↵
+The Joint Commission. (2017). R3 report | Requirements, rationale, reference. https://www.jointcommission.org/-/media/tjc/documents/resources/patient-safety-topics/sentinel-event/r3_report_issue_11_pain_assessment_8_25_17_final.pdf?db=web&hash=938C24A464A5B8B5646C8E297C8936C1 ↵
+The Joint Commission. (2017). R3 report | Requirements, rationale, reference. ↵
+ANA Center for Ethics and Human Rights. (2018). Position statement: The ethical responsibility to manage pain and the suffering it causes. American Nurses Association. https://www.nursingworld.org/~495e9b/globalassets/docs/ana/ethics/theethicalresponsibilitytomanagepainandthesufferingitcauses2018.pdf ↵
+Pain Management Best Practices Inter-Agency Task Force. (2019, May 9). Pain management best practices. U.S. Department of Health and Human Services. https://www.hhs.gov/sites/default/files/pmtf-final-report-2019-05-23.pdf ↵
+Cleveland Clinic. (2020). Acute v. chronic pain. https://my.clevelandclinic.org/health/articles/12051-acute-vs-chronic-pain ↵
+Dowell, D., Ragan, K. R., Jones, C. M., Baldwin, G. T., & Chou, R. (2022). CDC clinical practice guideline for prescribing opioids for pain — United States, 2022. MMWR Recommendation Report. http://doi.org/10.15585/mmwr.rr7103a1 ↵
+Pain Management Best Practices Inter-Agency Task Force. (2019). Pain management best practices. U.S. Department of Health and Human Services. https://www.hhs.gov/sites/default/files/pmtf-final-report-2019-05-23.pdf ↵
+American Psychiatric Association. (2022). Desk reference to the diagnostic criteria from DSM-5-TR. ↵
+American Psychiatric Association. (2022). Desk reference to the diagnostic criteria from DSM-5-TR. ↵
+Pain Management Best Practices Inter-Agency Task Force. (2019). Pain management best practices. U.S. Department of Health and Human Services. https://www.hhs.gov/sites/default/files/pmtf-final-report-2019-05-23.pdf ↵
+American Psychiatric Association. (2022). Desk reference to the diagnostic criteria from DSM-5-TR. ↵
+Pain Management Best Practices Inter-Agency Task Force. (2019). Pain management best practices. U.S. Department of Health and Human Services. https://www.hhs.gov/sites/default/files/pmtf-final-report-2019-05-23.pdf ↵
+American Psychiatric Association. (2022). Desk reference to the diagnostic criteria from DSM-5-TR. ↵
+Substance Abuse and Mental Health Services Administration. (2018). SAMHSA opioid overdose prevention toolkit: Five essential steps for first responders [Manual]. U.S. Department of Health & Human Services. https://store.samhsa.gov/sites/default/files/d7/priv/five-essential-steps-for-first-responders.pdf ↵
+American Nurses Association. (2016). Substance use among nurses and nursing students. https://www.nursingworld.org/practice-policy/nursing-excellence/official-position-statements/id/substance-use-among-nurses-and-nursing-students ↵
+definition
+
+11.3 Pain Assessment Methods
+Asking a client to rate the severity of their pain on a scale from 0 to 10, with “0” being no pain and “10” being the worst pain imaginable is a common question used to screen clients for pain. However, according to The Joint Commission requirements described earlier, this question can be used to initially screen a client for pain, but a thorough pain assessment is required. Additionally, the client’s comfort-function goal must be assessed and documented. This individualized comfort-function goal provides the basis for the client’s pain treatment plan and is used to evaluate the effectiveness of interventions and make changes as needed.
+PQRSTU, OLDCARTES, and COLDSPA
+The “PQRSTU,” “OLDCARTS,” or “COLDSPA” mnemonics are helpful in remembering a standardized set of questions used to gather additional data about a client’s pain. For example, PQRSTU stands for Provocative/Palliative; Quality/Quantity, Region/Radiation, Severity, Timing/Treatment, and Understanding. See Figure 11.4 for an illustration of the “PQRSTU” assessment framework.
+Figure 11.4 PQRSTU Assessment
+While interviewing a client about pain, use open-ended questions to allow the client to elaborate on information that further improves your understanding of their concerns. If their answers do not seem to align, validate data with follow-up questions using the PQRSTU framework to clarify information. For example, if a client states that “the pain is tolerable” but also rates the pain as a “7” on a 0-10 pain scale, these answers do not align, so the data must be validated with follow-up questions using the PQRSTU framework. Upon further questioning the client explains they rate the pain as a “7” in their knee when participating in physical therapy exercises, but currently feels the pain is tolerable while resting in bed. This additional information assists the nurse to customize interventions for effective pain management with reduced potential for overmedication with associated side effects. Sample questions when using the PQRSTU assessment are included in Table 11.3a.
+PQRSTU
+Questions Related to Pain
+Provocation/Palliation
+What makes your pain worse?
+What makes your pain feel better?
+Quality
+What does the pain feel like?
+Note: You can provide suggestions for pain characteristics such as “aching,” “stabbing,” or “burning.”
+Region
+Where exactly do you feel the pain?
+Does it move around or radiate elsewhere?
+Note: Instruct the client to point to the pain location.
+Severity
+How would you rate your pain on a scale of 0 to 10, with “0” being no pain and “10” being the worst pain you’ve ever experienced?
+Timing/Treatment
+When did the pain start?
+What were you doing when the pain started?
+Is the pain constant or does it come and go?
+If the pain is intermittent, when does it occur?
+How long does the pain last?
+Have you taken anything to help relieve the pain?
+Understanding
+What do you think is causing the pain?
+An alternative mnemonic to use when assessing pain is “OLDCARTS.”
+Onset: When did the pain start? How long does it last?
+Location: Where is the pain?
+Duration: How long has the pain been going on? How long does an episode last?
+Characteristics: What does the pain feel like? Can the pain be described in terms such as stabbing, gnawing, sharp, dull, aching, piercing, or crushing?
+Aggravating factors: What brings on the pain? What makes the pain worse? Are there triggers such as movement, body position, activity, eating, or the environment?
+Radiating: Does the pain travel to another area or the body, or does it stay in one place?
+Treatment: What has been done to make the pain better and has it been helpful? Examples include medication, position change, rest, and application of hot or cold.
+Severity: Rate your pain from 0 to 10.
+A third mnemonic used is “COLDSPA.”
+C: Character
+O: Onset
+L: Location
+D: Duration
+S: Severity
+P: Pattern
+A: Associated Factors
+No matter which mnemonic is used to guide the assessment questions, the goal is to obtain comprehensive assessment data that allows the nurse to create a customized nursing care plan that effectively addresses the client’s need for comfort.
+Pain Scales
+In addition to using the PQRSTU or OLDCARTS methods of investigating a client’s chief complaint, there are several standardized pain rating scales used in nursing practice.
+FACES Scale
+The FACES scale is a visual tool for assessing pain with children and others who cannot quantify the severity of their pain on a scale of 0 to 10. See Figure 11.5 for the FACES Pain Rating Scale. To use this scale, use the following evidence-based instructions. Explain to the client that each face represents a person who has no pain (hurt), some pain, or a lot of pain. “Face 0 doesn’t hurt at all. Face 2 hurts just a little. Face 4 hurts a little more. Face 6 hurts even more. Face 8 hurts a whole lot. Face 10 hurts as much as you can imagine, although you don’t have to be crying to have this worst pain.” Ask the person to choose the face that best represents the pain they are feeling. Note that the client reports which face best represents how they are feeling and the nurse is not selecting a face based on how the client appears to feel.
+Figure 11.5 The Wong-Baker FACES Pain Rating Scale. Used with permission from http://www.WongBakerFACES.org.
+FLACC Scale
+The FLACC scale (i.e., the Face, Legs, Activity, Cry, Consolability scale) is a measurement used to assess pain for children between the ages of 2 months and 7 years or individuals who are unable to verbally communicate their pain. The scale has five criteria, which are each assigned a score of 0, 1, or 2. The scale is scored in a range of 0–10 with “0” representing no pain. See Table 11.3b for the FLACC scale.
+Table 11.3b The FLACC Scale
+Criteria
+Score 0
+Score 1
+Score 2
+Face
+No particular expression or smile
+Occasional grimace or frown, withdrawn, or uninterested
+Frequent to constant quivering chin; clenched jaw
+Legs
+Normal position or relaxed
+Uneasy, restless, or tense
+Kicking or legs drawn up
+Activity
+Lying quietly, normal position, and moves easily
+Squirming, shifting, back and forth, or tense
+Arched, rigid, or jerking
+Cry
+No cry (awake or asleep)
+Moans or whimpers or occasional complaint
+Crying steadily, screams or sobs, or frequent complaints
+Consolability
+Content and relaxed
+Reassured by occasional touching, hugging, or being talked to; distractible
+Difficult to console or comfort
+COMFORT Behavioral Scale
+The COMFORT Behavioral Scale is a behavioral-observation tool validated for use in children of all ages who are receiving mechanical ventilation. Eight physiological and behavioral indicators are scored on a scale of 1 to 5 to assess pain and sedation.
+View the COMFORT Behavioral Scale.
+Pain Assessment in Advanced Dementia (PAINAD) Scale
+The Pain Assessment in Advanced Dementia (PAINAD) Scale is a simple, valid, and reliable instrument for assessing pain in noncommunicative clients with advanced dementia. See Table 11.3c for the items included on the scale. Each item is scored from 0-2, When totaled, the score can range from 0 (no pain) to 10 (severe pain).
+Table 11.3c The PAINAD Scale
+Item
+0
+1
+2
+Breathing independent of vocalization
+Normal
+Occasional labored breathing. Short period of hyperventilation.
+Noisy labored breathing. Long period of hyperventilation. Cheyne-Stokes respirations.
+Negative vocalization
+None
+Occasional moan or groan. Low-level speech with a negative or disapproving quality.
+Repeated troubled calling out. Loud moaning or groaning. Crying.
+Facial Expression
+Smiling or inexpressive
+Sad. Frightened. Frown.
+Facial grimacing.
+Body language
+Relaxed
+Tense. Distressed pacing. Fidgeting.
+Rigid. Fists clenched. Knees pulled up. Pulling or pushing away. Striking out.
+Consolability
+No need to console
+Distracted or reassured by voice or touch.
+Unable to console, distract, or reassure.
+Download the full PAINAD scale from The Hartford Institute for Geriatric Nursing.
+Comfort-Function Goals
+Comfort-function goals encourage the client to establish their level of comfort needed to achieve functional goals based on their current health status. For example, one client may be comfortable ambulating after surgery and their pain level is 3 on a 0-to-10 pain intensity rating scale, whereas another client desires a pain level of 0 on a 0-to-10 scale in order to feel comfortable ambulating. To properly establish a client’s comfort-function goal, nurses must first describe the essential activities of recovery and explain the link between pain control and positive outcomes.
+If a client’s pain score exceeds their comfort-function goal, nurses must implement an intervention and follow up within 1 hour to ensure that the intervention was successful. Using the previous example, if a client had established a comfort-function goal of 3 to ambulate and the current pain rating was 6, the nurse would provide appropriate interventions, such as medication, application of cold packs, or relaxation measures. The nurse would then perform a follow-up assessment within an hour to evaluate the effectiveness of these interventions. Documentation of the comfort-function goal, pain level, interventions, and follow-up are key to effective, individualized pain management.
+Lapum, J., St-Amant, O., Hughes, M., Petrie, P., Morrell, S., & Mistry, S. (2019). The complete subjective health assessment. Open Libary. https://ecampusontario.pressbooks.pub/healthassessment/ ↵
+Wong-Baker FACES Foundation. (2016). Wong-Baker FACES pain rating scale. https://wongbakerfaces.org/. Used with permission. ↵
+Wong-Baker FACES Foundation. (2016). Wong-Baker FACES pain rating scale. https://wongbakerfaces.org/. Used with permission. ↵
+Merkel, S. I., Voepel-Lewis, T., Shayevitz, J. R., & Malviya, S. (1997). The FLACC: A behavioral scale for scoring postoperative pain in young children. Pediatric Nursing, 23(3). https://pubmed.ncbi.nlm.nih.gov/9220806/ ↵
+Merkel, S. I., Voepel-Lewis, T., Shayevitz, J. R., & Malviya, S. (1997). The FLACC: A behavioral scale for scoring postoperative pain in young children. Pediatric Nursing, 23(3). https://pubmed.ncbi.nlm.nih.gov/9220806/ ↵
+Freund, D., & Bolick, B. (2019). CE: Assessing a Child's Pain. American Journal of Nursing. 119(5), 34. https://journals.lww.com/ajnonline/Fulltext/2019/05000/CE__Assessing_a_Child_s_Pain.25.aspx ↵
+Warden, V., Hurley, A., & Volicer, L. (2003). Development and psychometric evaluation of the pain assessment in advanced dementia (PAINAD) scale. Journal of the American Medical Directors Association, 4(1), 9-15. https://doi.org/10.1097/01.JAM.0000043422.31640.F7 ↵
+The Hartford Institute for Geriatric Nursing, New York University, Rory Meyers School of Nursing. (n.d.). Assessment tools for best practices of care for older adults. https://hign.org/consultgeri-resources/try-this-series ↵
+Boswell, C., & Hall, M. (2017). Engaging the patient through comfort-function levels. Nursing 2017, 47 (10), 68-69. https://www.nursingcenter.com/journalarticle?Article_ID=4345712&Journal_ID=54016&Issue_ID=4345459 ↵
+Boswell, C., & Hall, M. (2017). Engaging the patient through comfort-function levels. Nursing 2017, 47 (10), 68-69. https://www.nursingcenter.com/journalarticle?Article_ID=4345712&Journal_ID=54016&Issue_ID=4345459 ↵
+
+11.4 Pain Management
+Pain management requires collaboration with the interdisciplinary team, including nurses, health care providers, pharmacists, and sometimes pain specialists. There are many different types of pain medications (called analgesics) that can be administered by various routes. Analgesics are classified as nonopioids, opioids, or adjuvants. An adjuvant is a medication that has been found in clinical practice to have either an independent analgesic effect or additive analgesic properties when administered with opioids. Examples of adjuvant medications include antidepressants (e.g., amitriptyline) and anti-seizure medications (e.g., gabapentin).
+A general rule of thumb when administering analgesics is to use the lowest dose of medication, with fewest potential side effects and the least invasive route of administration, to effectively treat the level of pain as reported by the client. The WHO ladder was originally developed by the World Health Organization for selecting analgesics for clients with cancer pain, but it can be broadened to illustrate this rule of thumb for managing pain appropriately for all clients. See Figure 11.6 for an image of the WHO ladder.
+For example, if a client reports a pain level of “2,” then a nurse typically starts at the lowest rung of the WHO ladder and administers a prescribed nonopioid via the oral route. If the nonopioid is not effective, then a prescribed adjuvant medication may be administered, or the nurse may decide to step up a rung on the ladder and administer a prescribed oral opioid for mild to moderate pain. On the other hand, if a client reports severe pain, the nurse may start at the top rung of the ladder and administer a prescribed opioid for moderate to severe pain via the intravenous route for rapid relief.
+Figure 11.6 The WHO Pain Ladder
+Nonopioid Analgesics
+Nonopioid analgesics include acetaminophen and NSAIDs.
+Acetaminophen
+Acetaminophen (Tylenol) is used to treat mild pain and fever but does not have anti-inflammatory properties. Acetaminophen is safe for all ages and can be administered using various routes, such as orally, rectally, and intravenously. Many over-the-counter (OTC) medications contain acetaminophen, along with other medications. See Figure 11.7 for an image of acetaminophen (Tylenol) and acetaminophen and diphenhydramine (Tylenol PM).
+A potential severe side effect of acetaminophen is hepatotoxicity (severe liver damage). Severe liver damage may occur if an adult client takes more than 4,000 mg of acetaminophen in 24 hours (or 3,200 mg for older adults or 2,000 mg for chronic alcoholics) or consumes three or more alcoholic drinks every day while using acetaminophen.
+Because some medications are combined with acetaminophen or are prescribed “as needed,” the nurse must calculate the cumulative dose of acetaminophen over the previous 24-hour period before administering an additional dose. For example, Percocet 5/325 contains a combination of oxycodone 5 mg and acetaminophen 325 mg and may be prescribed as “1-2 tablets every 4-6 hours as needed for pain.” If two tablets are truly administered every four hours over a 24-hour period, this would add up to 3,900 mg of acetaminophen, exceeding the recommended guidelines for a geriatric client, with the potential for causing liver damage.
+Figure 11.7 Acetaminophen (Tylenol) and Acetaminophen with Benadryl (Tylenol PM)
+NSAIDs
+Nonsteroidal anti-inflammatory drugs (NSAIDs) provide mild to moderate pain relief and also reduce fever and inflammation by inhibiting the production of prostaglandins. They can also be used as an adjuvant with opioids for severe pain. Examples of NSAIDs include ibuprofen, naproxen, and ketorolac. All NSAIDs, except aspirin, increase the risk of heart attack, heart failure, and stroke, with the risk being higher if the client takes more than is directed or takes it for longer than directed. Common side effects include dyspepsia, nausea, and vomiting, so it is helpful to administer this medication with food. Older adults and those taking NSAIDs concurrently with other drugs, such as warfarin or corticosteroids, are at elevated risk for gastrointestinal bleeding. Renal failure can also occur with NSAIDs.
+Ibuprofen is an over-the-counter medication that is safe for infants six months or older. It is typically prescribed every six to eight hours.
+Naproxen is an over-the-counter medication that is longer acting than ibuprofen and is typically prescribed every 8 to 12 hours with a full glass of water.
+Ketorolac is a prescribed medication commonly used to treat “breakthrough” pain that occurs during the treatment of severe acute pain already being treated with opioids. It is indicated for the short-term management (up to five days in adults) of moderate to severe acute pain that requires analgesia at the opioid level. Ketorolac is safe for adults, but the dosage should be reduced for clients ages 65 and over and renal function must be closely monitored.
+Read about nonopioid medications in the “Analgesic and Musculoskeletal” chapter in Open RN Nursing Pharmacology, 2e.
+View a supplementary video on “How Do Pain Relievers Work?“
+Opioid Analgesics
+Opioids are used to treat moderate to severe pain and work by blocking the release of neurotransmitters involved in the processing of pain. Different opioids have different levels of analgesia, with codeine having the lowest strength and hydromorphone and fentanyl having the highest strength. Morphine is commonly used to treat severe cancer pain and end-of-life pain because there is no ceiling effect, meaning the higher the dose, the higher the level of analgesia, but also the higher level of sedation and respiratory depression. See Table 11.4a for a summary of common opioids. As always, check a drug reference for current dosage ranges before administering medications.
+Table 11.4a Common Opioid Analgesics
+Generic Name
+Trade Name(s)
+Route
+Adult Dosages
+Codeine with acetaminophen
+Tylenol #3
+PO
+30 mg/300 mg
+Hydrocodone with acetaminophen
+Lortab, Norco, Vicodin
+PO
+5 mg/300 mg or 325 mg.
+10 mg/320 mg or 325 mg.
+5 mg/500 mg.
+Tramadol
+Ultram
+PO
+Immediate release: 50 mg.
+Extended release: 100 mg, 200 mg, 300 mg.
+Oxycodone, immediate release and extended release
+OR
+Oxycodone with acetaminophen
+Oxycodone IR & OxyContin ER.
+Percocet & Roxicet.
+PO.
+PO.
+5–10 mg.
+5 mg/325 mg.
+Fentanyl
+Duragesic, Sublimaze
+Transdermal.
+IM.
+IV.
+12–100 mcg/hr.
+0.5–1 mcg/kg.
+0.5–1 mcg/kg.
+Hydromorphone
+Dilaudid
+PO.
+Rectal.
+SubQ, IM, & IV.
+4–8 mg.
+3 mg.
+1.5 mg, may be increased.
+Morphine
+Duramorph, MS Contin, Oramorph SR, & Roxanol
+PO & Rectal.
+SubQ, IM, & IV.
+30 mg, may be increased.
+4–10 mg, may be increased.
+Tramadol is available in immediate release and extended-release forms. Immediate release is prescribed for moderate to moderately severe pain when other pain medications cannot be tolerated or are not effective. Immediate-release tramadol is not intended for use as an “as needed” medication but rather for pain episodes lasting less than a week. The extended-release forms are used to treat chronic ongoing pain.
+Morphine is administered via various routes of administration, including orally, rectally, subcutaneously, intramuscularly, intravenously, and transdermally. See Figure 11.8 for an image of a vial of morphine for injection or intravenous use.
+Figure 11.8 Morphine
+Some types of opioids can be administered through the skin, such as the fentanyl transdermal patch. See Figure 11.9 for an image of a fentanyl transdermal patch.
+Figure 11.9 Fentanyl Patch
+Read more information about opioid medications in the “Analgesic and Musculoskeletal” chapter in the Open RN Nursing Pharmacology, 2e textbook.
+Alternative Routes of Administration of Opioids
+Analgesic medications can be administered via several routes, including orally, rectally, subcutaneously, and intravenously. Intramuscular routes are typically avoided. Other routes of administration include patient-controlled analgesia (PCA), intrathecally, and by epidural.
+Patient-Controlled Analgesia
+Patient-controlled analgesia (PCA)
+is a method of pain management that allows hospitalized clients with severe pain to safely self-administer opioid medications using a programmed pump according to their level of discomfort. See Figure 11.10 for an image of a PCA pump. A computerized pump contains a syringe of pain medication and is connected directly to a client’s intravenous (IV) line. Pain medication includes morphine, hydromorphone, and fentanyl. Doses of medication can be self-administered as needed by the client by pressing a button. However, the pump is programmed to only allow administration of medication every set number of minutes with a maximum dose of medication every hour. These pump settings, and the design of the system requiring the client to be alert enough to press the button, are safety measures to prevent overmedication that can cause sedation and respiratory depression. For this reason, no one but the client should press the button for administration of medication (not even the nurse.) Nurses closely monitor clients receiving PCA medications for respiratory depression and oversedation, including their respiratory rate, SpO2, sedation level, and mental status.
+In other cases, the PCA pump delivers a small, continuous flow of pain medication intravenously with the option of the client self-delivering additional medication as needed, according to the limits set on the pump.
+To document the amount and frequency of pain medication the client is receiving, as well as to prevent drug diversion, the settings on the pump are checked at the end of every shift as part of the bedside report. The incoming and outgoing nurses double-check and document the pump settings, the amount of medication administered during the previous shift, and the amount of medication left in the syringe. The PCA pump is locked with a special key to keep the medication secure.
+Figure 11.10 PCA Pump. Used under Fair Use.
+Intrathecal Pump
+Another type of pump used to deliver pain medication is the intrathecal pump. This pump is surgically implanted under the skin and delivers small quantities of pain medication, such as morphine, directly into the spinal fluid. It is used to treat pain and muscle spasticity when other methods have not effectively treated the pain. It is typically used for clients with severe chronic pain, such as cancer pain, back pain, or nerve pain. However, the FDA urges cautious use because it has received numerous Medical Device Reports (MDRs) describing adverse events with implanted pumps. These reports describe pump failures, dosing errors, and other potential safety issues. Client symptoms described in these reports include pain, opioid withdrawal, fever, vomiting, muscle spasm, cognitive changes, weakness, and cardiac and respiratory distress.
+Epidural
+A third route of alternative administration of pain medication is epidural anesthesia. See Figure 11.11 for an image of an epidural anesthesia. Morphine is administered into the spinal fluid via an epidural catheter for severe pain management associated with surgical procedures or during labor and delivery. It is also used to treat chronic pain that has not responded to other treatments. Epidural administration of five mg of morphine provides adequate postoperative analgesia for up to 24 hours.
+Figure 11.11 Epidural
+Adverse Effects of Opioids
+Respiratory Depression
+The most serious potential adverse effect of opioids is respiratory depression. Respiratory depression is usually preceded by sedation. The nurse must carefully monitor clients receiving opioids for oversedation, which results in decreased respiratory rate. Clients at greatest risk are those who have never received an opioid and are receiving their first dose, those receiving an increased dose of opioids, or those taking benzodiazepines or other sedatives concurrently with opioids. If a client develops opioid-induced respiratory depression, the opioid is reversed with naloxone that immediately reverses all analgesic effect. Nurses should be aware that if a client is physically dependent on opioids, the administration of naloxone will cause immediate and severe withdrawal symptoms such as nausea, vomiting, diarrhea, and tremors. See Figure 11.12 for an image of a naloxone rescue kit to treat respiratory depression caused by opioids.
+Figure 11.12 Naloxone Rescue Kit
+Opioids can cause several other common adverse effects, such as constipation, nausea and vomiting, urinary retention, and pruritus (itching).
+Constipation
+Opioids slow peristalsis and cause increased reabsorption of fluid into the large intestine, resulting in slow-moving, hard stools. Nurses play an important role in preventing constipation for all clients taking opioids. A bowel management program should be initiated with the first dose and continued until the opioid is discontinued. A stool softener (such as docusate) is typically prescribed initially as part of the bowel management program. If needed, a stimulant laxative, such as sennoside (Senna), bisacodyl, or Milk of Magnesia may be added to maintain a normal bowel pattern. However, stimulants should not be taken long-term because they can be addictive. Clients taking opioids should be encouraged to increase fluid and fiber intake and ambulate, as appropriate.
+Nausea and Vomiting
+Nausea and vomiting can occur with opioid administration due to several factors, such as the slowing of gastrointestinal motility, constipation, or stimulation of the vestibular system. Tolerance will develop to these adverse effects within a few days. Treatment includes antiemetics, such as compazine or ondansetron.
+Urinary Retention
+Urinary retention is common in opioid-naive clients or when opioids are delivered via the spinal route. Urinary catheterization may be required if the client is unable to void. Tolerance to this effect occurs within a few days.
+Pruritus
+Pruritus (itching) may occur, especially when opioids are administered via the spinal route. Antihistamines, such as diphenhydramine (Benadryl), may be used to treat pruritus, but the client should be monitored for potential sedative effects of this medication.
+Adjuvant Medications
+Adjuvants are medications that are not classified as analgesics but have been found to contribute to analgesic effects, especially when used in addition to opioids. Two common examples of adjuvant medications are amitriptyline and gabapentin.
+Amitriptyline
+Amitriptyline is a tricyclic antidepressant that is also believed to be effective in treating neuropathic pain, such as diabetic neuropathy, postherpetic neuralgia, or post‐stroke pain. The mechanism of action of amitriptyline in the treatment of neuropathic pain remains uncertain, although it is known to inhibit both serotonin and noradrenaline reuptake. It is usually administered at bedtime in an attempt to reduce any sedative effects during the day.
+Gabapentin
+Gabapentin is an anticonvulsant that is also effective in treating neuropathic pain and restless leg syndrome. Clients taking gabapentin should be warned that their mental health may change in unexpected ways or they may become suicidal. Nurses should implement fall precautions for clients taking gabapentin because it can cause sleepiness, weakness, and unsteadiness.
+Nonpharmacological Interventions
+Nonpharmacological interventions can be used with or without pharmacologic interventions and often provide tremendous benefits to the client. A variety of techniques can be selected by the client that best fit their needs and goals. Nonpharmacological interventions should be documented in the plan of care and their effectiveness evaluated in terms of their ability to meet the client’s goals for pain relief. Table 11.4b provides examples of several types of nonpharmacological interventions.
+Table 11.4b Nonpharmacological Interventions
+Intervention
+Examples
+Distraction
+Describing photos, telling jokes, and playing games.
+Relaxation
+Rhythmic breathing, meditation, prayer, imagery, and music therapy.
+Basic Comfort Measures
+Proper positioning and therapeutic environment.
+Avoiding sudden movement.
+Reducing pain stimuli within the environment.
+Cutaneous Stimulation
+Acupuncture and acupressure.
+Massage: 3–5 minutes offers benefits.
+Transcutaneous Electrical Nerve Stimulation (TENS) unit: A specialized stimulator placed over the area of pain.
+Application of Heat or Cold
+Heat: Examples include heating pads and warm compresses. Vasodilation increases blood flow; duration should be 5–20 minutes based on client tolerance. Do not apply over medication patches or implanted devices.
+Cold: Examples include cool baths and moist, cool compresses. Vasoconstriction reduces blood flow; cold numbs nerve sensations; duration should be no longer than 20 minutes. Do not apply over medication patches or implanted devices.
+Mind-Body Therapies
+Biofeedback.
+Meditation and mindfulness.
+Aromatherapy
+Lotions and moisturizing cream.
+Avoiding strong smells.
+Exercise
+Physical activity.
+Tai chi.
+Yoga.
+Therapy
+Physical therapy.
+Occupational therapy.
+See Figure 11.13 for images of various nonpharmacological interventions.
+Figure 11.13 Nonpharmacological Interventions
+Clients may also consider using complementary health approaches to manage chronic pain. Complementary approaches include acupuncture, massage therapy, meditation, relaxation techniques, spinal manipulation, Tai Chi, yoga, and dietary supplements. Read more about complementary approaches provided in the following box.
+Read The Joint Commission document on “Non-pharmacologic and non-opioid solutions for pain management.”
+Read more about complementary approaches to treat pain from the National Center for Complementary and Integrative Health.
+Read about pain management for older adults from the University of Iowa.
+World Health Organization. (1996). Cancer pain relief: with a guide to opioid availability (2nd ed.). http://apps.who.int/iris/bitstream/handle/10665/37896/9241544821.pdf;jsessionid=08444506DC35A33288AD7C0DE6D34667?sequence=1 ↵
+“Extra_Strength_Tylenol_and_Tylenol_PM.jpg” by Ragesoss is licensed under CC BY-SA 4.0 ↵
+Dhesi , M., Maldonado, K.A., Patel, P., et al. (2024) Tramadol. StatPearls [Internet]. https://www.ncbi.nlm.nih.gov/books/NBK537060/ ↵
+“Morphine_vial.JPG” by Vaprotan is licensed under CC BY-SA 3.0 ↵
+“Fentanyl_Transdermal_System_50_mcg_Patch.jpg” by User:Crohnie is licensed under CC BY-SA 3.0 ↵
+"alaris-pca-module-IF-0518-0034" by unknown author used on the basis of Fair Use. Access original image at https://www.bd.com/en-us/products-and-solutions/products/product-families/bd-alaris-pca-module. ↵
+U.S. Food & Drug Administration. (2018). Use caution with implanted pumps for intrathecal administration of medicines for pain management: FDA safety communication. https://www.fda.gov/medical-devices/safety-communications/use-caution-implanted-pumps-intrathecal-administration-medicines-pain-management-fda-safety ↵
+“Epidural_Anesthesia.png” by BruceBlaus is licensed under CC BY-SA 4.0 ↵
+Martinez-Velez, A. (2023). Epidural morphine. StatPearls [Internet]. https://www.ncbi.nlm.nih.gov/books/NBK541073/ ↵
+American Association of Colleges of Nursing. (n.d.). End-of-life-care (ELNEC). https://www.aacnnursing.org/ELNEC ↵
+“Opiod_Rescue_Kit_3.jpg” by Intropin (Mark Oniffrey) is licensed under CC BY_SA 4.0 ↵
+American Association of Colleges of Nursing. (n.d.). End-of-life-care (ELNEC). https://www.aacnnursing.org/ELNEC ↵
+American Association of Colleges of Nursing. (n.d.). End-of-life-care (ELNEC). https://www.aacnnursing.org/ELNEC ↵
+American Association of Colleges of Nursing. (n.d.). End-of-life-care (ELNEC). https://www.aacnnursing.org/ELNEC ↵
+American Association of Colleges of Nursing. (n.d.). End-of-life-care (ELNEC). https://www.aacnnursing.org/ELNEC ↵
+Moore, R. A., Derry, S., Aldington, D., Cole, P., & Wiffen, P. J. (2015). Amitriptyline for neuropathic pain in adults. The Cochrane Database of Systematic Reviews, 2015(7). https://doi.org/10.1002/14651858.CD008242.pub3 ↵
+U.S. National Library of Medicine. (2020). Gabapentin: Medlineplus drug information. MedlinePlus. https://medlineplus.gov/druginfo/meds/a694007.html ↵
+“Massage-hand-4.jpg” by Lubyanka is licensed under CC BY-SA 3.0, “Biofeedback_training_program_for_post-traumatic_stress_symptoms.jpg” by Army Medicine is licensed under CC BY 2.0, “Tai_Chi1.jpg” by Craig Nagy is licensed under CC BY-SA 2.0, “Musicoterapia_lmidiman_flickr.jpg” by Midiman is licensed under CC BY 2.0, “Cold_Hot_Pack.jpg” by Mamun2a is licensed under CC BY-SA 4.0, “pexels-photo-1188511.jpeg” by Mareefe is licensed under CC0, “STOTT-PILATES-reformer-class.jpg” by MHandF is licensed under CC BY-SA 3.0, “prayer-2544994_960_720.jpg” by Himsan is licensed under CC0, and “gaming-2259191_960_720.jpg” by JESHOOTS-com is licensed under CC0 ↵
+definition
+
+11.5 Applying the Nursing Process
+Assessment
+Nurses play an essential role in performing comprehensive pain assessments. Assessments include asking questions about the presence of pain, as well as observing for nonverbal indicators of pain, such as grimacing, moaning, and touching the painful area. It is especially important to observe for nonverbal indicators of pain in clients unable to self-report their pain, such as infants, children, clients who have a cognitive disorder, client at end of life, non-English-speaking clients, or clients who tend to be stoic due to cultural beliefs. See Figure 11.14 for an image of a simulated client who is expressing pain nonverbally.
+Figure 11.14 Nonverbal Expression of Pain
+Recall that pain is defined as whatever the person experiencing it says it is. Subjective assessment includes asking questions regarding the severity rating, as well as obtaining comprehensive information by using standard measures like PQRSTU or OLDCARTES for assessing a chief complaint. For some clients who are unable to quantify the severity of their pain, visual scales like the FACES scale are the best way to perform subjective assessment regarding the severity of pain. Review the PQRSTU, OLDCARTES, FACES, and other pain assessment scales in the “Pain Assessment Methods” section of this chapter.
+Objective data includes observations of nonverbal indications of pain, such as restlessness, facial grimacing and wincing, moaning, and rubbing or guarding painful areas. For clients who cannot verbalize their pain, using a scale like the FLACC, COMFORT, or PAINAD is helpful to standardize observations across different staff members. Keep in mind that clients experiencing acute pain will also likely have vital signs changes, such as increased blood pressure, increased heart rate, and increased respiratory rate.
+It is important to assess the impact of pain on a client’s daily functioning. This can be accomplished by asking what effect the pain has on their ability to bathe, dress, prepare food, eat, walk, and complete other daily activities. Assessing the impact of pain on daily functioning is a new standard of care that assists the interdisciplinary team in tailoring treatment goals and interventions that are customized to the client’s situation. For example, for some clients, chronic pain affects their ability to be employed, so effective pain management is vital so they can return to work. For other clients receiving palliative care, the ability to sit up and eat a meal with loved ones without pain is an important goal.
+When performing a client assessment, any new complaints of pain or pain that is unresponsive to the current treatment plan should be reported to the health care provider. Instances of sudden, severe pain or chest pain/pressure require immediate notification or contact of emergency services.
+Diagnoses
+Commonly used NANDA-I nursing diagnoses for pain include Acute Pain (duration less than three months) and Chronic Pain. See Table 11.5 for more information regarding these diagnoses. For more information about defining characteristics and related factors for other NANDA-I nursing diagnoses, refer to a current nursing diagnosis resource.
+Table 11.5 Pain NANDA-I Nursing Diagnoses
+NANDA-I Diagnosis
+Definition
+Selected Defining Characteristics
+Acute Pain
+Unpleasant sensory and emotional experience associated with acute or potential tissue damage or described in terms of such damage; sudden or slow onset of any intensity from mild to severe with an anticipated or predictable end, and with a duration of less than three months.
+Appetite change.
+Altered physiological parameters; that is, blood pressure, heart rate, and respiratory rate.
+Diaphoresis.
+Distraction behavior.
+Evidence of pain using standardized pain behavior checklist for those unable to communicate verbally.
+Expressive behavior.
+Facial expression of pain.
+Guarding behavior.
+Hopelessness.
+Narrow focus.
+Positioning to ease pain.
+Protective behavior.
+Proxy report of pain behavior/activity changes.
+Pupil dilation.
+Self-focused.
+Chronic Pain
+Unpleasant sensory and emotional experience associated with actual or potential tissue damage or described in terms of such damage, International Association for the Study of Pain; sudden or slow onset of any intensity from mild to severe, constant or recurring without anticipated or predictable end, and with a duration of greater than three months.
+Altered ability to continue activities.
+Anorexia.
+Evidence of pain using standardized pain behavior checklist for those unable to communicate verbally.
+Facial expression of pain.
+Proxy report of pain behavior/activity changes.
+Reports altered sleep-wake cycle.
+Self-focused.
+Outcome Identification
+An overall goal when providing pain management is, “The client will report that the pain management treatment plan achieves their comfort-function goals.”
+SMART outcomes are customized to the client’s unique situation. An example of a SMART goal is, “The client will notify the nurse promptly for pain intensity level that is greater than their comfort-function goal throughout shift.”
+Planning Interventions
+Several pharmacological and nonpharmacological interventions have been described throughout this chapter. See the following box for a summarized list of interventions for acute pain management.
+Acute Pain Management
+Identify pain intensity during required recovery activities (e.g., coughing and deep breathing, ambulation, transfers to chair, etc.)
+Explore client’s knowledge and beliefs about pain, including cultural influences
+Question client regarding the level of pain that allows a state of comfort and desired function and attempt to keep pain at or lower than their identified level
+Ensure that the client receives prompt analgesic care before the pain becomes severe or before pain-inducing activities
+Administer analgesics around-the-clock as needed the first 24 to 48 hours after surgery, trauma, or injury except if sedation or respiratory status indicates otherwise
+Monitor sedation and respiratory status before administering opioids and at regular intervals when opioids are administered
+Follow agency protocols in selecting analgesia and dosage
+Use a combination of prescribed medications (e.g., opioids, nonopioids, and adjuvants), if pain level is severe
+Select and implement interventions tailored to the client’s risks, benefits, and preferences (e.g., pharmacological and nonpharmacological) to facilitate pain relief
+Cautiously use analgesics that may have adverse effects in older adults
+Administer analgesics using the least invasive route available, avoiding the intramuscular route
+Advocate PCA, intrathecal, and epidural routes of administration when appropriate
+Modify pain control measures on the basis of the client’s response to treatment
+Prevent and/or manage medication side effects
+Notify prescribing provider if pain control measures are unsuccessful
+Provide accurate information to family members or caregivers about the client’s pain experience with the client’s permission
+See the following box for a summarized list of interventions for chronic pain management.
+Chronic Pain Management
+Explore the client’s knowledge and beliefs about pain, including cultural influences
+Determine the pain experience on quality of life (e.g., sleep, appetite, activity, cognition, mood, relationships, job performance, and role responsibilities)
+Evaluate the effectiveness of past pain control measures with the client
+Question the client regarding the level of pain that allows a state of comfort and appropriate functioning and attempt to keep pain at or lower than identified level
+Control environmental factors that may influence the client’s pain experience
+Ensure that the client receives prompt analgesic care before the pain becomes severe or before activities that are anticipated to be pain-inducing
+Select and implement intervention options tailored to the client’s risks, benefits, and preferences (e.g., pharmacological, nonpharmacological, interpersonal) to facilitate pain relief, as appropriate
+Instruct the client and family about principles of pain management
+Encourage the client to monitor own pain and to use self-management approaches
+Encourage appropriate use of nonpharmacological techniques (e.g., biofeedback, TENS, hypnosis, relaxation, guided imagery, music therapy, distraction, play therapy, activity therapy, acupressure, heat and cold application, and massage) and pharmacological options as pain control measures
+Avoid use of analgesics that may have adverse effects on older adults
+Collaborate with the client, family, and other health professionals to select and implement pain control measures
+Prevent or manage side effects
+Evaluate the effectiveness of pain control measures through ongoing monitoring of the pain experience
+Watch for signs of depression (e.g., sleeplessness, not eating, flat affect, statements of depression, or suicidal ideation)
+Watch for signs of anxiety or fear (e.g., irritability, tension, worry, or fear of movement)
+Modify pain control measures on the basis of the client’s response to treatment
+Incorporate the family in the pain relief modality, when possible
+Utilize a multidisciplinary approach to pain management, when appropriate
+Consider referrals for the client and family to support groups and other resources, as appropriate
+Evaluate client satisfaction with pain management at specified intervals
+Evaluate barriers to adherence with past pain management care plans
+Implementing Pharmacological Interventions
+Clients should be involved and engaged in their plan of care to treat pain. By demonstrating empathy and collaborating with clients and the interdisciplinary team, it is more likely the treatment plan will be effective based on the client’s goals.
+When administering analgesic medication, holistic nursing care is important. Begin by considering the client’s goals for pain relief and ask if they have been met effectively by previously administered medications. If they have not been met, it may be necessary to advocate for additional or alternative medication with the health care provider. It is also important to consider if the client is experiencing any side effects that may impact the client’s desire to take additional pain medication.
+When administering medications that have been ordered on an “as-needed” basis, it is vital for the nurse to verify the amount of medication the client received in the past 24 hours and if any dosage limits have been met to ensure client safety.
+Prior to administration, consider the best route of administration for this client at this particular time. For example, if the client is nauseated and vomiting, then an oral route may not be effective. On the other hand, if a client’s pain has improved when receiving intravenous medications during the recovery process, it may be possible for the client to begin taking oral pain medications in preparation for discharge home. Keep the WHO ladder in mind when selecting medications to reach client goals while also avoiding potential adverse effects when possible.
+When preparing opioid medications, it is important to remember that these medications are controlled substances with special regulations regarding storage, count auditing, and disposal/wasting of medication. This generally involves two registered nurses counting, auditing, and wasting medications. Follow agency policy regarding these issues. It is also important to assess the client’s level of sedation and respiratory status before administering additional doses of opioids and withhold the medication if the client is oversedated or their respiratory rate is less than 12/minute. However, when providing pain management during end-of-life care, these parameters no longer apply because the emphasis is on providing comfort according to the client’s preferences. Read more about end-of-life care in the “Grief and Loss” chapter.
+Evaluation
+It is vital for the nurse to regularly evaluate if the established interventions are effectively meeting the pain management and function goals established collaboratively with the client. Additionally, when administering analgesics, the client should be reassessed in an hour (or other time frame based on the route, onset and peak of the medication) to determine if the medication was effective. If interventions are not effective, then follow-up interventions are required, which may include contacting the health care provider.
+For clients living with chronic pain, it can be helpful for them or their caregiver to maintain a pain journal. In the journal they can document activities that precipitated pain, medications taken to manage the pain, and whether these medications were effective in helping them to meet their functional goals. This journal is shared with the health care provider during follow-up visits to enhance the treatment plan.
+The nurse must continually monitor for potential adverse effects of pain medications. For example, if a client is receiving acetaminophen daily for chronic osteoarthritis pain, signs of liver dysfunction, such as jaundice and elevated liver function bloodwork, should be monitored. For older adults receiving NSAIDs, it is important to watch for early signs of gastrointestinal bleeding, such as melena. Clients receiving opioids should be continually monitored for oversedation, respiratory depression, constipation, nausea and vomiting, urinary retention, and pruritus. Side effects should be reported to the health care provider and orders received for treatment.
+“238074231_2485ed053b_o” by Erik Ogan is licensed under CC BY-SA 2.0 ↵
+American Association of Colleges of Nursing. (n.d.). End-of-life-care (ELNEC). https://www.aacnnursing.org/ELNEC ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021-2023, Twelfth Edition. Thieme Publishers New York. ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021–2023 (12th ed.). Thieme Publishers New York. ↵
+Ackley, B., Ladwig, G., Makic, M. B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier, pp. 676-691. ↵
+Ackley, B., Ladwig, G., Makic, M. B., Martinez-Kratz, M., & Zanotti, M. (2020). Nursing diagnosis handbook: An evidence-based guide to planning care (12th ed.). Elsevier, pp. 676-691. ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+American Association of Colleges of Nursing. (n.d.). End-of-life-care (ELNEC). https://www.aacnnursing.org/ELNEC ↵

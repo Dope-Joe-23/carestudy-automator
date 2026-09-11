@@ -1,0 +1,362 @@
+SOURCE: Open RN Nursing Fundamentals, chapter 8 — Oxygenation
+TITLE: Oxygenation
+URL: https://wtcs.pressbooks.pub/nursingfundamentals/
+LICENSE: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+RETRIEVED: 2026-09-11
+
+
+8.1 Oxygenation Introduction
+Learning Objectives
+Identify risk factors in oxygenation alterations across the life span
+Identify cues related to alterations in oxygenation
+Identify safety considerations related to care of oxygenation alterations
+Identify interventions to plan care for client with oxygenation alterations
+Identify diagnostic tests and lab values related to oxygenation alterations
+Contribute to a plan of care for clients with oxygenation alterations
+Sufficient oxygenation is vital to maintain life. When prioritizing nursing interventions, we often refer to using the “ABCs,” an acronym used to signify the importance of maintaining a client’s airway, breathing, and circulation. Several body systems work collaboratively during the oxygenation process to take in oxygen from the air, carry it through the bloodstream, and adequately oxygenate tissues. It is important that all parts of the system work together to ensure that oxygen is delivered appropriately to tissues within each system. Any alteration in these systems can have catastrophic implications on a client’s health. First, the airway must be open and clear. The chest and lungs must mechanically move air in and out of the lungs. The bronchial airways must be open so that air can reach the alveoli, where the exchange of oxygen and carbon dioxide occurs. The heart must effectively pump oxygenated blood from the lungs and through the systemic arteries. There must be adequate amounts of hemoglobin in the blood to sufficiently carry the oxygen molecules to the tissues. However, several medical conditions such as asthma, chronic obstructive pulmonary disease (COPD), pneumonia, heart disease, and anemia can impair the body’s ability to effectively complete this oxygenation process.
+This chapter will review these basic concepts related to oxygenation and apply the nursing process to clients who are experiencing alterations in oxygenation.
+Ernstmeyer, K., & Christman, E. (Eds.). (2023). Nursing Skills 2e. Access for free at https://wtcs.pressbooks.pub/nursingskills/ ↵
+
+8.2 Oxygenation Basic Concepts
+Review of Anatomy and Physiology
+Several body systems contribute to a person’s oxygenation status, including the respiratory, cardiovascular, and hematological systems. The anatomy and physiology of these systems are reviewed in the following sections.
+Respiratory System
+The major organs of the respiratory system function primarily to provide oxygen to body tissues for cellular respiration, remove the waste product carbon dioxide, and help maintain acid-base balance. See Figure 8.1 for an illustration of the major structures of the respiratory system.
+Figure 8.1 Major Respiratory Structures
+The purpose of the respiratory system is to perform gas exchange. Gas exchange refers to the exchange of oxygen and carbon dioxide in the alveoli and the pulmonary capillaries, also called respiration. During external respiration, at the alveolar level, oxygen from the air we breathe diffuses into the blood, and carbon dioxide diffuses out of the blood where it can be exhaled. Throughout the rest of the body, gas exchange also occurs between the systemic capillaries and body cells/tissues, called internal respiration. During internal respiration, oxygen diffuses out of the systemic capillaries and into body cells/tissues, and carbon dioxide diffuses from the cells/tissues into the systemic capillaries where it is carried to the lungs. It is through this process that cells in the body are oxygenated and carbon dioxide, the waste product of cellular respiration, is removed from the body. See Figure 8.2a for an illustration of alveoli.
+Figure 8.2a Alveoli
+To achieve gas exchange, the structures of the respiratory system create the mechanical movement of air into and out of the lungs called ventilation. Pulmonary ventilation provides air to the alveoli for this gas exchange process.
+Lung sounds are caused by the movement of air from the trachea to the bronchioles to the alveoli and can be impacted by the presence of sputum, bronchoconstriction, or fluid in the alveoli. Examples of adventitious sounds are rhonchi (coarse crackles), rales (fine crackles), wheezes, stridor, and pleural rub :
+Rhonchi, also referred to as coarse crackles, are low-pitched, continuous sounds heard on expiration that are a sign of turbulent airflow through mucus in the large airways.
+Rales, also called fine crackles, are popping or crackling sounds heard on inspiration. They are associated with medical conditions that cause fluid accumulation within the alveolar and interstitial spaces, such as heart failure or pneumonia. The sound is similar to that produced by rubbing strands of hair together close to your ear.
+Wheezes are whistling noises produced when air is forced through airways narrowed by bronchoconstriction or mucosal edema. For example, clients with asthma commonly have wheezing.
+Stridor is heard only on inspiration. It is associated with obstruction of the trachea/upper airway.
+Pleural rub sounds like the rubbing together of leather and can be heard on inspiration and expiration. It is caused by inflammation of the pleura membranes that results in friction as the surfaces rub against each other.
+Several respiratory conditions can affect a client’s ability to maintain adequate ventilation and respiration, and there are several medications used to enhance a client’s oxygenation status.
+Review common respiratory disorders and common respiratory medications in the “Respiratory” chapter in Open RN Nursing Pharmacology, 2e.
+Review how to perform a respiratory assessment in Open RN Nursing Skills, 2e.
+Cardiovascular System
+The heart consists of four chambers, including two atria and two ventricles. The right atrium receives deoxygenated blood from the systemic circulation, and the left atrium receives oxygenated blood from the lungs. The atria contract to push blood into the lower chambers, the right ventricle and the left ventricle. The right ventricle contracts to push blood into the lungs, and the left ventricle is the primary pump that propels blood to the rest of the body.
+There are two distinct but linked circuits in the cardiovascular system called the pulmonary and systemic circuits. The pulmonary circuit transports blood to and from the lungs, where it picks up oxygen and delivers carbon dioxide for exhalation. The systemic circuit transports oxygenated blood to body tissues and returns deoxygenated blood and carbon dioxide to the heart to be sent back to the pulmonary circulation. See Figure 8.2b for an illustration of heart structures and blood flow through the heart and body. The blue areas indicate deoxygenated blood flow, and the red areas indicate oxygenated blood flow.
+8.2b Major Heart Structures and Blood Flow Through the Heart and Body
+In order for oxygenated blood to move from the alveoli in the lungs to the various organs and tissues of the body, the heart must adequately pump blood through the systemic arteries. The amount of blood that the heart pumps in one minute is referred to as cardiac output. The passage of blood through arteries to an organ or tissue is referred to as perfusion. Several cardiac conditions can adversely affect cardiac output and perfusion in the body. There are several medications used to enhance cardiac output and maintain adequate perfusion to organs and tissues throughout the body.
+Review common cardiac disorders and common cardiovascular system medications in the “Cardiovascular & Renal” chapter in Open RN Nursing Pharmacology, 2e.
+Review how to perform a cardiovascular assessment in Open RN Nursing Skills, 2e.
+Hematological System
+Although the bloodstream carries small amounts of dissolved oxygen, the majority of oxygen molecules are transported throughout the body by attaching to hemoglobin within red blood cells. Each hemoglobin protein is capable of carrying four oxygen molecules. When all four hemoglobin structures contain an oxygen molecule, it is referred to as “saturated.” See Figure 8.2c for an image of hemoglobin protein within a red blood cell with four sites for carrying oxygen molecules.
+Figure 8.2c Hemoglobin
+When oxygenated blood reaches tissues within the body, oxygen is released from the hemoglobin, and carbon dioxide is picked up and transported to the lungs for release on exhalation. Carbon dioxide is transported throughout the body by three major mechanisms: dissolved carbon dioxide, attachment to water as HCO3-, and attachment to the hemoglobin in red blood cells. See Figure 8.2d for an illustration of carbon dioxide transport.
+Figure 8.2d Carbon Dioxide Transport
+Measuring Oxygen, Carbon Dioxide, and Acid Base Levels
+Because the majority of oxygen transported in the blood is attached to hemoglobin, a client’s oxygenation status is easily assessed using pulse oximetry, referred to as saturation of peripheral oxygen (SpO2). See Figure 8.3 for an image of a pulse oximeter. This reading refers to the amount of hemoglobin that is saturated. The target range of SpO2 for an adult is 94-98%.
+For clients with chronic oxygenation conditions such as COPD, the target range for SpO2 is often lower at 88% to 92%, although the acceptable SpO2 range should be specified by the provider. Although SpO2 is an efficient, noninvasive method for assessing a client’s oxygenation status, it is not always accurate, and data should be validated with other assessments. For example, if a client is severely anemic, the client has a decreased amount of hemoglobin in the blood available to carry the oxygen, which subsequently affects the SpO2 reading. Decreased perfusion of the extremities can also cause inaccurate SpO2 levels because less blood being delivered to the tissues can result in a false low SpO2. Similarly, cool extremities can also cause a false low reading. Additionally, other substances can attach to hemoglobin such as carbon monoxide, causing a falsely elevated SpO2.
+Figure 8.3 Portable Pulse Oximeter
+A more specific and accurate measurement of oxygen and carbon dioxide in the blood is obtained using an arterial blood gas (ABG). ABG results are often used for clients who have a deteriorating or unstable respiratory status requiring emergency treatment. An ABG is a specific type of blood sample drawn from an artery, typically the radial artery, by a respiratory therapist, physician, lab technician, or specially trained RN. ABG results indicate oxygen, carbon dioxide, pH, and bicarbonate levels in the arterial blood and are a more accurate measure of oxygenation status than SpO2 :
+PaO2: PaO2 is the partial pressure of oxygen dissolved in the arterial blood and is a measure of how well oxygen is able to move from the lungs into the bloodstream. The normal PaO2 level of a healthy adult is 80 to 100 mmHg. The PaO2 reading is more accurate than a SpO2 reading because it is not affected by hemoglobin levels.
+PaCO2: PaCO2 is the partial pressure of carbon dioxide dissolved in the arterial blood and measures how well carbon dioxide is able to move out of the body. It is typically used to determine if sufficient ventilation is occurring at the alveolar level. PaCO2 levels are affected by the rate and depth of ventilation. Decreased ventilation causes increased PaCO2 levels as gas exchange decreases and carbon dioxide is “retained.” The normal PaCO2 level of a healthy adult is 35-45 mmHg.
+pH level: Ph level is a measurement of acidity or alkalinity of the blood. The normal range of pH level for arterial blood is 7.35-7.45. A pH level below 7.35 is considered acidic, causing a condition called acidosis, and a pH level above 7.45 is considered alkaline, causing a condition known as alkalosis. Hydrogen ions are acids that affect the acidity of the blood and are regulated by respiratory rate and depth. Increased hydrogen ions cause increased acidity, and decreased hydrogen ions mean there is less acidity in the blood. Bicarbonate levels affect the alkalinity of the blood.
+HCO3: HCO3- is a measurement of bicarbonate levels in the blood. Bicarbonate is considered a buffer and is regulated by the kidneys. The kidneys retain HCO3- to make the blood more alkaline, and they excrete HCO3- to make the blood less alkaline. The normal range of HCO3- is 22-26.
+SaO2: SaO2 is the calculated arterial oxygen saturation level. SaO2 is similar to SpO2 in that it measures oxygen levels in the blood, but the SaO2 level is more accurate because it is not affected by poor perfusion, cool extremities, or carbon monoxide binding to hemoglobin. The normal SaO2 range for a healthy adult is 95-100%.
+Read more information about ABG values and ABG interpretation in the “Acid-Base Balance” section of the “Fluids and Electrolytes” chapter.
+Hypoxia and Hypercapnia
+Hypoxia
+is defined as a reduced level of tissue oxygenation. Hypoxia has many causes, ranging from respiratory and cardiac conditions to anemia. Hypoxemia is a specific type of hypoxia that is defined as decreased partial pressure of oxygen in the blood (PaO2) indicated in an arterial blood gas (ABG) result.
+Early signs of hypoxia are related to the brain becoming starved of oxygen and include anxiety, confusion, and restlessness. As hypoxia worsens, the client’s level of consciousness and vital signs will worsen with an increased respiratory rate and heart rate and decreased pulse oximetry readings. Late signs of hypoxia include bluish discoloration of the skin and mucous membranes called cyanosis. See Figure 8.4 for an image of cyanosis.
+Figure 8.4 Cyanosis
+Hypercapnia, also referred to as hypercarbia, is an elevated level of carbon dioxide in the blood. This level is measured by the PaCO2 level in an ABG test and is indicated when the PaCO2 level is greater than 45. Hypercapnia is caused by hypoventilation or when the alveoli are ventilated but not perfused. In a state of hypercapnia, the accumulation of carbon dioxide in the blood causes the pH of the blood to decrease, leading to a state of respiratory acidosis. You can read more about respiratory acidosis in the “Acid-Base Balance” section of the “Fluids and Electrolytes” chapter.
+It is important to note that some clients with hypercapnia may not initially exhibit changes in their vital signs. Instead, they may present with increased sedation or somnolence and decreased respiratory depth or rate. In these clients, SpO2 may be normal, but this should not provide false reassurance that their condition is stable. As hypercapnia worsens, the client will become increasingly unstable and may experience respiratory arrest.
+Clients with hypercapnia have symptoms such as tachycardia, dyspnea, flushed skin, confusion, headaches, and dizziness. In cases of opioid or narcotic overdose, clients may have increased sedation with shallow respirations. If the hypercapnia develops gradually over time, symptoms may be mild or may not be present at all.
+Hypercapnia is managed by the health care team by addressing its underlying cause. A noninvasive positive pressure device such as a BiPAP may be used to help eliminate the excess carbon dioxide. If noninvasive devices are not sufficient, intubation with an endotracheal tube and mechanical ventilation may be required.
+Read more about BiPAP devices and intubation in the “Oxygen Therapy” chapter in Open RN Nursing Skills, 2e.
+Nurses must recognize early signs of respiratory distress and promptly report changes in client condition to prevent respiratory failure. See Table 8.2a for symptoms and signs of respiratory distress.
+Table 8.2a Symptoms and Signs of Respiratory Distress
+Signs and Symptoms
+Description
+Shortness of Breath (Dyspnea)
+Dyspnea is a subjective feeling of not getting enough air. Depending on its severity, dyspnea can cause increased levels of anxiety.
+Restlessness
+An early sign of hypoxia resulting in increased movement and the inability to stay still.
+Tachycardia
+An elevated heart rate, above 100 beats per minute in adults, at rest can be an early sign of hypoxia.
+Tachypnea
+An increased respiration rate, above 20 breaths per minute in adults, at rest can be an indication of respiratory distress.
+Oxygen Saturation Level (SpO2)
+Oxygen saturation levels should be above 94% for adults who do not have an underlying respiratory condition. New SpO2 reading less than 92% may indicate hypoxia and require notification of the provider. SpO2 less than 88% may indicate severe hypoxia and require medical intervention.
+Use of Accessory Muscles
+Use of neck or intercostal muscles when breathing is an indication of respiratory distress.
+Noisy Breathing
+Audible noises with breathing are an indication of respiratory conditions. Further assess lung sounds with a stethoscope for adventitious sounds such as wheezing, rales, or crackles. Secretions can plug the airway, thereby decreasing the amount of oxygen available for gas exchange in the lungs.
+Flaring of Nostrils
+Nasal flaring is a sign of respiratory distress, especially in infants.
+Skin Color (Cyanosis)
+Bluish changes in skin color and mucus membranes is a late sign of hypoxia.
+Position of Client
+Clients in respiratory distress often automatically sit up and lean over by resting arms on their legs, referred to as the tripod position. The tripod position enhances lung expansion. Conversely, clients who are hypoxic often feel worse dyspnea when lying flat in bed and avoid the supine position.
+Ability of Client to Speak in Full Sentences
+Clients in respiratory distress may be unable to speak in full sentences or may need to catch their breath between sentences.
+New Confusion or Change in Level of Consciousness (LOC)
+New confusion or changing level of consciousness can be an early sign of hypoxia resulting from lack of oxygen to the brain.
+Treating Hypoxia and Hypercapnia
+Hypoxia and/or hypercapnia are medical emergencies and should be treated promptly by calling for assistance as indicated by agency policy.
+Failure to initiate oxygen therapy when needed can result in serious harm or death of the client. Although oxygen is considered a medication that requires a prescription, oxygen therapy may be initiated without a physician’s order in emergency situations as part of the nurse’s response to the “ABCs,” a common abbreviation for airway, breathing, and circulation. Most agencies have a protocol in place that allows nurses to apply oxygen in emergency situations and obtain the necessary order at a later time. Be aware of your specific agency policy.
+In addition to administering oxygen therapy, there are several other interventions a nurse can implement to assist an hypoxic client. Additional interventions used to treat hypoxia in conjunction with oxygen therapy are outlined in Table 8.2b.
+Table 8.2b Interventions to Manage Hypoxia
+Interventions
+Additional Information
+Raise the head of the bed.
+Raising the head of the bed to high Fowler’s position promotes effective chest expansion and diaphragmatic descent, maximizes inhalation, and decreases the work of breathing.
+Use tripod positioning.
+Situate the client in a tripod position. Clients who are short of breath may gain relief by sitting upright and leaning over a bedside table while in bed, which is called a three-point or tripod position. The tripod position allows for increased lung expansion as gravity helps open the chest during inspiration.
+Encourage enhanced breathing and coughing techniques.
+Enhanced breathing and coughing include techniques such as pursed-lip breathing, coughing and deep breathing, huffing technique, and use of incentive spirometry and flutter valves. These techniques may assist clients to clear their airway, open alveoli to prevent atelectasis, and maintain good oxygen saturation levels. See the “Enhanced Breathing and Coughing Techniques” section below for additional information regarding these techniques.
+Manage oxygen therapy and equipment.
+If the client is already on supplemental oxygen, ensure the equipment is turned on, set at the required flow rate, and is properly connected to an oxygen supply source. If a portable tank is being used, check the oxygen level in the tank. Ensure the connecting oxygen tubing is not kinked, which could obstruct the flow of oxygen. Feel for the flow of oxygen from the exit ports on the oxygen equipment and ensure the oxygen device is applied correctly on the client. In hospitals where medical air and oxygen are used, ensure the client is connected to the oxygen flow port.
+Various types of oxygenation equipment are prescribed for clients requiring oxygen therapy. Oxygenation equipment is typically managed in collaboration with a respiratory therapist in hospital settings. Equipment includes devices such as nasal cannula, masks, Continuous Positive Airway Pressure (CPAP), Bilevel Positive Airway Pressure (BiPAP), and mechanical ventilators. For more information, see the “Oxygenation Equipment” section of the “Oxygen Therapy” chapter in Open RN Nursing Skills, 2e.
+Assess the need for respiratory medications.
+Pharmacological management is essential for clients with respiratory disease such as asthma, COPD, or severe allergic response. Bronchodilators effectively relax smooth muscles and open airways. Glucocorticoids relieve inflammation and also assist in opening air passages. Mucolytics decrease the thickness of pulmonary secretions so that they can be expectorated more easily. See the “Respiratory System” chapter in Open RN Nursing Pharmacology, 2e for additional information on respiratory medications.
+Provide suctioning, if needed.
+Some clients may have a weakened cough that inhibits their ability to clear secretions from the mouth and throat. Clients with muscle disorders or those who have experienced a stroke, or cerebral vascular accident, are at risk for aspiration, which could lead to pneumonia and hypoxia. Provide oral suction if the client is unable to clear secretions from the mouth and pharynx. See the “Tracheostomy Care and Suctioning” chapter in Open RN Nursing Skills, 2e for additional details on suctioning.
+Provide pain relief, if needed.
+Provide adequate pain relief if the client is reporting pain. Pain increases anxiety and metabolic demands, which, in turn, increases the need for more oxygen supply. Pain medications such as morphine can also be used to decrease the work of breathing in clients experiencing air hunger, a severe form of dyspnea.
+Consider side effects of pain medication.
+A common side effect of pain medication is respiratory depression. For more information about managing respiratory depression, see the “Pain Management” section of the “Comfort” chapter.
+Consider other devices to enhance clearance of secretions.
+Chest physiotherapy and specialized devices assist with secretion clearance, such as handheld flutter valves or vests that inflate and vibrate the chest wall. These techniques are helpful to mobilize secretions and stimulate coughing to clear secretions out of the airway. Consult with a respiratory therapist as needed based on the client’s situation.
+Plan frequent rest periods between activities.
+Plan interventions for clients with dyspnea so they can rest frequently and decrease oxygen demand.
+Consider other potential causes of dyspnea.
+If a client’s level of dyspnea is worsening, assess for other underlying causes in addition to the primary diagnosis. For example, are there other respiratory, cardiovascular, or hematological conditions occurring? Start by reviewing the client’s most recent hemoglobin and hematocrit lab results, as well as any other diagnostic tests such as chest X-rays and ABG results. Completing a thorough assessment may reveal abnormalities in these systems to report to the health care provider.
+Consider obstructive sleep apnea.
+Clients with obstructive sleep apnea (OSA) are often not previously diagnosed prior to hospitalization. OSA refers to cessation of breathing while sleeping and is caused by the partial or full collapse of the airway as muscles relax during sleep. This obstructs the airway and prevents air from moving in and out of the lungs during sleep. The nurse may notice the client snores, has pauses in breathing while snoring, has decreased oxygen saturation levels while sleeping, or awakens feeling not rested. These signs may indicate the client is unable to maintain an open airway while sleeping, resulting in periods of apnea and hypoxia. If these apneic periods are noticed but have not been previously documented, the nurse should report these findings to the health care provider for further testing and follow-up. A prescription for a CPAP or BiPAP device while sleeping may be needed to keep the airway open during sleep and to prevent adverse outcomes.
+Monitor client’s anxiety.
+Assess client’s anxiety. Anxiety often accompanies the feeling of dyspnea and can worsen dyspnea. Anxiety in clients with COPD is chronically undertreated. It is important for the nurse to address the feelings of anxiety in addition to the feelings of dyspnea. Anxiety can be relieved by teaching enhanced breathing and coughing techniques, encouraging relaxation techniques, or administering prescribed antianxiety medications like benzodiazepines. Read additional information about benzodiazepines in the “CNS Depressant” section of the “CNS System” chapter of Open RN Nursing Pharmacology, 2e.
+Enhanced Breathing and Coughing Techniques
+In addition to oxygen therapy and the interventions listed in Table 8.2b, there are several techniques a nurse can teach a client to use to enhance their breathing and coughing. These techniques include pursed-lip breathing, incentive spirometry, coughing and deep breathing, and the huffing technique. Additionally, vibratory positive expiratory pressure (PEP) therapy can be incorporated in collaboration with a respiratory therapist.
+Pursed-lip Breathing
+Pursed-lip breathing
+is a technique that decreases dyspnea by teaching people to control their oxygenation and ventilation. See Figure 8.5 for an illustration of pursed-lip breathing. The technique teaches a person to inhale through the nose and exhale through the mouth at a slow, controlled flow. This type of exhalation gives the person a puckered or pursed-lip appearance. By prolonging the expiratory phase of respiration, a small amount of positive end-expiratory pressure (PEEP) is created in the airways that helps to keep them open so that more air can be exhaled. This subsequently reduces air trapping that commonly occurs in conditions such as chronic obstructive pulmonary disease (COPD). Pursed-lip breathing relieves the feeling of shortness of breath, decreases the work of breathing, and improves gas exchange. People also regain a sense of control over their breathing while simultaneously increasing their relaxation.
+Figure 8.5 Pursed-Lip Breathing
+Incentive Spirometry
+An incentive spirometer is a medical device commonly prescribed after surgery to expand the lungs to keep alveoli open, reduce the buildup of fluid in the lungs, and prevent pneumonia. See Figure 8.6 for an image of a client using an incentive spirometer. While sitting upright, if possible, the client should exhale fully, place the mouthpiece in their mouth and create a tight seal with their lips around it. They should breathe in slowly and as deeply as possible through the tubing with the goal of raising the piston to their prescribed level. The resistance indicator on the right side should be monitored to ensure they are not breathing in too quickly. The client should attempt to hold their breath for as long as possible (at least five seconds) and then exhale and rest for a few seconds. Coughing is expected due to alveoli stretching to open more fully. Encourage the client to expel any mucus produced and not swallow it. This technique should be repeated by the client ten times every hour while awake. The nurse may delegate this intervention to unlicensed assistive personnel, but the frequency in which it is completed, and the volume achieved should be documented and monitored by the nurse.
+Figure 8.6 Using an Incentive Spirometer
+Using an incentive spirometer can feel monotonous to clients, resulting in the lack of performing this important activity to prevent pneumonia. It is helpful to encourage clients to create easy reminders to complete the activity. For example, many clients watch television. Create the reminder to use the incentive spirometer each time they view a commercial. This is a helpful trigger to use the incentive spirometer frequently.
+Coughing and Deep Breathing
+Coughing and deep breathing
+is a breathing technique similar to incentive spirometry but no device is required. The client is encouraged to take deep, slow breaths and then exhale slowly. After each set of breaths, the client should cough. This technique is repeated three to five times every hour. Similar to an incentive spirometer, the purpose of coughing and deep breathing is to keep the airways open and clear of mucus to prevent atelectasis and pneumonia.
+Huffing Technique
+The huffing technique is helpful to teach clients who have difficulty coughing. Teach the client to inhale with a medium-sized breath and then make a sound like “ha” to push the air out quickly with the mouth slightly open.
+Vibratory PEP Therapy
+Vibratory Positive Expiratory Pressure (PEP) Therapy
+uses handheld devices such as flutter valves or Acapella devices for clients who need assistance in clearing mucus from their airways. These devices require a prescription and are used in collaboration with a respiratory therapist or advanced health care provider. To use vibratory PEP therapy, the client should sit up, take a deep breath, and blow into the device. A flutter valve within the device creates vibrations that help break up the mucus so the client can cough and spit it out. Additionally, a small amount of positive end-expiratory pressure (PEEP) is created in the airways that helps to keep them open so that more air can be exhaled. See the supplementary video below regarding how to use the flutter valve device.
+View this video on Using a Flutter Valve Device (Acapella).
+Betts, J. G., Desaix, P., Johnson, E., Johnson, J. E., Korol, O., Kruse, D., Poe, B., Wise, J., Womble, M. D., & Young, K. A. (2022). Anatomy and physiology 2e. OpenStax. Access for free at https://openstax.org/books/anatomy-and-physiology/pages/1-introduction ↵
+“2301 Major Respiratory Organs.jpg” by OpenStax College is licensed under CC BY 4.0. Access for free at https://openstax.org/books/anatomy-and-physiology/pages/22-1-organs-and-structures-of-the-respiratory-system ↵
+Ernstmeyer, K., & Christman, E. (Eds.). (2024). Medical Terminology 2e. WisTech Open. Access for free at https://wtcs.pressbooks.pub/medterm/ ↵
+“2309 The Respiratory Zone.jpg” by OpenStax College is licensed under CC BY 3.0. Access for free at https://openstax.org/books/anatomy-and-physiology/pages/22-1-organs-and-structures-of-the-respiratory-system ↵
+Ernstmeyer, K., & Christman, E. (Eds.). (2023). Nursing Skills 2e. Access for free at https://wtcs.pressbooks.pub/nursingskills/ ↵
+Betts, J. G., Desaix, P., Johnson, E., Johnson, J. E., Korol, O., Kruse, D., Poe, B., Wise, J., Womble, M. D., & Young, K. A. (2022). Anatomy and physiology 2e. OpenStax. Access for free at https://openstax.org/books/anatomy-and-physiology/pages/1-introduction ↵
+“Dual System of the Human Blood Circulation” by OpenStax College is licensed under CC By 4.0. Access for free at https://openstax.org/books/anatomy-and-physiology/pages/19-1-heart-anatomy ↵
+Betts, J. G., Desaix, P., Johnson, E., Johnson, J. E., Korol, O., Kruse, D., Poe, B., Wise, J., Womble, M. D., & Young, K. A. (2022). Anatomy and physiology 2e. OpenStax. Access for free at https://openstax.org/books/anatomy-and-physiology/pages/1-introduction ↵
+“2322_Fig_23.33-a.jpg” by OpenStax is licensed under CC BY 3.0 ↵
+Betts, J. G., Desaix, P., Johnson, E., Johnson, J. E., Korol, O., Kruse, D., Poe, B., Wise, J., Womble, M. D., & Young, K. A. (2022). Anatomy and physiology 2e. OpenStax. Access for free at https://openstax.org/books/anatomy-and-physiology/pages/1-introduction ↵
+“2325_Carbon_Dioxide_Transport.jpg” by OpenStax is licensed under CC BY 3.0 ↵
+Betts, J. G., Desaix, P., Johnson, E., Johnson, J. E., Korol, O., Kruse, D., Poe, B., Wise, J., Womble, M. D., & Young, K. A. (2022). Anatomy and physiology 2e. OpenStax. Access for free at https://openstax.org/books/anatomy-and-physiology/pages/1-introduction ↵
+“OxyWatch_C20_Pulse_Oximeter.png” by Thinkpaul is licensed under CC BY-SA 3.0 ↵
+Patel, S. (2022). Physiology, carbon dioxide retention. StatPearls [Internet]. https://www.ncbi.nlm.nih.gov/books/NBK482456/ ↵
+“Incentive Spirometer.png” by BruceBlaus is licensed under CC BY-SA 4.0 ↵
+Cleveland Clinic. (2022). Incentive spirometer. https://my.clevelandclinic.org/health/articles/4302-incentive-spirometer ↵
+NHS University Hospitals Plymouth Physiotherapy. (2015, May 12). Acapella [Video]. YouTube. All rights reserved. https://youtu.be/XOvonQVCE6Y ↵
+definition
+
+8.3 Applying the Nursing Process
+Now that we have discussed various concepts related to oxygenation and hypoxia, we will explain how a nurse uses the nursing process to care for clients with alterations in oxygenation.
+Assessment
+When assessing a client’s oxygenation status, there are several subjective and objective assessments to include.
+Subjective Assessment
+The primary symptom to assess when a client is experiencing decreased oxygenation is their level of dyspnea, the medical term for the subjective feeling of shortness of breath or difficulty breathing. Clients can be asked to rate their dyspnea on a scale of 0-10, similar to using a pain rating scale. The feeling of dyspnea can be very disabling for clients. There are many interventions that a nurse can implement to help improve the feeling of dyspnea and, thus, improve a client’s overall quality of life.
+It is also important to ask clients if they are experiencing a cough. If a cough is present, determine if sputum is present, and if so, the color and amount of sputum. Sputum is mucus and other secretions that are coughed up and expelled from the mouth. The body always produces mucus to keep the delicate tissues of the respiratory tract moist so small particles of foreign matter can be trapped and forced out, but when there is an infection in the lungs, an excess of mucus is produced. The body attempts to get rid of this excess by coughing it up as sputum. The color of a client’s sputum can provide cues for underlying medical conditions. For example, sputum caused by a respiratory infection is often yellow, green, or brown and often referred to as purulent sputum. See Figure 8.7 for an image of purulent sputum.
+Figure 8.7 Purulent Sputum
+Clients should be asked if they are experiencing chest pain. Chest pain can occur with several types of respiratory and cardiac conditions, some of which are emergent. If the client reports chest pain, first determine if it is an emergency by asking questions such as:
+“Does it feel like something is sitting on your chest?”
+“Is the pain radiating into your jaw or arm?”
+“Do you feel short of breath, dizzy, or nauseated?”
+If any of these symptoms are occurring, seek emergency medical assistance according to agency policy. If it is not a medical emergency, perform a focused assessment on the chest pain, including onset, location, duration, characteristics, alleviating or aggravating factors, radiation, and if any treatment has been used for the pain. Noncardiac chest pain tends to worsen with coughing and deep breathing.
+Objective Assessment
+Focused objective assessments for a client suspected of experiencing decreased oxygenation include assessing the airway; evaluating respiratory rate, effort, and quality; analyzing pulse oximetry readings; auscultating lung sounds for adventitious sounds; and evaluating the heart rate for tachycardia.
+Review detailed interview questions and how to perform a physical examination of the respiratory system in the “Respiratory Assessment” chapter in the Open RN Nursing Skills, 2e textbook.
+Signs of cyanosis or clubbing should be noted. Clubbing is the enlargement of the fingertips that occurs with chronic hypoxia such as in chronic obstructive pulmonary disease (COPD) or congenital deficits in pediatric clients. See Figure 8.8 for an image of clubbing.
+Figure 8.8 Clubbing of Fingertips
+Another sign of chronic hypoxia that often occurs in clients with chronic respiratory diseases like COPD includes an increased anterior-posterior chest diameter, often referred to as a barrel chest. A barrel chest results from air trapping in the alveoli. See Figure 8.9 for an image of a barrel chest.
+Figure 8.9 Comparison of Chest with Normal Anterior/Posterior Diameter (A) to a Barrel Chest(B)
+Diagnostic Tests and Lab Work
+Diagnostic tests and lab work are based on the client’s medical condition that is causing the decreased oxygenation. For example, clients with a productive cough may have a chest X-ray or sputum culture ordered, and clients experiencing respiratory distress often have arterial blood gas (ABG) tests performed.
+A chest X-ray is a fast and painless imaging test that uses certain electromagnetic waves to create pictures of the structures in and around the chest. This test can help diagnose and monitor conditions such as pneumonia, heart failure, lung cancer, and tuberculosis. Health care providers also use chest X-rays to see how well certain treatments are working and to check for complications after certain procedures or surgeries. Chest X-rays are contraindicated during pregnancy. , See Figure 8.10 for an image of a chest X-ray.
+Figure 8.10 Chest X-ray
+A sputum culture is a diagnostic test that evaluates the type and number of bacteria present in sputum. The client is asked to cough deeply and spit any mucus that comes up into a sterile specimen container. The sample is sent to a lab where it is placed in a special dish and is watched for two to three days or longer to see if bacteria or other disease-causing germs grow. The data is used to determine appropriate antimicrobial therapy. See Figure 8.11 for an image of a sputum culture.
+Figure 8.11 Sputum Culture
+For clients experiencing respiratory distress, arterial blood gas (ABG) tests are often ordered. Additional details about ABG tests are discussed in the “Oxygenation Basic Concepts” section of this chapter, as well as in the “Acid-Base Balance” section of the “Fluid and Electrolytes” chapter. See Table 8.3a for a summary of normal ranges of ABG values in adults.
+Table 8.3a Normal Ranges of ABG Values in Adults
+Value
+Description
+Normal Range
+pH
+Acid-base balance of blood.
+7.35–7.45
+PaO2
+Partial pressure of oxygen.
+80–100 mmHg
+PaCO2
+Partial pressure of carbon dioxide.
+35–45 mmHg
+HCO3
+Bicarbonate level.
+22–26 mEq/L
+SaO2
+Calculated oxygen saturation.
+95–100%
+Diagnoses
+Commonly used NANDA-I nursing diagnoses for clients experiencing decreased oxygenation and dyspnea include Impaired Gas Exchange, Ineffective Breathing Pattern, Ineffective Airway Clearance, Decreased Cardiac Output, and Decreased Activity Tolerance. See Table 8.3b for definitions and selected defining characteristics for these commonly used nursing diagnoses. Use a current, evidence-based nursing care plan resource when creating a care plan for a client.
+Table 8.3b NANDA-I Nursing Diagnoses Related to Decreased Oxygenation and Dyspnea
+NANDA-I Nursing Diagnoses
+Definition
+Selected Defining Characteristics
+Impaired Gas Exchange
+Excess or deficit in oxygenation and/or carbon dioxide elimination.
+Abnormal arterial pH.
+Abnormal skin color.
+Altered respiratory depth or rhythm.
+Bradypnea.
+Confusion.
+Hypercapnia.
+Hypoxia or hypoxemia.
+Irritable mood.
+Nasal flaring.
+Psychomotor agitation.
+Tachycardia.
+Tachypnea.
+Somnolence.
+Ineffective Breathing Pattern
+Inspiration and/or expiration that does not provide adequate ventilation.
+Abnormal breathing pattern.
+Bradypnea.
+Cyanosis.
+Dyspnea.
+Hypercapnia.
+Hyperventilation.
+Hypoventilation.
+Increased anterior-posterior chest diameter.
+Nasal flaring.
+Orthopnea.
+Pursed-lip breathing.
+Tachypnea.
+Uses accessory muscles to breathe.
+Uses three-point positioning.
+Ineffective Airway Clearance
+Reduced ability to clear secretions or obstructions from the respiratory tract to maintain a clear airway.
+Absence of cough.
+Adventitious breath sounds.
+Altered respiratory rhythm.
+Bradypnea.
+Excessive sputum.
+Ineffective sputum elimination.
+Orthopnea.
+Psychomotor agitation.
+Uses accessory muscles to breathe.
+Decreased Cardiac Output
+Inadequate volume of blood pumped by the heart to meet the metabolic demands of the body.
+Anxiety.
+Bradycardia.
+Adventitious breath sounds.
+Abnormal skin color.
+Tachycardia.
+Psychomotor agitation.
+Fatigue.
+Edema.
+Weight gain.
+Decreased peripheral pulses.
+Decreased Activity Tolerance
+Insufficient endurance to complete required or desired daily activities.
+Exertional dyspnea.
+Expresses fatigue.
+Abnormal heart rate or blood pressure response to activity.
+Generalized weakness.
+For example, nurses commonly care for clients with chronic obstructive pulmonary disease (COPD). To select an accurate nursing diagnosis for a specific client with COPD, the nurse compares assessment findings with the defining characteristics of various nursing diagnoses. The nurse may select Ineffective Breathing Pattern after validating this client is demonstrating the associated signs and symptoms related to this nursing diagnosis:
+Dyspnea
+Increase in anterior-posterior chest diameter (e.g., barrel chest)
+Nasal flaring
+Orthopnea
+Prolonged expiration phase
+Pursed-lip breathing
+Tachypnea
+Use of accessory muscles to breathe
+Use of three-point position
+Outcome Identification
+A broad goal(s) for clients experiencing alterations in oxygenation is:
+The client will have adequate movement of air into and out of the lungs
+A sample “SMART” outcome for a client experiencing dyspnea is:
+The client’s reported level of dyspnea will be within their stated desired range of 1-2 throughout their hospital stay.
+Planning Interventions
+Anxiety Reduction
+and Respiratory Monitoring are common categories of independent nursing interventions used to care for clients experiencing dyspnea and alterations in oxygenation. Anxiety Reduction refers to minimizing apprehension, dread, foreboding, or uneasiness related to an unidentified source of anticipated danger. Respiratory Monitoring refers to the collection and analysis of patient data to ensure airway patency and adequate gas exchange.” Selected nursing interventions related to anxiety reduction and respiratory monitoring are listed in the following box.
+Selected Nursing Interventions to Reduce Anxiety and Perform Respiratory Monitoring
+Anxiety Reduction
+Use a calm, reassuring approach
+Explain all procedures, including sensations likely to be experienced during the procedure
+Seek to understand the person’s perspective of stressful situations
+Provide information concerning diagnosis, treatment, and prognosis
+Stay with the client to promote safety and reduce fear
+Encourage the family to stay with the client, as appropriate
+Listen attentively
+Create an atmosphere of trust
+Encourage verbalization of feelings, perceptions, and fears
+Identify when level of anxiety changes
+Provide diversional activities geared toward the reduction of tension
+Instruct the client on the use of relaxation techniques (e.g., guided imagery, music, massage, aroma therapy, art therapy, yoga, Tai Chi)
+Administer medications to reduce anxiety, as appropriate
+Respiratory Monitoring
+Monitor rate, rhythm, depth, and effort of respirations
+Note chest movement, watching for symmetry, use of accessory muscles, and supraclavicular and intercostal muscle retractions
+Monitor for noisy respirations such as snoring
+Monitor breathing patterns (e.g., bradypnea, tachypnea, hyperventilation, Kussmaul respirations, and Cheyne-Stokes respirations)
+Monitor oxygen saturation levels continuously in sedated clients
+Provide for noninvasive continuous oxygen sensors with appropriate alarm systems in clients with risk factors per agency policy and as indicated
+Auscultate lung sounds, noting areas of decreased or absent ventilation and presence of adventitious sounds
+Monitor client’s ability to cough effectively
+Note onset, characteristics, and duration of cough
+Monitor the client’s respiratory secretions
+Determine the need for suctioning
+Provide frequent intermittent monitoring of respiratory status in at-risk clients
+Monitor for dyspnea and events that improve and worsen it
+Monitor chest X-ray reports as appropriate
+Note changes in ABG values if ordered and notify provider as appropriate
+Institute resuscitation efforts as needed
+Institute respiratory therapy treatments (e.g., nebulizer) as needed
+In addition to the independent nursing interventions listed in the preceding box, several nursing interventions can be implemented to manage hypoxia, such as teaching enhanced breathing and coughing techniques, repositioning, managing oxygen therapy, administering medications, and providing suctioning. Refer to Table 8.2b in the “Oxygenation Basic Concepts” section earlier in this chapter for information about these interventions.
+For additional details regarding managing oxygen therapy, see the “Oxygen Therapy” chapter in Open RN Nursing Skills, 2e.
+Read more information about respiratory medications in the “Respiratory” chapter in Open RN Nursing Pharmacology, 2e.
+Clients should also receive individualized health promotion teaching to enhance their respiratory status. Health promotion teaching includes encouraging activities such as the following:
+Receiving an annual influenza vaccine
+Receiving a pneumococcal vaccine every five years as indicated
+Stopping smoking
+Drinking adequate fluids to thin respiratory secretions
+Participating in physical activity as tolerated
+Implementing Interventions
+When implementing interventions that have been planned to enhance oxygenation, it is always important to assess the client’s current level of dyspnea and modify interventions based on the client’s current status. For example, if dyspnea has worsened, some interventions may no longer be appropriate (such as ambulating), and additional interventions may be needed (such as consulting with a respiratory therapist or administering additional medication).
+Evaluation
+After implementing interventions, the effectiveness of interventions should be documented, and the overall nursing care plan evaluated. Focused reassessments for evaluating improvement of oxygenation status include analyzing the client’s heart rate, respiratory rate, pulse oximetry reading, and lung sounds, in addition to asking the client to rate their level of dyspnea.
+Registered Nurses' Association of Ontario. (2005). Nursing care of dyspnea: The 6th vital sign in individuals with chronic obstructive pulmonary disease. https://rnao.ca/bpg/guidelines/dyspnea ↵
+Barrel, A. (2017). What is a sputum culture test? MedicalNewsToday. https://www.medicalnewstoday.com/articles/318924#what-is-a-sputum-culture-test ↵
+“Sputnum.JPG” by Zhangmoon618 is licensed under CC0 ↵
+U.S. National Library of Medicine. (2024). Chest pain. MedlinePlus. https://medlineplus.gov/ency/article/003079.htm ↵
+“Acopaquia.jpg” by Desherinka is licensed under CC BY-SA 4.0 ↵
+“Normal A-P Chest Image.jpg" and "Barrel Chest.jpg" by Meredith Pomietlo for Chippewa Valley Technical College are licensed under CC BY 4.0 ↵
+National Heart, Lung, and Blood Institute. (n.d.). Chest x-ray. https://www.nhlbi.nih.gov/health-topics/chest-x-ray ↵
+U.S. National Library of Medicine. (2022). Chest X-ray. MedlinePlus. https://medlineplus.gov/ency/article/003804.htm ↵
+“Chest Xray PA 3-8-2010.png” by Stillwaterising is licensed under CC0 ↵
+U.S. National Library of Medicine. (2023). Sputum culture. MedlinePlus. https://medlineplus.gov/ency/article/003723.htm ↵
+“m241-8 Blood agar culture of sputum from patient with pneumonia. Comprimised host. Colonies of Candida albicans and pseudomonas aeruginosa (LeBeau)” by Microbe World is licensed under CC BY-NC-SA 2.0 ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021-2023, Twelfth Edition. Thieme Publishers New York. ↵
+Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). Nursing diagnoses: Definitions and classification 2021–2023 (12th ed.). Thieme Publishers New York. ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+Wagner, C. M., Butcher, H. K., & Clarke, M. F. (2024). Nursing interventions classification (NIC) (8th ed.). Elsevier. ↵
+definition
