@@ -1,7 +1,16 @@
 import { Router, type IRouter } from "express";
-import { draftWorker, type Chapter2Recommendations } from "../lib/draftWorker";
+import { draftWorker, type Chapter2Recommendations, type PharmacologyRecommendations } from "../lib/draftWorker";
 
 const router: IRouter = Router();
+
+function collectChapter1Fields(rawFields: unknown): Record<string, string> | null {
+  if (!rawFields || typeof rawFields !== "object" || Array.isArray(rawFields)) return null;
+  return Object.fromEntries(
+    Object.entries(rawFields as Record<string, unknown>).flatMap(([key, value]) =>
+      typeof value === "string" || typeof value === "number" ? [[key, String(value)]] : [],
+    ),
+  );
+}
 
 router.post("/chapter2/recommendations", async (req, res) => {
   const rawFields = req.body?.chapter1Fields;
@@ -11,11 +20,11 @@ router.post("/chapter2/recommendations", async (req, res) => {
     return;
   }
 
-  const chapter1Fields = Object.fromEntries(
-    Object.entries(rawFields).flatMap(([key, value]) =>
-      typeof value === "string" || typeof value === "number" ? [[key, String(value)]] : [],
-    ),
-  );
+  const chapter1Fields = collectChapter1Fields(rawFields);
+  if (!chapter1Fields) {
+    res.status(422).json({ error: "chapter1Fields must be an object" });
+    return;
+  }
 
   try {
     const recommendations: Chapter2Recommendations = await draftWorker.recommendChapter2(
@@ -27,6 +36,27 @@ router.post("/chapter2/recommendations", async (req, res) => {
     req.log?.error?.({ err }, "chapter 2 recommendation failed");
     res.status(500).json({
       error: "Chapter 2 recommendation failed",
+      detail: err instanceof Error ? err.message : "Unknown engine error",
+    });
+  }
+});
+
+router.post("/chapter2/pharmacology", async (req, res) => {
+  const chapter1Fields = collectChapter1Fields(req.body?.chapter1Fields);
+  if (!chapter1Fields) {
+    res.status(422).json({ error: "chapter1Fields must be an object" });
+    return;
+  }
+
+  try {
+    const pharmacology: PharmacologyRecommendations = await draftWorker.recommendPharmacology(
+      chapter1Fields,
+    );
+    res.json({ pharmacology });
+  } catch (err) {
+    req.log?.error?.({ err }, "pharmacology recommendation failed");
+    res.status(500).json({
+      error: "Pharmacology recommendation failed",
       detail: err instanceof Error ? err.message : "Unknown engine error",
     });
   }

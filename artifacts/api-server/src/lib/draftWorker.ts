@@ -62,6 +62,13 @@ export type Chapter2Recommendations = {
   section_25: { nursingDiagnoses: string; diagnosisPriority: string };
 };
 
+/** Proposed section 2.2 pharmacology table rows (6 cells per row) plus notes. */
+export type PharmacologyRecommendations = {
+  rows: string[][];
+  unmatched?: string[];
+  note?: string;
+};
+
 export type ImportedSection = {
   heading: string;
   content: string;
@@ -102,7 +109,7 @@ export type ImportStudyResult = {
 };
 
 /** A worker response is a draft, an ingest result, a viva bank, an editorial answer, an import, or chapter 2 recommendations. */
-type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | ImportStudyResult | Chapter2Recommendations;
+type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | ImportStudyResult | Chapter2Recommendations | PharmacologyRecommendations;
 
 interface PendingRequest {
   /** The worker instance this request was written to. */
@@ -224,6 +231,34 @@ class DraftWorker {
       });
       try {
         child.stdin.write(JSON.stringify({ id, op: "chapter2_recommendations", chapter1Fields, condition }) + "\n");
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Recommend section 2.2 pharmacology table rows from Chapter 1 drug data. */
+  async recommendPharmacology(
+    chapter1Fields: Record<string, string>,
+  ): Promise<PharmacologyRecommendations> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<PharmacologyRecommendations>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("Pharmacology recommendations timed out. Please try again."));
+      }, REQUEST_TIMEOUT_MS);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as unknown as PharmacologyRecommendations),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(JSON.stringify({ id, op: "pharmacology_recommendations", chapter1Fields }) + "\n");
       } catch (writeErr) {
         this.pending.delete(id);
         clearTimeout(timer);
@@ -515,6 +550,7 @@ class DraftWorker {
       edits?: { sectionId: string; draft: string }[];
       imported?: ImportStudyResult;
       recommendations?: Chapter2Recommendations;
+      pharmacology?: PharmacologyRecommendations;
       error?: string;
     };
     try {
@@ -546,6 +582,9 @@ class DraftWorker {
       pending.resolve({ answer: msg.answer, edits: Array.isArray(msg.edits) ? msg.edits : [] });
     } else if (msg.imported && Array.isArray(msg.imported.chapters)) {
       pending.resolve({ title: msg.imported.title, chapters: msg.imported.chapters });
+    } else if (msg.pharmacology && typeof msg.pharmacology === "object") {
+      // PharmacologyRecommendations — same unwrapping pattern as above.
+      pending.resolve(msg.pharmacology);
     } else if (msg.recommendations && typeof msg.recommendations === "object") {
       // Resolve the sections object itself — callers type it directly as
       // Chapter2Recommendations (same unwrapping as the bank branch above).

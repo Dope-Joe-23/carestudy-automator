@@ -170,6 +170,13 @@ export type Chapter2Recommendations = {
   section_25: { nursingDiagnoses: string; diagnosisPriority: string };
 };
 
+/** Proposed pharmacology table rows for section 2.2 (6 cells per row). */
+export type PharmacologyRecommendations = {
+  rows: string[][];
+  unmatched?: string[];
+  note?: string;
+};
+
 /** Recommend Chapter 2 analysis from the collected Chapter 1 fields. */
 export async function requestChapter2Recommendations(
   chapter1Fields: Record<string, string>,
@@ -188,6 +195,25 @@ export async function requestChapter2Recommendations(
   const data = (await response.json()) as { recommendations?: Chapter2Recommendations };
   if (!data.recommendations) throw new Error("The recommendation engine returned no results.");
   return data.recommendations;
+}
+
+/** Recommend section 2.2 pharmacology table rows from the collected Chapter 1 drug data. */
+export async function requestPharmacologyRecommendations(
+  chapter1Fields: Record<string, string>,
+): Promise<PharmacologyRecommendations> {
+  const response = await fetch(`${API_URL}/chapter2/pharmacology`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ chapter1Fields }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
+    throw new Error(body?.detail ?? body?.error ?? `Recommendation request failed (${response.status})`);
+  }
+  const data = (await response.json()) as { pharmacology?: PharmacologyRecommendations };
+  if (!data.pharmacology) throw new Error("The recommendation engine returned no results.");
+  return data.pharmacology;
 }
 
 export type ImportedSection = { heading: string; content: string };

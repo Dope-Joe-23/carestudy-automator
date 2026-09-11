@@ -112,7 +112,9 @@ import {
   requestDraft,
   requestStudyAssistant,
   requestChapter2Recommendations,
+  requestPharmacologyRecommendations,
   type Chapter2Recommendations,
+  type PharmacologyRecommendations,
   updateLibrarySource,
   updateStudy,
   uploadStudyFile,
@@ -2182,6 +2184,8 @@ function Home() {
   const [chapter2Recommendations, setChapter2Recommendations] = useState<Chapter2Recommendations | null>(null);
   const [chapter2RecommendationOpen, setChapter2RecommendationOpen] = useState(false);
   const [chapter2RecommendationBusy, setChapter2RecommendationBusy] = useState(false);
+  const [pharmacologyRecommendations, setPharmacologyRecommendations] = useState<PharmacologyRecommendations | null>(null);
+  const [pharmacologyBusy, setPharmacologyBusy] = useState(false);
   const [planningProposal, setPlanningProposal] = useState<PlanningProposal | null>(null);
   const [planningProposalOpen, setPlanningProposalOpen] = useState(false);
   const [evaluationProposal, setEvaluationProposal] = useState<EvaluationProposal | null>(null);
@@ -2918,6 +2922,58 @@ function Home() {
     setChapter2RecommendationOpen(false);
     toast.success('Chapter 2 recommendations applied', {
       description: 'Review the suggested problems, strengths, and diagnoses before drafting.',
+    });
+  };
+
+  const recommendPharmacology = async () => {
+    if (pharmacologyBusy) return;
+    // Drug data lives in Chapter 1: the regular-medications field and the
+    // treatment fields on the admission/implementation sections.
+    const chapter1Fields: Record<string, string> = {
+      ...studyFacts.assessment.fields,
+      clinicalNotes: studyFacts.assessment.evidenceText,
+    };
+    if (!chapter1Fields.medications && !chapter1Fields.treatmentGivenList && !chapter1Fields.treatmentStarted && !chapter1Fields.treatment) {
+      toast.error('No drug data collected yet.', {
+        description: 'Add the patient\'s medications or treatment given in Chapter 1 first.',
+      });
+      return;
+    }
+    setPharmacologyBusy(true);
+    try {
+      const result = await requestPharmacologyRecommendations(chapter1Fields);
+      setPharmacologyRecommendations(result);
+    } catch (error) {
+      toast.error('Could not generate pharmacology recommendations', {
+        description: error instanceof Error ? error.message : 'Recommendation engine unavailable.',
+      });
+    } finally {
+      setPharmacologyBusy(false);
+    }
+  };
+
+  const applyPharmacologyRecommendations = () => {
+    if (!pharmacologyRecommendations?.rows.length) return;
+    setChapters((previous) => previous.map((chapter) => ({
+      ...chapter,
+      sections: chapter.sections.map((section) => {
+        if (section.id !== '2.2') return section;
+        // Merge without duplicating drugs already in the table (match on the
+        // drug-name cell, case-insensitive).
+        const existing = new Set(
+          section.rowData.map((row) => row.cells[0]?.trim().toLowerCase()).filter(Boolean),
+        );
+        const newRows = pharmacologyRecommendations.rows
+          .filter((cells) => !existing.has(cells[0]?.trim().toLowerCase()))
+          .map((cells) => ({ id: nextRowId(), cells }));
+        const rowData = [...section.rowData, ...newRows];
+        return { ...section, rowData, status: computeStatus({ ...section, rowData }) };
+      }),
+    })));
+    setDirty(true);
+    setPharmacologyRecommendations(null);
+    toast.success('Pharmacology rows added to section 2.2', {
+      description: 'Verify every dose and nursing responsibility against the patient\'s chart before use.',
     });
   };
 
@@ -4777,6 +4833,19 @@ function Home() {
                   {chapter2RecommendationBusy ? 'Analysing…' : 'Recommend from Ch 1'}
                 </Button>
               )}
+              {isChapter2 && currentSection.id === '2.2' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-primary"
+                  onClick={() => void recommendPharmacology()}
+                  disabled={pharmacologyBusy}
+                  title="Propose the pharmacology table from the drugs recorded in Chapter 1"
+                >
+                  <Sparkles className={cn("size-3.5", pharmacologyBusy && "animate-pulse")} />
+                  {pharmacologyBusy ? 'Analysing…' : 'Suggest drug rows'}
+                </Button>
+              )}
               {isChapter3 && (
                 <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={recommendChapter3}>
                   <Sparkles className="size-3.5" /> Build plan from Ch 2
@@ -5099,6 +5168,60 @@ function Home() {
                     </Button>
                     <Button onClick={applyChapter2Recommendations}>
                       Apply to Chapter 2
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={pharmacologyRecommendations !== null} onOpenChange={(open) => { if (!open) setPharmacologyRecommendations(null); }}>
+            <DialogContent className="max-h-[85vh] w-full max-w-4xl overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-primary" /> Proposed pharmacology table (2.2)
+                </DialogTitle>
+                <DialogDescription>
+                  Built from the drugs recorded in Chapter 1 and the WHO Model Formulary. Review every dose against the patient's chart before applying.
+                </DialogDescription>
+              </DialogHeader>
+              {pharmacologyRecommendations && (
+                <div className="space-y-3">
+                  <div className="overflow-x-auto rounded-lg border">
+                    <table className="w-full min-w-[860px] text-[11px]">
+                      <thead>
+                        <tr className="border-b bg-muted/50">
+                          {['Drug', 'Class', 'Dose, route & frequency', 'Indication', 'Side effects', 'Nursing responsibility'].map((heading) => (
+                            <th key={heading} className="px-2 py-2 text-left">{heading}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pharmacologyRecommendations.rows.map((row, index) => (
+                          <tr key={index} className="border-b last:border-0 align-top">
+                            {row.map((cell, cellIndex) => (
+                              <td key={cellIndex} className="px-2 py-2 text-muted-foreground">{cell}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {pharmacologyRecommendations.unmatched && pharmacologyRecommendations.unmatched.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Not pre-filled:</span>{' '}
+                      {pharmacologyRecommendations.unmatched.join(', ')} — no bundled formulary entry; fill these manually from a current formulary.
+                    </p>
+                  )}
+                  {pharmacologyRecommendations.note && (
+                    <p className="text-xs text-muted-foreground">{pharmacologyRecommendations.note}</p>
+                  )}
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button variant="outline" onClick={() => setPharmacologyRecommendations(null)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={applyPharmacologyRecommendations}>
+                      Add rows to 2.2
                     </Button>
                   </div>
                 </div>

@@ -35,6 +35,7 @@ from reference_chunker import chunk_reference_text, ref_chunks_to_dicts  # noqa:
 from retrieval import SimpleIndex  # noqa: E402
 from import_worker import import_study, import_study_with_fields  # noqa: E402
 from nanda_mapper import build_chapter2_analysis_from_chapter1  # noqa: E402
+from pharm_mapper import build_pharmacology_rows  # noqa: E402
 
 # Per-study retrieval indexes, keyed by study id and cached in memory so each
 # draft doesn't reload the pickled index from disk. Lives at the project root
@@ -445,6 +446,105 @@ def _chapter2_with_llm(chapter1_fields: Dict[str, str], condition: str, rules_re
     return _merge_chapter2_result(answer, rules_result)
 
 
+_PHARMACY_SYSTEM = (
+    "You are a nursing tutor at a Ghana NMC-accredited college helping a student "
+    "complete section 2.2 'Pharmacology of Drugs Prescribed' of a care study. You "
+    "receive the patient's Chapter 1 drug data and rule-generated table rows "
+    "grounded in the WHO Model Formulary. Keep every dose, route, and frequency "
+    "EXACTLY as given in the rule rows — never invent or alter doses. For drugs "
+    "the rules could not fill (listed as unmatched), you may add a row ONLY with "
+    "standard, well-established information (drug class, typical indication, "
+    "common side effects, nursing care) and keep doses general — never a specific "
+    "made-up dose. Return ONLY a JSON object of this exact shape where rows is an "
+    "array of 6-element string arrays [name, drugClass, doseRouteFrequency, "
+    "indication, sideEffects, nursingResponsibility]:\n"
+    '{"rows": [["...", "...", "...", "...", "...", "..."]]}\n'
+    "Keep each cell concise (one to two sentences)."
+)
+
+
+def _pharmacology_with_llm(chapter1_fields: Dict[str, str], rules_result: dict) -> dict:
+    """One model call that polishes the rule-generated pharmacology rows."""
+    fields_text = json.dumps(chapter1_fields, ensure_ascii=True, indent=2)
+    rules_text = json.dumps(rules_result, ensure_ascii=True, indent=2)
+    prompt = (
+        f"CHAPTER 1 DRUG DATA:\n{fields_text}\n\n"
+        f"RULE-GENERATED ROWS (grounded in the WHO Model Formulary):\n{rules_text}\n\n"
+        "Polish these rows for the student's pharmacology table: tidy wording, keep "
+        "all doses verbatim, keep one row per drug, keep the column order "
+        "[name, class, dose/route/frequency, indication, side effects, nursing "
+        "responsibility]. You may add rows for unmatched drugs using only "
+        "well-established standard information with no invented specific doses. "
+        "Return only the JSON object."
+    )
+    # Thinking models can spend thousands of tokens before any text appears.
+    answer = _chat_model(_PHARMACY_SYSTEM, prompt, max_tokens=6000, label="pharmacology recommendations")
+    return _merge_pharmacology_result(answer, rules_result)
+
+
+def _merge_pharmacology_result(raw: str, rules_result: dict) -> dict:
+    """Validate the model's rows JSON, falling back to the rule rows."""
+    candidate = raw.strip()
+    if candidate.startswith("```"):
+        end = candidate.rfind("```")
+        candidate = candidate[3:end if end != -1 else None].strip()
+        if candidate.lower().startswith("json"):
+            candidate = candidate[4:].strip()
+
+    parsed = None
+    try:
+        parsed = json.loads(candidate)
+    except (json.JSONDecodeError, ValueError):
+        pass
+    if parsed is None:
+        first_brace = candidate.find("{")
+        last_brace = candidate.rfind("}")
+        if first_brace != -1 and last_brace > first_brace:
+            try:
+                parsed = json.loads(candidate[first_brace:last_brace + 1])
+            except (json.JSONDecodeError, ValueError):
+                pass
+    if not isinstance(parsed, dict):
+        raise ValueError("model response was not a JSON object")
+
+    model_rows = parsed.get("rows")
+    if not isinstance(model_rows, list) or not model_rows:
+        raise ValueError("model response contained no rows")
+
+    clean_rows: List[List[str]] = []
+    for row in model_rows:
+        if not isinstance(row, list):
+            continue
+        cells = [str(cell).strip() if cell is not None else "" for cell in row]
+        while len(cells) < 6:
+            cells.append("")
+        clean_rows.append(cells[:6])
+    if not clean_rows:
+        raise ValueError("model response contained no usable rows")
+    return {"rows": clean_rows}
+
+
+def generate_pharmacology_recommendations(chapter1_fields: Dict[str, str]) -> dict:
+    """Proposed section 2.2 pharmacology rows: LLM polish, rule fallback.
+
+    The deterministic formulary rows ground the model prompt and serve as the
+    fallback whenever the model call fails or returns an unusable shape, so the
+    API always returns a usable table proposal.
+    """
+    rules_result = build_pharmacology_rows(chapter1_fields)
+    try:
+        result = _pharmacology_with_llm(chapter1_fields, rules_result)
+        result["note"] = rules_result.get("note", "")
+        result["unmatched"] = rules_result.get("unmatched", [])
+        return result
+    except Exception as exc:
+        print(
+            f"[worker] pharmacology recommendations: model call failed, using rule-based rows: {exc}",
+            file=sys.stderr, flush=True,
+        )
+        return rules_result
+
+
 _CHAPTER2_FIELDS = {
     "section_23": ("actualProblems", "potentialProblems", "problemPriority"),
     "section_24": ("generalStrengths", "specificStrengths"),
@@ -627,6 +727,16 @@ def main() -> None:
                     condition.strip(),
                 )
                 emit({"id": req.get("id"), "recommendations": result})
+                continue
+            if op == "pharmacology_recommendations":
+                chapter1_fields = req.get("chapter1Fields") or {}
+                if not isinstance(chapter1_fields, dict):
+                    emit({"id": req.get("id"), "error": "pharmacology_recommendations requires chapter1Fields"})
+                    continue
+                result = generate_pharmacology_recommendations(
+                    {str(key): str(value) for key, value in chapter1_fields.items()},
+                )
+                emit({"id": req.get("id"), "pharmacology": result})
                 continue
 
             study_id = req.get("studyId")
