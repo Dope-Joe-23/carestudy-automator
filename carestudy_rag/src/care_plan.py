@@ -23,7 +23,9 @@ import re
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from draft_worker import _chat_model  # reuse the model gateway with fallbacks
+# Reuse the shared model gateway (extracted from draft_worker to avoid a
+# circular import: the worker imports this module to register its operation).
+from model_gateway import _chat_model  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Diagnosis-family order library
