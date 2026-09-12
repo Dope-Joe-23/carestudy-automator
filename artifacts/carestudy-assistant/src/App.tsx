@@ -231,6 +231,17 @@ type Section = {
 
 type RowRow = { id: number; cells: string[] };
 
+/** A section's recommended values held for review in the Collect-data form.
+ *  Nothing reaches the workspace until the user commits (or discards). */
+type StagedSectionPreview = {
+  sectionId: string;
+  data: Record<string, string>;
+  rowData?: RowRow[];
+  notes?: string;
+  /** Sections still to preview after this one is applied. */
+  queue: { sectionId: string; data?: Record<string, string>; rowData?: string[][] }[];
+};
+
 type Chapter = {
   name: string;
   shortLabel: string;
@@ -2411,6 +2422,7 @@ function Home() {
   /** Export all collected data (field values, row data, notes, drafts) as a
    *  JSON file that can be re-imported to repopulate the section forms. */
   const exportCollectedData = () => {
+    if (aiBusy) return;
     const payload = buildStudyPayload();
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: 'application/json',
@@ -2431,6 +2443,7 @@ function Home() {
 
   /** Read the selected file, validate it, and open the confirmation dialog. */
   const importCollectedData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (aiBusy) return;
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
@@ -2457,7 +2470,7 @@ function Home() {
 
   /** Actually apply the pending import after the user confirms. */
   const confirmImport = () => {
-    if (!pendingImport) return;
+    if (!pendingImport || aiBusy) return;
     const summary = summariseChapterData(pendingImport.chapters);
     loadStudyIntoWorkspace(pendingImport, null);
     setDirty(true);
@@ -2507,6 +2520,7 @@ function Home() {
 
   /** Read a chapter JSON file and open the confirmation dialog. */
   const importChapter = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (aiBusy) return;
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
@@ -2550,7 +2564,7 @@ function Home() {
 
   /** Apply a chapter import after user confirmation. */
   const confirmChapterImport = () => {
-    if (!pendingChapterImport) return;
+    if (!pendingChapterImport || aiBusy) return;
     const { chapterIndex, data } = pendingChapterImport;
     const target = chapters[chapterIndex];
     setChapters((previous) =>
@@ -2615,9 +2629,140 @@ function Home() {
     reader.readAsText(file);
   };
 
+  // ---------------------------------------------------------------------------
+  // Staged section-form preview — recommendation "Apply" buttons open the
+  // Collect-data form pre-filled instead of writing to the study directly.
+  // Values live only in this state until the user presses Done (commit) or
+  // discards (close/cancel), so previewing never dirties the workspace.
+  // ---------------------------------------------------------------------------
+  const [stagedSection, setStagedSection] = useState<StagedSectionPreview | null>(null);
+
+  // ---------------------------------------------------------------------------
+  // Operation conflict locking — buttons that would disturb an in-flight
+  // operation are disabled while it runs (and vice versa). A staged preview
+  // counts too: until it is applied or discarded, nothing may rewrite the
+  // workspace underneath it. Navigation, overview, and export stay available:
+  // those operations already capture their targets up front.
+  // ---------------------------------------------------------------------------
+  const aiBusy =
+    stagedSection !== null ||
+    isDrafting ||
+    isIntroDrafting ||
+    isChapterDrafting ||
+    chapter2RecommendationBusy ||
+    pharmacologyBusy ||
+    docImportBusy;
+
+  /** Find (chapterIndex, sectionIndex) for a section id like "2.3". */
+  const locateSection = (sectionId: string) => {
+    for (const [chapterIndex, chapter] of chapters.entries()) {
+      const sectionIndex = chapter.sections.findIndex((section) => section.id === sectionId);
+      if (sectionIndex >= 0) return { chapterIndex, sectionIndex };
+    }
+    return null;
+  };
+
+  /**
+   * Open the Collect-data form for `sectionId` with `data`/`rowData` shown as
+   * a staged preview. Stepping: when more staged sections remain in `queue`,
+   * Done commits the current section and opens the next one.
+   */
+  const beginStagedPreview = (
+    entries: { sectionId: string; data?: Record<string, string>; rowData?: string[][] }[],
+  ) => {
+    const [first, ...rest] = entries;
+    if (!first) return;
+    const location = locateSection(first.sectionId);
+    if (!location) return;
+    setActiveChapter(location.chapterIndex);
+    setActiveSection(location.sectionIndex);
+    setStagedSection({
+      sectionId: first.sectionId,
+      data: first.data ?? {},
+      rowData: first.rowData?.map((cells) => ({ id: nextRowId(), cells })),
+      queue: rest,
+    });
+    setCollectOpen(true);
+  };
+
+  /** Write the staged values into the workspace (idempotent across re-renders). */
+  const commitStagedSection = (staged: StagedSectionPreview) => {
+    setChapters((previous) =>
+      previous.map((chapter) => ({
+        ...chapter,
+        sections: chapter.sections.map((section) => {
+          if (section.id !== staged.sectionId) return section;
+          const data = { ...section.data, ...staged.data };
+          const rowData = staged.rowData && staged.rowData.length > 0 ? staged.rowData : section.rowData;
+          const notes = typeof staged.notes === 'string' ? staged.notes : section.notes;
+          return { ...section, data, rowData, notes, status: computeStatus({ ...section, data, rowData, notes }) };
+        }),
+      })),
+    );
+    setDirty(true);
+  };
+
+  /** Done in the form: commit this section, then open the next staged one. */
+  const commitStagedPreview = () => {
+    if (!stagedSection) return;
+    commitStagedSection(stagedSection);
+    const [next, ...rest] = stagedSection.queue;
+    if (next) {
+      const location = locateSection(next.sectionId);
+      if (location) {
+        setActiveChapter(location.chapterIndex);
+        setActiveSection(location.sectionIndex);
+      }
+      setStagedSection({
+        sectionId: next.sectionId,
+        data: next.data ?? {},
+        rowData: next.rowData?.map((cells) => ({ id: nextRowId(), cells })),
+        queue: rest,
+      });
+    } else {
+      setStagedSection(null);
+      toast.success('Recommendations applied', {
+        description: 'Every staged section was saved to the workspace.',
+      });
+    }
+  };
+
+  /** Throw away the staged preview without touching the workspace. */
+  const discardStagedPreview = () => {
+    setStagedSection(null);
+    setCollectOpen(false);
+    toast('Preview discarded', { description: 'No staged values were saved.' });
+  };
+
+  /** Closing the form keeps a staged preview alive so it can be resumed. */
+  const handleCollectOpenChange = (open: boolean) => {
+    if (open) {
+      setCollectOpen(true);
+      return;
+    }
+    if (stagedSection) {
+      setCollectOpen(false);
+      toast('Preview paused', {
+        description: 'Reopen “Collect data” on this section to apply or discard the staged values.',
+      });
+      return;
+    }
+    setCollectOpen(false);
+  };
+
+  /** Apply the staged section, then keep stepping through any remaining ones. */
+  const handleDoneStaged = () => {
+    if (!stagedSection) return;
+    const hadQueue = stagedSection.queue.length > 0;
+    commitStagedPreview();
+    if (!hadQueue) setCollectOpen(false);
+  };
+
+  const handleDiscardStaged = discardStagedPreview;
+
   /** Send the document text to the AI, parse it, and populate the workspace. */
   const runDocImport = async () => {
-    if (!docImportText.trim() || docImportBusy) return;
+    if (!docImportText.trim() || aiBusy) return;
     setDocImportBusy(true);
     setDocImportError(null);
     try {
@@ -2850,11 +2995,35 @@ function Home() {
     );
   };
 
+  /** Effective field value — staged preview values win while previewing. */
+  const getFieldValue = (fieldId: string) => {
+    if (stagedSection && stagedSection.sectionId === currentSection.id) {
+      return stagedSection.data[fieldId] ?? '';
+    }
+    return currentSection.data[fieldId] ?? '';
+  };
+
   const setFieldValue = (fieldId: string, value: string) => {
+    if (stagedSection && stagedSection.sectionId === currentSection.id) {
+      setStagedSection({ ...stagedSection, data: { ...stagedSection.data, [fieldId]: value } });
+      return;
+    }
     updateCurrentSection({ data: { ...currentSection.data, [fieldId]: value } });
   };
 
+  /** Effective row data — staged preview rows win while previewing. */
+  const getSectionRows = (): RowRow[] => {
+    if (stagedSection && stagedSection.sectionId === currentSection.id && stagedSection.rowData) {
+      return stagedSection.rowData;
+    }
+    return currentSection.rowData;
+  };
+
   const setRowData = (rows: RowRow[]) => {
+    if (stagedSection && stagedSection.sectionId === currentSection.id) {
+      setStagedSection({ ...stagedSection, rowData: rows });
+      return;
+    }
     updateCurrentSection({ rowData: rows });
   };
 
@@ -2867,7 +3036,7 @@ function Home() {
   const selectChapter = (index: number) => jumpTo(index, 0);
 
   const recommendChapter2 = async () => {
-    if (chapter2RecommendationBusy) return;
+    if (chapter2RecommendationBusy || aiBusy) return;
     const chapter1Fields = {
       ...studyFacts.assessment.fields,
       clinicalNotes: studyFacts.assessment.evidenceText,
@@ -2893,40 +3062,41 @@ function Home() {
     }
   };
 
+  /** Stage the Chapter 2 recommendations into the section forms for review. */
   const applyChapter2Recommendations = () => {
     if (!chapter2Recommendations) return;
-    const values: Record<string, Record<string, string>> = {
-      '2.3': {
-        healthProblems: chapter2Recommendations.section_23.actualProblems,
-        potentialProblems: chapter2Recommendations.section_23.potentialProblems,
-        problemPriority: chapter2Recommendations.section_23.problemPriority,
-      },
-      '2.4': {
-        generalStrengths: chapter2Recommendations.section_24.generalStrengths,
-        strengths: chapter2Recommendations.section_24.specificStrengths,
-      },
-      '2.5': {
-        nursingDiagnoses: chapter2Recommendations.section_25.nursingDiagnoses,
-        diagnosisPriority: chapter2Recommendations.section_25.diagnosisPriority,
-      },
-    };
-    setChapters((previous) => previous.map((chapter) => ({
-      ...chapter,
-      sections: chapter.sections.map((section) =>
-        values[section.id]
-          ? { ...section, data: { ...section.data, ...values[section.id] }, status: computeStatus({ ...section, data: { ...section.data, ...values[section.id] } }) }
-          : section,
-      ),
-    })));
-    setDirty(true);
     setChapter2RecommendationOpen(false);
-    toast.success('Chapter 2 recommendations applied', {
-      description: 'Review the suggested problems, strengths, and diagnoses before drafting.',
+    beginStagedPreview([
+      {
+        sectionId: '2.3',
+        data: {
+          healthProblems: chapter2Recommendations.section_23.actualProblems,
+          potentialProblems: chapter2Recommendations.section_23.potentialProblems,
+          problemPriority: chapter2Recommendations.section_23.problemPriority,
+        },
+      },
+      {
+        sectionId: '2.4',
+        data: {
+          generalStrengths: chapter2Recommendations.section_24.generalStrengths,
+          strengths: chapter2Recommendations.section_24.specificStrengths,
+        },
+      },
+      {
+        sectionId: '2.5',
+        data: {
+          nursingDiagnoses: chapter2Recommendations.section_25.nursingDiagnoses,
+          diagnosisPriority: chapter2Recommendations.section_25.diagnosisPriority,
+        },
+      },
+    ]);
+    toast('Previewing Chapter 2 recommendations', {
+      description: 'Review the staged values in each section form — nothing is saved until you press Done in every section.',
     });
   };
 
   const recommendPharmacology = async () => {
-    if (pharmacologyBusy) return;
+    if (pharmacologyBusy || aiBusy) return;
     // Drug data lives in Chapter 1: the regular-medications field and the
     // treatment fields on the admission/implementation sections.
     const chapter1Fields: Record<string, string> = {
@@ -2952,32 +3122,18 @@ function Home() {
     }
   };
 
+  /** Stage the proposed pharmacology rows into section 2.2's form for review. */
   const applyPharmacologyRecommendations = () => {
     if (!pharmacologyRecommendations?.rows.length) return;
-    setChapters((previous) => previous.map((chapter) => ({
-      ...chapter,
-      sections: chapter.sections.map((section) => {
-        if (section.id !== '2.2') return section;
-        // Merge without duplicating drugs already in the table (match on the
-        // drug-name cell, case-insensitive).
-        const existing = new Set(
-          section.rowData.map((row) => row.cells[0]?.trim().toLowerCase()).filter(Boolean),
-        );
-        const newRows = pharmacologyRecommendations.rows
-          .filter((cells) => !existing.has(cells[0]?.trim().toLowerCase()))
-          .map((cells) => ({ id: nextRowId(), cells }));
-        const rowData = [...section.rowData, ...newRows];
-        return { ...section, rowData, status: computeStatus({ ...section, rowData }) };
-      }),
-    })));
-    setDirty(true);
     setPharmacologyRecommendations(null);
-    toast.success('Pharmacology rows added to section 2.2', {
-      description: 'Verify every dose and nursing responsibility against the patient\'s chart before use.',
+    beginStagedPreview([{ sectionId: '2.2', rowData: pharmacologyRecommendations.rows }]);
+    toast('Previewing pharmacology rows', {
+      description: 'Verify every dose against the patient\'s chart — press Done to keep them.',
     });
   };
 
   const recommendChapter3 = () => {
+    if (aiBusy) return;
     const diagnoses = studyFacts.analysis.nursingDiagnoses;
     const diagnosisList = diagnoses
       .split(/\n+/)
@@ -3039,33 +3195,21 @@ function Home() {
     setPlanningProposalOpen(true);
   };
 
+  /** Stage the planning proposal into sections 3.1/3.2 forms for review. */
   const applyPlanningProposal = () => {
     if (!planningProposal) return;
-    setChapters((previous) => previous.map((chapter) => ({
-      ...chapter,
-      sections: chapter.sections.map((section) => {
-        if (section.id === '3.1') {
-          return { ...section, data: { ...section.data, ...planningProposal.objectives }, status: computeStatus({ ...section, data: { ...section.data, ...planningProposal.objectives } }) };
-        }
-        if (section.id === '3.2') {
-          const existingDiagnoses = new Set(
-            section.rowData.map((row) => row.cells[1]?.trim().toLowerCase()).filter(Boolean),
-          );
-          const newRows = planningProposal.carePlanRows
-            .filter((cells) => !existingDiagnoses.has(cells[1].trim().toLowerCase()))
-            .map((cells) => ({ id: nextRowId(), cells }));
-          const rowData = [...section.rowData, ...newRows];
-          return { ...section, rowData, status: computeStatus({ ...section, rowData }) };
-        }
-        return section;
-      }),
-    })));
-    setDirty(true);
     setPlanningProposalOpen(false);
-    toast.success('Chapter 3 planning proposal applied', { description: 'Review every objective, intervention, rationale, and date before use.' });
+    beginStagedPreview([
+      { sectionId: '3.1', data: planningProposal.objectives },
+      { sectionId: '3.2', rowData: planningProposal.carePlanRows },
+    ]);
+    toast('Previewing Chapter 3 plan', {
+      description: 'Review the objectives and care-plan rows in each section form — nothing is saved until you press Done in every section.',
+    });
   };
 
   const recommendChapter5 = () => {
+    if (aiBusy) return;
     const rows = studyFacts.planning.carePlanRows.filter((row) => row[1]?.trim());
     if (rows.length === 0) {
       toast.error('Build the Chapter 3 care plan first.');
@@ -3091,38 +3235,23 @@ function Home() {
     setEvaluationProposalOpen(true);
   };
 
+  /** Stage the evaluation proposal into sections 5.1/5.2 forms for review. */
   const applyEvaluationProposal = () => {
     if (!evaluationProposal) return;
-    setChapters((previous) => previous.map((chapter) => ({
-      ...chapter,
-      sections: chapter.sections.map((section) => {
-        if (section.id !== '5.1') return section;
-        const data = { ...section.data, overallEvaluation: evaluationProposal.overall };
-        const existingDiagnoses = new Set(
-          section.rowData.map((row) => row.cells[0]?.trim().toLowerCase()).filter(Boolean),
-        );
-        const newRows = evaluationProposal.rows
-          .filter((cells) => !existingDiagnoses.has(cells[0].trim().toLowerCase()))
-          .map((cells) => ({ id: nextRowId(), cells }));
-        const rowData = [...section.rowData, ...newRows];
-        return { ...section, data, rowData, status: computeStatus({ ...section, data, rowData }) };
-      }),
-    })));
-    setChapters((previous) => previous.map((chapter) => ({
-      ...chapter,
-      sections: chapter.sections.map((section) => {
-        if (section.id !== '5.2' || evaluationProposal.amendmentRows.length === 0) return section;
-        const existing = new Set(section.rowData.map((row) => row.cells[0]?.trim().toLowerCase()).filter(Boolean));
-        const additions = evaluationProposal.amendmentRows
-          .filter((row) => !existing.has(row[0].trim().toLowerCase()))
-          .map((cells) => ({ id: nextRowId(), cells }));
-        const rowData = [...section.rowData, ...additions];
-        return { ...section, rowData, status: computeStatus({ ...section, rowData }) };
-      }),
-    })));
-    setDirty(true);
     setEvaluationProposalOpen(false);
-    toast.success('Chapter 5 evaluation scaffold applied', { description: 'Enter actual outcomes before finalising the evaluation.' });
+    beginStagedPreview([
+      {
+        sectionId: '5.1',
+        data: { overallEvaluation: evaluationProposal.overall },
+        rowData: evaluationProposal.rows,
+      },
+      ...(evaluationProposal.amendmentRows.length > 0
+        ? [{ sectionId: '5.2', rowData: evaluationProposal.amendmentRows }]
+        : []),
+    ]);
+    toast('Previewing Chapter 5 evaluation', {
+      description: 'Enter actual outcomes, then press Done in each section to keep them.',
+    });
   };
 
   const goPrevious = () => {
@@ -3152,7 +3281,7 @@ function Home() {
   };
 
   const draftSection = async () => {
-    if (!draftAvailable || isDrafting) return;
+    if (!draftAvailable || isDrafting || aiBusy) return;
     // Capture the target section now: the request takes seconds, and the user
     // may navigate to another section before it resolves.
     const targetChapter = activeChapter;
@@ -3220,6 +3349,7 @@ function Home() {
   };
 
   const clearSection = () => {
+    if (aiBusy) return;
     setSectionTab('draft');
     setCollectOpen(false);
     setDraftEditing(false);
@@ -3235,6 +3365,7 @@ function Home() {
   };
 
   const resetAll = () => {
+    if (aiBusy) return;
     workspaceGeneration.current += 1;
     setSectionTab('draft');
     setCollectOpen(false);
@@ -3299,7 +3430,7 @@ function Home() {
 
   /** Draft the active chapter's introduction with the AI engine. */
   const draftChapterIntro = async () => {
-    if (isIntroDrafting) return;
+    if (isIntroDrafting || aiBusy) return;
     const targetChapter = activeChapter;
     setIsIntroDrafting(true);
     try {
@@ -3347,7 +3478,7 @@ function Home() {
    * with per-item progress surfaced in the chapter-draft card.
    */
   const draftChapter = async () => {
-    if (isChapterDrafting || isDrafting || isIntroDrafting) return;
+    if (aiBusy) return;
     // Capture the target chapter now: the run takes a while, and the user may
     // navigate to another chapter before it resolves.
     const targetChapterIndex = activeChapter;
@@ -3682,6 +3813,7 @@ function Home() {
   });
 
   const applyAssistantEdits = (messageIndex: number, edits: StudyAssistantEdit[]) => {
+    if (aiBusy) return;
     const knownIds = new Set(chapters.flatMap((chapter) => chapter.sections.map((section) => section.id)));
     const validEdits = edits.filter(
       (edit) => knownIds.has(edit.sectionId) && (
@@ -3741,7 +3873,7 @@ function Home() {
 
   /** Polish the current section's draft via the AI assistant. */
   const polishCurrentSection = async () => {
-    if (!currentSection || !currentSection.draft.trim() || assistantBusy) return;
+    if (!currentSection || !currentSection.draft.trim() || assistantBusy || aiBusy) return;
     const sectionHeading = currentSection.heading;
     const sectionId = currentSection.id;
     const draftText = currentSection.draft;
@@ -3774,6 +3906,7 @@ function Home() {
     studyId: number | null,
     announce = true,
   ) => {
+    setStagedSection(null);
     workspaceGeneration.current += 1;
     const next = makeChapters();
     for (const chapter of stored.chapters) {
@@ -3928,13 +4061,14 @@ function Home() {
 
   /** Start a blank study under the name chosen in the dialog. */
   const createNewStudy = () => {
+    if (aiBusy) return;
     const name = newStudyName.trim() || deriveStudyName();
     setNewStudyOpen(false);
     startNewStudy(name);
   };
 
   const saveStudy = async () => {
-    if (isSaving) return;
+    if (isSaving || aiBusy) return;
     setIsSaving(true);
     try {
       const data = buildStudyPayload();
@@ -3971,6 +4105,7 @@ function Home() {
   };
 
   const openStudy = async (id: number) => {
+    if (aiBusy) return;
     try {
       const detail = await getStudy(id);
       loadStudyIntoWorkspace(detail.data, id);
@@ -4206,6 +4341,7 @@ function Home() {
 
   const removeStudy = async (id: number) => {
     // The confirmation happens in the ⋯ menu's Delete tab — never double-ask.
+    if (aiBusy) return;
     try {
       await deleteStudy(id);
       if (currentStudyId === id) {
@@ -4228,6 +4364,7 @@ function Home() {
 
   /** Rename a saved study (keeps its data) from the ⋯ menu. */
   const renameStudy = async (id: number, name: string) => {
+    if (aiBusy) return;
     try {
       // updateStudy stores a full snapshot — reuse the study's own data so the
       // rename changes nothing but the name.
@@ -4250,6 +4387,7 @@ function Home() {
   };
 
   const startNewStudy = (name: string | null = null) => {
+    if (aiBusy) return;
     workspaceGeneration.current += 1;
     suppressDirty.current = true;
     setChapters(makeChapters());
@@ -4417,6 +4555,11 @@ function Home() {
   const atLast =
     activeChapter === navigableChapterIndices[navigableChapterIndices.length - 1] &&
     activeSection === currentChapter.sections.length - 1;
+  // Rows staged for the section currently shown in the form.
+  const stagedCount =
+    stagedSection && stagedSection.sectionId === currentSection.id
+      ? (stagedSection.rowData?.length ?? 0) + Object.values(stagedSection.data).filter((value) => value.trim()).length
+      : 0;
 
   // Live save status — shared by the main header and the Preview/Export
   // toolbar so edits and formatting show their autosave state where they happen.
@@ -4604,7 +4747,7 @@ function Home() {
                       <StudiesPanel
                         refreshKey={studyListKey}
                         currentStudyId={currentStudyId}
-                        isSaving={isSaving}
+                        isSaving={isSaving || aiBusy}
                         canSave={canSave}
                         onOpenStudy={openStudy}
                         onDeleteStudy={removeStudy}
@@ -4666,12 +4809,15 @@ function Home() {
               <DropdownMenuItem onClick={exportCollectedData}>
                 <FileDown /> Export data
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => importInputRef.current?.click()}>
+              <DropdownMenuItem
+                disabled={aiBusy}
+                onClick={() => importInputRef.current?.click()}
+              >
                 <FileUp /> Import data
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
+                disabled={aiBusy}
                 onClick={resetAll}
               >
                 <RotateCcw /> Reset all progress
@@ -4743,7 +4889,7 @@ function Home() {
               size="icon"
               className="size-8 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600 dark:text-emerald-400 dark:hover:bg-emerald-400/10"
               onClick={openSaveDialog}
-              disabled={!canSave}
+              disabled={!canSave || aiBusy}
               title={canSave ? 'Save study' : 'Add data before saving'}
             >
               <Save className="size-3.5" />
@@ -4753,7 +4899,7 @@ function Home() {
               size="icon"
               className="size-8 text-primary hover:bg-primary/10"
               onClick={openNewStudyDialog}
-              title="New study"
+              disabled={aiBusy}
             >
               <Plus className="size-3.5" />
             </Button>
@@ -4785,13 +4931,13 @@ function Home() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={exportCollectedData}>
+                <DropdownMenuItem disabled={aiBusy} onClick={exportCollectedData}>
                   <FileDown /> Export data
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => importInputRef.current?.click()}>
                   <FileUp /> Import data
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setDocImportOpen(true)}>
+                <DropdownMenuItem disabled={aiBusy} onClick={() => setDocImportOpen(true)}>
                   <FileText /> Import document
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -4826,7 +4972,7 @@ function Home() {
                   size="sm"
                   className="h-8 gap-1.5 text-primary"
                   onClick={() => void recommendChapter2()}
-                  disabled={chapter2RecommendationBusy}
+                  disabled={aiBusy}
                   title="Recommend Chapter 2 problems, strengths, and diagnoses from Chapter 1"
                 >
                   <Sparkles className={cn("size-3.5", chapter2RecommendationBusy && "animate-pulse")} />
@@ -4839,15 +4985,14 @@ function Home() {
                   size="sm"
                   className="h-8 gap-1.5 text-primary"
                   onClick={() => void recommendPharmacology()}
-                  disabled={pharmacologyBusy}
+                  disabled={aiBusy}
                   title="Propose the pharmacology table from the drugs recorded in Chapter 1"
                 >
                   <Sparkles className={cn("size-3.5", pharmacologyBusy && "animate-pulse")} />
                   {pharmacologyBusy ? 'Analysing…' : 'Suggest drug rows'}
                 </Button>
-              )}
-              {isChapter3 && (
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={recommendChapter3}>
+              )}                {isChapter3 && (
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={recommendChapter3} disabled={aiBusy}>
                   <Sparkles className="size-3.5" /> Build plan from Ch 2
                 </Button>
               )}
@@ -4857,14 +5002,13 @@ function Home() {
                   size="sm"
                   className="h-8 gap-1.5 text-primary"
                   onClick={() => setActualCareReviewOpen(true)}
-                  disabled={isChapterDrafting || isDrafting || isIntroDrafting}
+                  disabled={aiBusy}
                   title="Review documented care before drafting implementation sections"
                 >
                   <FileCheck2 className="size-3.5" /> Review actual care
                 </Button>
-              )}
-              {isChapter5 && (
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={recommendChapter5}>
+              )}                {isChapter5 && (
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={recommendChapter5} disabled={aiBusy}>
                   <Sparkles className="size-3.5" /> Evaluate care plan
                 </Button>
               )}
@@ -4890,23 +5034,22 @@ function Home() {
                   className={`size-1.5 rounded-full ${currentChapter.intro.trim() ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`}
                   aria-hidden="true"
                 />
-              </Button>
-              <Button
-                size="sm"
-                className="h-8 gap-1.5"
-                onClick={draftChapter}
-                disabled={!canDraftChapter || isChapterDrafting || isDrafting || isIntroDrafting}
-              >
-                {isChapterDrafting ? (
-                  <>
-                    <RotateCcw className="size-3.5 animate-spin" /> Drafting…
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="size-3.5" /> Draft all
-                  </>
-                )}
-              </Button>
+              </Button>                <Button
+                  size="sm"
+                  className="h-8 gap-1.5"
+                  onClick={draftChapter}
+                  disabled={!canDraftChapter || aiBusy}
+                >
+                  {isChapterDrafting ? (
+                    <>
+                      <RotateCcw className="size-3.5 animate-spin" /> Drafting…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="size-3.5" /> Draft all
+                    </>
+                  )}
+                </Button>
             </div>
 
             {/* Chapter navigation buttons */}
@@ -4937,14 +5080,15 @@ function Home() {
               {navigableChapterIndices.map((chapterIndex) => {
                 const chapterNumber = chapterOrdinal(chapterIndex) + 1;
                 return (
-                  <Button
-                    key={chapterIndex}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 gap-1.5"
-                    onClick={() => selectChapter(chapterIndex)}
-                    title={`Go to Chapter ${chapterNumber}`}
-                  >
+                <Button
+                  key={chapterIndex}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5"
+                  onClick={() => selectChapter(chapterIndex)}
+                  disabled={aiBusy}
+                  title={`Go to Chapter ${chapterNumber}`}
+                >
                     <span className="text-[11px]">Ch {chapterNumber}</span>
                   </Button>
                 );
@@ -5005,7 +5149,7 @@ function Home() {
                           size="sm"
                           className="h-8 gap-1.5"
                           onClick={draftChapterIntro}
-                          disabled={isIntroDrafting}
+                          disabled={aiBusy}
                         >
                           {isIntroDrafting ? (
                             <>
@@ -5069,7 +5213,7 @@ function Home() {
                   </div>
                   <Button
                     onClick={draftChapter}
-                    disabled={!canDraftChapter || isChapterDrafting || isDrafting || isIntroDrafting}
+                    disabled={!canDraftChapter || aiBusy}
                     className="h-9 shrink-0 gap-1.5"
                   >
                     {isChapterDrafting ? (
@@ -5438,15 +5582,16 @@ function Home() {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={collectOpen} onOpenChange={setCollectOpen}>
+          <Dialog open={collectOpen} onOpenChange={handleCollectOpenChange}>
             <DialogContent className="max-h-[85vh] w-full max-w-2xl overflow-y-auto border-sidebar-border bg-sidebar-accent text-sidebar-foreground">
               <DialogHeader>
                 <DialogTitle>
                   {currentSection.id} · {currentSection.heading}
                 </DialogTitle>
                 <DialogDescription className="text-sidebar-foreground/70">
-                  Fill what you observed — drafts are built from exactly what you record here,
-                  nothing is invented on your behalf.
+                  {stagedSection
+                    ? 'These values are staged for preview — nothing is saved until you press the Apply button below.'
+                    : 'Fill what you observed — drafts are built from exactly what you record here, nothing is invented on your behalf.'}
                 </DialogDescription>
               </DialogHeader>
 
@@ -5456,7 +5601,7 @@ function Home() {
                     <FieldControl
                       key={field.id}
                       field={field}
-                      value={currentSection.data[field.id] ?? ''}
+                      value={getFieldValue(field.id)}
                       onChange={(value) => setFieldValue(field.id, value)}
                     />
                   ))}
@@ -5481,8 +5626,18 @@ function Home() {
                 </div>
                 <Textarea
                   id="section-notes"
-                  value={currentSection.notes}
-                  onChange={(event) => updateCurrentSection({ notes: event.target.value })}
+                  value={
+                    stagedSection && stagedSection.sectionId === currentSection.id
+                      ? stagedSection.notes ?? currentSection.notes
+                      : currentSection.notes
+                  }
+                  onChange={(event) => {
+                    if (stagedSection && stagedSection.sectionId === currentSection.id) {
+                      setStagedSection({ ...stagedSection, notes: event.target.value });
+                    } else {
+                      updateCurrentSection({ notes: event.target.value });
+                    }
+                  }}
                   onKeyDown={handleNotesKeyDown}
                   rows={5}
                   placeholder={'Write what you observed, heard, measured, or were told…\n\nUse your own shorthand. There is no need to make it polished yet.'}
@@ -5502,7 +5657,7 @@ function Home() {
               {currentSection.rows && (
                 <RowEditor
                   rowDef={currentSection.rows}
-                  rows={currentSection.rowData}
+                  rows={getSectionRows()}
                   onChange={setRowData}
                 />
               )}
@@ -5512,20 +5667,42 @@ function Home() {
                   aria-live="polite"
                   className="font-mono text-[11px] tabular text-sidebar-foreground/70"
                 >
-                  {currentSection.rows
+                  {stagedSection ? `${stagedCount} staged` : currentSection.rows
                     ? `${collectedCount} filled`
                     : `${collectedCount} / ${collectedTotal} collected`}
                 </span>
                 <div className="flex items-center gap-2">
+                  {stagedSection && (
+                    <span className="flex items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                      <Eye className="size-3" /> Previewing
+                    </span>
+                  )}
                   {currentRequiredMissing.length > 0 && (
                     <span className="flex items-center gap-1 text-[11px] text-amber-300">
                       <CircleAlert className="size-3.5" />
                       {currentRequiredMissing.length} required missing
                     </span>
                   )}
-                  <Button onClick={() => setCollectOpen(false)}>
-                    <Check className="size-4" /> Done
-                  </Button>
+                  {stagedSection ? (
+                    <>
+                      <Button
+                        variant="ghost"
+                        onClick={handleDiscardStaged}
+                      >
+                        Discard
+                      </Button>
+                      <Button onClick={handleDoneStaged}>
+                        <Check className="size-4" />
+                        {stagedSection.queue.length > 0
+                          ? `Apply & continue (${stagedSection.queue.length} left)`
+                          : 'Apply'}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => setCollectOpen(false)}>
+                      <Check className="size-4" /> Done
+                    </Button>
+                  )}
                 </div>
               </div>
             </DialogContent>
@@ -5651,7 +5828,7 @@ function Home() {
                                 sectionIndex: activeSection,
                               })
                             }
-                            disabled={filledCount === 0 && !currentSection.draft.trim()}
+                            disabled={aiBusy || (filledCount === 0 && !currentSection.draft.trim())}
                           >
                             <FileText className="size-4" />
                             This section (.docx)
@@ -5661,6 +5838,7 @@ function Home() {
                               downloadDocx({ type: 'chapter', chapterIndex: activeChapter })
                             }
                             disabled={
+                              aiBusy ||
                               !currentChapter.sections.some(
                                 (section) =>
                                   sectionFilledCount(section) > 0 || section.draft.trim().length > 0,
@@ -5678,7 +5856,7 @@ function Home() {
                       size="sm"
                       className="h-8 gap-1.5 text-muted-foreground"
                       onClick={clearSection}
-                      disabled={filledCount === 0}
+                      disabled={filledCount === 0 || aiBusy}
                     >
                       <RotateCcw className="size-3.5" /> Clear
                     </Button>
@@ -5745,7 +5923,7 @@ function Home() {
                           </Button>
                           <Button
                             onClick={draftSection}
-                            disabled={!draftAvailable || isDrafting}
+                            disabled={!draftAvailable || aiBusy}
                             className="h-9 gap-1.5"
                           >
                             {isDrafting ? (
@@ -6088,7 +6266,7 @@ function Home() {
           <CommandGroup heading="Actions">
             <CommandItem
               value="draft current section"
-              disabled={!draftAvailable || isDrafting}
+              disabled={!draftAvailable || aiBusy}
               onSelect={() => {
                 setCommandOpen(false);
                 draftSection();
@@ -6654,7 +6832,7 @@ function Home() {
                       <Redo2 className="size-3.5" />
                     </Button>
                     <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
-                    <Button variant="outline" size="icon" className="size-6" onClick={openSaveDialog} disabled={!canSave} title="Save study" aria-label="Save study">
+                    <Button variant="outline" size="icon" className="size-6" onClick={openSaveDialog} disabled={!canSave || aiBusy} title="Save study" aria-label="Save study">
                       {isSaving ? <RotateCcw className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
                     </Button>
                     <Button variant="outline" size="icon" className="size-6" onClick={() => setTitlePageOpen(true)} title="Title page details" aria-label="Title page details">
