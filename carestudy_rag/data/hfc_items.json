@@ -1,0 +1,2817 @@
+[
+ {
+  "uuid": "16c5fb9e-5507-467f-a6ea-0e84402b8048",
+  "title": "The Patient/Family Care Study Sickle Cell Disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "db94ec5e-495e-40be-a063-098cb0845673",
+  "title": "Patient And Family Care Study on Acute Asthmatic Attack",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "38bbcbf1-ce9a-43c3-97b5-de0dcb51240a",
+  "title": "A patient / family ceentered care study on gastroenteritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "e9aa858f-b88f-4edb-b25e-efe38285d7c1",
+  "title": "A Patient / Family Care Study on Enteric Fever",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "b461bc8e-cfd0-46cf-ab56-cf497f81fcbb",
+  "title": "Patient / Family Care Study on Bronchopneumonia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "56d5b793-a5a5-4204-a1e1-abda091d0310",
+  "title": "A patient/family centered care study on cellulitis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "f99b012d-862f-4666-8b22-1aad9eeaa336",
+  "title": "A Patient / Family Care Study on Gastroenteritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d9b01136-d654-4474-bfd4-64eef4dfe3ad",
+  "title": "A client/family centered maternity care study on madam Abena Pokuaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "a620d891-308c-4d6d-b531-21de736df5da",
+  "title": "A patient / family centered care study on cellulitis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "36d8fb8c-04fb-4a7a-9f87-25b89f19f0ac",
+  "title": "A patient /family care study on Malaria",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "fd5aa910-9fc5-4637-86ba-b72f5e257b7d",
+  "title": "A patient/family care study on Hypertension",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "409efa0a-45bd-4d0f-b690-1a14e9be84d6",
+  "title": "A patient/family care study on gastroenteritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "b7923033-9f56-4c4a-bf06-c4b29c077330",
+  "title": "A patient and family care study on gastroenteritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "71469756-6fa5-4489-b357-70b1114ad61c",
+  "title": "A patient/family care study on acute gastroenteritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "cf7ff671-12d0-4305-86c1-8409a4a43c66",
+  "title": "A client/ family centered maternity care study on madam Mariam Samawuro",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "3d1d97fb-5540-4925-a3fe-926adb339cd4",
+  "title": "A patient/family centered care study on Gastroenteritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "ca5fd879-cfaa-46a2-8559-264bc574365e",
+  "title": "A patient / family care study on Broncho-Pneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "48fdf03b-5516-466d-8e42-57ba656cee20",
+  "title": "A Patient and Family Centered  Care Study on Bronchopneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "99a92687-0851-4869-b2e6-555ce165ad15",
+  "title": "A patient/family centered care study on acute appendicitis (appendectomy)",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "4686fc1e-101b-4cd1-95f4-03d372b6eed0",
+  "title": "A client/ family centered maternity care study on madam  Asiedu Sarpong Harriet",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "741e7cf7-f93b-4b3e-a21a-a7f26c82fe50",
+  "title": "A client and family centered care study on madam Akosua Saah",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "3e82f64b-5253-4681-a30b-64c25eced6a1",
+  "title": "Patient / family centered care study on Mrs. D.L with Acute Gastritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "648dd2c2-90d3-458a-90cc-26dc7ad21b6a",
+  "title": "A Client/ Family Centered Maternity Care Study on  Madam Pokuaa Mavis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "3ca896cb-759c-463c-9611-a8b72bff2948",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Sule Adigya",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "0dedb29e-eef9-4efe-840f-390a12650935",
+  "title": "A Client/ Family Centered Maternity Care Study on Madam   Vida Ntiawine",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "4ee45159-9f9f-439f-b7f8-ec8d7befb5d3",
+  "title": "A client /family centered maternity care study on madam Fosuaa Elizabeth",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "ca0bb5d6-45f4-45da-914d-3bd044cc5694",
+  "title": "A client/family centered maternity care study on Mahamood Fusena",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "be999d14-3cd9-4b5a-868f-ba54765e2c13",
+  "title": "A client/family centered maternity care study on madam Ivy Abotiyure",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "f8276bda-f7c6-4719-964b-7f668c483c4d",
+  "title": "A Patient/Family Care Study on Acute Pyelonephritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ba18ffd7-6f95-43f7-8eba-fa3d6c4454f5",
+  "title": "A Patient And Family Care Study on  Severe Malaria",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "10364726-545b-4e32-b1c1-6d6d7bc7b3b6",
+  "title": "A Client/Family Centered Nursing Care Study on Bronchopneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "dde64a7b-f0ca-4dca-a3a2-46bc9ac34423",
+  "title": "A patient/family centered care study on Sickle Cell Disease",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "f0c871fe-91d6-42b0-9437-024c73004ead",
+  "title": "A patient/family care study on Peptic Ulcer Disease",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "62789db4-dacb-4b40-aac0-f9ca6748a420",
+  "title": "A Client /Family Centered Maternity Care Study on Madam Grace Ameyaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "cebd3147-8c22-4e17-bda4-cb8d187f615f",
+  "title": "A patient/family centered care study on pneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "5aa00a44-72fc-416e-9531-9ab85ef54d46",
+  "title": "A client/family centered maternity care study on Madam Felicia Pokuaa",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "9cf03270-55fb-4c92-b3f7-23c881515d6c",
+  "title": "A client/family centered maternity care study on Madam Dery Ama Mary",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "88cd904b-07b1-4dba-aaf0-bf157788e1c2",
+  "title": "A Patient/Family Care Study on Pneumonia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "31012077-832c-4926-b14b-1bf2c90f8fa0",
+  "title": "A client/family centered maternity care study  on madam Janet Natebogari",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "f87f5313-8d78-4697-9a77-f3ddb2ecb01a",
+  "title": "A patient and family care study on Gastritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "bb1232b6-69bd-4e23-8d9e-67fba757fae5",
+  "title": "A Client/Family Centered Maternity Care Study on  Madam Hannah Boaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "7fdd8443-5136-4780-ab12-263cde5ff581",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Abena Antwiwaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "511f5bed-e093-4274-a3a7-02aec69a3ad3",
+  "title": "A Client/Family Centered Maternity Care Study on Madam   Hamida Azouda",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "a690e7b4-c4f1-4c60-9610-bad486a74b18",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Linda Aniwaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "20554d5c-17bf-46f3-90ca-aa6681f970d4",
+  "title": "A Patient/ Family Care Study on AcuteGastritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "53917bf6-84c9-4398-a000-f9a4f079bf0f",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Akosua Frema",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "57acc672-0175-415b-b641-715b4fd29f03",
+  "title": "A client/family centered maternity care study on madanm  Aisha Mumuni",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "d027a9fc-3376-4c9a-b092-8064ba50d784",
+  "title": "A client / family centered maternity care study on Henrieta Boatemaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "d53fa319-fa0c-4ee8-92da-c581320dfc62",
+  "title": "A client/family centered maternity care study on madam Mavis Yeboah",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "e1ed36a1-7a3a-4128-981f-6f5faba74a4e",
+  "title": "A client and family centered and maternity care study on madam Gloria Fosuaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "1c7f96a7-9326-4e80-acb4-e01e74f96710",
+  "title": "A client/family centered maternity care study on madam Selina Marfo",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "d87aeaae-e44a-444d-9d9c-4b135c8cd2ea",
+  "title": "A client/family centered maternity care study on Madam Sina Aramatar",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "87f8eb43-f0db-46a7-9659-182875ecf60f",
+  "title": "A Patient / Family Care Study on Uterine Fibroid",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "46ee9a58-eed4-4712-85ee-289f06fc0221",
+  "title": "A Patient / Family Care Study on Pneumonia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "7cb66668-fd91-437f-94fe-83920e2c238f",
+  "title": "A Patient/Family Care Study on Goiter",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "81a973fb-d4f0-48d1-8c3a-291392772026",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Faustina Pomaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ff138f58-7240-4626-a74c-9611e90bc81e",
+  "title": "A Patient and Family Centered  Care Study on Peptic Ulcer Disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "55ae3b97-4db5-4363-b163-cfcb4746fc47",
+  "title": "A client/family centered maternity care study on madam Lydia Afriyie",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "5ac6dcf7-0ce8-42bf-8ccb-7310fff342b2",
+  "title": "A patient and family care study on Gastritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "6e6fb5a8-2310-413a-88db-d2d90bef3ba6",
+  "title": "A patient / family care study on Pneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "81034c58-0215-40e4-8833-aaf90bd80f5b",
+  "title": "A Patient and Family Care Study on Uncomplicated Gastritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "5e1c76ee-6539-4f65-bf47-af65a53b0011",
+  "title": "A Client/Family Centered Maternity Care Study On Madam Monica Aniniwaa",
+  "date": "2022-08-07"
+ },
+ {
+  "uuid": "167b9277-df79-4937-91c3-f5170fadc777",
+  "title": "A Client/ Family Centered Maternity Care Study on Madam Ayiwaa Regina",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "da3f8ee8-5655-4d55-a59a-68d523fea6e2",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Ernestina Arye",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "bfc84980-8d9a-4e9c-87fb-abcdec94fb82",
+  "title": "A patient and family care study on peptic ulcer.",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "3970e2bc-3de0-42f5-8569-6d5ca3030c66",
+  "title": "A client/family centered care study on gastroenteritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "062aa4f5-1a15-4f3c-b2dc-a63bba82f960",
+  "title": "A client/family centered maternity care study on madam Millicent Amaroa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "9e988b71-0f3d-4660-b25a-82e34dc3a312",
+  "title": "A client/family centered maternity care study on madam Cynthia Mary Attaa Senior",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "3900b803-13ed-445c-a731-ef6cac99e069",
+  "title": "A client/family centered maternity care study on madam Anatuma Linda",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "f35adcde-58a1-4fca-9649-65bd800ebd8b",
+  "title": "A patient/family centered nursing care study on Malaria",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "a7197a58-8c1e-437c-a3dd-feef0b712330",
+  "title": "A client/ family centered maternity care study on Madam Asmawo Ibrahim",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "2d97a887-6f5f-4e5f-99a5-e177efa77a43",
+  "title": "A client/family centered maternity care study on madam Anifa Laminu",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "087f5cd3-4097-4f66-b952-a0e624fd6c9f",
+  "title": "A Patient/Family Centered Care Study on Peritonitis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "f841c034-c3f6-4f7f-b19d-72feaf659756",
+  "title": "A Client/Family Centered Maternity Care Study On Mrs. Kyeraa Benedicta",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "7aaa5b8b-e674-4c1a-9a03-fef206af519f",
+  "title": "A Patient/Family Care Study on Nephrotic Syndrome",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "5ced5290-b14c-422a-a08d-4bca6807bda2",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Linda Nsor",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "70e381bc-ae33-49f0-9bcd-196f0c7331ca",
+  "title": "A Client/ Family Centered Maternity Care Study on  Madam Joana Dickson",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "2cbfa10c-8cfb-4457-9827-7a7d412bf345",
+  "title": "A patient and family care study on acute appendicitis with appendectomy done",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "2eedbcb1-fb5b-48f5-a555-ae7e1fbd3578",
+  "title": "A patient and family care study on cellulitis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "282610c7-3195-42d6-9db0-e2c3f19ffebb",
+  "title": "A patient / family care study on Appendicitis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "0759b2f3-3553-4ac3-959e-682c9c1d70cd",
+  "title": "A patient care study on Malaria",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "ae3cd9ab-1ae9-4d7e-a6bc-20dd6885ab36",
+  "title": "A patient and family centered care study on Acute Appendicitis with Appendectomy Done.",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "608368f0-4540-4481-a9a4-053a046e52dd",
+  "title": "A client / family centered maternity care study on Madam Mary Afosaa",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "0a196da3-cd5e-45da-87f9-070d26b7ca79",
+  "title": "A Patient / Family Care Study on Sickle Cell Diseases.",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "4196597d-099a-46e2-aaa0-4614714d1c72",
+  "title": "A Patient/Family Centered Nursing Care Study on Asthma",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ba3f5819-9c9f-44cf-984d-69ff0e81c3b8",
+  "title": "A Patient/Family Centered Care Study on Acute Gastroenteritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "7e83ed70-5624-419f-aa27-9b64cd34b725",
+  "title": "A Patient/ Family Nursing Care Study on Peptic Ulcer",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "81f51acf-0b80-4c6d-a889-d4da475d9fcb",
+  "title": "A Patient and Family Care Study on Sickle Cell Disease",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "4b5abd6f-dc87-49ea-882f-b9fec10b4d65",
+  "title": "A patient / family care study on Gastroenteritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "d8e06e48-9fdc-4762-ad76-821a9fe4bed4",
+  "title": "A patient and family care study on Sickle Cell Disease",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "61bb4a51-abda-4ace-a5fd-921aa32815b6",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Martha Agyei",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "bd194c76-3ea3-4974-b102-aca08b5c3fe7",
+  "title": "A Client And Family Centered Care Study on Madam Agyeiwaa Joyce",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "8a22320c-a281-4bc3-8d04-14477371a254",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Monica Aniniwaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "962cf1b8-7690-4ee9-b2dc-4e4a53ed920a",
+  "title": "A Client / Family Centered Maternity Care Study on Madam Konadu Evelyn",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "2a221670-826e-4427-ac0d-94f7a52b94b0",
+  "title": "A Patient and Family Centered  Care Study on Bronchopneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "7e26b16d-2aeb-4531-8b64-39bbc02747d0",
+  "title": "A client/family centered maternity care study on  madam Constance Adubea",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "df1bcd00-5319-4893-b703-fc5603daac4c",
+  "title": "A client/family centered maternity care study on madam Diana Ansah",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "a28da023-5572-4747-ab9d-3fbb55da467e",
+  "title": "A client/family centered maternity care study on Abigail Lamptey",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "3876fbd4-8c03-475a-83f1-d96995b4f9f1",
+  "title": "A client/ family centered maternity care study  on Millicent Asiraa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "42ef19b7-3a83-438f-b3a0-0214b7840d4d",
+  "title": "A client/ family centered maternity care study on madam Gladys Nienu.",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "9983d9c8-e130-4a83-abd0-3c273315aae5",
+  "title": "A patient / family care study on Acute Tonsilities",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "a21c26d5-d9c4-457c-831e-f06b20a7f4ef",
+  "title": "A client/family centered maternity care study on Mrs. Twumwaa Cecilia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "1cf32593-27a0-4385-878f-621024c2fb95",
+  "title": "A client/family centered maternity care study on Nazifa Shaibu",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "82b2a193-0d03-43f6-97ef-1d3d9e58f9f9",
+  "title": "A client/family centered maternity care study on madam Serwaa Cecilia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "af136c68-2f7e-4f6d-94b2-8893a90a8e69",
+  "title": "A client/family centered maternity care study on madam Issaka Rashida",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "7a561ca2-82a4-4529-924b-a824aab6ad3e",
+  "title": "A Patient and Family Care Study on Typhoid Fever",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "007a2590-583c-42fd-8aea-d51975c55376",
+  "title": "A Patient /Family Care Study on Cellulitis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "9cf5dbdf-3a52-416b-9303-2bcc4f2e0bdd",
+  "title": "A Patient/Family Care Study on Malaria",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "20336687-8c59-4017-9c44-da8af53c3c41",
+  "title": "A patient/family centered nursing care study on sickle cell disease with vaso occlusive crises",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "da22c97f-c20a-49f3-959e-946840222190",
+  "title": "A patient /family care study on Cellulitis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e81a7a03-9481-4636-8571-6c8a5077a5a9",
+  "title": "A patient/family care study on Hypertension",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "615fc790-11c6-47b8-88ec-5d0633ec3d1e",
+  "title": "A client/family centered maternity care study on Madam Abigail Gyamfi",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e67826c6-bd0f-4087-89ea-7d583e67caa4",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Kuruwaa Hannah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "2ed0e8b3-35cc-461c-8d5b-e543c338057c",
+  "title": "A Patient/Family Care Study on Peritonitis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "7138a05b-8d0e-4a72-b567-71e09ed2747a",
+  "title": "A Client/Family Centered Maternity Care Study On Madam Comfort",
+  "date": "2022-12-08"
+ },
+ {
+  "uuid": "e43d798a-9ad3-4173-942f-c66c30243ce2",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Comfort",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "4bbe1395-6583-4b9a-9e3d-c8f520eb5c59",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Foriwaa Constance",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "60465590-18b5-4ac4-a0a0-cebd01e2681c",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Sakinatu Alhassanh .",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "72106f32-fd1e-41f9-98f1-588e50cc4b66",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Alima Issaka Asante",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "12d4215b-0bdf-44aa-b93c-1509f042dced",
+  "title": "A patient / family centered care study on   peptic ulcer disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "fe123b24-45cc-4710-918a-fd4a40b48da5",
+  "title": "A client/family centered maternity care study on madam Amoah Lydia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "80808e49-32c5-494b-b1cb-d506db56f849",
+  "title": "A client/family centered maternity care study on madanm  Mavis Asantewaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "c8dbcf1d-f9b7-4cdb-bf99-a4425ac755c9",
+  "title": "A client/family centered maternity care study on Madam Nidahpo Afi",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "faad2401-871d-4cc1-9837-117f92567235",
+  "title": "A client/family centered maternity care study on Madam Mercy Kwallah",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "472f2023-427e-4b8b-b4b0-b44401b11cf8",
+  "title": "A client/family centered maternity care study on Jannifer Opoku",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "935e8744-b342-4cec-b673-9fd5127a7d58",
+  "title": "A client/family centered maternity care study on madam Esther Akagliga",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "4b164a50-679d-42e6-b3c5-821ecfbef781",
+  "title": "A patient and family care study on sickle cell",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "1fea96cd-ffdf-4b61-b61b-ac5d318d18dd",
+  "title": "A patient / family care study on Sickle Cell Disease",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "b48a82bc-b973-4a71-84cc-73c6abc513ec",
+  "title": "A Patient/Family Care Study on Scrotal Hernia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "78705e89-387a-46c2-9260-41a0ef08ec31",
+  "title": "Patient/Family Care Study on Hypertension",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "a8583ef2-e7d1-4aa0-b8cc-6091abe5f9c0",
+  "title": "A Patient/Family Care Study on Hypertension",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "e423fab8-5d26-4975-9b09-0a5f20e8a311",
+  "title": "A Patient/Family Care Study on Malaria",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d78f42ee-24da-465e-8d00-f7380bb563ce",
+  "title": "Apatient Care Study on Malaria",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "97335368-fa68-4f45-a646-3bd21a48aeca",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Ampomaa Rose",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "793d0364-fcc5-4fb2-8e87-329e60bcc719",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Obeng Linda",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "6e2df32c-b393-4b0b-a9c7-f0aaecf0862c",
+  "title": "A Patient and Family Centered  Care Study on Typhoid Fever",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "518e5614-cab5-44a9-af62-1964a12ad089",
+  "title": "A client and family centered care study on madam Geri Jennifer",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "e6aaa8f3-bfe4-4de7-94eb-89d8070fe765",
+  "title": "A client/ family centered maternity care study on madam Atuiri Charity Yaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "de7e9a68-7417-4822-a0f9-16c18df6dfa9",
+  "title": "A client/family centered maternity care study on madam Oforiwaa Emmanuel",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "2ae6214b-4a23-41d7-a637-56958b5f65e1",
+  "title": "A  patient/family care study on diabetes mellitus",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "37146ad3-8ac2-4de6-a09d-ad8a2e8d0f5e",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Azeta Patricia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "9f6509bd-00ab-45d9-b1f7-6c4aaad97d25",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Akosuah Elizabeth",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "4a4ec062-5bc1-490f-b108-dc19a0fbdab8",
+  "title": "A Client/ Family Centered Maternity Care Study on Madam Perpetual Sulley",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "f924a289-4c63-4bfa-a0ea-2de8b222f2b9",
+  "title": "A Client/Family Centered Maternity Care Study  on Madam Dakorah Tarata",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "2df8f5cf-d4eb-4e44-a59d-6d24ecb2c2e0",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Yeboah Janet",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "56755497-5e42-40c2-a552-3bc10cfd1177",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Tiwaa Racheal",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "63ed4915-3521-46c7-9d55-42f2a6374025",
+  "title": "A patient/family centered nursing care study on right leg cellulitis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "014bfd91-a4ae-4667-a2fa-e096695bfece",
+  "title": "A client and family centered care study on Agyemang Atta Yaa Junior",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "bd70375d-caaf-4104-bc0d-09abcd679114",
+  "title": "A client/family centered maternity care study on Badu Akosua Juliet",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "cdb4c543-107f-4095-a944-3db8507b4448",
+  "title": "A client/family centered maternity care study  on madam Asibi Cynthia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "54f6e2e8-06aa-4bcd-965e-6e3add950093",
+  "title": "A client/family centered maternity care study on madam Mercy Owusuaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "4f99ee15-c5bb-4c51-b89b-8f487f83a6c4",
+  "title": "A patient/family centered nursing care study on severe malaria secondary anaemia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "540be5f6-f962-4147-bc13-d284b50f52a0",
+  "title": "A patient/family care study on Pneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "2e0f5910-166e-4518-ad84-b0658027a23a",
+  "title": "A client/family centered marternity care study on Madam Rita Gyamfi",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "bc3034ce-f45a-4047-bf22-475e127a0098",
+  "title": "A client/family centered maternity care study on Madam Mary Donkor",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c0733fbf-d0ea-425e-850f-625c38738c45",
+  "title": "A client/family centered maternity care study on Madam Barbara Agyeiwaa Achempong",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "664abd0f-78d7-46ea-aa0e-eb5109dba41c",
+  "title": "A client and family centered care study on Madam Joribako Lordina",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "3c0be33a-cc7c-44d1-850f-b3ad96adb7b9",
+  "title": "A client/family centered marternity care study on madam Akrubila Rita",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "184f6dca-5b66-46ca-aed8-b53aebab17a9",
+  "title": "A Client/Family Centered Nursing Care Study on Acute Appendicitis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "5c19ae7d-6da0-4dee-9f66-3725a8a33a4e",
+  "title": "A Patient/Family Care Study on Peptic Ulcer Disease",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "a718d053-b116-44a2-a081-6a55de998cc1",
+  "title": "A Client/ Family Centered Maternity Care Study on Madam Yussif Zulfawo",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "379716f3-4b52-4c58-9672-764d624269a7",
+  "title": "Patient/ Family Care Study on a Patient With a Diagnosis of Left Inguinal Hernia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d28da948-3c05-425e-b338-421f1f5d01fe",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Janet Benewaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "5768861d-436c-4966-865f-e6656fb2b40f",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Janet Benewaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "903a9005-caa6-46cd-a4e8-e018b33b5b84",
+  "title": " Patient/Family Care Study On Sickle Cell Disease",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "db08faba-3873-49f4-8d7c-6a79df382735",
+  "title": "A Patient And Family Care Study On Diabetes Mellitus",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "4d99b5ba-aa07-438a-8f25-00e578fec429",
+  "title": "A Patient/Family Care Study On Cellulitis Of The Rigth Leg",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "3cc02181-8036-4b70-86b2-83e18610471a",
+  "title": "A client/family centered care study on sickle cell disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "c2780875-ddb9-49f3-bc04-ca6a956270a4",
+  "title": "A client/family centered maternity care study on madam Boahemaa Helina",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "11e3a243-b368-4dcf-8fcc-cfa857856d5b",
+  "title": "A client/family centered maternity care study on madam Haruna Mariam",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "0b522b99-a64d-447e-bd9a-7d70c494b9f2",
+  "title": "A patient/family centered nursing care study on acute gastritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "0e92d773-41cd-4884-9f80-33c799e4e6db",
+  "title": "A patient/family care study on Hypertension",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "17691979-0b54-4e02-b76c-843d4a13e5f8",
+  "title": "A patient/family centered care study on Malaria",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "17be2708-876a-47e9-918f-02b3775cb2dc",
+  "title": "A Client/ Family Centered Maternity Care Study On Madam Konadu Doreen",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "28353e78-1c9d-425a-b436-f88871c490a6",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Yaw Francisca",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "e3825699-5e40-4aba-ad6b-72e06e4a8df3",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Cecilia Laar",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "e88ed792-3dcb-4ac1-b87d-9b979afefdb8",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Ali Mariama",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "dd1f414f-0d97-413d-9701-78e7d33c429d",
+  "title": "A client /family centered maternity care study on madam Amanda Asamoah",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "7a38ad0f-3160-4f0b-a9d1-d920786be6ac",
+  "title": "A patient/family centered care study on hypertension",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "9a06a663-7e71-4275-885f-d2c9d850ddc1",
+  "title": "A patient/family care study on Gastroenteristis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e690fbdd-a516-4c84-8357-07a1210b9c32",
+  "title": "A patient/family care study on Myomectomy",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c5779284-d60b-4f62-9cb4-db9391bbdeb9",
+  "title": "A client/family centered maternity care study on Madam Rebecca Ntiriwaa",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "455c3f93-eda2-4e31-a3de-9c418a7ae438",
+  "title": "A client/family centered maternity care study on Madam Charity Serwaa",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "6f17bda8-2bc0-4571-b8ac-8a97bfc8b47e",
+  "title": "A client/family centered maternity care study on Mrs. Comfort Afia Yeboah",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "b17f900b-98ce-4cd5-9719-04df818debab",
+  "title": "A client / family centered maternity care study on madam Kombat Asibi",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "18e7f383-803b-42d9-be2a-52812a956c01",
+  "title": "A Patient/ Family Care Study on Gastritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "52a68276-8e6a-460c-9325-68ae6cbe5fd3",
+  "title": "Patient/Family Centered Nursing Care Study on Gastroenteritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "a10e7ce3-8a74-4c2b-af43-aa99a94c803d",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Bonua",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "3b9f52d0-45bf-4918-897e-0c776f3c9cc8",
+  "title": "A Client/Family Centered Nursing Care Study on Sickle Cell Disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "3f55f508-e8db-421d-a5ad-49a47fac54bb",
+  "title": "A Patient/Family Centered Nursing Care Study on Peptic Ulcer",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "0f93c2c4-964b-4811-a684-462ebc82912e",
+  "title": "A Client/Family Centered Nursing Care Study on Severe Malaria",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "0206794a-8226-4088-9808-84ee29dba513",
+  "title": "A Patient/ Family Care Study on Bronchoneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "ccd352d0-900b-43d2-af30-112efb4e27fe",
+  "title": "A Patient/Family Centered Nursing Care Study on Hypertension",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "c03563df-1254-4d2a-8fab-ac89084bf0ac",
+  "title": "A patient/family centered nursing care study on cellulitis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "a0fc4395-dbcc-45ad-bddc-0176fff99294",
+  "title": "A client/family centered maternity care study on madam Gladys Dartey",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "c744c885-5baf-443d-958a-594385e14044",
+  "title": "A patient/family centered nursing care study on severe malaria",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "05d85f48-6234-4941-8d63-3659f4808661",
+  "title": "A client/family centered maternity care study on madam   Olivia Nyaw",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "0a9e14ba-88de-41fd-9417-ca3588a74bcd",
+  "title": "A patient and family care study on Hypertension",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "34b220ce-0efb-4057-b6a0-2c5b816f10b5",
+  "title": "A client/family centered maternity care study on Madam Boamah Lydia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "d5c76977-a7fb-487b-aaf6-ad50f01bac8c",
+  "title": "A client / family centred maternity care study on Madam Adu Elizabeth",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "1f24cc39-4d62-4023-9564-7207f4e8f7e9",
+  "title": "A client/family centered maternity care study on madam Osei Veronica",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "0cc5cf45-8bca-4ce6-9799-dd6e162ca397",
+  "title": "A Patient Care Study on Hypertension",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "73763963-b798-42b9-a39e-0f6cb4936535",
+  "title": "A Patient/Family Care Study on Cholecystectomy",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "0cc2e088-3651-4fcd-94e3-6af6782f5ff0",
+  "title": "A Patient / Family Care Study on Peptic Ulcer Disease",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "8b2e0a60-f73d-4a8f-8128-4a0e3b0b06d8",
+  "title": "A Patient/Family Care Study on Diabetis Mellitus",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "f11be29a-897d-4e97-b306-7cb04a3df2f1",
+  "title": "A Patient / Family Care Study on Epigastric Hernia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "324f1f46-7729-4176-a82a-afaf1fcc6cd0",
+  "title": "A Patient / Family Care Study On Madam Twewa Margaret",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "64c71eca-0de9-4016-9531-87e86376b0ec",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Konamah Hawa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "6d2681c6-cfb3-410c-9030-c08eb5e35606",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Grace Tabua",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "677beac5-7dcc-4504-ae1a-e4a48bc17da9",
+  "title": "A client/family centered maternity care study on madam Dasaah Comfort",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "3d86722c-dacb-4126-9d05-fedc8fc572d3",
+  "title": "A client/family centered maternity care study on  madam Sarfo Vida Kondu",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "5bfea118-0b78-46a2-8093-fbfe56565330",
+  "title": "A client/ family centered maternity care study on madam Helena Badu",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "0041a609-cd73-4404-acf4-d20d5557112c",
+  "title": "A client/family centered maternity care study on madam Atongbone Patience",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "22129447-3c85-4888-88a1-5fd736bf8ae0",
+  "title": "A client/family centered maternity care study on madam Sung Blessing Mwinikuma",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "29ce3d75-6bff-43e5-88d0-2673da88d9b5",
+  "title": "A client/family centered maternity care study on madam   Boadiwaa Leticia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "c564486e-cee4-4160-9f7a-4e3906f3195a",
+  "title": "A client/family centered maternity care study on madam Cynthia Laar",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "afb8f975-693d-4b0d-8041-81114759f695",
+  "title": "A patient / family care study of a patient with Umbilical Hermia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "98ddffe9-3af2-4a06-8f24-454a3c9cf882",
+  "title": "A client/family centered maternity care study on Madam Deborah Yeboah",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e2a79f5d-e30b-4b0d-82e2-00963e0bda43",
+  "title": "A client/ family centered maternity care study on Madam Janet Charack Fobi",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "25dcddc0-5f1a-4fbb-964c-40a1353f3d86",
+  "title": "The client/family centered maternity care study on madam Asare Comfort",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "93d0d893-aa7a-4720-8b5e-5b57868cc28e",
+  "title": "A Patient/Family Care Study on Haemolytic Anaemia Secondary to Severe Malaria",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "7202fb9d-85df-47cd-8238-e1aaeb88dbf9",
+  "title": "A Patient /Family Care Study on Peptic Ulcer Disease",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "fff0879d-f972-4946-85d8-4fd4e97f2073",
+  "title": "A client / family centered maternity care study on madam Kafiska Anudia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "64af63fb-bc7b-4eca-a6a9-3e3b79c93f73",
+  "title": "A client/family centered maternity care study on madam Takyiwaa Abigail",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "762799f2-4285-424f-ab34-fdb6d6fa75c9",
+  "title": "A patient/family centred care study on Hypertension",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "cba69422-b141-4901-a49a-3490177960a5",
+  "title": "A Client/ Family Centered Maternity Care Study On Mrs Mary Nyarko",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "264ed2ee-1175-41c5-badd-cef6355c8fd5",
+  "title": "A client/Family centered maternity care study on Madam Janet Sarpong",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "88a88d56-2b2d-4cd9-871c-ae8ca2c47f03",
+  "title": "A Client /Family Centered Maternity Care Study on Madam Agyeiwaa Regina",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "bc3d8b5b-bc1c-45e2-b208-0952addff5d8",
+  "title": "A Client/Family Centered Maternity Care Study on Mrs. Na Juma Amadu",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d6c0987d-bbbc-4e71-9f7d-b59c91cbee52",
+  "title": "A Client/ Family Centered Maternity Care Study On Madam Konadu Doreen",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "03f57eac-0b02-4c7e-80ee-a9da63c50d7b",
+  "title": "A patient/family centered nursing care study on severe anaemia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "bb659d26-e8ae-4ec3-853d-918d755547f4",
+  "title": "A client/family centered maternity care study on madam Nyamekye Elizabeth",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "f17f6317-fe7e-4cd7-a8aa-9fe9daa70318",
+  "title": "A client/family centered maternity care study on madam Afrifa Vera",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "9bea4f35-7564-46ea-b3ea-4a29d91e3efd",
+  "title": "A client/family centered maternity care study on madam   Grace Boadiwaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "b3e9c0ad-371e-4863-a876-f05303e9f317",
+  "title": "A client/family centered maternity care study on madanm  Vivian Ankomah",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "be538e5f-816a-4f4c-88ce-b73df9c940c9",
+  "title": "A patient/family centered care study on Right Inguinal Hernia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "7a4d17cf-71ad-4e95-a573-51dc119b6ca5",
+  "title": "A client/family centered nursing care study on severe Anaemia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "27ace7c2-58c8-446f-bef3-1a4c562c3efb",
+  "title": "A client/family centered maternity care study on Madam Abena Mabel",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "33529b53-f9f9-4f57-850b-932b745287b7",
+  "title": "A client/family centered maternity care study on Madam Plipah Benedicta",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e0ed06f7-704e-43e8-b513-2a7c6782a11b",
+  "title": "A client/family centered maternity care study on madam Gyamea Mary",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e5567f35-5ebc-4447-b046-627986f59ab7",
+  "title": "A Patient/Family Care Study on Gastritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d77475ef-8aee-47f8-84c6-4f8874215baf",
+  "title": "A patient and family care study on pneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "f9ff73b3-df0d-41a8-a16e-a821b55c78f5",
+  "title": "A Patient Family Care Study on Bronchopneumonia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "fab182c0-12f1-4b93-a5a1-1967156d07e9",
+  "title": "A Patient/Family Care Study on Acute Gastroenteritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "e1af4e5b-22c1-4e58-adab-a1084a8d6a17",
+  "title": "A Patient and Family Care Study on Right Vaginal Hydrocele",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "e644e1df-3e89-4822-9e30-adbe91a81722",
+  "title": "A patient / family care study on acute pyelonephritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "0b862b9a-7349-4a77-91a7-3c5ecb8c1300",
+  "title": "A patient and family care study on severe malaria",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "64c52562-fcff-41e7-a02a-d969b8a8e507",
+  "title": "A patient/family care study on Pneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "d2373f88-35e6-4013-a611-1dd1919724d7",
+  "title": "A patient/family centered care study on Peptic Ulcer Disease",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "eb3d1c12-6bf1-4a51-af23-cc52e1b30a8c",
+  "title": "A Patient/Family Care Study on Gastroenteritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "21bedb38-e893-4a0d-bf7f-033b8cc6ac4b",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Appiah Abigail",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "2a055352-0307-4c68-983a-6dfaab3c4cc2",
+  "title": "A Client/ Family Centered Maternity Care Study on  Madam Lucy Mensah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "76a9f0a3-421f-4ff5-a5bd-4ff55377e85c",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Juliet Sakoma",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d5bf8a00-e7fe-4634-a431-34ec48cb8cc0",
+  "title": "A Client/Family Centered Maternity Care Study On Madam  Sussana",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "aa85b1f8-a6c2-40be-9a63-5a773e7f574c",
+  "title": "A client/family centered maternity care study on madam Edna Dayiri",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "4028fb92-849c-4900-bbfa-3ccbbb879084",
+  "title": "A client/family centered maternity care study on madam Abdulai Amina",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "d358cb5a-fc04-4647-8604-b3e5840cdb06",
+  "title": "A client/family centered maternity care study on madam Abigail Yeboah",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "46105757-f448-4341-9ce7-07fbfe371127",
+  "title": "A client/family centered maternity care study on madam  Dorcas Nsiah",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "11f23a57-a8be-4e41-a7aa-de5cad8fbee1",
+  "title": "A client/family centered maternity care study on madam Takyiwaa Rita",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "8325b09a-d6cd-4c51-896c-fe4a29c4f14e",
+  "title": "A client/family centered maternity care study on madam Naomi Kwakye",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "521f535f-3506-48d9-8e25-558c922b5ba8",
+  "title": "A patient and family care study on Cellulitis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c34fef1c-6466-4be1-a1e8-c9156681146b",
+  "title": "A client/family centered maternity care study on madam Tingale Doris",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "8f5db6bc-6fa0-4749-aa70-bb7d10e9a7cc",
+  "title": "A Patient/Family Care Study on Gastritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "1f92ef03-b3ae-49e7-95aa-20e324f77cf8",
+  "title": "A Client/Family Centered Maternity Care Study on Madam  Ayisheitu Fuseini",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "4c31bba6-5be9-44a1-bfa4-fe400df0933b",
+  "title": "A client/family centered maternity care study on madam Seidu Rebecca",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "eba0d954-40ea-4189-bce7-b4f926b96685",
+  "title": "A client/family centered maternity care study on Mrs. Bentu Afia.",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "945a99b9-5574-49d1-85c0-03d473e98855",
+  "title": "A patient and family centered care study on peptic ulcer",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "ec812f05-5f65-4e9f-8ed9-4b8ebb12a8d8",
+  "title": "A patient/family care study on Acute Gastroenteritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "6b112589-77ea-4df7-b34d-11783907cf13",
+  "title": "A patient/family care study on Hypertension",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "9dcce5aa-c187-49ef-bde6-2cdb79a28318",
+  "title": "A patient/family care study on Cellulitis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "0532d529-4fbb-48a3-bd99-ef2b6fd8b1e1",
+  "title": "A client/family centered maternity care study on Madam Lydia Owusuaa",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "906f3446-aefb-4dd5-869e-69125f21c972",
+  "title": "A client/family centered maternity care study on Madam Boahemaa Belinda",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e11f295c-c1f8-4f81-a44d-bd4629a93667",
+  "title": "A client/family centered maternity care study on Hawa Ibrahim",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "0e2477f3-47bc-4438-ae9f-85c16201b5b0",
+  "title": "A client/family centered maternity care study on madam Juliana Acheampong",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "37b44887-42cc-469c-a497-5730ece120fb",
+  "title": "A client/family centered maternity care study on madam Adwoa Tamea",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "cc18a4e8-9b78-4a37-9235-83fbd95064d2",
+  "title": "A Patient/Family Care Study on Peptic Ulcer Disease",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "dae06242-9feb-4fa3-ad62-f20dfd4e1092",
+  "title": "A Patient/Family Care Study on Bronchopneumonia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "9febdba8-e343-4775-987b-089803549317",
+  "title": "A Client/Family Centerd Maternity Care Study on Madam Jennifer Asantewaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "fa757d91-23e9-4aed-ba54-fc6be40645bf",
+  "title": "A Client/Family Centered Nursing Care Study on Gastroenteritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "a53e0989-a461-42b4-b61a-d408f8af0220",
+  "title": "A Patient/Family Centered Care Study on Bilateralpneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "dea945a1-b687-44a2-957b-2f944d32f7fe",
+  "title": "A patient/family centered nursing care study on gastritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "a923c958-785d-4b3a-bd17-baa3361b83a0",
+  "title": "A client/family centered maternity care study on madam Abigail Konamah",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "882f69ec-31ea-4ecf-a784-28b5e6444e0f",
+  "title": "A client\\family centered maternity care study on madam Lariba Benedicta",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "2ce98fde-97de-451a-8fbe-540ac63eba5d",
+  "title": "A client/family centered maternity care study on Sanwine Cynthia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "e69f5462-7403-47e4-91fa-589470fd890c",
+  "title": "A patient/family care study on Lobar Pneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "ab7a9542-e869-4373-aa46-bf450276ce7a",
+  "title": "A patient/family centered nursing care study on Gastroenteritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "5d48ef0b-0bff-4445-9ba0-ac817bfd07ee",
+  "title": "A client\\family centered maternity care study on Madam Adolf Ama",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "6e5d0af1-9436-4155-a011-f462f8d1697c",
+  "title": "A client/family centered maternity care study on Madam Agyeiwaa Akua",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "0191e123-cddf-41bd-a2cb-bd2c31840107",
+  "title": "A client/family centered maternity care study on Abubakari Ayishetu",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "6ba8d5e9-0320-411b-be34-ddefd789fdff",
+  "title": "A patient and family care study on Gastroenteritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "ca7fd8a3-d30d-442c-8fdf-c196322ad6c0",
+  "title": "A Patient/Family Centered Care Study On Bronchiolitis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "eb1ec0b2-6826-4885-b21e-bac7ed9d9d66",
+  "title": "A client/family centered maternity care study on madam Tutu Yeboah Alice",
+  "date": "2024-08-08"
+ },
+ {
+  "uuid": "eb050f55-52c3-42e7-b475-632346282e99",
+  "title": "A Patient and Family Care Study on Hydrocele",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "3fbb7985-a1ec-4c62-b675-0e3234c1274e",
+  "title": "A Patient/Family Care Study on Hypertension",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "0d042ad0-4b34-4667-b064-036d7516c89f",
+  "title": "Patient/Family Care Study on Mr. A.R With Right inguino-Scrotal Hernia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d5b08402-5fe5-4b3a-987d-dc5f75cfd862",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Salia Nafisah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d9ee28e8-bdb3-4c7f-af84-2a7104c07fcb",
+  "title": "A Client/Family Centered Maternity Care Study on Madam",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "e9fdebe5-de1a-4f5d-872c-8e1dc71a2775",
+  "title": "A Client/Family Centered Nursing Care Study on  Diabetes Mellitus",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "6ac61d51-cc56-4c80-b142-5b3c5f9f559f",
+  "title": "A patient/family care study on cellulitis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "97ecbfe4-b5ab-445b-9f08-3497c089bde5",
+  "title": "A patient/family care study on acute gastritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "add02b4c-9378-46ef-b15d-fc81f93b166e",
+  "title": "A client/family centered maternity care study on madam Portia Ameyaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "c4656abf-4ff7-4b4e-9ea1-6685c1bf8848",
+  "title": "A client/family centered maternity care study on madam Esther Konama",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "b5a93576-4300-4515-964b-49400cd7b0b6",
+  "title": "A client/family centered maternity care study on  madam Amponsah Magdalene",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "8cb10778-b7e2-4dd7-9216-be44cb059e4e",
+  "title": "A patient/family care study on Enteric Fever",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "7cdc444c-fa0a-4962-80cc-01e280b374dc",
+  "title": "A patient and family care study on Bronchopneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c77c030c-89a6-4389-9f57-4e4c3284dad3",
+  "title": "A patient/family care study on Gastritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "ab41b378-be4a-4bf8-9942-334e1bd9f79d",
+  "title": "A client /family centered maternity care study on Madam Antwiwaa Ophilia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "9a3fd893-04f6-486f-95c1-2f78cd010eb8",
+  "title": "The client/family centered maternity care study on madam Sorfowaa Bernis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e283fdf4-c056-4678-b26f-0cc2eafa4ca5",
+  "title": "A client /family centered maternity care study on madam Gyansah Elizabet",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "b2531ad9-f3a8-4572-ae1a-8a0e0e1e016c",
+  "title": "A client/family centered maternity care study on madam Alice Agyemang",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "dd680e6e-8b20-42c6-8a42-a01f40d374d1",
+  "title": "A client/family centered maternity care study on Mrs. Theresa Serwaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "5a64d97e-0320-409b-9c46-2b1ee873e76f",
+  "title": "A patient and family centered care study on gastroenteritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "61b865a8-b07f-442c-9f65-d6aa097c1783",
+  "title": "A patient and family care study (a nursing process approach) on a patient with Hypertention",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "915fd5f9-c09b-4bdf-b231-2649ff534cad",
+  "title": "A Patient/Family Centered Care Study on Bilateralpneumonia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "230a6276-52bd-4128-8d1e-061786e8fed1",
+  "title": "A Patient / Family Care Study on Diabetes Melitus",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "a54b6b72-cfe7-4674-9247-1c28fd3d2d2d",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Adizatu Samsudeen",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "6a7819c9-958e-4023-8ad4-9388a4ae2118",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Eunice Mansah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "e401fdec-a729-4d5a-9879-b01040d50b29",
+  "title": "A Client/Family Centered Maternity Care Study on Madam  Wasilatu Azizi",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "6ee7e027-3d16-4b2a-8cba-e6efe32d139c",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Osman Ramat",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "44b483f2-a308-443a-97ed-e43acb56d2c2",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Barikisu Jaberu",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ef5a5c06-ffec-4592-8ebd-384e587450ac",
+  "title": "A Client/Family Centered Nursing Care Study on Gastroenteritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "cd7e704f-2db9-4518-a1b9-673a94c7a8cd",
+  "title": "A patient/family centered nursing care study on hypertension",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "7d3d6928-e329-49d9-a0c7-30feafbb0aae",
+  "title": "A client/family centered maternity care study on madam Zulaiha Ali",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "84c3fcb8-4cb9-412b-adf2-84b29be75224",
+  "title": "A client/family centered maternity care study on  madam Stephanie Boman Saana",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "08469a18-38f4-44dd-a0c8-07442dca722f",
+  "title": "A client/ family centered maternity care study on madam Mary Obour",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "79f4f9cf-a9ec-4b3b-b749-47f51c837b4f",
+  "title": "A client/family centered maternity care study on madam Anobel Mercy",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "ad29c77e-6213-4d45-aace-0b0412dc6ee5",
+  "title": "A client/family centered maternity care study on madam Oppong Ameyaa Elizabeth",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "a6dae58f-c8f6-4cfa-acbd-9977de0d783d",
+  "title": "A patient/family centered care study on Severe Anaemia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "24c37dd9-d6f2-4392-b27e-a5e8c744d3ec",
+  "title": "A patient/family care study on Peptic Ulcer Diseases",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "14a45ac3-1a72-4c34-a2cc-854632fbde2d",
+  "title": "A client/family cenered maternity care study on Madam Jamila Musah",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e7ab05c4-e6cf-42a1-9aa1-43b5cefe9d2d",
+  "title": "A client/family centered maternity care study on Madam Boaduwaa Rahima",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "dd0e45a9-f8fd-46fd-a61e-5e2fe53fbda1",
+  "title": "A client/family centered maternity care study on Madam Elizabeth Brago",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "ebbe10af-af63-47dd-98d4-8d2d9c83dbe0",
+  "title": "A patient/family care study on hypertension",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "12983af9-0e33-47a3-842c-9381cb043253",
+  "title": "A client/family centered maternity care study on madam Ameyaa Comfort",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "6aaa88cf-b611-468c-9852-38848ce1ef7d",
+  "title": "Patient/Family Care study on Diabetes Mellitus",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "9f5b0f34-cdc8-4e2e-a9b1-259479bf3dd7",
+  "title": "Patient/Family Care study on Diabetes Mellitus",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "1f97ff6a-345f-48b4-9475-fc89352b8100",
+  "title": "A Patient / Family Care Study on Acute Exercebation Of Peptic Ulcer Disease",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ba1f4af9-ced4-4f35-8383-889c6d8dc490",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Martha Kyeremaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "8a5b3cee-e4f9-4e21-932b-0720593b2beb",
+  "title": "A Client/ Family Centered Maternity Care Study on Madam Fosuah Janet",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "479a3b92-4acb-469e-86b6-113a028ca6a7",
+  "title": "A   Family Centered Maternity Care Study  Written On Yeboah Augustina At  Tuobodom Health Centre",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ebef64e3-c710-4fe0-a615-353668c2ce74",
+  "title": "A Client/ Family Centered Maternity Care Study on Madam Alima Falida",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "8bffe1ff-b279-4272-abb0-1788e68e55c0",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Tiwaa Grace",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ac74c6b5-79c4-4d2d-a3f6-e87af0495cf8",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Azu Mariama",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "de577713-6f9f-4c84-899f-1a5936c7ec19",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Serwaa Augustina",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "59923ea8-443c-48e8-ae0e-c58b829db154",
+  "title": "A client /family centered maternity care study on  madam Deborah Okyere",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "138ddcb2-a057-4a2d-af69-907c5cdc769f",
+  "title": "A client/ family centered maternity care study on madam Helina Krapa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "ce24d502-4590-4412-9311-c2c63744e3da",
+  "title": "A patient/family centered care study on peptic ulcer",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "1f95f818-0258-4723-a7e3-59a54654054e",
+  "title": "A client/family centered Nursing care study on Sickle Cell Anaemia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "9eac9294-b373-401f-8429-87a578f98551",
+  "title": "A patient/family care study on Bronchopneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "cb095609-e862-4997-b45f-6313bc894dc8",
+  "title": "A client/ family centered maternity care study on Madam Abigail Sabi",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "f857213c-8c4b-46aa-9328-c8a795ba6635",
+  "title": "A client/family centered maternity care study on Madam Zenabu Sumaila",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "ece68213-b7a7-42d3-9369-5d524a3c8e2e",
+  "title": "A client /family centered maternity care study on madam Ellen Andrew",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c8e0e6d3-b740-41f7-8643-86df0c437d84",
+  "title": "A patient/family care study on right lobar pneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "670a7ab6-1297-4946-a841-445149f42c30",
+  "title": "A patient and family care study (a nursing process approach) on a patient with Hypertention",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "1b91f2b6-476a-48b0-ba3b-9958aca81f48",
+  "title": "A patient/family centered nursing care study on acute gastritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "83325a75-7d16-420d-8958-c3c274615493",
+  "title": "A Client/Family Centered Nursing Care Study on Peptic Ulcer Diseases",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "4554c5eb-4e92-4de5-9465-67280d22e6cd",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Beatrice Biakanena Enoch",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "1918d81d-17e4-4cc3-a788-5fa8c66a8d01",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Amina Awudu",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d1ec2d5c-ccfd-4728-b9ec-36138880f11b",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Sarah Kyei",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ba6c63f1-9e60-4d6f-982b-6b8d1405f96c",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Hannah Boanu",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "bd2fd6bb-02e1-4990-bc3f-a5d36e747f43",
+  "title": "Client/Family Centered Maternity Care Study On Madam Adam Mariam",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "5301e5be-04a3-4f5a-96ea-6c0df706c5a4",
+  "title": "A Client Family Centered Case Study on    Madam Comfort Akosuah Mansah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "9dc54786-ad23-4716-ba1f-db62c20fc01c",
+  "title": "A Client/Family Centered Maternity Care Study on Madam",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "aa4b6b37-646e-4664-af94-9a2648d21eb3",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Afia Sarah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "0276fd8b-5cd5-49c0-985a-c7fde8040821",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Obeng Twene Vera",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "f02662e8-4fc3-4e01-9cf3-795092c78061",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Agyemang Diana",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "1420f2e7-71c1-49c5-b6a0-b7cd2a190359",
+  "title": "A patient and family centered care study on  Cellulitis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "e5dce02b-321f-4826-b41f-d086d8980654",
+  "title": "A client/family centered maternity care study on madam Bilakpokim Akosua",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "cb2dda38-94aa-4e2f-8ccc-544b27ee889e",
+  "title": "A client/family centered maternit care study on madam Kogh Veronica",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "d385d2fc-89d5-4e38-9d3f-ff6a1f3b1ff4",
+  "title": "A client/family centered maternity care study on madam Priscilla Wematu Adaliwor",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "857b332f-1aad-4f74-a1db-ddc7d3c60e83",
+  "title": "A client/family centered maternity care study on Amponsah Martha",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "48882b7f-888b-4a9a-9ee9-bc24e4ff4dfc",
+  "title": "A client/family centered maternity care study on Madam Afiabasiara",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "dbe3b4dd-6993-4bf6-925c-fc8dee88b4a2",
+  "title": "A client/family centered maternity care study on Madam Paulina Bewaar",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "bf72f290-468a-4f9a-9145-b9723cf408a0",
+  "title": "A Patient/Family Care Study on Severe Malaria",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ec7cf9ec-7118-4076-bf92-f1d8f291b8b8",
+  "title": "A Patient/Family Care Study on Right Lobar Pneumonia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "3a5f8ede-45a4-48f2-a3ac-c156502a1196",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Owusuaa Ruth",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "a7106216-e3a4-454f-ae44-77053b79974c",
+  "title": "A patient/family care study on peptic ulcer diseases",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "f59e7c60-00c7-422e-8607-707ec421d2fd",
+  "title": "A client/family centered maternity care study on Vida Takyiwaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "19d058ac-1967-4a2a-9cca-884e52f08081",
+  "title": "A patient/family care study on Bronchopneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c3170806-8519-4283-bc1b-3ace2b978bd1",
+  "title": "A patient/family care study on Asthma",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e867f1a5-5723-4d60-babf-a468c46b673c",
+  "title": "A patient/family care study on Bronchopneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e2243b01-d6c2-4fff-877a-43d285925c01",
+  "title": "A patient/family care study on Gastroenteritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "48a36d0a-5849-44bc-8401-4556600d41b7",
+  "title": "A client/family centered maternity care study on madam Akansere Mary",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "54a28b44-0165-4f41-b95e-d567000a7df4",
+  "title": "Patient/Family Care Study on Broncho Pneumonia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "1d92fdc8-5f04-466b-86d8-f3d3515fa8b3",
+  "title": "A Patient/ Family Care Study on Gastroenteritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "1b3c45b4-826c-4f8e-9156-af5a95cbeb57",
+  "title": "A   Family Centered Maternity Care Study Written on  Nketia Hagger Fountain  Care Hospital -Sampa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "dc680422-c730-4d48-ba47-a3815dee8d06",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Mary  Duut",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "2e676f4e-a4e2-4f16-bc12-a9cef16923aa",
+  "title": "A Client / Family Centered Maternity Care Study On Madam Ernestina Ataa Boakye",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "82d059ae-c083-4d21-862a-0ef1165d91c5",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Felicity Agyei",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "0ad1b19c-73e1-433a-a473-f9320aef043d",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Felicia Nenpeebolola",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "a289789a-b560-401e-b53c-69bb8de00ec0",
+  "title": "A Client/Family Centered Maternity Care Study on Madam",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "f0defd3c-83df-4e0d-a675-599e976091d6",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Victoria Bondzie",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "042866e9-842c-4a9d-a48c-950729eb97e4",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Anto Constance",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "633540cb-0138-4e20-ad97-1608b9fdf425",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Bissaratu Ali Mumuni",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "cbe33637-235f-47c9-828e-b348680cae86",
+  "title": "A patient/family centered nursing care study on gastroenteristis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "caa8aa71-90e9-42d4-990d-917631f90d2d",
+  "title": "A client/family centered maternity care study on Otchere Esther",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "6199ad9f-0c43-4b99-9c66-82f2781eabe7",
+  "title": "A client /family centered maternity care study on madam Haruna Mariatu",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "48c26fb1-a2be-4c09-a9f0-783fa77dbd47",
+  "title": "A client/family centered maternity care study on madam Vida Anwhere",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "fc48ba61-0603-43a5-a61f-f8471c6cb34f",
+  "title": "A client/family centered maternity care study on  madam Freda Anim",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "812339d4-b589-4745-9a38-5d04f11925c7",
+  "title": "A client/family centered maternity care study on madam Yeboah Rhoda",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "a6ffda3f-65f3-4c31-869b-3d249b48cbe9",
+  "title": "A client family centered care study on Punguyire Wemanga Diana",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "213b03a9-737e-4d78-aa78-cd01099b48f2",
+  "title": "A client/ family centered maternity care study on Madam Sarah Asor",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "ee0687b7-2106-402b-855f-1907d7bba5d0",
+  "title": "A client/ family centered maternity care study on Madam Fati Amadu",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "098bf4de-19f1-4c0e-8ef6-99963f370cc3",
+  "title": "A client/family centered mernity care study on madam Tiwaa Mary",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "4840a77b-eaed-4f0d-b612-1fe1ee22b110",
+  "title": "A Patient And Family Care Study on Severve Anaemia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "7a6ce245-c858-4364-9090-480527e7e6cf",
+  "title": "A Patient/ Family Care Study on Hypertension",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "07562172-ac1f-4aff-8dea-0a3ad29e984c",
+  "title": "A Client/Family Centered Nursing Care Study on Bronchopneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "2ee3678e-43e7-435e-b042-fe97069a44e7",
+  "title": "A Client/Family Centered Nursing Care Study on Peptic Ulcer Disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "e3578386-761b-4acc-8e50-e6c0e02a5658",
+  "title": "A Patient/Family Centered Nursing Care Study on Pneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "30134924-9ded-4da6-ade1-e5827a11594c",
+  "title": "A patient/family centered care study malaria",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "3cb607c7-839e-488d-bbd0-77a2f4e076fe",
+  "title": "A client/family centered maternity care study on madam Georgina Agyeiwaa Boateng",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "d70571ef-0a67-4316-986a-71fa19543c23",
+  "title": "A client/family centered maternity care study on madam Rebecca Opoku",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "3f56e40d-fc9d-48f2-920a-dbf9362d0e18",
+  "title": "A patient/family care study on Peptic Ulcer Disease",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "65081da6-0a37-4fe3-aa1b-adc24ec73c30",
+  "title": "A patient and family care study on Malaria",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "171ae484-346f-4f83-b410-922234e3a734",
+  "title": "A patient/family care study on Diabetes Mellitus",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "2830b191-8c02-4581-b365-8885f3479b18",
+  "title": "A client/family centered marternity care study on madam Adubea Diana",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "4ce3a4a4-3539-48e1-b3f9-8b76d0e14a3e",
+  "title": "A Patient/Family Care Study on Gastritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "246d5920-951d-42fe-8b93-6ac12d60db2c",
+  "title": "A CLIENT/FAMILY CENTERED MATERNITY CARE STUDY ON  MADAM BAAH PATRICIA  BY  BOAKYEWAA SANDRA",
+  "date": "2021-04-06"
+ },
+ {
+  "uuid": "00ed876d-c3a9-478b-b40b-9b556f2ac243",
+  "title": "A Patient / Family Care Study on Haemorrhoids",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "f9a252f2-afa7-4a3a-a040-995b5075a546",
+  "title": "A Client/ Family Centered Maternity Care Study on Madam Stella Bewaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "c525c3a0-1d40-40c0-bbb0-6d0976ed8301",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Kpodo Christine",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "6419cea1-ed19-4038-90d9-25447ef39fca",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Felicia Nsiah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "15b75d0b-c5b7-4687-a70f-fb4b7a310671",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Pomaa Salomay",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "e6a3898e-2223-42df-9494-e040d576c73d",
+  "title": "A   family centered maternity care study on Ackah Dorcas",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "537feb73-dd74-42bb-b8a4-29c769e9169c",
+  "title": "A client/family centered maternity care study on madam Antwiwaa Naomi",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "3587c12f-68cf-4ade-a162-d042c323df3a",
+  "title": "A client / family centered maternity care study on Mrs. Winnifred Mensah",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "1d3614f1-4d2c-4bc1-9712-9164dd1b3ee1",
+  "title": "A client/family centered maternity care study on Madam Nyarko Juliet",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "ea9a5a53-4d0f-4997-ae4f-2e54f2d29c68",
+  "title": "A client/family centered maternity care study on Ferkaa Yaa Vida",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "f1c1b766-dc65-4d9a-a999-42c687314ed4",
+  "title": "A client/family centered maternity care study on madam Madi Mariama",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "3ef9110f-fe67-4b65-bcbb-87872e7333b7",
+  "title": "A client/ family centered maternity care study on madam Yeboah Juliana",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "35370e34-17ff-40e4-b908-5e37a01a858a",
+  "title": "A client/family centered maternity care study on madam Ataa Agyapomaa Junior",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "fdd8307d-dc38-4b28-84d7-7c52b4f87efb",
+  "title": "A Patient/Family Care Study on Anaemia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "e258a27a-515f-4c1e-9e80-ee8eeef28906",
+  "title": "A Patient / Family Care Study in Gastritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "fe5491d6-6522-48c1-a4e9-41e4def660f1",
+  "title": "A Patient/Family Care Study on Right Inguino-Scrotal Hernia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "a73f58bd-5b18-49ae-908d-2407ef132ade",
+  "title": "A client/Family centered maternity care study On Madam Ramatu Yahaya",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "6990686c-79db-49db-b024-ba1e466a0e69",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Rita Asumah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ceb9bee5-3cc0-407c-af63-ea717d93d257",
+  "title": "A patient/family care study on bronchopneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "430d5d0d-6457-4c0e-ad37-5a2b9fe5c491",
+  "title": "A client/family centered maternity care study  on madam Bertha Pokuaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "98ff40fe-9b9b-47c4-ba31-58d157bba75c",
+  "title": "A client/family centered maternity care study on madam Vida Duut",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "9336a063-b610-4a73-9b92-df42528a4b10",
+  "title": "A patient/family care study on Pneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "95cc6c2b-ca87-4b5e-b51e-d781be22ab0b",
+  "title": "A patient /family centered care study on Asthma",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "db539199-c599-41e4-9d94-e50e5b2d6743",
+  "title": "A patient and family care study on Gastroenteritis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "7dcab2d0-ece0-4a67-ab14-77ec2a8e203f",
+  "title": "A patient and family care study on Peptic Ulcer Disease (PUD)",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "a06ed911-0f4e-413b-b67b-30a72cfec4bf",
+  "title": "Patient/Family Care Study on Gastroenteritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "94966b5d-8c2f-47ad-840d-317480f9b530",
+  "title": "A Patient/Family Centered Nursing Care Study on Gastritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "6d985701-45a1-4ef2-a20e-3907ce797dac",
+  "title": "A patient/family care study on diabetes mellitus",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "32fc58eb-3210-456e-90d0-036d3550a14b",
+  "title": "A client/ family centered maternity care study on madam Boatemaa Grace",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "cf6d33bb-35c9-4064-b1ed-4667ab49b7f9",
+  "title": "A patient/family centered nursing care study on peptic ulcer disease  Nyini  Elizabeth Abena",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "fbbbd2b8-a431-4df6-bec8-2281ee6a1bb8",
+  "title": "A client/family centered maternity care study on Madam Abena Joyce",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c39672d8-856b-4d9f-8e6c-3cbd2a239ed8",
+  "title": "A Patient / Family Care Study on Hypertension",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "2d61e518-9861-4a9d-bcd6-5d190c4e4da6",
+  "title": "A Client/ Family Centered Maternity Care Study on  Madam  Matilda  Kwaa  Antwi",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "4249fd1c-52e9-471f-8f55-a0328a68611e",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Kontiono Fatima",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ba40eda4-e42c-404e-9766-fb924eea0138",
+  "title": "A patient/family care study on pneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "dafe54e1-70e8-49c9-be96-d86c65605fa5",
+  "title": "A patient/family centered nursing care study on Pneumonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "70792147-f91a-4b39-9407-d0b08fef0d0c",
+  "title": "A patient/family centered nursing care study on  Peptic ulcer disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "f93298d7-d2b3-4a35-ac6e-957bb32f812d",
+  "title": "A patient/family centered nursing care study on peptic ulcer disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "70745238-7d69-4225-8197-9d22d478eced",
+  "title": "A client and family centered maternity care study on madam Adubia Benedicta",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "6dbc6e1b-3531-41d1-98a0-69f0c0c84908",
+  "title": "A client/family centered maternity care study on madam Dukumuni Felicia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "27e06a54-6904-40d0-b323-fff6cd2b4f46",
+  "title": "A client/family centered maternity care study on madam Agyemang Bernice",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "4a5ffecd-9319-4ab9-8aa1-b6e949640ae1",
+  "title": "A patient/family care study on Sickle Cell Disease",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c5bb65dc-c52e-469c-a5e9-873291bd06fc",
+  "title": "A patient/family care study on Pneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "5343f6d5-5d6e-4b5d-be8f-e3265c13db91",
+  "title": "A client/family centered nursing care study on  Sickle cell anaemia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "5f053f11-dd56-40d2-9f1e-7872ae2f8f44",
+  "title": "A patient/family care study on Acute Appendicitis",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "1cab814f-da0c-4e7d-82cc-add309734c5a",
+  "title": "A client/Familycentered Maternity Care Study on Madam Grace Yeboah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "1ae1386d-1eab-43a4-b514-2b0e24ea7752",
+  "title": "A patient/family centered nursing care study on severe malaria",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "484f890c-c03c-4f66-8fc1-a6df58d76a11",
+  "title": "A Client/Family Centered Nursing Care Study on Sickle Cell Disease",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "1911485e-3a02-44ac-b354-342168572bd7",
+  "title": "A Patient / Family Care Study on Right Inguino-Scrotal Hernia  (Rish)",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "3125fe65-511f-4197-bd10-ee0decd37e4f",
+  "title": "A Client/Family Centered Maternity Care Study on Janet Owusuwaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "9ad8df0c-cfb8-4b97-b4bc-55b94e35beb7",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Akua Gifty",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "1be962a8-7be3-4346-bdbb-2c751b544210",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Barikisu Hamidu",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "9627ffb9-02b1-4bd6-96ba-bec9815086fd",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Comfort Pramah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "8fe41d3e-cff5-43a9-b781-7e7a2c9976f4",
+  "title": "A patient/family care study on severe malaria",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "caed8aa7-c17d-491e-82cc-beba2fc55184",
+  "title": "A patient/family centered nursing care study on peptic ulcer disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "47f3c8f3-a9fe-4b48-91e2-2030a056ff71",
+  "title": "A patient/family centered nursing care study on Malaria",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "209c4739-25d4-4dd6-869d-1b98fd828acf",
+  "title": "A client/family centered maternity care study on Abiba Mohammed",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "874c63b6-d7d6-4642-8c5a-a3a052b4ac0b",
+  "title": "A client/family centered maternity care study on madam Priscilla Yeboah",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "fd4d6d57-0716-4ca4-b4fd-f7f0a7d85980",
+  "title": "A client/family centered maternity care study on madam Abiba Asumah",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "99979983-796e-41b3-8647-dcc9ecb52730",
+  "title": "A patient/family centered care study on Sickle Cell Disease",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "a8d88551-b867-4197-b675-22450868c30f",
+  "title": "A patient/family care study on Bronchopneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "49482f7d-e758-40dc-88ea-3f4139f73ef4",
+  "title": "A client/ family centered maternity care study on Madam Grace Yeboah",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "a8298d3a-917f-4927-8d6e-9c100831ac75",
+  "title": "A Patient and Family Care Study on Brochial Asthma",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "394aa884-2698-49b0-9155-270d828d12c9",
+  "title": "A Patient /Family Care Study on Enteritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "2cf8ed22-8ef7-4092-88f0-9da261d12acd",
+  "title": "A client/family centered maternity care study on Madam Alima",
+  "date": "2021-12-01"
+ },
+ {
+  "uuid": "6f064282-a8f5-4d30-a0e7-afa1ca52719d",
+  "title": "A Family Centered Maternity Care Study Written on Lawya Fati at Kintampo Municipal Hospital",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "2a4da464-5ab7-441b-97d5-1ce36f47e941",
+  "title": "A client/family centered maternity care study on madam Dabuo Fati",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "1fa724ae-1c36-4fd7-8edb-59df52ba7353",
+  "title": "A patient/family care study on Hypertension",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "7711a088-e65c-4b3c-8279-3d536be136fc",
+  "title": "A client/family centered maternity care study on madam Mansah Lydia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "6e8d8b52-877c-46d4-82d6-ffb05186a7d3",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Emelia Animah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "9393b1c5-15fa-4592-ba47-8e17f3e480e9",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Akua Gloria",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "3016bb12-28f2-45a6-b7ff-e0ddfa6a66f1",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Mary Agyapong",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "b5b52622-864e-4dec-be72-02f16915e8dc",
+  "title": "A Patient/Family Centered Care Study On Bronchopnuemonia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "1f96c8b7-b92d-4dad-8d30-b1744d15fed3",
+  "title": "A patient and family care study on miss b.v with severe anemia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "262da996-417e-49a9-b99a-fab42cd28ee1",
+  "title": "A patient/family centered care study on sickle cell disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "0b20c930-7489-4022-a0f8-df643120044a",
+  "title": "A patient /family centered care study on cellulitis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "c0cbda07-5a34-4b71-8fdf-624909240c9d",
+  "title": "A patient/family centered nursing care study on  sickle cell disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "d3389601-8c7d-46c7-b3c6-8f8f85eaa615",
+  "title": "A client/family centered maternity care study on madam Pomaa Linda",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "44134a68-cb78-4698-b22b-e74a8d0df9e8",
+  "title": "A patient/family centered nursing care study on left inguino-scrotal hernia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "a6a14a5d-c4c1-4948-9866-60942567d794",
+  "title": "A client/ family centered maternity care study on madam Pomaa Suzzy",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "b1211018-1ab0-4c36-8a04-f76dd254b41e",
+  "title": "A client/family centered maternity care study on Safia Abdul Razak",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "13d52a2b-f4e8-4a2d-ac1c-5b892232ad31",
+  "title": "A client/family centered maternity care study on Madam Dentaah Grace",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "95bd9477-20d2-44f7-9b0a-ef8d1e635821",
+  "title": "A client/family centered maternity care study on Madam Jennifer Antwiwaa",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "500b215f-4a77-4da5-a0b1-3dc666da2032",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Faustina",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "6ab3f5e7-ebde-495d-89ae-1dcd001bbd80",
+  "title": "A patient/family care study on peptic ulcer disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "6a7e3744-f1f5-42b0-926e-d98c833f5aec",
+  "title": "A Patient/Family Care Study on Acute Gastritis",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "9c11cb72-e1c3-44a1-9551-1ad5ebc4a9ab",
+  "title": "A Patient and Family Care Study On Peptic Ulcer",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d2052594-5569-4b9c-892c-da7f447b470c",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Mary",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "9809ed28-d78e-4631-82fc-7e0ca35596da",
+  "title": "A client/family care study on acute gastritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "034e3e9e-3799-40f0-8c61-efe54db805f5",
+  "title": "A patient/ family care study on severe anaemia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "eb007f7f-1953-4c40-8396-ea881b2d55d9",
+  "title": "A patient/ family care study on Severe Anaemia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "6c645576-78ef-4f58-8f7f-ec4eba806146",
+  "title": "A client/ family centered maternity care study on Madam Gifty Apam",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "605409e8-e5a7-4e89-a342-0f8fde3da066",
+  "title": "A client/family centered maternity care study on madam Darko Sakyiwaa Gertrude",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "e979759a-8d2f-4562-b519-3c335e8fe2a2",
+  "title": "A Client/ Family Centered Maternity Care Study On Mrs. Abigail Suah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d039ae2e-a56e-4b5b-83ac-3b4bad00fb52",
+  "title": "A Client/Family Centered Maternity Care Study on Alimah Salifu",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "d28d1fd4-0ab8-4296-a610-92a59c8c5845",
+  "title": "A patient/family centered nursing care study on Severe anaemia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "4adbae85-136b-4e96-9b3b-4425380ba146",
+  "title": "A client/family centered maternity care study on madam Akua Manu",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "d2397e7d-da7e-4768-ac74-86f289ffa80f",
+  "title": "A client/family centered maternity care study on madam Twumwaa Patricia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "9140a7ef-e67b-4100-a789-c4986e7dfe9c",
+  "title": "A patient and family care study on malaria",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "410fd3d8-e06f-4f1b-8246-c896de51a510",
+  "title": "A patient/family centered care study on Hypertension",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "28fefd3d-4674-4101-8f52-9ec62991b603",
+  "title": "A Patient/Family Care Study on Pneumonia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ce52c1d0-aa1f-4020-8668-e6e811081e8b",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Vivian Atika",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "3e2976c9-3892-4f48-b5d5-3052d3de3773",
+  "title": "A Patient/Family Care Study on Diabetis Mellitus with Hyperglycemia",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "91f2f47e-930a-4957-ac8d-c51c628aff4a",
+  "title": "A patient/family care study on Pneumonia",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "24c7f47b-eaba-4a73-814d-3e47ff9d6219",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Akosua Margaret",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "602b09ce-836a-4c97-8cd6-24a675e969f7",
+  "title": "A Client/Family Centered Maternity Case Study on Madam Vivian Ankamaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "7ab3e415-f1ba-46b8-871b-3f19d05db292",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Savina Nsiah  By",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "ad654468-d738-4224-9cc2-a97ecf54fef5",
+  "title": "A client /family centered maternity care study on madam Hannah Ofori",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "d72a9809-f065-42f0-a976-d65e272f5d35",
+  "title": "A Patient / Family Care Study on Right Inguino-Scrotal Hernia",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "4713c4a3-3eb7-4bea-b85a-981384422472",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Vera Prempeh Mensah",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "4b0e01fa-828f-45d4-a2fb-560a716cb224",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Sumani Ernestina",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "15ba834f-770f-4bfd-b884-8eaee5c7ec3b",
+  "title": "A client and family centered care study on Madam Mary Yaa Owusuaa",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "0895dd52-7ec5-4c40-bbb2-40ad68fd01f9",
+  "title": "A client/family centered maternity care study on madam Pokuah Rita",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "a50a2fca-fd18-4825-84e4-e54b145e3389",
+  "title": "A client/family centered maternity care study on madam Esther Adwoa Appiah",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "14db6a28-ee7b-48cd-a604-5d54f8e013e5",
+  "title": "A Client/ Family Centered Maternity Care Study on Madam Augustina",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "de3bf898-89d0-498b-a36e-a1dc577c6a0a",
+  "title": "A client and family centered maternity care study on madam Oforiwaa Debora",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "66ee609a-2c70-4b1f-895c-37085ab76b62",
+  "title": "A client/ family centered maternity care study on madam Akua Serwaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "0a413713-ab21-4319-82f3-c1c854bd2265",
+  "title": "A client/ family centered maternity care study on madam Agyera Ansu",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "ef390638-6ea7-4da7-b518-415a8b4406c1",
+  "title": "A Client/ Family Centered Maternity Care Study on Madam Augustina",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "dae40c19-2739-4502-9296-0fcc061b1b20",
+  "title": "A client/family centered maternity care study on madam Portia Agyapomaa",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "0f99a0f4-26d1-4889-81f3-c825208ee31f",
+  "title": "A client/family centered maternity care study on madam Safia Saabears",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c531b60c-c797-4b3b-b3d1-e4c7ffa88c5f",
+  "title": "A client/family centered maternity care study on  madam Baffowaa Dorcas",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "7b5ffc98-3318-48af-9619-e17063855bb9",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Theresa Amofaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "f4310bae-3c1f-4302-b635-970d1a0ff4fe",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Chanaa Serwaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "a65852ea-c022-45bd-84d7-99cc05b56639",
+  "title": "A client/family centered maternity care study on madam Afia Deborah",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "6fd42dd8-3a45-47a1-85ab-0cf14e5427bf",
+  "title": "A client/family centered maternity care study on madam Kumi Vivian",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "ea8a27a4-b96f-46f0-ae8f-384a47612f71",
+  "title": "A client/family centered maternity care study on madam Nketia Naomi",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "3be4b92c-5351-4e3d-8d48-76e5566d8099",
+  "title": "A Client/Family Centered Maternity Care Study on   Madam Patricia Konadu",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "f1862621-6b9e-45c2-846a-891cd056e31e",
+  "title": "A Client/Family Centered Maternity Care Study on Madam Darkwaa Yaa",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "7e86d7b8-7173-403f-8307-fb1fbc8039f8",
+  "title": "Client family centered case study on Madam Tengka Janet",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c48b1eb2-f1d1-45c0-91db-59dd172c2035",
+  "title": "A Client Family Centered Case Study  on Madam Zuliaha Sayuba",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "5107f2a4-5481-45c3-a891-349f20d7879c",
+  "title": "Patient and family care on madam b.r with peptic ulcer disease",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "88996304-52a2-4518-8b9e-a300292d6467",
+  "title": "Utilization of unprescribed over the counter medication among trainee Nurses and Midwifeves at Holy Family NMTC,Berekum.",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "8855e9fb-b15e-44e6-af2b-73d47659b94e",
+  "title": "A patient/family centered care study on acute gastroenteritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "951ab77c-d945-4cb2-a7b0-f139deac494f",
+  "title": "A patient/family centered care study on Acute Gastroenteritis",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "61ff6b30-cbb7-4859-b797-06b47feaa890",
+  "title": "Client family centered case study on Madam Afia Yeboah Gloria",
+  "date": "2024-08-01"
+ },
+ {
+  "uuid": "c73fd088-fdaa-4805-a705-808a73aa7e6e",
+  "title": "Client family centered case study on madam Obour Ruth",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "71cddc79-a57c-4c4c-bb5a-ceef7b7a67e9",
+  "title": "A CROSS SECTIONAL DESCRIPTIVE STUDY ON ASSESSMENT OF FACTORS INFLUENCING UTILIZATION OF ANTENATAL CARE SERVICES IN ZONGO COMMUNITY IN BEREKUM.",
+  "date": "2023-12-31"
+ },
+ {
+  "uuid": "9c5c72d8-eb3c-4e43-9f58-a5e1fd15a48e",
+  "title": "Exploring the healthcare seeking behaviour among adolecents at  Freeman Methodist  Preparatory and junior high school in Berekum.",
+  "date": "2022-09-01"
+ },
+ {
+  "uuid": "4dc9b481-7e41-4830-991d-22267d54be8c",
+  "title": "Factors influencing the utilization of antenatal care services among pregnant women at Holy Family Hospital, Berekum",
+  "date": "2022-09-01"
+ },
+ {
+  "uuid": "53c731d7-365b-4873-aad4-6821a28dfc72",
+  "title": "Factors influencing ultilization of antenatal care service among women at Holy Family Hospital,Berekum",
+  "date": "2022-08-01"
+ },
+ {
+  "uuid": "8b3fd515-4979-4f43-a8d7-db98390aee96",
+  "title": "A Client/Patients satisfaction with nursing care at Antenatal Clinic(ANC) OF Holy Family Hospital, Berekum",
+  "date": "2023-08-01"
+ },
+ {
+  "uuid": "9d5d808d-cd39-49a8-9c00-b7eb2ba28105",
+  "title": "FACTORS INFLUENCING ANTENATAL CARE (ANC) PATRONAGE AMONG PREGNANT WOMEN AT ZONGO CLINIC, BEREKUM.",
+  "date": "2023-12-31"
+ },
+ {
+  "uuid": "7c25b645-65f7-44d7-bece-d29e779f9287",
+  "title": "Ascertaining the impact of effective time management on the academic achievements of the final year Nursing and Midwifery Training College,Berekum",
+  "date": "2022-09-01"
+ },
+ {
+  "uuid": "f5125f74-22d9-4ff6-961c-486ed896bc3b",
+  "title": "Assessing pregnant women\u2019s knowledge and attitudes towards exercise during pregnancy at Holy Family Hospital-Berekum",
+  "date": "2024-08-01"
+ }
+]
