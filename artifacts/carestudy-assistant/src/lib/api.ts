@@ -177,6 +177,42 @@ export type PharmacologyRecommendations = {
   note?: string;
 };
 
+/** One proposed 3.2 care-plan row (mirrors the section's 8 columns). */
+export type CarePlanRow = {
+  diagnosis: string;
+  objective: string;
+  orders: string;
+  interventions: string;
+  evaluation: string;
+  rationale: string;
+};
+
+/** Proposed Chapter 3 care plan — one row per nursing diagnosis. */
+export type CarePlanRecommendations = {
+  rows: CarePlanRow[];
+};
+
+/** Recommend the Chapter 3 nursing care plan from the Chapter 2 diagnoses. */
+export async function requestCarePlanRecommendations(
+  diagnoses: string[],
+  drugs: string[],
+  patientContext: string,
+): Promise<CarePlanRecommendations> {
+  const response = await fetch(`${API_URL}/chapter3/care-plan`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ diagnoses, drugs, patientContext }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
+    throw new Error(body?.detail ?? body?.error ?? `Recommendation request failed (${response.status})`);
+  }
+  const data = (await response.json()) as { carePlan?: CarePlanRecommendations };
+  if (!data.carePlan?.rows?.length) throw new Error("The recommendation engine returned no care-plan rows.");
+  return data.carePlan;
+}
+
 /** Recommend Chapter 2 analysis from the collected Chapter 1 fields. */
 export async function requestChapter2Recommendations(
   chapter1Fields: Record<string, string>,

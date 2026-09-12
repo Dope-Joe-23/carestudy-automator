@@ -113,8 +113,10 @@ import {
   requestStudyAssistant,
   requestChapter2Recommendations,
   requestPharmacologyRecommendations,
+  requestCarePlanRecommendations,
   type Chapter2Recommendations,
   type PharmacologyRecommendations,
+  type CarePlanRecommendations,
   updateLibrarySource,
   updateStudy,
   uploadStudyFile,
@@ -2199,6 +2201,7 @@ function Home() {
   const [pharmacologyBusy, setPharmacologyBusy] = useState(false);
   const [planningProposal, setPlanningProposal] = useState<PlanningProposal | null>(null);
   const [planningProposalOpen, setPlanningProposalOpen] = useState(false);
+  const [planningBusy, setPlanningBusy] = useState(false);
   const [evaluationProposal, setEvaluationProposal] = useState<EvaluationProposal | null>(null);
   const [evaluationProposalOpen, setEvaluationProposalOpen] = useState(false);
   const [qualityGateOpen, setQualityGateOpen] = useState(false);
@@ -2651,6 +2654,7 @@ function Home() {
     isChapterDrafting ||
     chapter2RecommendationBusy ||
     pharmacologyBusy ||
+    planningBusy ||
     docImportBusy;
 
   /** Find (chapterIndex, sectionIndex) for a section id like "2.3". */
@@ -3132,7 +3136,7 @@ function Home() {
     });
   };
 
-  const recommendChapter3 = () => {
+  const recommendChapter3 = async () => {
     if (aiBusy) return;
     const diagnoses = studyFacts.analysis.nursingDiagnoses;
     const diagnosisList = diagnoses
@@ -3140,7 +3144,50 @@ function Home() {
       .map((line) => line.replace(/^\s*[-•]\s*/, '').trim())
       .filter((line) => line && !/^\(no nursing diagnoses/i.test(line));
     if (diagnosisList.length === 0) {
-      toast.error('Generate or enter Chapter 2 nursing diagnoses first.');
+      // No diagnoses yet: fall back to the documented problems (2.3) so the AI
+      // can still propose suitable diagnoses, outcomes, orders, and
+      // interventions — the student reviews everything in the staged preview.
+      const problems = studyFacts.analysis.healthProblems
+        .split(/\n+/)
+        .map((line) => line.replace(/^\s*[-•]\s*/, '').trim())
+        .filter(Boolean);
+      if (problems.length === 0) {
+        toast.error('Collect Chapter 2 problems or diagnoses first.', {
+          description: 'The care plan is built from the nursing diagnoses (2.5) or the identified problems (2.3).',
+        });
+        return;
+      }
+      setPlanningBusy(true);
+      try {
+        const proposed = await requestCarePlanRecommendations(problems, [], 'No nursing diagnoses recorded yet — propose the most suitable NANDA-I diagnoses for these documented problems, then write the plan for each.');
+        const objectives = {
+          longTerm: proposed.rows.map((row, index) => `${index + 1}. ${row.diagnosis}: by discharge or the agreed follow-up period, the objective (${row.objective.replace(/^Patient will /, '')}) will be sustained or exceeded.`).join('\n'),
+          shortTerm: proposed.rows.map((row, index) => `${index + 1}. ${row.diagnosis}: ${row.objective}`).join('\n'),
+          outcomeCriteria: proposed.rows.map((row, index) => `${index + 1}. For ${row.diagnosis}: record the baseline, target, date/time, patient response, and measurement against the objective.`).join('\n'),
+          familyObjectives: 'Proposed: family will demonstrate the knowledge and practical support relevant to the documented diagnoses before discharge, verified by teach-back or observed participation.',
+        };
+        const carePlanRows = proposed.rows.map((row) => [
+          '',
+          row.diagnosis,
+          row.objective,
+          row.orders,
+          row.interventions,
+          '',
+          row.evaluation,
+          row.rationale,
+        ]);
+        setPlanningProposal({ objectives, carePlanRows });
+        setPlanningProposalOpen(true);
+        toast('Diagnoses proposed from problems', {
+          description: 'Chapter 2 had no diagnoses, so suitable ones were proposed from the documented problems — review every row carefully.',
+        });
+      } catch (error) {
+        toast.error('Could not build the Chapter 3 care plan', {
+          description: error instanceof Error ? error.message : 'Recommendation engine unavailable.',
+        });
+      } finally {
+        setPlanningBusy(false);
+      }
       return;
     }
     const assessment = studyFacts.assessment.fields;
@@ -3174,25 +3221,54 @@ function Home() {
         rationale: `Supports timely reassessment of ${diagnosis} against the patient's documented baseline and agreed outcome criteria.`,
       };
     };
-    const plans = diagnosisList.map((diagnosis) => planFor(diagnosis));
-    const objectives = {
-      longTerm: diagnosisList.map((diagnosis, index) => `${index + 1}. Proposed long-term objective for ${diagnosis}: by discharge or the agreed follow-up period, ${plans[index].indicator} will show sustained improvement or stability from the documented baseline.`).join('\n'),
-      shortTerm: diagnosisList.map((diagnosis, index) => `${index + 1}. Proposed short-term objective for ${diagnosis}: within 24–72 hours, reassess ${plans[index].indicator} and document whether the agreed target is being met.`).join('\n'),
-      outcomeCriteria: diagnosisList.map((diagnosis, index) => `${index + 1}. For ${diagnosis}: record the baseline, target, date/time, patient response, and measurement for ${plans[index].indicator}.`).join('\n'),
-      familyObjectives: 'Proposed: family will demonstrate the knowledge and practical support relevant to the documented diagnoses before discharge, verified by teach-back or observed participation.',
-    };
-    const carePlanRows = diagnosisList.map((diagnosis, index) => [
-      '',
-      diagnosis,
-      plans[index].goal,
-      plans[index].orders,
-      plans[index].interventions,
-      '',
-      'Pending implementation and patient response.',
-      plans[index].rationale,
-    ]);
-    setPlanningProposal({ objectives, carePlanRows });
-    setPlanningProposalOpen(true);
+    // Patient-specific drugs (Chapter 1) make the interventions column
+    // finished and specific — "Tab Diclofenac 100mg was administered" instead
+    // of a vague "prescribed medication was administered".
+    const drugs = [
+      studyFacts.assessment.fields.medications,
+      studyFacts.assessment.fields.treatmentGivenList,
+      studyFacts.assessment.fields.treatmentStarted,
+      studyFacts.assessment.fields.treatment,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+      .flatMap((value) => value.split(/[,;\n]+/))
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const patientContext = [
+      `Diagnosis: ${studyFacts.patient.diagnosis}`,
+      studyFacts.assessment.evidenceText && `Assessment findings: ${studyFacts.assessment.evidenceText}`,
+    ].filter(Boolean).join('\n');
+
+    setPlanningBusy(true);
+    try {
+      const result = await requestCarePlanRecommendations(diagnosisList, drugs, patientContext);
+      // Objectives per diagnosis come from the engine's SMART builder; the
+      // 3.1 objectives fields keep their four-part shape.
+      const objectives = {
+        longTerm: result.rows.map((row, index) => `${index + 1}. ${row.diagnosis}: by discharge or the agreed follow-up period, the objective (${row.objective.replace(/^Patient will /, '')}) will be sustained or exceeded.`).join('\n'),
+        shortTerm: result.rows.map((row, index) => `${index + 1}. ${row.diagnosis}: ${row.objective.replace(/^Patient will /, 'Patient will ')}`).join('\n'),
+        outcomeCriteria: result.rows.map((row, index) => `${index + 1}. For ${row.diagnosis}: record the baseline, target, date/time, patient response, and measurement against the objective.`).join('\n'),
+        familyObjectives: 'Proposed: family will demonstrate the knowledge and practical support relevant to the documented diagnoses before discharge, verified by teach-back or observed participation.',
+      };
+      const carePlanRows = result.rows.map((row) => [
+        '',
+        row.diagnosis,
+        row.objective,
+        row.orders,
+        row.interventions,
+        '',
+        row.evaluation,
+        row.rationale,
+      ]);
+      setPlanningProposal({ objectives, carePlanRows });
+      setPlanningProposalOpen(true);
+    } catch (error) {
+      toast.error('Could not build the Chapter 3 care plan', {
+        description: error instanceof Error ? error.message : 'Recommendation engine unavailable.',
+      });
+    } finally {
+      setPlanningBusy(false);
+    }
   };
 
   /** Stage the planning proposal into sections 3.1/3.2 forms for review. */
@@ -3216,8 +3292,8 @@ function Home() {
       return;
     }
     const evaluationRows = rows.map((row) => [
-      row[1],
-      'Pending: record the patient response and mark the outcome fully met, partially met, or not met.',
+      row[1] ?? '',
+      `Pending: record the patient response against the objective — ${row[2] || 'state whether the goal was fully met, partially met, or not met, with the measurement observed.'}`,
     ]);
     const amendmentRows = studyFacts.evaluation.outcomeRows
       .filter((row) => /partially\s+met|not\s+met|unmet/i.test(row[1] ?? ''))
@@ -4992,8 +5068,8 @@ function Home() {
                   {pharmacologyBusy ? 'Analysing…' : 'Suggest drug rows'}
                 </Button>
               )}                {isChapter3 && (
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={recommendChapter3} disabled={aiBusy}>
-                  <Sparkles className="size-3.5" /> Build plan from Ch 2
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={() => void recommendChapter3()} disabled={aiBusy} title="Build the nursing care plan from the Chapter 2 diagnoses">
+                  <Sparkles className={cn("size-3.5", planningBusy && "animate-pulse")} /> {planningBusy ? 'Planning…' : 'Build plan from Ch 2'}
                 </Button>
               )}
               {isChapter4 && (

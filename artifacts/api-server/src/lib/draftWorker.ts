@@ -69,6 +69,21 @@ export type PharmacologyRecommendations = {
   note?: string;
 };
 
+/** One proposed 3.2 care-plan row (mirrors the section's 8 columns). */
+export type CarePlanRow = {
+  diagnosis: string;
+  objective: string;
+  orders: string;
+  interventions: string;
+  evaluation: string;
+  rationale: string;
+};
+
+/** Proposed Chapter 3 care plan — one row per nursing diagnosis. */
+export type CarePlanRecommendations = {
+  rows: CarePlanRow[];
+};
+
 export type ImportedSection = {
   heading: string;
   content: string;
@@ -109,7 +124,7 @@ export type ImportStudyResult = {
 };
 
 /** A worker response is a draft, an ingest result, a viva bank, an editorial answer, an import, or chapter 2 recommendations. */
-type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | ImportStudyResult | Chapter2Recommendations | PharmacologyRecommendations;
+type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | ImportStudyResult | Chapter2Recommendations | PharmacologyRecommendations | CarePlanRecommendations;
 
 interface PendingRequest {
   /** The worker instance this request was written to. */
@@ -259,6 +274,38 @@ class DraftWorker {
       });
       try {
         child.stdin.write(JSON.stringify({ id, op: "pharmacology_recommendations", chapter1Fields }) + "\n");
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Recommend the Chapter 3 care plan from Chapter 2 nursing diagnoses. */
+  async recommendCarePlan(
+    diagnoses: string[],
+    drugs: string[],
+    patientContext: string,
+  ): Promise<CarePlanRecommendations> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<CarePlanRecommendations>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("Care plan recommendations timed out. Please try again."));
+      }, REQUEST_TIMEOUT_MS);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as unknown as CarePlanRecommendations),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(
+          JSON.stringify({ id, op: "care_plan_recommendations", diagnoses, drugs, patientContext }) + "\n",
+        );
       } catch (writeErr) {
         this.pending.delete(id);
         clearTimeout(timer);

@@ -1,5 +1,10 @@
 import { Router, type IRouter } from "express";
-import { draftWorker, type Chapter2Recommendations, type PharmacologyRecommendations } from "../lib/draftWorker";
+import {
+  draftWorker,
+  type Chapter2Recommendations,
+  type PharmacologyRecommendations,
+  type CarePlanRecommendations,
+} from "../lib/draftWorker";
 
 const router: IRouter = Router();
 
@@ -36,6 +41,38 @@ router.post("/chapter2/recommendations", async (req, res) => {
     req.log?.error?.({ err }, "chapter 2 recommendation failed");
     res.status(500).json({
       error: "Chapter 2 recommendation failed",
+      detail: err instanceof Error ? err.message : "Unknown engine error",
+    });
+  }
+});
+
+router.post("/chapter3/care-plan", async (req, res) => {
+  const rawDiagnoses = req.body?.diagnoses;
+  if (
+    !Array.isArray(rawDiagnoses) ||
+    rawDiagnoses.length === 0 ||
+    !rawDiagnoses.every((item: unknown) => typeof item === "string" && item.trim())
+  ) {
+    res.status(422).json({ error: "diagnoses must be a non-empty array of strings" });
+    return;
+  }
+  const rawDrugs = req.body?.drugs;
+  const drugs = Array.isArray(rawDrugs)
+    ? rawDrugs.filter((item: unknown): item is string => typeof item === "string")
+    : [];
+  const patientContext = typeof req.body?.patientContext === "string" ? req.body.patientContext : "";
+
+  try {
+    const carePlan: CarePlanRecommendations = await draftWorker.recommendCarePlan(
+      rawDiagnoses.map((item: string) => item.trim()),
+      drugs,
+      patientContext,
+    );
+    res.json({ carePlan });
+  } catch (err) {
+    req.log?.error?.({ err }, "care plan recommendation failed");
+    res.status(500).json({
+      error: "Care plan recommendation failed",
       detail: err instanceof Error ? err.message : "Unknown engine error",
     });
   }

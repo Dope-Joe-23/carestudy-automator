@@ -166,6 +166,33 @@ FORMAT_TABLE = (
     "You may begin with a single brief introductory sentence above the table."
 )
 
+FORMAT_CARE_PLAN = (
+    "FORMAT (Nursing Care Plan): Output the content as a markdown pipe table with "
+    "EXACTLY these column headers, in this order: Date/Time | Nursing Diagnosis | "
+    "Objectives/Outcome Criteria | Nursing Orders | Nursing Interventions | "
+    "Date/Time — Evaluation | Evaluation | Rationale. One row per diagnosis. "
+    "GRAMMAR (follow the sample care studies exactly):\n"
+    "- NURSING ORDERS are 5-8 DISCRETE, action-oriented, imperative activities "
+    "the nurse plans to do, numbered in the cell like '1) Reassure patient ... "
+    "2) Assess pain level using the 0-10 pain scale 3) Let patient assume a "
+    "position of comfort 4) Check and record vital signs as baseline data 5) "
+    "Give diversional therapy 6) Administer prescribed analgesic'. They must be "
+    "specific care activities — NEVER a generic 'monitor the response and "
+    "escalate deterioration' sentence.\n"
+    "- NURSING INTERVENTIONS mirror the orders one-to-one in the PAST TENSE as "
+    "finished activities, numbered the same way: '1) Patient was reassured ... "
+    "2) Pain level was assessed using the 0-10 pain scale ... 6) Tab Diclofenac "
+    "100mg was administered'. Name the patient's recorded drugs with doses "
+    "where the notes provide them; otherwise use 'Prescribed medication was "
+    "administered'.\n"
+    "- OBJECTIVES are SMART: 'Patient will be relieved of the pain within 30 "
+    "minutes as evidenced by; A) patient verbalising relief B) nurse observing a "
+    "relaxed facial expression'. Always include a time frame and two evidence "
+    "criteria (one patient verbalisation, one nurse observation).\n"
+    "- The Evaluation column states 'Pending implementation and patient "
+    "response.' The Rationale column ties the orders to the objective."
+)
+
 FORMAT_ANALYSIS_LIST = (
     "FORMAT (Chapter 2 analysis list): Output this section as clearly separated "
     "bullet lists, never as flowing narrative paragraphs. Use bold labels for "
@@ -436,8 +463,15 @@ def build_prompt(
         f"If the collected data is shorter than {min_words} words, "
         f"{('do NOT add inferences to pad the count — report only the facts.' if section_type == 'data_only' else 'you may add minimal, directly relevant inferences to meet the minimum.')}")
 
+    # Care plans get their own strict grammar — orders as imperative
+    # activities, interventions as their past-tense mirrors — matched to the
+    # school's sample care studies.
+    heading_lower = (heading or "").lower()
+    is_care_plan_section = "care plan" in heading_lower
     if chapter_intro:
         format_instruction = CHAPTER_INTRO_FORMAT
+    elif is_care_plan_section:
+        format_instruction = FORMAT_CARE_PLAN
     elif tabular:
         format_instruction = FORMAT_TABLE
     elif is_analysis_list_section(heading):

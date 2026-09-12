@@ -36,6 +36,7 @@ from retrieval import SimpleIndex  # noqa: E402
 from import_worker import import_study, import_study_with_fields  # noqa: E402
 from nanda_mapper import build_chapter2_analysis_from_chapter1  # noqa: E402
 from pharm_mapper import build_pharmacology_rows  # noqa: E402
+from care_plan import generate_care_plan_recommendations  # noqa: E402
 
 # Per-study retrieval indexes, keyed by study id and cached in memory so each
 # draft doesn't reload the pickled index from disk. Lives at the project root
@@ -737,6 +738,29 @@ def main() -> None:
                     {str(key): str(value) for key, value in chapter1_fields.items()},
                 )
                 emit({"id": req.get("id"), "pharmacology": result})
+                continue
+            if op == "care_plan_recommendations":
+                diagnoses = req.get("diagnoses") or []
+                drugs = req.get("drugs") or []
+                patient_context = req.get("patientContext", "")
+                if (
+                    not isinstance(diagnoses, list)
+                    or not diagnoses
+                    or not all(isinstance(d, str) and d.strip() for d in diagnoses)
+                ):
+                    emit({"id": req.get("id"), "error": "care_plan_recommendations requires a non-empty diagnoses list of strings"})
+                    continue
+                if not isinstance(drugs, list) or not all(isinstance(d, str) for d in drugs):
+                    emit({"id": req.get("id"), "error": "care_plan_recommendations requires drugs as a list of strings"})
+                    continue
+                if not isinstance(patient_context, str):
+                    patient_context = ""
+                result = generate_care_plan_recommendations(
+                    [d.strip() for d in diagnoses],
+                    [d.strip() for d in drugs],
+                    patient_context.strip(),
+                )
+                emit({"id": req.get("id"), "carePlan": result})
                 continue
 
             study_id = req.get("studyId")
