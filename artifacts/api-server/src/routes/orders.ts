@@ -1006,7 +1006,7 @@ studioRouter.post(
                     : chapter.sections[0]?.sectionId?.startsWith("5.")
                       ? "Evaluation"
                       : chapter.sections[0]?.sectionId?.startsWith("6.")
-                        ? "Summary and Conclusion"
+                        ? "Additional Pages"
                         : chapter.name,
             intro: "",
             introReferences: [],

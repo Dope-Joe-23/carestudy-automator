@@ -15,14 +15,15 @@ from typing import Any
 
 
 # The standard chapter structure matching the NMC Ghana care study format.
+# "Additional Pages" is the merged front-matter + closing chapter (preliminary
+# sections P.* plus the 6.* summary/conclusion/bibliography sections).
 CHAPTER_NAMES = [
-    "Preliminary Pages",
+    "Additional Pages",
     "Assessment",
     "Analysis of Data",
     "Planning",
     "Implementation",
     "Evaluation",
-    "Summary and Conclusion",
 ]
 
 
@@ -234,7 +235,7 @@ SECTION_FIELDS = {
     "1.5": ["dailyRoutine", "diet", "sleep", "exercise", "habits", "hobbies"],
     "1.6": ["childhoodIllness", "pastAdmissions", "transfusions", "allergies", "medications", "obstetric"],
     "1.7": ["onset", "presentingSymptoms", "associatedSymptoms", "physicalFindings", "investigations"],
-    "1.8": ["admissionDate", "admissionRoute", "admittingDiagnosis", "admissionInvestigations", "treatmentStarted", "initialCare"],
+    "1.8": ["admissionDate", "admissionRoute", "admittingDiagnosis", "admissionInvestigations", "treatmentStarted", "initialCare", "dischargeDate"],
     "1.9": ["understanding", "perceivedCause", "emotionalResponse"],
     "1.10": ["condition", "definition", "anatomy", "incidence", "causes", "pathophysiology", "clinicalFeatures", "diagnostics", "treatment", "complications", "nursingConsiderations"],
     "1.11": ["validationMethods", "discrepancies"],
@@ -244,7 +245,7 @@ SECTION_FIELDS = {
     "2.5": ["nursingDiagnoses", "diagnosisPriority"],
     "3.1": ["longTerm", "shortTerm", "outcomeCriteria", "familyObjectives"],
     "4.1": ["careGiven", "healthEducation", "familyInvolvement"],
-    "4.2": ["dischargeEducation", "longTermNeeds", "communityResources", "dischargeProcess"],
+    "4.2": ["dischargeEducation", "longTermNeeds", "communityResources", "dischargeProcess", "dischargeDate", "reviewDate"],
     "5.1": ["overallEvaluation", "followUp"],
     "5.2": ["failedOutcomes", "amendment"],
     "5.3": ["terminationProcess", "patientInvolvement", "handover"],
@@ -270,13 +271,13 @@ def _coverage_report(chapters: list[dict[str, Any]]) -> dict[str, Any]:
     ))
     by_chapter: dict[str, dict[str, Any]] = {}
     chapter_names = {
-        "P": "Preliminary Pages",
+        "P": "Additional Pages",
         "1": "Assessment",
         "2": "Analysis of Data",
         "3": "Planning",
         "4": "Implementation",
         "5": "Evaluation",
-        "6": "Summary and Conclusion",
+        "6": "Additional Pages",
     }
     for prefix, name in chapter_names.items():
         chapter_expected = [section_id for section_id in expected if section_id.startswith(f"{prefix}.")]
@@ -492,14 +493,20 @@ def _deterministic_import(raw_text: str) -> dict | None:
     section_by_id: dict[str, dict[str, Any]] = {}
     for section in sections:
         section_id = section["sectionId"]
-        chapter_name = "Preliminary Pages" if section_id.startswith("P.") else {
-            "1": "Assessment",
-            "2": "Analysis of Data",
-            "3": "Planning",
-            "4": "Implementation",
-            "5": "Evaluation",
-            "6": "Summary and Conclusion",
-        }.get(section_id[0], "Assessment")
+        # "Additional Pages" is the merged front-matter + closing chapter:
+        # preliminary sections (P.*) and the 6.x summary/conclusion/bibliography
+        # sections all map there — the document's page order is unchanged.
+        if section_id.startswith("P.") or section_id.startswith("6."):
+            chapter_name = "Additional Pages"
+        else:
+            chapter_name = {
+                "1": "Assessment",
+                "2": "Analysis of Data",
+                "3": "Planning",
+                "4": "Implementation",
+                "5": "Evaluation",
+                "6": "Summary and Conclusion",
+            }.get(section_id[0], "Assessment")
         chapter = chapter_by_name.setdefault(
             chapter_name,
             {"name": chapter_name, "sections": []},

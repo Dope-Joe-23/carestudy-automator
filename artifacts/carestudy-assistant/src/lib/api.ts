@@ -192,6 +192,105 @@ export type CarePlanRecommendations = {
   rows: CarePlanRow[];
 };
 
+/** Proposed 4.2 discharge-preparation field drafts (one per section field). */
+export type DischargeRecommendations = {
+  dischargeEducation: string;
+  longTermNeeds: string;
+  communityResources: string;
+  dischargeProcess: string;
+};
+
+/** Recommend the 4.2 discharge-preparation fields from documented data. */
+export async function requestDischargeRecommendations(
+  patient: Record<string, string>,
+  drugs: string[],
+  diagnoses: string[],
+  patientContext: string,
+  discharge: Record<string, string> = {},
+): Promise<DischargeRecommendations> {
+  const response = await fetch(`${API_URL}/chapter4/discharge`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ patient, drugs, diagnoses, patientContext, discharge }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
+    throw new Error(body?.detail ?? body?.error ?? `Recommendation request failed (${response.status})`);
+  }
+  const data = (await response.json()) as { discharge?: DischargeRecommendations };
+  if (!data.discharge) throw new Error("The recommendation engine returned no results.");
+  return data.discharge;
+}
+
+/** Proposed 4.1 day-by-day care summary, serialized into the careGiven field. */
+export type CareSummaryRecommendations = { careGiven: string };
+
+/** Proposed 4.3 per-visit home-visit blocks plus the full serialized text. */
+export type HomeVisitRecommendations = {
+  opening: string;
+  visits: {
+    heading: string;
+    paragraph: string;
+    /** Guided-card values in grid order: [date, objectives, findings, education, outcome]. */
+    cells: string[];
+    /** Conventional + discharge-education topics offered as checkboxes. */
+    educationSuggestions: string[];
+    /** True while the visit's date is still an engine suggestion. */
+    dateIsSuggested: boolean;
+    /** True for the derived Day-of-Review block (from the 4.2 review date). */
+    isReviewBlock?: boolean;
+  }[];
+  visitsText: string;
+};
+
+/** Build the 4.1 day-by-day care-summary skeleton from documented data. */
+export async function requestCareSummarySkeleton(
+  patient: Record<string, string>,
+  admission: Record<string, string>,
+  carePlanRows: string[][],
+  drugs: string[],
+): Promise<CareSummaryRecommendations> {
+  const response = await fetch(`${API_URL}/chapter4/care-summary`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ patient, admission, carePlanRows, drugs }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
+    throw new Error(body?.detail ?? body?.error ?? `Care summary request failed (${response.status})`);
+  }
+  const data = (await response.json()) as { careSummary?: CareSummaryRecommendations };
+  if (!data.careSummary?.careGiven) throw new Error("The engine returned no care-summary skeleton.");
+  return data.careSummary;
+}
+
+/** Build the 4.3 per-visit home-visit skeleton from documented data. */
+export async function requestHomeVisitSkeleton(
+  patient: Record<string, string>,
+  drugs: string[],
+  diagnoses: string[],
+  discharge: Record<string, string>,
+  socio: Record<string, string>,
+  visitRows: string[][],
+  admission: Record<string, string> = {},
+): Promise<HomeVisitRecommendations> {
+  const response = await fetch(`${API_URL}/chapter4/home-visits`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ patient, drugs, diagnoses, discharge, socio, visitRows, admission }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
+    throw new Error(body?.detail ?? body?.error ?? `Home visit request failed (${response.status})`);
+  }
+  const data = (await response.json()) as { homeVisits?: HomeVisitRecommendations };
+  if (!data.homeVisits?.visitsText) throw new Error("The engine returned no home-visit skeleton.");
+  return data.homeVisits;
+}
+
 /** Recommend the Chapter 3 nursing care plan from the Chapter 2 diagnoses. */
 export async function requestCarePlanRecommendations(
   diagnoses: string[],

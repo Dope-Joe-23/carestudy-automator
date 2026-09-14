@@ -1,3 +1,5 @@
+import { hasSuggestedDateMarker } from "./homeVisitMarkers";
+
 export type StudyFactSection = {
   id: string;
   heading: string;
@@ -129,7 +131,10 @@ export function deriveStudyFacts(
       carePlanRows: rowsFrom(sections.get("3.2")),
     },
     implementation: {
-      fields: fieldsFrom(sections.get("4.1")),
+      // 4.2's fields (discharge education, community resources, discharge
+      // date) flow through here too — the 4.3 home-visit skeleton and the
+      // discharge-preparation recommendations are built from them.
+      fields: Object.assign({}, fieldsFrom(sections.get("4.1")), fieldsFrom(sections.get("4.2"))),
       notes: ["4.1", "4.2"].map((id) => nonEmpty(sections.get(id)?.notes)).filter(Boolean).join("\n"),
       homeVisitRows: rowsFrom(sections.get("4.3")),
     },
@@ -153,6 +158,32 @@ export function validateStudyFacts(facts: StudyFacts): StudyFactIssue[] {
       code: "diagnosis-mismatch",
       message: "The admission diagnosis in sections 1.1 and 1.8 does not match.",
       sections: ["1.1", "1.8"],
+    });
+  }
+
+  // The discharge date is mirrored in 1.8 and 4.2 so it is collectable from
+  // either the admission story or the discharge narrative — but the two must
+  // agree, mirroring the existing 1.1/1.8 diagnosis-mismatch check.
+  const dischargeDate18 = nonEmpty(facts.assessment.fields.dischargeDate);
+  const dischargeDate42 = nonEmpty(facts.implementation.fields.dischargeDate);
+  if (dischargeDate18 && dischargeDate42 && dischargeDate18 !== dischargeDate42) {
+    add({
+      severity: "warning",
+      code: "discharge-date-mismatch",
+      message: "The date of discharge in sections 1.8 and 4.2 does not match.",
+      sections: ["1.8", "4.2"],
+    });
+  }
+
+  // The review date must fall after discharge — a review visit recorded
+  // before the patient even went home breaks the 4.3 Day-of-Review block.
+  const reviewDate42 = nonEmpty(facts.implementation.fields.reviewDate);
+  if (dischargeDate42 && reviewDate42 && reviewDate42 <= dischargeDate42) {
+    add({
+      severity: "warning",
+      code: "review-before-discharge",
+      message: "The review date in section 4.2 is on or before the date of discharge.",
+      sections: ["4.2", "4.3"],
     });
   }
 
@@ -240,6 +271,21 @@ export function validateStudyFacts(facts: StudyFacts): StudyFactIssue[] {
       sections: ["3.1", "3.2", "5.1", "5.2"],
     });
   }
+  // Engine-suggested (unconfirmed) home-visit dates must not slip into an
+  // export unnoticed — the 4.3 card editor badges them, and this gate
+  // surfaces them again at study-level before download.
+  const suggestedVisitDates = facts.implementation.homeVisitRows.filter((row) =>
+    hasSuggestedDateMarker(row[0] ?? ""),
+  );
+  if (suggestedVisitDates.length > 0) {
+    add({
+      severity: "warning",
+      code: "unconfirmed-visit-dates",
+      message: `${suggestedVisitDates.length} home-visit date${suggestedVisitDates.length === 1 ? " is" : "s are"} still an unconfirmed engine suggestion — confirm or change the date in section 4.3.`,
+      sections: ["4.3"],
+    });
+  }
+
   const planDiagnoses = new Set(
     facts.planning.carePlanRows.map((row) => nonEmpty(row[1]).toLowerCase()).filter(Boolean),
   );

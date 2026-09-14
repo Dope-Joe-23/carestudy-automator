@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import app from "./app";
@@ -6,14 +6,51 @@ import { logger } from "./lib/logger";
 import { draftWorker } from "./lib/draftWorker";
 import { closeStudyStore, initializePostgres } from "@workspace/db";
 
-// Load local config from <package>/..env if present (bundled into dist/,
-// so resolve relative to this module). Values already set in the process
-// environment take precedence, so this is a safe fallback for local dev.
+// Load local config from <package>/.env if present (bundled into dist/,
+// so resolve relative to this module).
+//
+// .env values OVERRIDE an inherited OS-level environment on purpose: the
+// deployment's config file is more specific than whatever shell/user
+// variables happen to be set. Node's process.loadEnvFile() keeps
+// already-set variables ("--env-file" semantics), which let a stale
+// user-level ANTHROPIC_MODEL shadow a corrected .env value across
+// restarts — so values are parsed and assigned explicitly here. Deployments
+// that need a different value should edit .env, not the OS environment.
 const localEnvPath = fileURLToPath(new URL("../.env", import.meta.url));
 if (existsSync(localEnvPath)) {
   try {
-    process.loadEnvFile(localEnvPath);
-    logger.info({ path: localEnvPath }, "Loaded environment from .env");
+    const before = { ...process.env };
+    const lines = readFileSync(localEnvPath, "utf-8").split(/\r?\n/);
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith("#")) continue;
+      const eq = line.indexOf("=");
+      if (eq <= 0) continue;
+      const key = line.slice(0, eq).trim().replace(/^export\s+/, "");
+      let value = line.slice(eq + 1).trim();
+      // Strip surrounding quotes and an inline comment after an unquoted value.
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      } else {
+        const hash = value.indexOf(" #");
+        if (hash !== -1) value = value.slice(0, hash).trim();
+      }
+      if (key) process.env[key] = value;
+    }
+    // Log overrides so stale OS/user-level variables are visible in the log.
+    const overridden = Object.keys(process.env).filter(
+      (key) => key in before && before[key] !== process.env[key],
+    );
+    if (overridden.length > 0) {
+      logger.warn(
+        { keys: overridden },
+        ".env overrode inherited environment variables",
+      );
+    }
+    logger.info({ path: localEnvPath }, "Loaded environment from .env (overrides applied)");
   } catch (err) {
     logger.warn({ err, path: localEnvPath }, "Failed to load .env");
   }

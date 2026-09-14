@@ -157,6 +157,7 @@ SECTIONS = {
             _f("initialCare", "Immediate nursing care",
                "e.g. Admitted into female medical ward, oriented to ward routine, vital signs monitored 4-hourly",
                "textarea"),
+            _f("dischargeDate", "Date of discharge", "e.g. 24th August, 2023", "date"),
         ],
         "rows": None,
     },
@@ -362,6 +363,8 @@ SECTIONS = {
             _f("longTermNeeds", "Long-term needs & responsibilities", "e.g. Follow-up, rehabilitation, nutrition, and medication responsibilities", "textarea"),
             _f("communityResources", "Community resources & referrals", "e.g. Community health nurse, clinic referral, or home-visit support", "textarea"),
             _f("dischargeProcess", "The discharge process", "e.g. How the patient and family were prepared and involved in handover", "textarea"),
+            _f("dischargeDate", "Date of discharge", "e.g. 24th August, 2023", "date"),
+            _f("reviewDate", "Review date", "e.g. 7th September, 2023", "date"),
         ],
         "rows": None,
     },
@@ -628,10 +631,15 @@ WORD_COUNT_RANGES: dict = {
     # Usually a table; 300–700 words typical.
     "nursing care plan": (300, 700),
     # Chapter 4 — Implementation (inference-allowed)
-    # 4.1 Summary of the Actual Nursing Care: observed 2–271 words (4 samples)
-    "summary of the actual nursing care": (100, 400),
+    # 4.1 Summary of the Actual Nursing Care: opening paragraph plus day-by-day
+    # narratives — re-measured directly from the samples' 4.1 section bodies:
+    # CASE 2728, Halima 1811, Joe's 3046, SHARIFA'S 1774, rafa's 1736 words.
+    "summary of the actual nursing care": (1200, 3200),
+    # 4.2: re-measured 155–386 words — short and formulaic.
     "preparation of patient and family for discharge and rehabilitation": (150, 500),
-    "follow-up / home visit / continuity of care": (150, 500),
+    # 4.3: narrative per-visit prose, re-measured 609–1361 words
+    # (CASE 893, Joe's 1361, SHARIFA'S 609, rafa's 808).
+    "follow-up / home visit / continuity of care": (500, 1500),
     # Chapter 5 — Evaluation (inference-allowed)
     # 5.1 Statement of Evaluation: observed 254 words (1 sample)
     "statement of evaluation": (200, 400),

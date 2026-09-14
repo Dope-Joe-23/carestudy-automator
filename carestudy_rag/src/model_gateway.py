@@ -20,6 +20,25 @@ from typing import List
 sys.path.insert(0, os.path.dirname(__file__))
 
 
+def sanitize_surrogates(text: str) -> str:
+    """Replace lone UTF-16 surrogates with U+FFFD so the text encodes to UTF-8.
+
+    Surrogates enter request text two ways: pasted browser strings carrying
+    lone UTF-16 code units (JSON.parse accepts "\\udc9d" escapes), and Windows
+    pipes decoding stdin as cp1252 with 'surrogateescape' (an unmapped byte
+    like 0x9D becomes \\udc9d). The Anthropic SDK refuses to UTF-8-encode
+    surrogates, so one bad character would fail every model call. Cheap for
+    the common case: already-clean text passes through untouched.
+    """
+    if not isinstance(text, str):
+        return text
+    try:
+        text.encode("utf-8")
+        return text
+    except UnicodeEncodeError:
+        return text.encode("utf-8", "replace").decode("utf-8")
+
+
 def _response_text(response) -> str:
     """Extract text from Anthropic SDK and compatible gateway responses."""
     output_text = getattr(response, "output_text", None)
@@ -79,15 +98,28 @@ def _candidate_models() -> List[str]:
     return list(dict.fromkeys([primary_model, *fallbacks]))
 
 
-def _chat_model(system: str, prompt: str, max_tokens: int = 3500, label: str = "request") -> str:
+def _chat_model(
+    system: str,
+    prompt: str,
+    max_tokens: int = 3500,
+    label: str = "request",
+    _client=None,
+) -> str:
     """Send one prompt to the configured model, with fallbacks and retries.
 
     Returns the response text. Raises RuntimeError when every candidate model
     fails or returns empty, so callers can fall back to local logic.
+
+    _client lets a caller that already built an Anthropic client (generate.py's
+    dry-run key handling) reuse it instead of building a second one.
     """
     import time
 
-    client = _anthropic_client()
+    # Belt-and-braces: no prompt containing lone surrogates can reach the SDK.
+    system = sanitize_surrogates(system)
+    prompt = sanitize_surrogates(prompt)
+
+    client = _client or _anthropic_client()
     max_retries = 2
     model_errors: list[str] = []
     for candidate_model in _candidate_models():
@@ -132,6 +164,26 @@ def _chat_model(system: str, prompt: str, max_tokens: int = 3500, label: str = "
                     f"[worker] {label} model {candidate_model} failed (attempt {attempt}/{max_retries}): {exc}",
                     file=sys.stderr, flush=True,
                 )
+                # A 404 'not found' from the gateway means the configured slug
+                # no longer exists (providers retire free models regularly).
+                # Retrying cannot help and burning the retries delays every
+                # request — skip the remaining attempts for this model, and
+                # make the eventual error message point at the fix.
+                exc_text = str(exc)
+                status = getattr(exc, "status_code", None)
+                if (
+                    status == 404
+                    or "not_found_error" in exc_text
+                    or "No endpoints found" in exc_text
+                    or "model is unavailable" in exc_text
+                ):
+                    model_errors.append(
+                        f"{candidate_model}: model slug no longer exists on the "
+                        "gateway (404) — update ANTHROPIC_MODEL / "
+                        "ANTHROPIC_FALLBACK_MODELS in the server .env to a live "
+                        "model and restart"
+                    )
+                    break
                 if attempt < max_retries:
                     wait = 2 ** attempt
                     time.sleep(wait)

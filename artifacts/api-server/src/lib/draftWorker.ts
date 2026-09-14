@@ -84,6 +84,38 @@ export type CarePlanRecommendations = {
   rows: CarePlanRow[];
 };
 
+/** Proposed 4.2 discharge-preparation field drafts (one per section field). */
+export type DischargeRecommendations = {
+  dischargeEducation: string;
+  longTermNeeds: string;
+  communityResources: string;
+  dischargeProcess: string;
+};
+
+/** Proposed 4.1 day-by-day care summary (serialized into the careGiven field). */
+export type CareSummaryRecommendations = {
+  careGiven: string;
+};
+
+/** One proposed 4.3 home-visit block (bold subheading + paragraph). */
+export type HomeVisitRecommendations = {
+  opening: string;
+  visits: {
+    heading: string;
+    paragraph: string;
+    /** Guided-card values in grid order: [date, objectives, findings, education, outcome]. */
+    cells: string[];
+    /** Conventional + discharge-education topics offered as checkboxes. */
+    educationSuggestions: string[];
+    /** True while the visit's date is still an engine suggestion. */
+    dateIsSuggested: boolean;
+    /** True for the derived Day-of-Review block (from the 4.2 review date). */
+    isReviewBlock?: boolean;
+  }[];
+  /** Full serialized section text (opening paragraph + per-visit blocks). */
+  visitsText: string;
+};
+
 export type ImportedSection = {
   heading: string;
   content: string;
@@ -124,7 +156,7 @@ export type ImportStudyResult = {
 };
 
 /** A worker response is a draft, an ingest result, a viva bank, an editorial answer, an import, or chapter 2 recommendations. */
-type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | ImportStudyResult | Chapter2Recommendations | PharmacologyRecommendations | CarePlanRecommendations;
+type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | ImportStudyResult | Chapter2Recommendations | PharmacologyRecommendations | CarePlanRecommendations | DischargeRecommendations | CareSummaryRecommendations | HomeVisitRecommendations;
 
 interface PendingRequest {
   /** The worker instance this request was written to. */
@@ -305,6 +337,109 @@ class DraftWorker {
       try {
         child.stdin.write(
           JSON.stringify({ id, op: "care_plan_recommendations", diagnoses, drugs, patientContext }) + "\n",
+        );
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Recommend the 4.2 discharge-preparation field drafts from documented data. */
+  async recommendDischarge(
+    patient: Record<string, string>,
+    drugs: string[],
+    diagnoses: string[],
+    patientContext: string,
+    discharge: Record<string, string> = {},
+  ): Promise<DischargeRecommendations> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<DischargeRecommendations>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("Discharge preparation recommendations timed out. Please try again."));
+      }, REQUEST_TIMEOUT_MS);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as unknown as DischargeRecommendations),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(
+          JSON.stringify({ id, op: "discharge_recommendations", patient, drugs, diagnoses, patientContext, discharge }) + "\n",
+        );
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Build the 4.3 per-visit home-visit skeleton (deterministic, no model call). */
+  async homeVisitSkeleton(
+    patient: Record<string, string>,
+    drugs: string[],
+    diagnoses: string[],
+    discharge: Record<string, string>,
+    socio: Record<string, string>,
+    visitRows: string[][],
+    admission: Record<string, string> = {},
+  ): Promise<HomeVisitRecommendations> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<HomeVisitRecommendations>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("Home visit skeleton generation timed out. Please try again."));
+      }, 120_000);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as unknown as HomeVisitRecommendations),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(
+          JSON.stringify({ id, op: "home_visit_skeleton", patient, drugs, diagnoses, discharge, socio, visitRows, admission }) + "\n",
+        );
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Build the 4.1 day-by-day care-summary skeleton (deterministic, no model call). */
+  async careSummarySkeleton(
+    patient: Record<string, string>,
+    admission: Record<string, string>,
+    carePlanRows: string[][],
+    drugs: string[],
+  ): Promise<CareSummaryRecommendations> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<CareSummaryRecommendations>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("Care summary generation timed out. Please try again."));
+      }, 120_000);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as unknown as CareSummaryRecommendations),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(
+          JSON.stringify({ id, op: "care_summary_skeleton", patient, admission, carePlanRows, drugs }) + "\n",
         );
       } catch (writeErr) {
         this.pending.delete(id);
@@ -599,6 +734,9 @@ class DraftWorker {
       recommendations?: Chapter2Recommendations;
       pharmacology?: PharmacologyRecommendations;
       carePlan?: CarePlanRecommendations;
+      discharge?: DischargeRecommendations;
+      careSummary?: CareSummaryRecommendations;
+      homeVisits?: HomeVisitRecommendations;
       error?: string;
     };
     try {
@@ -636,6 +774,15 @@ class DraftWorker {
     } else if (msg.carePlan && Array.isArray(msg.carePlan.rows)) {
       // CarePlanRecommendations — the worker emits { carePlan: { rows } }.
       pending.resolve(msg.carePlan);
+    } else if (msg.discharge && typeof msg.discharge === "object") {
+      // DischargeRecommendations — the worker emits { discharge: {...} }.
+      pending.resolve(msg.discharge);
+    } else if (msg.careSummary && typeof msg.careSummary === "object") {
+      // CareSummaryRecommendations — the worker emits { careSummary: {...} }.
+      pending.resolve(msg.careSummary);
+    } else if (msg.homeVisits && typeof msg.homeVisits === "object") {
+      // HomeVisitRecommendations — the worker emits { homeVisits: {...} }.
+      pending.resolve(msg.homeVisits);
     } else if (msg.recommendations && typeof msg.recommendations === "object") {
       // Resolve the sections object itself — callers type it directly as
       // Chapter2Recommendations (same unwrapping as the bank branch above).

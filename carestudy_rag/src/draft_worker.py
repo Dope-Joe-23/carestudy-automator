@@ -37,6 +37,13 @@ from import_worker import import_study, import_study_with_fields  # noqa: E402
 from nanda_mapper import build_chapter2_analysis_from_chapter1  # noqa: E402
 from pharm_mapper import build_pharmacology_rows  # noqa: E402
 from care_plan import generate_care_plan_recommendations  # noqa: E402
+from implementation_mapper import (  # noqa: E402
+    build_care_summary_skeleton,
+    build_home_visit_skeleton,
+    home_visit_skeleton_to_text,
+    build_discharge_preparation,
+    skeleton_to_text,
+)
 from model_gateway import _chat_model  # noqa: E402  (shared gateway — see model_gateway.py)
 
 # Per-study retrieval indexes, keyed by study id and cached in memory so each
@@ -509,11 +516,187 @@ def generate_chapter2_recommendations(chapter1_fields: Dict[str, str], condition
         return rules_result
 
 
+_DISCHARGE_SYSTEM = (
+    "You are a nursing tutor at a Ghana NMC-accredited college helping a student "
+    "write section 4.2 'Preparation of Patient and Family for Discharge and "
+    "Rehabilitation' of a care study. You receive the patient's particulars, the "
+    "documented diagnoses, the rule-based field drafts, and any free-form notes. "
+    "Personalise the drafts so they are specific to THIS patient, using only the "
+    "findings present in the data — never invent clinical findings, dates, drugs, "
+    "doses, or review dates. Keep the school's structure: preparation started on "
+    "the day of admission, condition/medication/diet/danger-sign education, family "
+    "involvement, long-term needs, community resources and referrals, and the "
+    "gradual discharge process. Where the source marks a bracketed placeholder "
+    "like [state ...], keep a placeholder in the polished text so the student "
+    "fills it from their own records — never fill it with an invented fact. Return "
+    "ONLY a JSON object with exactly these string keys:\n"
+    '{"dischargeEducation": "...", "longTermNeeds": "...", '
+    '"communityResources": "...", "dischargeProcess": "..."}'
+)
+
+
+def _discharge_with_llm(
+    payload: Dict[str, object],
+    rules_result: Dict[str, str],
+) -> Dict[str, str]:
+    """One model call that personalises the rule-based 4.2 field drafts."""
+    context_text = json.dumps(payload, ensure_ascii=True, indent=2)
+    rules_text = json.dumps(rules_result, ensure_ascii=True, indent=2)
+    prompt = (
+        f"PATIENT DATA:\n{context_text}\n\n"
+        f"RULE-BASED FIELD DRAFTS TO REFINE:\n{rules_text}\n\n"
+        "Polish these 4.2 discharge-preparation field drafts for this specific "
+        "patient: keep the school's structure, keep every bracketed placeholder "
+        "as a placeholder (you may reword the bracket text), use only documented "
+        "facts, and write flowing professional prose (3-6 sentences per field). "
+        "The PATIENT DATA carries the documented review date (reviewDate) — use "
+        "it where the draft references the review appointment instead of leaving "
+        "the placeholder. Return only the JSON object."
+    )
+    answer = _chat_model(
+        _DISCHARGE_SYSTEM, prompt, max_tokens=4000, label="discharge preparation recommendations",
+    )
+    return _merge_discharge_result(answer, rules_result)
+
+
+def _merge_discharge_result(raw: str, rules_result: Dict[str, str]) -> Dict[str, str]:
+    """Validate the model's 4.2 JSON, falling back per-field to the rules."""
+    candidate = raw.strip()
+    if candidate.startswith("```"):
+        end = candidate.rfind("```")
+        candidate = candidate[3:end if end != -1 else None].strip()
+        if candidate.lower().startswith("json"):
+            candidate = candidate[4:].strip()
+
+    parsed = None
+    try:
+        parsed = json.loads(candidate)
+    except (json.JSONDecodeError, ValueError):
+        pass
+    if parsed is None:
+        first_brace = candidate.find("{")
+        last_brace = candidate.rfind("}")
+        if first_brace != -1 and last_brace > first_brace:
+            try:
+                parsed = json.loads(candidate[first_brace:last_brace + 1])
+            except (json.JSONDecodeError, ValueError):
+                pass
+    if not isinstance(parsed, dict):
+        raise ValueError("model response was not a JSON object")
+
+    merged: Dict[str, str] = {}
+    usable = False
+    for field in ("dischargeEducation", "longTermNeeds", "communityResources", "dischargeProcess"):
+        value = parsed.get(field)
+        if isinstance(value, str) and len(value.strip()) >= 60:
+            merged[field] = value.strip()
+            usable = True
+        else:
+            merged[field] = rules_result.get(field, "")
+    if not usable:
+        raise ValueError("model response contained no usable discharge fields")
+    return merged
+
+
+def generate_discharge_recommendations(
+    patient: Dict[str, str],
+    drugs: List[str],
+    diagnoses: List[str],
+    patient_context: str = "",
+    discharge: Optional[Dict[str, str]] = None,
+) -> dict:
+    """Proposed 4.2 field drafts: LLM polish, rule fallback.
+
+    Mirrors generate_chapter2_recommendations / generate_care_plan_recommendations:
+    the deterministic builder grounds the prompt and serves as the per-field
+    fallback, so the API always returns the same field shape. `discharge`
+    carries the documented 4.2 fields (its structured `reviewDate` replaces
+    the review-date placeholder in the drafts).
+    """
+    rules_result = build_discharge_preparation(
+        patient, drugs, diagnoses, patient_context,
+        (discharge or {}).get("reviewDate", ""),
+    )
+    try:
+        return _discharge_with_llm(
+            {
+                "patient": patient,
+                "drugs": drugs,
+                "diagnoses": diagnoses,
+                "patientContext": patient_context,
+                "reviewDate": (discharge or {}).get("reviewDate", ""),
+            },
+            rules_result,
+        )
+    except Exception as exc:
+        print(
+            f"[worker] discharge recommendations: model call failed, using rule-based output: {exc}",
+            file=sys.stderr, flush=True,
+        )
+        return rules_result
+
+
+def generate_home_visit_skeleton(
+    patient: Dict[str, str],
+    drugs: List[str],
+    diagnoses: List[str],
+    discharge: Dict[str, str],
+    socio: Dict[str, str],
+    visit_rows: List[List[str]],
+    admission: Optional[Dict[str, str]] = None,
+) -> dict:
+    """Proposed 4.3 per-visit skeleton — deterministic, no model calls.
+
+    Mirrors generate_care_summary: the skeleton (definition paragraph +
+    per-visit blocks with grounded purpose/education sentences and explicit
+    placeholders) is returned directly; the student fills only the facts they
+    documented. Serialized into the 4.3 notes for review before drafting.
+    """
+    skeleton = build_home_visit_skeleton(patient, drugs, diagnoses, discharge, socio, visit_rows, admission)
+    return {
+        "opening": str(skeleton.get("opening", "")),
+        "visits": [
+            {
+                "heading": str(visit.get("heading", "")),
+                "paragraph": str(visit.get("paragraph", "")),
+                "cells": [str(cell) for cell in visit.get("cells", []) or []],
+                "educationSuggestions": [
+                    str(s) for s in visit.get("educationSuggestions", []) or []
+                ],
+                "dateIsSuggested": bool(visit.get("dateIsSuggested", False)),
+                "isReviewBlock": bool(visit.get("isReviewBlock", False)),
+            }
+            for visit in skeleton.get("visits", []) or []
+            if isinstance(visit, dict)
+        ],
+        "visitsText": home_visit_skeleton_to_text(skeleton),
+    }
+
+
+def generate_care_summary(
+    patient: Dict[str, str],
+    admission: Dict[str, str],
+    care_plan_rows: List[List[str]],
+    drugs: List[str],
+) -> dict:
+    """Proposed 4.1 day-by-day skeleton — deterministic, no model call.
+
+    The skeleton (opening paragraph + per-day headings with grounded points and
+    explicit placeholders) is returned directly; the student fills the day
+    narratives only they can document. Serialized into the 'careGiven' field.
+    """
+    skeleton = build_care_summary_skeleton(patient, admission, care_plan_rows, drugs)
+    return {"careGiven": skeleton_to_text(skeleton), "skeleton": skeleton}
+
+
 def main() -> None:
-    # Windows consoles default to cp1252, which can't encode every Unicode
-    # character a model may output. Write UTF-8 and replace anything still
-    # unencodable instead of crashing a draft.
-    for stream in (sys.stdout, sys.stderr):
+    # Windows consoles/pipes default stdin to cp1252 with surrogateescape, and
+    # stdout/stderr to cp1252. Reconfigure all three to UTF-8: request JSON on
+    # stdin is always UTF-8 (Express writes raw UTF-8), and a cp1252 decode
+    # turns every unmapped byte into a lone surrogate (\udc9d etc.) that later
+    # crashes the SDK's UTF-8 prompt encoding with UnicodeEncodeError. 'replace'
+    # keeps output safe from characters the console can't encode.
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
 
@@ -585,6 +768,87 @@ def main() -> None:
                     emit({"id": req.get("id"), "imported": result})
                 except Exception as exc:
                     emit({"id": req.get("id"), "error": str(exc)})
+                continue
+            if op == "discharge_recommendations":
+                patient = req.get("patient") or {}
+                drugs = req.get("drugs") or []
+                diagnoses = req.get("diagnoses") or []
+                patient_context = req.get("patientContext", "")
+                if not isinstance(patient, dict):
+                    emit({"id": req.get("id"), "error": "discharge_recommendations requires a patient object"})
+                    continue
+                if not isinstance(drugs, list) or not all(isinstance(d, str) for d in drugs):
+                    emit({"id": req.get("id"), "error": "discharge_recommendations requires drugs as a list of strings"})
+                    continue
+                if not isinstance(diagnoses, list) or not all(isinstance(d, str) for d in diagnoses):
+                    emit({"id": req.get("id"), "error": "discharge_recommendations requires diagnoses as a list of strings"})
+                    continue
+                if not isinstance(patient_context, str):
+                    patient_context = ""
+                discharge_payload = req.get("discharge") or {}
+                if not isinstance(discharge_payload, dict):
+                    discharge_payload = {}
+                result = generate_discharge_recommendations(
+                    {str(k): str(v) for k, v in patient.items()},
+                    [d.strip() for d in drugs],
+                    [d.strip() for d in diagnoses],
+                    patient_context.strip(),
+                    {str(k): str(v) for k, v in discharge_payload.items()},
+                )
+                emit({"id": req.get("id"), "discharge": result})
+                continue
+            if op == "home_visit_skeleton":
+                patient = req.get("patient") or {}
+                discharge = req.get("discharge") or {}
+                socio = req.get("socio") or {}
+                admission = req.get("admission") or {}
+                drugs = req.get("drugs") or []
+                diagnoses = req.get("diagnoses") or []
+                visit_rows = req.get("visitRows") or []
+                if not isinstance(patient, dict) or not isinstance(discharge, dict) or not isinstance(socio, dict) or not isinstance(admission, dict):
+                    emit({"id": req.get("id"), "error": "home_visit_skeleton requires patient, discharge, socio, and admission objects"})
+                    continue
+                if not isinstance(drugs, list) or not all(isinstance(d, str) for d in drugs):
+                    emit({"id": req.get("id"), "error": "home_visit_skeleton requires drugs as a list of strings"})
+                    continue
+                if not isinstance(diagnoses, list) or not all(isinstance(d, str) for d in diagnoses):
+                    emit({"id": req.get("id"), "error": "home_visit_skeleton requires diagnoses as a list of strings"})
+                    continue
+                if not isinstance(visit_rows, list):
+                    emit({"id": req.get("id"), "error": "home_visit_skeleton requires visitRows as a list"})
+                    continue
+                result = generate_home_visit_skeleton(
+                    {str(k): str(v) for k, v in patient.items()},
+                    [d.strip() for d in drugs],
+                    [d.strip() for d in diagnoses],
+                    {str(k): str(v) for k, v in discharge.items()},
+                    {str(k): str(v) for k, v in socio.items()},
+                    [row if isinstance(row, list) else [] for row in visit_rows],
+                    {str(k): str(v) for k, v in admission.items()},
+                )
+                emit({"id": req.get("id"), "homeVisits": result})
+                continue
+            if op == "care_summary_skeleton":
+                patient = req.get("patient") or {}
+                admission = req.get("admission") or {}
+                care_plan_rows = req.get("carePlanRows") or []
+                drugs = req.get("drugs") or []
+                if not isinstance(patient, dict) or not isinstance(admission, dict):
+                    emit({"id": req.get("id"), "error": "care_summary_skeleton requires patient and admission objects"})
+                    continue
+                if not isinstance(care_plan_rows, list):
+                    emit({"id": req.get("id"), "error": "care_summary_skeleton requires carePlanRows as a list"})
+                    continue
+                if not isinstance(drugs, list) or not all(isinstance(d, str) for d in drugs):
+                    emit({"id": req.get("id"), "error": "care_summary_skeleton requires drugs as a list of strings"})
+                    continue
+                result = generate_care_summary(
+                    {str(k): str(v) for k, v in patient.items()},
+                    {str(k): str(v) for k, v in admission.items()},
+                    [row if isinstance(row, list) else [] for row in care_plan_rows],
+                    [d.strip() for d in drugs],
+                )
+                emit({"id": req.get("id"), "careSummary": result})
                 continue
             if op == "study_assistant":
                 study = req.get("study")

@@ -27,6 +27,7 @@ from typing import Dict, List
 sys.path.insert(0, os.path.dirname(__file__))
 from retrieval import RetrievedChunk, SimpleIndex
 from template import classify_section, is_data_only, get_word_count_range
+from model_gateway import _chat_model, sanitize_surrogates  # noqa: E402  (shared gateway — see model_gateway.py)
 
 TEMPLATE_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "template_index.pkl")
 REFERENCE_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "reference_index.pkl")
@@ -224,6 +225,44 @@ FORMAT_OBJECTIVES = (
     "'Patient will ... within <time frame> as evidenced by; A) <patient "
     "verbalisation> B) <nurse observation>'. Never merge several objectives into "
     "one bullet and never dissolve the list back into a prose paragraph."
+)
+
+FORMAT_CARE_SUMMARY = (
+    "FORMAT (Summary of the Actual Nursing Care): Write this section exactly as "
+    "the school's sample care studies do — an opening summary paragraph "
+    "(care span from the admission date to the discharge date, ward, the "
+    "patient's presenting problems, medications administered), then bold "
+    "day-by-day subheadings — **Day of Admission (date)**, **First/Second/Third "
+    "Day of Admission (date)**, **Day of Discharge (date)** — each narrating the "
+    "documented care for that day in flowing past-tense prose: meals served and "
+    "portion eaten, medications administered, ward-round findings, care given, "
+    "visitors, when each objective was set and met, and the day's vital-signs "
+    "range at the end. NEVER summarise the whole admission in one paragraph. "
+    "Report ONLY documented care — where the notes lack a day's details, write "
+    "the day's subheading with a bracketed placeholder like [document the care "
+    "given this day] instead of inventing events. Aim for the samples' depth: "
+    "one substantial paragraph per day."
+)
+
+FORMAT_HOME_VISIT = (
+    "FORMAT (Follow-up / Home Visit / Continuity of Care): Write this section as "
+    "the school's sample care studies do — flowing narrative prose with bold "
+    "per-visit subheadings, NEVER as a table. Open with one short paragraph "
+    "defining home visits and their purpose (assess the home environment, "
+    "identify risk factors, reinforce education, ensure continuity of care). "
+    "Then one bold subheading per documented visit in order — **First Home "
+    "Visit (date)** (made while the patient was still on admission: purpose, "
+    "arrival and reception, home environment assessment findings, education "
+    "given), **Second Home Visit (date)** (after discharge: treatment "
+    "adherence, response, remaining education), **Day of Review (date)** where "
+    "documented (OPD review outcome), and a **Third Home Visit (date)** or "
+    "final visit where documented (recovery status, termination of care). Each "
+    "visit is one to three paragraphs of past-tense prose covering the visit's "
+    "objectives, assessment findings, health education given, and the outcome / "
+    "continuity-of-care point — drawn only from the documented visit data; "
+    "where a documented visit lacks a detail, use a bracketed placeholder like "
+    "[state the education given] rather than inventing it. Never present the "
+    "visits as a pipe table."
 )
 
 CHAPTER_INTRO_FORMAT = (
@@ -437,6 +476,27 @@ def is_objectives_section(heading: str) -> bool:
     return "objective" in normalized or normalized.startswith("3.1")
 
 
+def is_care_summary_section(heading: str) -> bool:
+    """Whether a heading is the 4.1 actual-nursing-care summary."""
+    normalized = heading.strip().lower()
+    return (
+        normalized.startswith("4.1")
+        or "summary of the actual" in normalized
+        or ("actual nursing care" in normalized and "summary" in normalized)
+    )
+
+
+def is_home_visit_section(heading: str) -> bool:
+    """Whether a heading is the 4.3 follow-up / home-visit section."""
+    normalized = heading.strip().lower()
+    return (
+        normalized.startswith("4.3")
+        or "home visit" in normalized
+        or "follow-up" in normalized
+        or "follow up" in normalized
+    )
+
+
 def build_prompt(
     heading: str,
     patient_notes: str,
@@ -503,6 +563,10 @@ def build_prompt(
         format_instruction = FORMAT_ANALYSIS_LIST
     elif is_objectives_section(heading):
         format_instruction = FORMAT_OBJECTIVES
+    elif is_care_summary_section(heading):
+        format_instruction = FORMAT_CARE_SUMMARY
+    elif is_home_visit_section(heading):
+        format_instruction = FORMAT_HOME_VISIT
     elif is_admission_section(heading):
         format_instruction = ADMISSION_FORMAT
     else:
@@ -809,13 +873,13 @@ def _rewrite_as_prose(client, draft: str) -> str:
     This is deliberately the cap: the rewrite output is accepted as-is without
     re-checking, so a weak model can never loop the rewrite forever.
     """
-    response = client.messages.create(
-        model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
+    return _chat_model(
+        SYSTEM_PROMPT,
+        REWRITE_AS_PROSE_PROMPT.format(draft=draft),
         max_tokens=1500,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": REWRITE_AS_PROSE_PROMPT.format(draft=draft)}],
+        label="prose rewrite",
+        _client=client,
     )
-    return "".join(block.text for block in response.content if block.type == "text")
 
 
 def _rewrite_as_section(
@@ -831,20 +895,17 @@ def _rewrite_as_section(
         else ADMISSION_FORMAT if is_admission_section(heading)
         else FORMAT_PROSE
     )
-    response = client.messages.create(
-        model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
+    return _chat_model(
+        SYSTEM_PROMPT,
+        REWRITE_AS_SECTION_PROMPT.format(
+            heading=heading,
+            patient_notes=patient_notes,
+            draft=draft,
+        ) + "\n\n" + format_instruction,
         max_tokens=1500,
-        system=SYSTEM_PROMPT,
-        messages=[{
-            "role": "user",
-            "content": REWRITE_AS_SECTION_PROMPT.format(
-                heading=heading,
-                patient_notes=patient_notes,
-                draft=draft,
-            ) + "\n\n" + format_instruction,
-        }],
+        label="section rewrite",
+        _client=client,
     )
-    return "".join(block.text for block in response.content if block.type == "text")
 
 
 def draft_section(
@@ -862,6 +923,7 @@ def draft_section(
     library_chunks=None,
     row_columns=None,
 ) -> DraftResult:
+    patient_notes = sanitize_surrogates(patient_notes)
     if not patient_notes.strip():
         return DraftResult(
             draft=("No patient notes were provided for this section. Add the student's "
@@ -931,55 +993,31 @@ def draft_section(
         client_kwargs["api_key"] = api_key
 
     client = anthropic.Anthropic(**client_kwargs)
-    model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
-    # Keep a free model as the preferred choice, but do not make a single
-    # overloaded provider able to block drafting. OpenRouter's free router is
-    # the no-cost fallback unless a deployment specifies its own model list.
-    configured_fallbacks = [
-        candidate.strip()
-        for candidate in os.environ.get("ANTHROPIC_FALLBACK_MODELS", "").split(",")
-        if candidate.strip()
-    ]
-    using_openrouter = "openrouter.ai" in client_kwargs["base_url"]
-    fallback_models = configured_fallbacks or (
-        ["openrouter/free"] if using_openrouter and model != "openrouter/free" else []
-    )
-    candidate_models = list(dict.fromkeys([model, *fallback_models]))
     # The literature review is a long structured essay; a chapter intro is
     # deliberately short — give each only as much room as it needs. Thinking
     # models (openrouter/free) can burn 1-3k tokens reasoning before any text
     # appears, so keep headroom above the target length everywhere.
     max_tokens = 2500 if chapter_intro else (8000 if is_lit else 6000)
 
-    def call_model(candidate_model: str) -> str:
-        """One model call; returns the concatenated text blocks ('' when empty)."""
-        response = client.messages.create(
-            model=candidate_model,
-            max_tokens=max_tokens,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return "".join(block.text for block in response.content if block.type == "text")
+    # All model traffic goes through the shared gateway (model_gateway.py):
+    # ordered candidates from ANTHROPIC_MODEL / ANTHROPIC_FALLBACK_MODELS, per-
+    # model retries with backoff, fail-fast on retired model slugs, and a
+    # diagnostic RuntimeError naming every attempted model. The previous    # inline loop had zero retries, so a single transient 429 from a free-tier    # provider killed the whole request even though the next model was healthy.
+    draft = _chat_model(
+        SYSTEM_PROMPT,
+        prompt,
+        max_tokens=max_tokens,
+        label=f"draft '{heading[:60]}'" if heading else "draft",
+        _client=client,
+    )
 
-    draft = ""
-    # An empty completion is treated like a provider failure, allowing the
-    # fallback to rescue the request without repeating the same bad model.
-    for candidate_model in candidate_models:
-        try:
-            draft = call_model(candidate_model)
-        except Exception:
-            continue
-        if draft.strip():
-            break
-
-    # Free-tier models occasionally return an empty completion (no text blocks)
-    # on data-heavy sections. Retry once before surfacing an error — a silent
-    # empty draft would otherwise be stored as if it were a real one and the
-    # export would fall back to raw collected fields.
+    # _chat_model raises when every candidate model fails or returns empty, so
+    # reaching this point guarantees non-empty text. Keep a cheap guard anyway:
+    # an empty draft must surface as an error, never be silently stored as if
+    # it were a real one (the export would fall back to raw collected fields).
     if not draft.strip():
         raise RuntimeError(
-            "The AI models returned no usable response for this section "
-            f"(tried: {', '.join(candidate_models)}). Please try again."
+            "The AI models returned no usable response for this section. Please try again."
         )
 
     # Strip leaked thinking/reasoning blocks from free-tier models that
@@ -987,9 +1025,13 @@ def draft_section(
     draft = _strip_thinking(draft)
 
     # If the model returned a safety filter response (e.g. "User Safety: safe")
-    # instead of actual content, treat it as a failed response and retry.
+    # instead of actual content, treat it as a failed response: raising here
+    # lets the caller's retry/fallback machinery rescue the request, instead of
+    # silently storing an empty draft.
     if _is_safety_filter_response(draft):
-        draft = ""
+        raise RuntimeError(
+            "The AI models returned a safety-filter response instead of content. Please try again."
+        )
 
     # Some models echo the assignment and citation rules instead of producing
     # the requested section. Give that response one focused repair pass while
@@ -1004,15 +1046,18 @@ def draft_section(
 
     # Prose enforcement: if the model still dumped the data as bullets/labels,
     # run one corrective rewrite. The literature review, Chapter 2 analysis,
-    # and Chapter 3 objectives sections are excluded — their format
-    # instructions explicitly want bulleted lists, not prose. On failure the
-    # original draft is kept rather than lost — the student can still edit it
-    # by hand — and an empty rewrite never clobbers a real draft.
+    # Chapter 3 objectives, and Chapter 4 care-summary/home-visit sections are
+    # excluded — their format instructions explicitly want structured lists or
+    # day/visit narratives, not flattened prose. On failure the original draft
+    # is kept rather than lost — the student can still edit it by hand — and an
+    # empty rewrite never clobbers a real draft.
     if (
         not tabular
         and not is_lit
         and not is_analysis_list_section(heading)
         and not is_objectives_section(heading)
+        and not is_care_summary_section(heading)
+        and not is_home_visit_section(heading)
         and _looks_like_data_dump(draft)
     ):
         try:

@@ -101,10 +101,10 @@ const vitalsFields = (prefix: string): TemplateField[] => [
 
 export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
   {
-    name: "Preliminary Pages",
-    shortLabel: "Prelim",
+    name: "Additional Pages",
+    shortLabel: "Extra",
     isFrontMatter: true,
-    blurb: "The pages that open the care study before Chapter One.",
+    blurb: "The pages that open the care study, plus its closing sections.",
     sections: [
       {
         id: "P.1",
@@ -216,6 +216,60 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
             span: 2,
           },
         ],
+      },
+      {
+        id: "6.1",
+        heading: "Summary",
+        blurb: "A concise recap of the whole study.",
+        fields: [
+          {
+            id: "summaryText",
+            label: "Summary of the study",
+            placeholder: "e.g. This study assessed Mrs. P.A, a 49-year-old trader with sickle cell disease...",
+            type: "textarea",
+            span: 2,
+          },
+        ],
+      },
+      {
+        id: "6.2",
+        heading: "Conclusion",
+        blurb: "What the study concludes about the care given.",
+        fields: [
+          {
+            id: "conclusionText",
+            label: "Conclusion",
+            placeholder: "e.g. The care given was holistic and goal-directed. The study deepened my understanding of...",
+            type: "textarea",
+            span: 2,
+          },
+          {
+            id: "recommendations",
+            label: "Recommendations",
+            placeholder: "e.g. Health education should emphasise early reporting of danger signs...",
+            type: "textarea",
+            span: 2,
+          },
+        ],
+      },
+      {
+        id: "6.3",
+        heading: "Bibliography",
+        blurb: "Every source used in the study, in APA style.",
+        fields: [],
+        rows: {
+          id: "bibliography",
+          title: "Bibliography entries",
+          addLabel: "Add a source",
+          emptyHint: "List every source you used — at least 10, formatted in APA referencing style: Author, A. A. (Year). Title of work. Publisher / Source.",
+          columns: [
+            {
+              id: "reference",
+              label: "Reference (APA)",
+              placeholder: "e.g. Smeltzer, S. C., Bare, B. G., Hinkle, J. L., & Cheever, K. H. (2010). Textbook of medical-surgical nursing (12th ed.). Lippincott Williams & Wilkins.",
+            },
+          ],
+        },
       },
     ],
   },
@@ -616,6 +670,13 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
             label: "Immediate nursing care",
             placeholder: "e.g. Admitted into female medical ward, oriented to ward routine, vital signs monitored 4-hourly",
             type: "textarea",
+            span: 2,
+          },
+          {
+            id: "dischargeDate",
+            label: "Date of discharge",
+            hint: "Used to suggest the follow-up home-visit dates in section 4.3 — keep it the same as the date in section 4.2.",
+            type: "date",
             span: 2,
           },
         ],
@@ -1084,6 +1145,20 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
             type: "textarea",
             span: 2,
           },
+          {
+            id: "dischargeDate",
+            label: "Date of discharge",
+            hint: "Used to suggest the follow-up home-visit dates in section 4.3.",
+            type: "date",
+            span: 2,
+          },
+          {
+            id: "reviewDate",
+            label: "Review date",
+            hint: "Used to derive the Day-of-Review block in section 4.3 and to anchor the review visit date.",
+            type: "date",
+            span: 2,
+          },
         ],
       },
       {
@@ -1097,7 +1172,7 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
           addLabel: "Add a home visit",
           emptyHint: "The pre-discharge visit plus follow-up visits after discharge — preferably three visits about a week apart, ending in a hand-over for continuity of care.",
           columns: [
-            { id: "date", label: "Date / visit", placeholder: "e.g. Visit 1 — pre-discharge, 5th Sept", type: "datetime-local" },
+            { id: "date", label: "Date / visit", placeholder: "e.g. Visit 1 — pre-discharge, 5th Sept", type: "date" },
             { id: "objectives", label: "Objectives", placeholder: "e.g. Assess home environment and resources for care" },
             { id: "findings", label: "Assessment & findings", placeholder: "e.g. 4-room house, pipe-borne water; client afebrile, BP 120/80 mmHg" },
             { id: "education", label: "Health education given", placeholder: "e.g. Reinforced drug compliance and danger signs" },
@@ -1208,67 +1283,6 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
             span: 2,
           },
         ],
-      },
-    ],
-  },
-  {
-    name: "Summary and Conclusion",
-    shortLabel: "Summarise",
-    blurb: "Close the study — what happened, and what it means.",
-    sections: [
-      {
-        id: "6.1",
-        heading: "Summary",
-        blurb: "A concise recap of the whole study.",
-        fields: [
-          {
-            id: "summaryText",
-            label: "Summary of the study",
-            placeholder: "e.g. This study assessed Mrs. P.A, a 49-year-old trader with sickle cell disease...",
-            type: "textarea",
-            span: 2,
-          },
-        ],
-      },
-      {
-        id: "6.2",
-        heading: "Conclusion",
-        blurb: "What the study concludes about the care given.",
-        fields: [
-          {
-            id: "conclusionText",
-            label: "Conclusion",
-            placeholder: "e.g. The care given was holistic and goal-directed. The study deepened my understanding of...",
-            type: "textarea",
-            span: 2,
-          },
-          {
-            id: "recommendations",
-            label: "Recommendations",
-            placeholder: "e.g. Health education should emphasise early reporting of danger signs...",
-            type: "textarea",
-            span: 2,
-          },
-        ],
-      },
-      {
-        id: "6.3",
-        heading: "Bibliography",
-        blurb: "Every source used in the study, in APA style.",
-        fields: [],
-        rows: {
-          id: "bibliography",
-          title: "Bibliography entries",
-          addLabel: "Add a source",
-          emptyHint: "List every source you used — at least 10, formatted in APA referencing style: Author, A. A. (Year). Title of work. Publisher / Source.",
-          columns: [
-            {
-              id: "reference",
-              label: "Reference (APA)",
-              placeholder: "e.g. Smeltzer, S. C., Bare, B. G., Hinkle, J. L., & Cheever, K. H. (2010). Textbook of medical-surgical nursing (12th ed.). Lippincott Williams & Wilkins.",
-            },
-          ],
-        },
       },
     ],
   },

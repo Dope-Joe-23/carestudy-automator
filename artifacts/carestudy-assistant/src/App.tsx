@@ -97,6 +97,7 @@ import { adminLogout } from '@/lib/adminAuth';
 import {
   CHAPTER_TEMPLATE,
   type TemplateField,
+  type TemplateRowColumn,
   type TemplateRowDef,
 } from '@/lib/template';
 import {
@@ -114,9 +115,14 @@ import {
   requestChapter2Recommendations,
   requestPharmacologyRecommendations,
   requestCarePlanRecommendations,
+  requestDischargeRecommendations,
+  requestCareSummarySkeleton,
+  requestHomeVisitSkeleton,
   type Chapter2Recommendations,
   type PharmacologyRecommendations,
   type CarePlanRecommendations,
+  type DischargeRecommendations,
+  type HomeVisitRecommendations,
   updateLibrarySource,
   updateStudy,
   uploadStudyFile,
@@ -138,6 +144,12 @@ import { SourceCheckList } from '@/components/source-verification';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  hasSuggestedDateMarker,
+  markSuggestedDate,
+  stripSuggestedDateMarker,
+} from '@/lib/homeVisitMarkers';
 import {
   Card,
   CardContent,
@@ -206,6 +218,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudiesPanel } from '@/components/studies-panel';
 import { useAdmin, getInitials, getDisplayName, getRoleLabel } from '@/lib/adminContext';
 import { deriveStudyFacts, validateStudyFacts } from '@/lib/studyFacts';
+import {
+  buildTerminationPrefill,
+  finalVisitDate,
+} from '@/lib/terminationPrefill';
 
 type SectionStatus = 'empty' | 'noted' | 'drafted';
 
@@ -241,7 +257,7 @@ type StagedSectionPreview = {
   rowData?: RowRow[];
   notes?: string;
   /** Sections still to preview after this one is applied. */
-  queue: { sectionId: string; data?: Record<string, string>; rowData?: string[][] }[];
+  queue: { sectionId: string; data?: Record<string, string>; rowData?: string[][]; notes?: string }[];
 };
 
 type Chapter = {
@@ -282,11 +298,41 @@ const CHAPTER_ICONS: LucideIcon[] = [
   Target,
   ClipboardList,
   CheckCircle2,
-  BookOpen,
 ];
 
 let rowIdCounter = 0;
 const nextRowId = () => ++rowIdCounter;
+
+/** The merged "Additional Pages" workspace chapter holds both the preliminary
+ *  sections (P.*) and the closing 6.x summary sections, but the DOCUMENT must
+ *  keep them at opposite ends: P.* open the study unnumbered, the 6.x sections
+ *  close it as "CHAPTER VI: SUMMARY AND CONCLUSION". This splitter turns the
+ *  workspace chapters into the physical chapter list for export/storage —
+ *  positions and numbering are unchanged from the pre-merge layout. */
+function exportChaptersForDocument(chapters: Chapter[]): Chapter[] {
+  const out: Chapter[] = [];
+  for (const chapter of chapters) {
+    const hasClosing =
+      chapter.isFrontMatter && chapter.sections.some((section) => section.id.startsWith('6.'));
+    if (!hasClosing) {
+      out.push(chapter);
+      continue;
+    }
+    const preliminary: Chapter = {
+      ...chapter,
+      sections: chapter.sections.filter((section) => !section.id.startsWith('6.')),
+    };
+    const closing: Chapter = {
+      ...chapter,
+      name: 'Summary and Conclusion',
+      isFrontMatter: false,
+      sections: chapter.sections.filter((section) => section.id.startsWith('6.')),
+    };
+    if (preliminary.sections.length > 0) out.push(preliminary);
+    if (closing.sections.length > 0) out.push(closing);
+  }
+  return out;
+}
 
 function makeChapters(): Chapter[] {
   return CHAPTER_TEMPLATE.map((chapter, chapterIndex) => ({
@@ -591,7 +637,9 @@ function composeSectionInput(section: Section): string {
       if (filled.length === 0) return;
       parts.push(`${section.rows!.title} — entry ${rowIndex + 1}:`);
       section.rows!.columns.forEach((column, columnIndex) => {
-        const cell = (row.cells[columnIndex] ?? '').trim();
+        // Strip the engine-suggested date marker so an unverified date never
+        // reads as a documented fact in the drafting notes.
+        const cell = stripSuggestedDateMarker((row.cells[columnIndex] ?? '').trim());
         if (cell) parts.push(`  ${column.label}: ${cell}`);
       });
     });
@@ -773,6 +821,37 @@ function fieldsToProse(section: Section): FieldProse[] {
 // Field-level building blocks
 // ---------------------------------------------------------------------------
 
+/** Textarea that grows with its content (up to a max height) — replaces
+ *  fixed-height textareas that hide long text in a cramped box. */
+function AutoTextarea({
+  value,
+  minRows = 2,
+  maxRows = 14,
+  className,
+  ...props
+}: React.ComponentProps<'textarea'> & { minRows?: number; maxRows?: number }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const resize = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, maxRows * 24 + 16)}px`;
+  };
+  useEffect(() => {
+    resize();
+  }, [value]);
+
+  return (
+    <Textarea
+      ref={ref}
+      rows={minRows}
+      value={value}
+      className={cn('resize-none overflow-hidden', className)}
+      {...props}
+    />
+  );
+}
+
 function FieldControl({
   field,
   value,
@@ -810,13 +889,14 @@ function FieldControl({
       </label>
 
       {field.type === 'textarea' ? (
-        <Textarea
+        <AutoTextarea
           id={inputId}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={field.placeholder}
-          rows={3}
-          className="min-h-[76px] border-white/15 bg-white/10 leading-relaxed text-sidebar-foreground placeholder:text-sidebar-foreground/40"
+          minRows={3}
+          maxRows={16}
+          className="border-white/15 bg-white/10 leading-relaxed text-sidebar-foreground placeholder:text-sidebar-foreground/40"
           aria-describedby={field.hint ? `hint-${field.id}` : undefined}
           aria-required={field.required || undefined}
         />
@@ -873,9 +953,8 @@ function FieldControl({
           aria-describedby={field.hint ? `hint-${field.id}` : undefined}
           aria-required={field.required || undefined}
         />
-      )}
+      )}      {field.hint && (
 
-      {field.hint && (
         <p
           className="text-[11px] leading-relaxed text-sidebar-foreground/60"
           id={`hint-${field.id}`}
@@ -887,7 +966,12 @@ function FieldControl({
   );
 }
 
-function RowEditor({
+/** Card-per-row grid editor — the Collect-modal replacement for the flat
+ *  horizontally-scrolling RowEditor strip. One stacked card per row with a
+ *  labeled control per column: date/datetime columns get pickers, long-text
+ *  columns get auto-growing textareas, everything else a labeled text input.
+ *  Data shape is unchanged, so staging, drafts, and export keep working. */
+function RowCardEditor({
   rowDef,
   rows,
   onChange,
@@ -907,6 +991,494 @@ function RowEditor({
           : row,
       ),
     );
+  };
+
+  const addRow = () =>
+    onChange([...rows, { id: nextRowId(), cells: rowDef.columns.map(() => '') }]);
+  const removeRow = (rowId: number) => onChange(rows.filter((row) => row.id !== rowId));
+
+  /** Long-ish free-text columns grow; short ones stay single-line inputs. */
+  const isLongText = (column: TemplateRowColumn, columnIndex: number): boolean => {
+    if (column.type) return false;
+    void columnIndex;
+    return /objective|outcome criteria|nursing orders|interventions|evaluation|findings|assessment|education|description|reason|result|amendment|dose|indication|response|diagnosis/i.test(
+      column.label,
+    );
+  };
+
+  return (
+    <div className="mt-4 border-t border-sidebar-border/60 pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-sidebar-foreground">{rowDef.title}</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addRow}
+          className="h-8 gap-1.5 border-white/15 bg-white/10 text-sidebar-foreground hover:bg-white/15 hover:text-sidebar-foreground"
+        >
+          <Plus className="size-3.5" /> {rowDef.addLabel}
+        </Button>
+      </div>
+
+      {rows.length === 0 && (
+        <p className="mt-3 text-xs italic leading-relaxed text-sidebar-foreground/60">
+          {rowDef.emptyHint}
+        </p>
+      )}
+
+      <div className="mt-3 space-y-3">
+        {rows.map((row, rowIndex) => (
+          <div
+            key={row.id}
+            className="rounded-lg border border-white/10 bg-white/5 p-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2 text-xs font-semibold text-sidebar-foreground">
+                <span className="grid size-5 place-items-center rounded-full bg-primary/20 font-mono text-[10px] text-primary">
+                  {rowIndex + 1}
+                </span>
+                {rowDef.title.replace(/s$/, '')} {rowIndex + 1}
+                {rowDef.columns.length > 3 && (
+                  <span className="font-normal text-sidebar-foreground/60">
+                    · {rowDef.columns.filter((column, columnIndex) => (row.cells[columnIndex] ?? '').trim()).length}/{rowDef.columns.length} filled
+                  </span>
+                )}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 text-sidebar-foreground/50 hover:text-red-400"
+                onClick={() => removeRow(row.id)}
+                aria-label={`Remove ${rowDef.title} row ${rowIndex + 1}`}
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            </div>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {rowDef.columns.map((column, columnIndex) => {
+                const long = isLongText(column, columnIndex);
+                const control = column.type === 'datetime-local' ? (
+                  <Input
+                    type="datetime-local"
+                    className="h-9 border-white/15 bg-white/10 text-xs text-sidebar-foreground [color-scheme:dark]"
+                    value={row.cells[columnIndex] ?? ''}
+                    onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
+                  />
+                ) : column.type === 'date' ? (
+                  <Input
+                    type="date"
+                    className="h-9 border-white/15 bg-white/10 text-xs text-sidebar-foreground [color-scheme:dark]"
+                    value={row.cells[columnIndex] ?? ''}
+                    onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
+                  />
+                ) : long ? (
+                  <AutoTextarea
+                    minRows={2}
+                    maxRows={12}
+                    className="border-white/15 bg-white/10 text-xs leading-relaxed text-sidebar-foreground placeholder:text-sidebar-foreground/40"
+                    placeholder={column.placeholder}
+                    value={row.cells[columnIndex] ?? ''}
+                    onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
+                  />
+                ) : (
+                  <Input
+                    className="h-9 border-white/15 bg-white/10 text-xs text-sidebar-foreground placeholder:text-sidebar-foreground/40"
+                    placeholder={column.placeholder}
+                    value={row.cells[columnIndex] ?? ''}
+                    onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
+                  />
+                );
+                return (
+                  <div key={column.id} className={long ? 'space-y-1.5 sm:col-span-2' : 'space-y-1.5'}>
+                    <label className="text-[11px] font-medium text-sidebar-foreground/70">
+                      {column.label}
+                    </label>
+                    {control}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Guided home-visit cards (section 4.3) — one card per visit instead of a flat
+// 15-cell grid. Each card pre-seeds the school's conventional objective and
+// offers the visit's education topics as checkboxes (from the skeleton
+// proposal, plus anything already typed); the student fills date, findings,
+// and outcome. Data stays in the section's rowData grid so staging, saving,
+// the LLM draft pass, and export all work unchanged.
+// ---------------------------------------------------------------------------
+
+const HOME_VISIT_EDUCATION_COLUMN = 3;
+
+/** Per-visit education topic pools for the staged 4.3 card editor (from the
+ * skeleton proposal). Module-level because the Collect dialog reads it while
+ * rendering; cleared when the staged preview is applied or discarded. */
+let homeVisitEducationSuggestions: string[][] = [];
+
+function HomeVisitCardEditor({
+  rowDef,
+  rows,
+  educationSuggestions,
+  onChange,
+}: {
+  rowDef: TemplateRowDef;
+  rows: RowRow[];
+  /** Per-visit topic pools aligned to rows by index (from the skeleton proposal). */
+  educationSuggestions?: string[][];
+  onChange: (rows: RowRow[]) => void;
+}) {
+  /** The date input can't display a marked value, so cards show the bare
+   *  ISO date and re-mark on change while the suggestion is unconfirmed. */
+  const displayDate = (raw: string): string => stripSuggestedDateMarker(raw);
+  const updateCell = (rowId: number, columnIndex: number, value: string) => {
+    onChange(
+      rows.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              cells: row.cells.map((cell, ci) => (ci === columnIndex ? value : cell)),
+            }
+          : row,
+      ),
+    );
+  };
+
+  const addRow = () =>
+    onChange([...rows, { id: nextRowId(), cells: rowDef.columns.map(() => '') }]);
+  const removeRow = (rowId: number) => onChange(rows.filter((row) => row.id !== rowId));
+
+  const checkedTopics = (cell: string): Set<string> =>
+    new Set(cell.split(';').map((topic) => topic.trim()).filter(Boolean));
+
+  /** Checkbox pool = suggested topics + anything already typed in the cell. */
+  const topicPool = (rowIndex: number, cell: string): string[] => {
+    const pool = new Set<string>();
+    for (const topic of educationSuggestions?.[rowIndex] ?? []) {
+      if (topic.trim()) pool.add(topic.trim());
+    }
+    for (const topic of checkedTopics(cell)) pool.add(topic);
+    return [...pool];
+  };
+
+  const toggleTopic = (row: RowRow, rowIndex: number, topic: string, checked: boolean) => {
+    const topics = checkedTopics(row.cells[HOME_VISIT_EDUCATION_COLUMN] ?? '');
+    if (checked) topics.add(topic);
+    else topics.delete(topic);
+    updateCell(row.id, HOME_VISIT_EDUCATION_COLUMN, [...topics].join('; '));
+  };
+
+  return (
+    <div className="mt-4 border-t border-sidebar-border/60 pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-sidebar-foreground">{rowDef.title}</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addRow}
+          className="h-8 gap-1.5 border-white/15 bg-white/10 text-sidebar-foreground hover:bg-white/15 hover:text-sidebar-foreground"
+        >
+          <Plus className="size-3.5" /> {rowDef.addLabel}
+        </Button>
+      </div>
+
+      {rows.length === 0 && (
+        <p className="mt-3 text-xs italic leading-relaxed text-sidebar-foreground/60">
+          {rowDef.emptyHint}
+        </p>
+      )}
+
+      <div className="mt-3 space-y-3">
+        {rows.map((row, rowIndex) => {
+          const pool = topicPool(rowIndex, row.cells[HOME_VISIT_EDUCATION_COLUMN] ?? '');
+          const checked = checkedTopics(row.cells[HOME_VISIT_EDUCATION_COLUMN] ?? '');
+          return (
+            <div
+              key={row.id}
+              className="rounded-lg border border-white/10 bg-white/5 p-3"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-xs font-semibold text-sidebar-foreground">
+                  <span className="grid size-5 place-items-center rounded-full bg-primary/20 font-mono text-[10px] text-primary">
+                    {rowIndex + 1}
+                  </span>
+                  Visit {rowIndex + 1}
+                  {rowIndex === rows.length - 1 && rows.length > 1 && (
+                    <span className="font-normal text-sidebar-foreground/60">— final visit: include the hand-over in the outcome</span>
+                  )}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 text-sidebar-foreground/50 hover:text-red-400"
+                  onClick={() => removeRow(row.id)}
+                  aria-label={`Remove visit ${rowIndex + 1}`}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </div>
+
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-[11px] font-medium text-sidebar-foreground/70">
+                      Date of visit
+                    </label>
+                    {hasSuggestedDateMarker(row.cells[0]) && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateCell(row.id, 0, stripSuggestedDateMarker(row.cells[0]))
+                        }
+                        className="flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 transition-colors hover:bg-amber-500/20 dark:text-amber-400"
+                        title="This date was suggested from the discharge date — click to confirm it, or change the date to confirm automatically."
+                      >
+                        <CircleAlert className="size-3" /> Suggested — click to confirm
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    type="date"
+                    className="h-9 border-white/15 bg-white/10 text-xs text-sidebar-foreground [color-scheme:dark]"
+                    value={displayDate(row.cells[0] ?? '')}
+                    onChange={(event) =>
+                      // Any deliberate date edit confirms it: the marker is
+                      // dropped and the badge disappears. The badge returns
+                      // only if the pre-fill runs again.
+                      updateCell(row.id, 0, event.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-medium text-sidebar-foreground/70">
+                    Objectives
+                    <span className="font-normal text-sidebar-foreground/50"> (pre-filled — adjust to what you planned)</span>
+                  </label>
+                  <Textarea
+                    rows={2}
+                    className="min-h-[36px] border-white/15 bg-white/10 text-xs leading-relaxed text-sidebar-foreground placeholder:text-sidebar-foreground/40"
+                    placeholder="e.g. Assess home environment and resources for care"
+                    value={row.cells[1] ?? ''}
+                    onChange={(event) => updateCell(row.id, 1, event.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-[11px] font-medium text-sidebar-foreground/70">
+                    Assessment &amp; findings
+                  </label>
+                  <Textarea
+                    rows={2}
+                    className="min-h-[36px] border-white/15 bg-white/10 text-xs leading-relaxed text-sidebar-foreground placeholder:text-sidebar-foreground/40"
+                    placeholder="e.g. 4-room house, pipe-borne water; client afebrile, BP 120/80 mmHg"
+                    value={row.cells[2] ?? ''}
+                    onChange={(event) => updateCell(row.id, 2, event.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-[11px] font-medium text-sidebar-foreground/70">
+                    Health education given
+                    {pool.length > 0 && (
+                      <span className="font-normal text-sidebar-foreground/50"> (tick what you covered, or type your own — separate with ;)</span>
+                    )}
+                  </label>
+                  {pool.length > 0 && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-2">
+                      {pool.map((topic) => (
+                        <label
+                          key={topic}
+                          className="flex max-w-full items-start gap-2 text-xs leading-relaxed text-sidebar-foreground"
+                        >
+                          <Checkbox
+                            className="mt-0.5 border-white/25 bg-white/10 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                            checked={checked.has(topic)}
+                            onCheckedChange={(next) => toggleTopic(row, rowIndex, topic, next === true)}
+                          />
+                          <span>{topic}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  <Input
+                    className="h-9 border-white/15 bg-white/10 text-xs text-sidebar-foreground placeholder:text-sidebar-foreground/40"
+                    placeholder="e.g. Reinforced drug compliance and danger signs"
+                    value={row.cells[HOME_VISIT_EDUCATION_COLUMN] ?? ''}
+                    onChange={(event) => updateCell(row.id, HOME_VISIT_EDUCATION_COLUMN, event.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-[11px] font-medium text-sidebar-foreground/70">
+                    Outcome / continuity
+                  </label>
+                  <Textarea
+                    rows={2}
+                    className="min-h-[36px] border-white/15 bg-white/10 text-xs leading-relaxed text-sidebar-foreground placeholder:text-sidebar-foreground/40"
+                    placeholder="e.g. Objectives met; family compliant with teaching"
+                    value={row.cells[4] ?? ''}
+                    onChange={(event) => updateCell(row.id, 4, event.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Guided outcome-evaluation cards (section 5.1) — mirrors the 4.3 visit cards:
+// one card per nursing diagnosis with the goal context pre-filled from the
+// care plan, a status select (fully / partially / not met), and an evidence
+// textarea. Data stays in the section's rowData grid, so staging, saving, the
+// draft pass, and export all work unchanged.
+// ---------------------------------------------------------------------------
+
+const OUTCOME_STATUS_COLUMN = 1;
+
+/** Conventional outcome statuses for the 5.1 guided cards. The select stores
+ *  one of these as the outcome cell's prefix, keeping the "Goal fully met — …"
+ *  cell text the 5.2 amendment detection and the Word export expect. */
+const OUTCOME_STATUS_OPTIONS = [
+  'Goal fully met',
+  'Goal partially met',
+  'Goal not met',
+] as const;
+
+/** The evidence text after the "— " separator of a "<status> — <evidence>"
+ *  outcome cell (the whole cell when no status prefix is present). */
+const outcomeEvidence = (raw: string): string => {
+  const separator = raw.indexOf(' — ');
+  return separator === -1 ? raw : raw.slice(separator + 3);
+};
+
+/** The 5.1 overall-evaluation statement derived from the per-goal statuses.
+ *  Counts the status prefixes across the outcome rows; goals without a
+ *  status are reported as awaiting evaluation. Returns the pending text
+ *  when no status has been selected yet. */
+const deriveOverallEvaluation = (rows: string[][]): string => {
+  const total = rows.filter((row) => (row[0] ?? '').trim()).length;
+  const count = (prefix: string) =>
+    rows.filter((row) => (row[OUTCOME_STATUS_COLUMN] ?? '').trim().startsWith(prefix)).length;
+  const fully = count('Goal fully met');
+  const partially = count('Goal partially met');
+  const notMet = count('Goal not met');
+  const awaiting = total - fully - partially - notMet;
+  if (total === 0 || (fully + partially + notMet) === 0) {
+    return 'Evaluation pending: review each care-plan outcome against the patient response and documented measurements.';
+  }
+  const parts: string[] = [];
+  if (fully) parts.push(`${fully} ${fully === 1 ? 'was' : 'were'} fully met`);
+  if (partially) parts.push(`${partially} ${partially === 1 ? 'was' : 'were'} partially met`);
+  if (notMet) parts.push(`${notMet} ${notMet === 1 ? 'was' : 'were'} not met`);
+  if (awaiting > 0) parts.push(`${awaiting} ${awaiting === 1 ? 'is' : 'are'} awaiting evaluation`);
+  const summary = `Of the ${total} care-plan goals evaluated, ${parts.join(', ')}.`;
+  const amendmentNote =
+    partially + notMet > 0
+      ? ' The partially met and unmet outcomes and the amendments made to the nursing care are discussed in section 5.2.'
+      : '';
+  return summary + amendmentNote;
+};
+
+/** True when the overall-evaluation field may be overwritten by the derived
+ *  sentence: it is empty, still the pending placeholder, or a previously
+ *  derived sentence ("Of the N goals …"). Hand-written text is never touched. */
+const canAutoWriteOverall = (value: string): boolean => {
+  const trimmed = value.trim();
+  return (
+    trimmed === '' ||
+    trimmed.startsWith('Evaluation pending:') ||
+    trimmed.startsWith('Of the ')
+  );
+};
+
+/** Tailored 5.2 amendment rows from documented 5.1 outcome rows
+ *  ([diagnosis, outcome] pairs): partially met → extend the period of care,
+ *  not met → revise the orders/objective/diagnosis, each grounded in the
+ *  matching care-plan entry's orders and interventions. */
+const AMENDABLE_OUTCOME_RE = /partially\s+met|not\s+met|unmet/i;
+
+/** Staged 5.2 field values when every goal was fully met — the school
+ *  convention records the absence of amendments explicitly rather than
+ *  leaving section 5.2 empty. */
+const NO_AMENDMENT_DATA = {
+  failedOutcomes:
+    'No outcome criteria were partially met or unmet — all care-plan goals were fully met.',
+  amendment: 'No amendment of the nursing care was required.',
+};
+
+function buildAmendmentRows(
+  outcomeRows: string[][],
+  carePlanRows: string[][],
+): string[][] {
+  return outcomeRows
+    .filter((row) => AMENDABLE_OUTCOME_RE.test(row[1] ?? ''))
+    .map((row) => {
+      // 5.1's diagnosis cell may be "Diagnosis — objective" (proposal-staged)
+      // or a bare diagnosis; match the care plan on the bare diagnosis part.
+      const diagnosis = (row[0] ?? '').split(' — ')[0].trim();
+      const outcome = row[1] ?? '';
+      const partiallyMet = /partially\s+met/i.test(outcome);
+      // The matching care-plan entry supplies the interventions and orders
+      // already tried, so the proposal amends what was actually done.
+      const source = carePlanRows.find((r) => (r[1] ?? '').trim() === diagnosis);
+      const interventions = (source?.[4] ?? '').trim();
+      const orders = (source?.[3] ?? '').trim();
+      const amendment = partiallyMet
+        ? `Extend the period of care — progress was made but the objective was not fully achieved. Suggested amendments: continue the documented orders${orders ? ` (${orders.replace(/\s+/g, ' ').slice(0, 160)})` : ''}, reinforce the interventions${interventions ? ` (${interventions.replace(/\s+/g, ' ').slice(0, 160)})` : ''}, and extend the evaluation period by [state how long].`
+        : `Revise the plan of care — the objective was not achieved. Suggested amendments: modify or replace the nursing orders${orders ? ` (${orders.replace(/\s+/g, ' ').slice(0, 160)})` : ''}, review the interventions${interventions ? ` (${interventions.replace(/\s+/g, ' ').slice(0, 160)})` : ''}, and re-state the objective with a realistic, measurable target — or modify the diagnosis if the patient's condition has changed.`;
+      return [
+        diagnosis,
+        amendment,
+        `Documented outcome requiring review: ${outcome}`,
+        'Pending documented result after the amended plan.',
+      ];
+    });
+}
+
+function OutcomeEvaluationCardEditor({
+  rowDef,
+  rows,
+  onChange,
+  onOutcomeStatusesChanged,
+}: {
+  rowDef: TemplateRowDef;
+  rows: RowRow[];
+  onChange: (rows: RowRow[]) => void;
+  /** Fires with the re-derived overall statement whenever a status changes,
+   *  so the Collect dialog can auto-write the 5.1 evaluation field. */
+  onOutcomeStatusesChanged: (derived: string) => void;
+}) {
+  // Statuses can arrive pre-filled (staged from care-plan evaluations) without
+  // the student touching a select — derive once on mount so the statement is
+  // ready immediately. The dialog's guard decides whether to write it.
+  useEffect(() => {
+    onOutcomeStatusesChanged(
+      deriveOverallEvaluation(rows.map((row) => row.cells)),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const updateCell = (rowId: number, columnIndex: number, value: string) => {
+    const next = rows.map((row) =>
+      row.id === rowId
+        ? {
+            ...row,
+            cells: row.cells.map((cell, ci) => (ci === columnIndex ? value : cell)),
+          }
+        : row,
+    );
+    onChange(next);
+    if (columnIndex === OUTCOME_STATUS_COLUMN) {
+      onOutcomeStatusesChanged(
+        deriveOverallEvaluation(next.map((row) => row.cells)),
+      );
+    }
   };
 
   const addRow = () =>
@@ -933,61 +1505,97 @@ function RowEditor({
         </p>
       )}
 
-      <div className="mt-3 space-y-2 overflow-x-auto pb-1">
-        <AnimatePresence initial={false}>
-          {rows.map((row, rowIndex) => (
-            <motion.div
-              key={row.id}
-              layout
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.16 }}
-              className="flex items-center gap-2"
-              style={{ minWidth: rowDef.columns.length * 132 + 56 }}
-            >
-              <span className="w-5 shrink-0 text-center font-mono text-[11px] tabular text-sidebar-foreground/60">
-                {rowIndex + 1}
+      <div className="mt-3 space-y-3">
+        {rows.map((row, rowIndex) => (
+          <div
+            key={row.id}
+            className="rounded-lg border border-white/10 bg-white/5 p-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2 text-xs font-semibold text-sidebar-foreground">
+                <span className="grid size-5 place-items-center rounded-full bg-primary/20 font-mono text-[10px] text-primary">
+                  {rowIndex + 1}
+                </span>
+                Goal {rowIndex + 1}
               </span>
-              {rowDef.columns.map((column, columnIndex) => (
-                column.type === 'datetime-local' ? (
-                  <Input
-                    key={column.id}
-                    type="datetime-local"
-                    className="h-8 border-white/15 bg-white/10 text-xs text-sidebar-foreground [color-scheme:dark]"
-                    value={row.cells[columnIndex] ?? ''}
-                    onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
-                  />
-                ) : column.type === 'date' ? (
-                  <Input
-                    key={column.id}
-                    type="date"
-                    className="h-8 border-white/15 bg-white/10 text-xs text-sidebar-foreground [color-scheme:dark]"
-                    value={row.cells[columnIndex] ?? ''}
-                    onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
-                  />
-                ) : (
-                  <Input
-                    key={column.id}
-                    className="h-8 border-white/15 bg-white/10 text-xs text-sidebar-foreground placeholder:text-sidebar-foreground/40"
-                    placeholder={column.label}
-                    value={row.cells[columnIndex] ?? ''}
-                    onChange={(event) => updateCell(row.id, columnIndex, event.target.value)}
-                  />
-                )
-              ))}
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 shrink-0 text-sidebar-foreground/50 hover:text-red-400"
+                className="size-7 text-sidebar-foreground/50 hover:text-red-400"
                 onClick={() => removeRow(row.id)}
-                aria-label={`Remove ${rowDef.title} row ${rowIndex + 1}`}
+                aria-label={`Remove evaluation row ${rowIndex + 1}`}
               >
                 <Trash2 className="size-3.5" />
               </Button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+            </div>
+
+            <div className="mt-3 space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-sidebar-foreground/70">
+                  Nursing diagnosis &amp; objective
+                  <span className="font-normal text-sidebar-foreground/50"> (copied from your care plan — adjust if it changed)</span>
+                </label>
+                <Textarea
+                  rows={2}
+                  className="min-h-[36px] border-white/15 bg-white/10 text-xs leading-relaxed text-sidebar-foreground placeholder:text-sidebar-foreground/40"
+                  placeholder="e.g. Impaired gas exchange — client will maintain SpO₂ ≥ 95% within 24 hrs"
+                  value={row.cells[0] ?? ''}
+                  onChange={(event) => updateCell(row.id, 0, event.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-sidebar-foreground/70">
+                  Outcome
+                </label>
+                <Select
+                  // The cell holds "<status> — <evidence>"; match the select
+                  // against the status prefix, not the whole composite cell.
+                  value={
+                    OUTCOME_STATUS_OPTIONS.find((option) =>
+                      (row.cells[OUTCOME_STATUS_COLUMN] ?? '').startsWith(option),
+                    ) ?? undefined
+                  }
+                  onValueChange={(value) => {
+                    // Swap the status prefix while preserving the evidence.
+                    const evidence = outcomeEvidence(row.cells[OUTCOME_STATUS_COLUMN] ?? '');
+                    updateCell(
+                      row.id,
+                      OUTCOME_STATUS_COLUMN,
+                      evidence && evidence !== value ? `${value} — ${evidence}` : value,
+                    );
+                  }}
+                >
+                  <SelectTrigger className="h-9 w-full border-white/15 bg-white/10 text-xs text-sidebar-foreground data-[placeholder]:text-sidebar-foreground/40">
+                    <SelectValue placeholder="Select the outcome status — fully met, partially met, or not met" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OUTCOME_STATUS_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option} className="text-xs">
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Textarea
+                  rows={2}
+                  className="min-h-[36px] border-white/15 bg-white/10 text-xs leading-relaxed text-sidebar-foreground placeholder:text-sidebar-foreground/40"
+                  placeholder="e.g. Breathing comfortable, SpO₂ 98% on room air — [record the measurement observed]"
+                  value={outcomeEvidence(row.cells[OUTCOME_STATUS_COLUMN] ?? '')}
+                  onChange={(event) => {
+                    // Preserve the selected status as the cell prefix so the
+                    // 5.2 amendment detection and export keep working.
+                    const status = row.cells[OUTCOME_STATUS_COLUMN] ?? '';
+                    updateCell(
+                      row.id,
+                      OUTCOME_STATUS_COLUMN,
+                      status ? `${status} — ${event.target.value.trim()}`.trim() : event.target.value,
+                    );
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -2216,10 +2824,17 @@ function Home() {
   const [planningProposal, setPlanningProposal] = useState<PlanningProposal | null>(null);
   const [planningProposalOpen, setPlanningProposalOpen] = useState(false);
   const [planningBusy, setPlanningBusy] = useState(false);
+  const [implementationBusy, setImplementationBusy] = useState(false);
   const [evaluationProposal, setEvaluationProposal] = useState<EvaluationProposal | null>(null);
   const [evaluationProposalOpen, setEvaluationProposalOpen] = useState(false);
   const [qualityGateOpen, setQualityGateOpen] = useState(false);
   const [actualCareReviewOpen, setActualCareReviewOpen] = useState(false);
+  const [implementationProposal, setImplementationProposal] = useState<{
+    careGiven: string;
+    discharge: DischargeRecommendations | null;
+    homeVisits: HomeVisitRecommendations | null;
+  } | null>(null);
+  const [implementationProposalOpen, setImplementationProposalOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [showPreliminaryPages, setShowPreliminaryPages] = useState(false);
   const [exportMeta, setExportMeta] = useState({
@@ -2669,6 +3284,7 @@ function Home() {
     chapter2RecommendationBusy ||
     pharmacologyBusy ||
     planningBusy ||
+    implementationBusy ||
     docImportBusy;
 
   /** Find (chapterIndex, sectionIndex) for a section id like "2.3". */
@@ -2686,7 +3302,7 @@ function Home() {
    * Done commits the current section and opens the next one.
    */
   const beginStagedPreview = (
-    entries: { sectionId: string; data?: Record<string, string>; rowData?: string[][] }[],
+    entries: { sectionId: string; data?: Record<string, string>; rowData?: string[][]; notes?: string }[],
   ) => {
     const [first, ...rest] = entries;
     if (!first) return;
@@ -2698,6 +3314,7 @@ function Home() {
       sectionId: first.sectionId,
       data: first.data ?? {},
       rowData: first.rowData?.map((cells) => ({ id: nextRowId(), cells })),
+      notes: first.notes,
       queue: rest,
     });
     setCollectOpen(true);
@@ -2724,7 +3341,41 @@ function Home() {
   const commitStagedPreview = () => {
     if (!stagedSection) return;
     commitStagedSection(stagedSection);
-    const [next, ...rest] = stagedSection.queue;
+
+    // Auto-chain 5.2: once the staged 5.1 outcomes are applied, derive the
+    // amendment rows from the statuses the student just recorded and queue
+    // section 5.2 next. Previously 5.2 only populated if "Evaluate care
+    // plan" was run a second time after filling the statuses, so it looked
+    // permanently empty. Skipped when the proposal already queued 5.2 or
+    // section 5.2 already holds documented rows.
+    let queue = stagedSection.queue;
+    if (
+      stagedSection.sectionId === '5.1' &&
+      !queue.some((entry) => entry.sectionId === '5.2')
+    ) {
+      const outcomeRows = (stagedSection.rowData ?? []).map((row) => row.cells);
+      const amendments = buildAmendmentRows(outcomeRows, studyFacts.planning.carePlanRows);
+      const existing52 = chapters
+        .flatMap((chapter) => chapter.sections)
+        .find((section) => section.id === '5.2');
+      const has52Rows = (existing52?.rowData ?? []).some((row) =>
+        row.cells.some((cell) => cell.trim()),
+      );
+      const has52Fields = Object.values(existing52?.data ?? {}).some((value) => value.trim());
+      if (!has52Rows && !has52Fields) {
+        // Amendable outcomes → tailored amendment rows; all goals fully met
+        // → the school convention's explicit no-amendment statement. Either
+        // way section 5.2 is queued instead of being silently skipped.
+        queue = [
+          amendments.length > 0
+            ? { sectionId: '5.2', rowData: amendments }
+            : { sectionId: '5.2', data: NO_AMENDMENT_DATA },
+          ...queue,
+        ];
+      }
+    }
+
+    const [next, ...rest] = queue;
     if (next) {
       const location = locateSection(next.sectionId);
       if (location) {
@@ -2735,10 +3386,12 @@ function Home() {
         sectionId: next.sectionId,
         data: next.data ?? {},
         rowData: next.rowData?.map((cells) => ({ id: nextRowId(), cells })),
+        notes: next.notes,
         queue: rest,
       });
     } else {
       setStagedSection(null);
+      homeVisitEducationSuggestions = [];
       toast.success('Recommendations applied', {
         description: 'Every staged section was saved to the workspace.',
       });
@@ -2748,6 +3401,7 @@ function Home() {
   /** Throw away the staged preview without touching the workspace. */
   const discardStagedPreview = () => {
     setStagedSection(null);
+    homeVisitEducationSuggestions = [];
     setCollectOpen(false);
     toast('Preview discarded', { description: 'No staged values were saved.' });
   };
@@ -2899,9 +3553,9 @@ function Home() {
   const studyFacts = useMemo(() => deriveStudyFacts(chapters, exportMeta), [chapters, exportMeta]);
   const studyFactIssues = useMemo(() => validateStudyFacts(studyFacts), [studyFacts]);
   const allSections = useMemo(() => chapters.flatMap((chapter) => chapter.sections), [chapters]);
-  const navigableChapterIndices = chapters
-    .map((chapter, index) => (chapter.isFrontMatter ? -1 : index))
-    .filter((index) => index >= 0);
+  // Every chapter gets a tab — including the merged front-matter chapter
+  // ("Additional Pages"), which renders as 'Pages' in the strip.
+  const navigableChapterIndices = chapters.map((_, index) => index);
   const isChapter2 = currentChapter.name === 'Analysis of Data';
   const isChapter3 = currentChapter.name === 'Planning';
   const isChapter4 = currentChapter.name === 'Implementation';
@@ -3285,6 +3939,243 @@ function Home() {
     }
   };
 
+  /** Propose the 4.1 day-by-day care summary + 4.2 discharge preparation from documented data. */
+  const recommendImplementation = async () => {
+    if (aiBusy) return;
+    const facts = studyFacts;
+    const hasCareData =
+      facts.planning.carePlanRows.some((row) => row[1]?.trim()) ||
+      Object.keys(facts.implementation.fields).length > 0 ||
+      facts.implementation.homeVisitRows.length > 0 ||
+      facts.implementation.notes.trim().length > 0;
+    if (!hasCareData) {
+      toast.error('Document the care plan or actual care first.', {
+        description: 'The 4.1 summary and 4.2 discharge preparation are built from the Chapter 3 care plan and your documented notes.',
+      });
+      return;
+    }
+    setImplementationBusy(true);
+    try {
+      // Admission-of-patient fields (1.8) feed the Day-of-Admission block: the
+      // admission* keys pass through unchanged; treatment/initial-care ride along.
+      const admission: Record<string, string> = {};
+      for (const [key, value] of Object.entries(facts.assessment.fields)) {
+        if (key.startsWith('admission') || key === 'treatmentStarted' || key === 'initialCare') {
+          admission[key] = value;
+        }
+      }
+      const visitInput = homeVisitSkeletonInputs();
+      const [discharge, careSummary, homeVisits] = await Promise.all([
+        requestDischargeRecommendations(
+          visitInput.patient,
+          visitInput.drugs,
+          visitInput.diagnoses,
+          facts.assessment.evidenceText.slice(0, 2000),
+          visitInput.discharge,
+        ),
+        requestCareSummarySkeleton(
+          visitInput.patient,
+          admission,
+          facts.planning.carePlanRows,
+          visitInput.drugs,
+        ),
+        // 4.3 skeleton is deterministic: purposes/education come from the
+        // conventional visit sequence and the documented 4.2 education; the
+        // documented 4.3 grid rows (if any) override the conventional text.
+        // The 1.3 socio-economic facts seed the first visit's environment
+        // findings, and the 4.2 discharge date pre-computes visit dates.
+        requestHomeVisitSkeleton(
+          visitInput.patient,
+          visitInput.drugs,
+          visitInput.diagnoses,
+          visitInput.discharge,
+          visitInput.socio,
+          visitInput.visitRows,
+          visitInput.admission,
+        ),
+      ]);
+      setImplementationProposal({ careGiven: careSummary.careGiven, discharge, homeVisits });
+      setImplementationProposalOpen(true);
+    } catch (error) {
+      toast.error('Could not build the implementation draft', {
+        description: error instanceof Error ? error.message : 'Recommendation engine unavailable.',
+      });
+    } finally {
+      setImplementationBusy(false);
+    }
+  };
+
+  /** Build the 4.3 home-visit skeleton inputs from the current study facts. */
+  const homeVisitSkeletonInputs = () => {
+    const facts = studyFacts;
+    const patient = {
+      initials: facts.patient.initials,
+      diagnosis: facts.patient.diagnosis,
+      ward: facts.patient.ward,
+      admissionDateTime: facts.patient.admissionDateTime,
+    };
+    const drugs = facts.implementation.fields.drugsGiven
+      ? facts.implementation.fields.drugsGiven.split(/[;\n]/).map((d) => d.trim()).filter(Boolean)
+      : [];
+    const diagnoses = facts.analysis.nursingDiagnoses
+      .split(/\n+/)
+      .map((line) => line.replace(/^\s*[-•]\s*/, '').trim())
+      .filter(Boolean);
+    return {
+      patient,
+      drugs,
+      diagnoses,
+      discharge: {
+        dischargeEducation: facts.implementation.fields.dischargeEducation ?? '',
+        communityResources: facts.implementation.fields.communityResources ?? '',
+        dischargeDate: facts.implementation.fields.dischargeDate ?? '',
+        // Grounds the 4.2 review-appointment sentence and the 4.3
+        // Day-of-Review block.
+        reviewDate: facts.implementation.fields.reviewDate ?? '',
+      },
+      socio: {
+        housing: facts.assessment.fields.housing ?? '',
+        water: facts.assessment.fields.water ?? '',
+        sanitation: facts.assessment.fields.sanitation ?? '',
+        familyType: facts.assessment.fields.familyType ?? '',
+        dependents: facts.assessment.fields.dependents ?? '',
+      },
+      visitRows: facts.implementation.homeVisitRows,
+      // 1.8 mirrors the discharge date; the skeleton falls back to it when
+      // 4.2 hasn't documented its own.
+      admission: {
+        dischargeDate: facts.assessment.fields.dischargeDate ?? '',
+      },
+    };
+  };
+
+  /** Pre-fill section 4.3 with the conventional three visits as a staged
+   *  preview — the guided-card path when the student hasn't run the full
+   *  Chapter 4 proposal. Deterministic and instant (no model call). */
+  const prefillHomeVisits = () => {
+    if (aiBusy) return;
+    const existingRows = getSectionRows().filter((row) => row.cells.some((cell) => cell.trim()));
+    if (existingRows.length > 0) {
+      toast.error('Section 4.3 already has documented visits.', {
+        description: 'Clear the existing rows first if you want to re-run the pre-fill.',
+      });
+      return;
+    }
+    setImplementationBusy(true);
+    void (async () => {
+      try {
+        const input = homeVisitSkeletonInputs();
+        const homeVisits = await requestHomeVisitSkeleton(
+          input.patient,
+          input.drugs,
+          input.diagnoses,
+          input.discharge,
+          input.socio,
+          input.visitRows,
+          input.admission,
+        );
+        homeVisitEducationSuggestions = homeVisits.visits.map((visit) => visit.educationSuggestions);
+        beginStagedPreview([
+          {
+            sectionId: '4.3',
+            // Engine-suggested dates carry the "suggested:" marker — the
+            // card editor badges them until the student confirms the date.
+            rowData: homeVisits.visits.map((visit) =>
+              visit.dateIsSuggested
+                ? visit.cells.map((cell, ci) => (ci === 0 ? markSuggestedDate(cell) : cell))
+                : visit.cells,
+            ),
+          },
+        ]);
+        toast('Previewing the suggested home visits', {
+          description: 'Confirm each visit — dates and objectives are suggestions; nothing is saved until you press Apply.',
+        });
+      } catch (error) {
+        toast.error('Could not build the home-visit skeleton', {
+          description: error instanceof Error ? error.message : 'Recommendation engine unavailable.',
+        });
+      } finally {
+        setImplementationBusy(false);
+      }
+    })();
+  };
+
+  /** Pre-fill section 5.3 (Termination of Care) from the documented study:
+   *  the three narrative fields are composed deterministically from the
+   *  admission/discharge/review dates, the final 4.3 visit, the 4.2
+   *  education and community resources. Staged for review like the other
+   *  pre-fills — nothing saves until the student applies. */
+  const prefillTermination = () => {
+    if (aiBusy) return;
+    const facts = studyFacts;
+    const alreadyDocumented = [
+      facts.evaluation.fields.terminationProcess ?? '',
+      facts.evaluation.fields.patientInvolvement ?? '',
+      facts.evaluation.fields.handover ?? '',
+    ].some((value) => value.trim());
+    if (alreadyDocumented) {
+      toast.error('Section 5.3 already has documented content.', {
+        description: 'Clear the fields first if you want to re-run the pre-fill.',
+      });
+      return;
+    }
+    if (!finalVisitDate(facts.implementation.homeVisitRows) && !facts.assessment.fields.admissionDate && !facts.patient.admissionDateTime) {
+      toast.error('Nothing to build from yet.', {
+        description: 'Document a home visit in section 4.3 or the admission details in section 1.8 first.',
+      });
+      return;
+    }
+    const drafts = buildTerminationPrefill({
+      patientInitials: facts.patient.initials,
+      admissionDate: facts.assessment.fields.admissionDate || facts.patient.admissionDateTime || '',
+      dischargeDate: facts.implementation.fields.dischargeDate ?? '',
+      reviewDate: facts.implementation.fields.reviewDate ?? '',
+      homeVisitRows: facts.implementation.homeVisitRows,
+      dischargeEducation: facts.implementation.fields.dischargeEducation ?? '',
+      communityResources: facts.implementation.fields.communityResources ?? '',
+    });
+    beginStagedPreview([{ sectionId: '5.3', data: drafts }]);
+    toast('Previewing the termination pre-fill', {
+      description: 'Every bracketed placeholder must come from your own records — nothing is saved until you press Apply.',
+    });
+  };
+
+  /** Stage the implementation proposal into sections 4.1–4.3 forms for review. */
+  const applyImplementationProposal = () => {
+    if (!implementationProposal) return;
+    setImplementationProposalOpen(false);
+    const entries: { sectionId: string; data?: Record<string, string>; notes?: string; rowData?: string[][] }[] = [
+      { sectionId: '4.1', data: { careGiven: implementationProposal.careGiven } },
+    ];
+    if (implementationProposal.discharge) {
+      entries.push({ sectionId: '4.2', data: implementationProposal.discharge });
+    }
+    // 4.3 stages as guided visit cards: the skeleton's per-visit cells
+    // (suggested dates, conventional objectives, 1.3 environment findings)
+    // land in the rowData grid, and its education topics power the card
+    // checkboxes — the student confirms, edits, and ticks rather than typing
+    // from scratch. Draft then polishes the grid into the samples' narrative.
+    if (implementationProposal.homeVisits?.visits.length) {
+      homeVisitEducationSuggestions = implementationProposal.homeVisits.visits.map(
+        (visit) => visit.educationSuggestions,
+      );
+      entries.push({
+        sectionId: '4.3',
+        // Engine-suggested dates carry the "suggested:" marker — the card
+        // editor badges them until the student edits/confirms the date.
+        rowData: implementationProposal.homeVisits.visits.map((visit) =>
+          visit.dateIsSuggested
+            ? visit.cells.map((cell, ci) => (ci === 0 ? markSuggestedDate(cell) : cell))
+            : visit.cells,
+        ),
+      });
+    }
+    beginStagedPreview(entries);
+    toast('Previewing Chapter 4 sections', {
+      description: 'Fill every bracketed placeholder from your own records — nothing is saved until you press Done in each section.',
+    });
+  };
+
   /** Stage the planning proposal into sections 3.1/3.2 forms for review. */
   const applyPlanningProposal = () => {
     if (!planningProposal) return;
@@ -3305,22 +4196,44 @@ function Home() {
       toast.error('Build the Chapter 3 care plan first.');
       return;
     }
-    const evaluationRows = rows.map((row) => [
-      row[1] ?? '',
-      `Pending: record the patient response against the objective — ${row[2] || 'state whether the goal was fully met, partially met, or not met, with the measurement observed.'}`,
-    ]);
-    const amendmentRows = studyFacts.evaluation.outcomeRows
-      .filter((row) => /partially\s+met|not\s+met|unmet/i.test(row[1] ?? ''))
-      .map((row) => [
-        row[0],
-        'Proposed amendment: review or add an intervention, revise the target, or extend the evaluation period based on the documented response.',
-        `Documented outcome requiring review: ${row[1]}`,
-        'Pending documented result after the amended plan.',
-      ]);
+    // One guided 5.1 card per care-plan diagnosis: the diagnosis and its
+    // objective are copied over as context, and the status select arrives
+    // pre-filled when the care plan already recorded an evaluation — the
+    // student picks the status and records the actual patient response.
+    const statusFor = (evaluation: string): string => {
+      const lowered = evaluation.toLowerCase();
+      if (/not\s+met|unmet/.test(lowered) && !/partially/.test(lowered)) return 'Goal not met';
+      if (/partially/.test(lowered)) return 'Goal partially met';
+      if (/fully\s+met/.test(lowered)) return 'Goal fully met';
+      return '';
+    };
+    const evaluationRows = rows.map((row) => {
+      const diagnosis = row[1] ?? '';
+      const objective = (row[2] ?? '').trim();
+      const priorStatus = statusFor(row[6] ?? '');
+      // School-sample convention: goals are recorded as fully met unless the
+      // record documents otherwise — so every card arrives pre-selected
+      // (from the care plan's evaluation when it recorded one, otherwise
+      // "Goal fully met") with a placeholder for the observed response. The
+      // student adjusts any goal that wasn't actually achieved.
+      const status = priorStatus || 'Goal fully met';
+      const outcomeCell = `${status} — [record the patient response that showed this: ${
+        objective || 'state the measurement observed'
+      }]`;
+      return [objective ? `${diagnosis} — ${objective}` : diagnosis, outcomeCell];
+    });
+    const amendmentRows = buildAmendmentRows(
+      studyFacts.evaluation.outcomeRows,
+      rows,
+    );
     setEvaluationProposal({
       rows: evaluationRows,
       amendmentRows,
-      overall: 'Evaluation pending: review each care-plan outcome against the patient response and documented measurements.',
+      // Derived from the staged statuses: with nothing documented as
+      // partially met or unmet, this reads "Of the N care-plan goals
+      // evaluated, N were fully met." — and keeps updating live in the
+      // card editor if the student changes any status.
+      overall: deriveOverallEvaluation(evaluationRows),
     });
     setEvaluationProposalOpen(true);
   };
@@ -3335,9 +4248,11 @@ function Home() {
         data: { overallEvaluation: evaluationProposal.overall },
         rowData: evaluationProposal.rows,
       },
+      // Every goal fully met: section 5.2 still stages — with the school
+      // convention's explicit no-amendment statement rather than empty.
       ...(evaluationProposal.amendmentRows.length > 0
         ? [{ sectionId: '5.2', rowData: evaluationProposal.amendmentRows }]
-        : []),
+        : [{ sectionId: '5.2', data: NO_AMENDMENT_DATA }]),
     ]);
     toast('Previewing Chapter 5 evaluation', {
       description: 'Enter actual outcomes, then press Done in each section to keep them.',
@@ -3384,8 +4299,10 @@ function Home() {
       const composed = composeSectionInput(currentSection);
       // Pure row-data sections (2.2 drugs, 3.2 care plan) are drafted as tables.
       // Mixed sections like 5.1 (narrative fields + an outcomes grid) stay prose
-      // — their grid still exports as a structured table.
-      const tabular = Boolean(currentSection.rows) && currentSection.fields.length === 0;
+      // — their grid still exports as a structured table. 4.3 stays prose too:
+      // the school's samples write it as per-visit narrative, not a table.
+      const tabular =
+        Boolean(currentSection.rows) && currentSection.fields.length === 0 && currentSection.id !== '4.3';
       // Pass the section template's column headers so the drafted table matches
       // the expected layout (drug, dose, indication, ...) instead of making
       // up its own columns.
@@ -3634,8 +4551,10 @@ function Home() {
         try {
           const composed = composeSectionInput(section);
           // Pure row-data sections (2.2 drugs, 3.2 care plan) are drafted as
-          // tables; mixed sections stay prose.
-          const tabular = Boolean(section.rows) && section.fields.length === 0;
+          // tables; mixed sections stay prose. 4.3 is row-data but the school's
+          // samples write it as per-visit narrative — keep it prose too.
+          const tabular =
+            Boolean(section.rows) && section.fields.length === 0 && section.id !== '4.3';
           const rowColumns =
             tabular && section.rows ? section.rows.columns.map((column) => column.label) : [];
           const result = await requestDraft(
@@ -3792,7 +4711,11 @@ function Home() {
     title: exportMeta,
     scope,
     theme: docTheme,
-    chapters: chapters.map((chapter) => ({
+    // The merged "Additional Pages" workspace chapter is split back into its
+    // two physical chapters here so the document's page order is unchanged:
+    // preliminary sections (P.*) open the document, the 6.x summary sections
+    // close it as the unnumbered-following final chapter.
+    chapters: exportChaptersForDocument(chapters).map((chapter) => ({
       name: chapter.name,
       isFrontMatter: chapter.isFrontMatter,
       intro: chapter.intro,
@@ -3806,7 +4729,13 @@ function Home() {
               title: section.rows.title,
               columns: section.rows.columns.map((column) => column.label),
               data: section.rowData
-                .map((row) => section.rows!.columns.map((_, ci) => row.cells[ci] ?? ''))
+                // Engine-suggested (unconfirmed) visit dates are stripped so
+                // the Word export never presents them as documented facts.
+                .map((row) =>
+                  section.rows!.columns.map(
+                    (_, ci) => stripSuggestedDateMarker(row.cells[ci] ?? ''),
+                  ),
+                )
                 .filter((cells) => cells.some((cell) => cell.trim())),
             }
           : undefined;
@@ -3889,6 +4818,7 @@ function Home() {
     theme: docTheme,
     chapters: chapters.map((chapter) => ({
       name: chapter.name,
+      isFrontMatter: chapter.isFrontMatter,
       intro: chapter.intro,
       introReferences: chapter.introReferences,
       sections: chapter.sections.map((section) => ({
@@ -4000,8 +4930,17 @@ function Home() {
     workspaceGeneration.current += 1;
     const next = makeChapters();
     for (const chapter of stored.chapters) {
+      // Chapter aliasing: "Additional Pages" absorbed the old "Preliminary
+      // Pages" chapter and the numbered summary chapter, so old saves map
+      // onto the new combined chapter by section ids.
+      const chapterAliases: Record<string, string> = {
+        'Preliminary Pages': 'Additional Pages',
+        'Summary and Conclusion': 'Additional Pages',
+        'Summarise': 'Additional Pages',
+      };
+      const targetName = chapterAliases[chapter.name] ?? chapter.name;
       const chapterIndex = CHAPTER_TEMPLATE.findIndex(
-        (template) => template.name === chapter.name,
+        (template) => template.name === targetName,
       );
       if (chapterIndex < 0) continue;
       // Old saves have no intro — default to an empty string so the chapter
@@ -4941,7 +5880,7 @@ function Home() {
             <span className="mx-0.5 opacity-50">/</span>{' '}
             <span className="text-foreground">
               {isFrontMatterChapter(activeChapter)
-                ? 'Prelim'
+                ? 'Pages'
                 : `Ch ${chapterOrdinal(activeChapter) + 1}`}
             </span>
           </div>
@@ -5047,7 +5986,7 @@ function Home() {
             <p className="min-w-0 truncate text-sm font-semibold leading-tight">
               <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-primary">
                 {isFrontMatterChapter(activeChapter)
-                  ? 'Preliminary Pages'
+                  ? 'Additional Pages'
                   : `Chapter ${ROMAN[chapterOrdinal(activeChapter)]}`}
               </span>
               <span className="mx-2 text-muted-foreground/40">/</span>
@@ -5059,47 +5998,62 @@ function Home() {
               {isChapter2 && (
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="h-8 gap-1.5 text-primary"
+                  size="icon"
+                  className="h-7 w-7 gap-0 p-0 text-primary"
                   onClick={() => void recommendChapter2()}
                   disabled={aiBusy}
-                  title="Recommend Chapter 2 problems, strengths, and diagnoses from Chapter 1"
+                  title="Recommend from Ch. 1"
+                  aria-label="Recommend from Ch. 1"
                 >
-                  <Sparkles className={cn("size-3.5", chapter2RecommendationBusy && "animate-pulse")} />
-                  {chapter2RecommendationBusy ? 'Analysing…' : 'Recommend from Ch 1'}
+                  {chapter2RecommendationBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
                 </Button>
               )}
               {isChapter2 && currentSection.id === '2.2' && (
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="h-8 gap-1.5 text-primary"
+                  size="icon"
+                  className="h-7 w-7 gap-0 p-0 text-primary"
                   onClick={() => void recommendPharmacology()}
                   disabled={aiBusy}
-                  title="Propose the pharmacology table from the drugs recorded in Chapter 1"
+                  title="Pharmacology rows"
+                  aria-label="Pharmacology rows"
                 >
-                  <Sparkles className={cn("size-3.5", pharmacologyBusy && "animate-pulse")} />
-                  {pharmacologyBusy ? 'Analysing…' : 'Suggest drug rows'}
+                  {pharmacologyBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
                 </Button>
               )}                {isChapter3 && (
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={() => void recommendChapter3()} disabled={aiBusy} title="Build the nursing care plan from the Chapter 2 diagnoses">
-                  <Sparkles className={cn("size-3.5", planningBusy && "animate-pulse")} /> {planningBusy ? 'Planning…' : 'Build plan from Ch 2'}
+                <Button variant="outline" size="icon" className="h-7 w-7 gap-0 p-0 text-primary" onClick={() => void recommendChapter3()} disabled={aiBusy} title="Build from Ch. 2" aria-label="Build from Ch. 2">
+                  {planningBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
                 </Button>
               )}
               {isChapter4 && (
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="h-8 gap-1.5 text-primary"
+                  size="icon"
+                  className="h-7 w-7 gap-0 p-0 text-primary"
+                  onClick={recommendImplementation}
+                  disabled={aiBusy}
+                  title="Propose 4.1 & 4.2"
+                  aria-label="Propose 4.1 & 4.2"
+                >
+                  {aiBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+                </Button>
+              )}
+              {isChapter4 && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7 gap-0 p-0 text-primary"
                   onClick={() => setActualCareReviewOpen(true)}
                   disabled={aiBusy}
-                  title="Review documented care before drafting implementation sections"
+                  title="Review actual care"
+                  aria-label="Review actual care"
                 >
-                  <FileCheck2 className="size-3.5" /> Review actual care
+                  <FileCheck2 className="size-3.5" />
                 </Button>
-              )}                {isChapter5 && (
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary" onClick={recommendChapter5} disabled={aiBusy}>
-                  <Sparkles className="size-3.5" /> Evaluate care plan
+              )}
+              {isChapter5 && (
+                <Button variant="outline" size="icon" className="h-7 w-7 gap-0 p-0 text-primary" onClick={recommendChapter5} disabled={aiBusy} title="Evaluate care plan" aria-label="Evaluate care plan">
+                  {aiBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
                 </Button>
               )}
               <Progress value={overallCompletion} className="h-1.5 w-16" aria-hidden="true" />
@@ -5169,17 +6123,30 @@ function Home() {
               <div className="h-5 w-px bg-border mx-1" />
               {navigableChapterIndices.map((chapterIndex) => {
                 const chapterNumber = chapterOrdinal(chapterIndex) + 1;
+                const isActive = chapterIndex === activeChapter;
                 return (
                 <Button
                   key={chapterIndex}
                   variant="outline"
                   size="sm"
-                  className="h-8 gap-1.5"
+                  className={cn(
+                    'h-8 gap-1.5',
+                    isActive
+                      ? 'border-primary/40 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
                   onClick={() => selectChapter(chapterIndex)}
                   disabled={aiBusy}
-                  title={`Go to Chapter ${chapterNumber}`}
+                  aria-current={isActive ? 'page' : undefined}
+                  title={
+                    isFrontMatterChapter(chapterIndex)
+                      ? 'Additional pages — preliminary pages and the summary/conclusion sections'
+                      : `Go to Chapter ${chapterNumber}`
+                  }
                 >
-                    <span className="text-[11px]">Ch {chapterNumber}</span>
+                    <span className="text-[11px]">
+                      {isFrontMatterChapter(chapterIndex) ? 'Pages' : `Ch ${chapterNumber}`}
+                    </span>
                   </Button>
                 );
               })}
@@ -5473,9 +6440,9 @@ function Home() {
               </DialogHeader>
               {planningProposal && (
                 <div className="space-y-3">
-                  <div className="rounded-lg border p-3 text-xs leading-relaxed">
-                    <p className="font-semibold">Objectives</p>
-                    <pre className="mt-2 whitespace-pre-wrap font-sans text-muted-foreground">{Object.values(planningProposal.objectives).join('\n\n')}</pre>
+                  <div className="rounded-lg border p-3 text-[11px] leading-relaxed">
+                    <p className="text-xs font-semibold">Objectives</p>
+                    <pre className="mt-2 whitespace-pre-wrap break-words font-sans text-muted-foreground">{Object.values(planningProposal.objectives).join('\n\n')}</pre>
                   </div>
                   <div className="overflow-x-auto rounded-lg border">
                     <table className="w-full min-w-[900px] text-[11px]">
@@ -5483,7 +6450,57 @@ function Home() {
                       <tbody>{planningProposal.carePlanRows.map((row, index) => <tr key={index} className="border-b last:border-0 align-top">{[row[1], row[2], row[3], row[4], row[6], row[7]].map((cell, cellIndex) => <td key={cellIndex} className="px-2 py-2 text-muted-foreground">{cell}</td>)}</tr>)}</tbody>
                     </table>
                   </div>
-                  <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setPlanningProposalOpen(false)}>Cancel</Button><Button onClick={applyPlanningProposal}>Apply to Chapter 3</Button></div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" className="h-7 px-3 text-xs" onClick={() => setPlanningProposalOpen(false)}>Cancel</Button>
+                    <Button size="sm" className="h-7 px-3 text-xs" onClick={applyPlanningProposal}>Apply to Chapter 3</Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={implementationProposalOpen} onOpenChange={setImplementationProposalOpen}>
+            <DialogContent className="max-h-[85vh] w-full max-w-3xl overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Proposed Chapter 4 sections</DialogTitle>
+                <DialogDescription>
+                  Built from your documented care plan, notes, and admission record. Bracketed placeholders mark facts only you can fill — they are never invented.
+                </DialogDescription>
+              </DialogHeader>
+              {implementationProposal && (
+                <div className="space-y-3">
+                  <div className="rounded-lg border p-3 text-[11px] leading-relaxed">
+                    <p className="text-xs font-semibold">4.1 · Summary of the Actual Nursing Care (day by day)</p>
+                    <pre className="mt-2 whitespace-pre-wrap break-words font-sans text-muted-foreground">{implementationProposal.careGiven}</pre>
+                  </div>
+                  {implementationProposal.discharge && (
+                    <div className="rounded-lg border p-3 text-[11px] leading-relaxed">
+                      <p className="text-xs font-semibold">4.2 · Preparation for Discharge and Rehabilitation</p>
+                      <div className="mt-2 space-y-2 text-muted-foreground">
+                        {Object.entries(implementationProposal.discharge).map(([key, value]) => (
+                          <p key={key} className="break-words"><span className="font-medium text-foreground">{key}:</span> {value}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {implementationProposal.homeVisits?.visits.length ? (
+                    <div className="rounded-lg border p-3 text-[11px] leading-relaxed">
+                      <p className="text-xs font-semibold">4.3 · Follow-up / Home Visit / Continuity of Care</p>
+                      <p className="mt-1 break-words text-muted-foreground">{implementationProposal.homeVisits.opening}</p>
+                      <div className="mt-2 space-y-2">
+                        {implementationProposal.homeVisits.visits.map((visit, index) => (
+                          <div key={index}>
+                            <p className="font-medium text-foreground">{visit.heading}</p>
+                            <p className="break-words text-muted-foreground">{visit.paragraph}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" className="h-7 px-3 text-xs" onClick={() => setImplementationProposalOpen(false)}>Cancel</Button>
+                    <Button size="sm" className="h-7 px-3 text-xs" onClick={applyImplementationProposal}>Apply to sections 4.1–4.3</Button>
+                  </div>
                 </div>
               )}
             </DialogContent>
@@ -5499,16 +6516,19 @@ function Home() {
               </DialogHeader>
               {evaluationProposal && (
                 <div className="space-y-3">
-                  <div className="rounded-lg border p-3 text-sm text-muted-foreground">{evaluationProposal.overall}</div>
-                  <div className="space-y-2">{evaluationProposal.rows.map((row, index) => <div key={index} className="rounded-lg border p-3"><p className="text-sm font-medium">{row[0]}</p><p className="mt-1 text-xs text-muted-foreground">{row[1]}</p></div>)}</div>
+                  <div className="rounded-lg border p-3 text-xs leading-relaxed break-words text-muted-foreground">{evaluationProposal.overall}</div>
+                  <div className="space-y-2">{evaluationProposal.rows.map((row, index) => <div key={index} className="rounded-lg border p-3"><p className="text-xs font-medium break-words">{row[0]}</p><p className="mt-1 text-[11px] leading-relaxed break-words text-muted-foreground">{row[1]}</p></div>)}</div>
                   {evaluationProposal.amendmentRows.length > 0 && (
                     <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-                      <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Amendments detected</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Explicitly documented partially met or unmet outcomes will be added to section 5.2 for review.</p>
-                      <div className="mt-2 space-y-2">{evaluationProposal.amendmentRows.map((row, index) => <div key={index} className="text-xs"><span className="font-medium">{row[0]}</span><span className="text-muted-foreground"> — {row[2]}</span></div>)}</div>
+                      <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">Amendments detected</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">Partially met outcomes propose extending the period of care and reinforcing the current orders; unmet outcomes propose revising the orders, objective, or diagnosis. They are queued into section 5.2 as soon as you apply section 5.1 — edit the proposals there.</p>
+                      <div className="mt-2 space-y-2">{evaluationProposal.amendmentRows.map((row, index) => <div key={index} className="text-[11px] leading-relaxed"><span className="font-medium">{row[0]}</span><span className="text-muted-foreground"> — {row[2]}</span></div>)}</div>
                     </div>
                   )}
-                  <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setEvaluationProposalOpen(false)}>Cancel</Button><Button onClick={applyEvaluationProposal}>Apply to Chapter 5</Button></div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" className="h-7 px-3 text-xs" onClick={() => setEvaluationProposalOpen(false)}>Cancel</Button>
+                    <Button size="sm" className="h-7 px-3 text-xs" onClick={applyEvaluationProposal}>Apply to Chapter 5</Button>
+                  </div>
                 </div>
               )}
             </DialogContent>
@@ -5527,19 +6547,19 @@ function Home() {
                   <div
                     key={issue.code}
                     className={cn(
-                      'rounded-lg border p-3 text-sm',
+                      'rounded-lg border p-3 text-xs leading-relaxed break-words',
                       issue.severity === 'error'
                         ? 'border-destructive/30 bg-destructive/10 text-destructive'
                         : 'border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300',
                     )}
                   >
                     <p className="font-medium">{issue.severity === 'error' ? 'Required' : 'Review'}: {issue.message}</p>
-                    <p className="mt-1 text-xs opacity-80">Sections: {issue.sections.join(', ')}</p>
+                    <p className="mt-1 text-[11px] opacity-80">Sections: {issue.sections.join(', ')}</p>
                   </div>
                 ))}
               </div>
               <div className="flex justify-end pt-2">
-                <Button onClick={() => setQualityGateOpen(false)}>Close</Button>
+                <Button size="sm" className="h-7 px-3 text-xs" onClick={() => setQualityGateOpen(false)}>Close</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -5559,22 +6579,24 @@ function Home() {
                   ['4.3 · Home visits', studyFacts.implementation.homeVisitRows.map((row) => row.join(' | ')).join('\n')],
                 ].map(([heading, content]) => (
                   <div key={heading} className="rounded-lg border p-3">
-                    <p className="text-sm font-semibold">{heading}</p>
-                    <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+                    <p className="text-xs font-semibold">{heading}</p>
+                    <p className="mt-2 whitespace-pre-wrap break-words text-[11px] leading-relaxed text-muted-foreground">
                       {content || 'No documented data yet.'}
                     </p>
                   </div>
                 ))}
                 <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" onClick={() => setActualCareReviewOpen(false)}>Close</Button>
+                  <Button variant="outline" size="sm" className="h-7 px-3 text-xs" onClick={() => setActualCareReviewOpen(false)}>Close</Button>
                   <Button
+                    size="sm"
+                    className="h-7 px-3 text-xs"
                     disabled={!studyFacts.implementation.notes && Object.keys(studyFacts.implementation.fields).length === 0 && studyFacts.implementation.homeVisitRows.length === 0}
                     onClick={() => {
                       setActualCareReviewOpen(false);
                       void draftChapter();
                     }}
                   >
-                    <Sparkles className="size-3.5" /> Draft from documented care
+                    <Sparkles className="size-3" /> Draft from documented care
                   </Button>
                 </div>
               </div>
@@ -5673,7 +6695,7 @@ function Home() {
           </Dialog>
 
           <Dialog open={collectOpen} onOpenChange={handleCollectOpenChange}>
-            <DialogContent className="max-h-[85vh] w-full max-w-2xl overflow-y-auto border-sidebar-border bg-sidebar-accent text-sidebar-foreground">
+            <DialogContent className="max-h-[88vh] w-full max-w-3xl overflow-y-auto border-sidebar-border bg-sidebar-accent text-sidebar-foreground">
               <DialogHeader>
                 <DialogTitle>
                   {currentSection.id} · {currentSection.heading}
@@ -5714,7 +6736,7 @@ function Home() {
                     {currentSection.notes.length} chars
                   </span>
                 </div>
-                <Textarea
+                <AutoTextarea
                   id="section-notes"
                   value={
                     stagedSection && stagedSection.sectionId === currentSection.id
@@ -5729,9 +6751,10 @@ function Home() {
                     }
                   }}
                   onKeyDown={handleNotesKeyDown}
-                  rows={5}
+                  minRows={4}
+                  maxRows={18}
                   placeholder={'Write what you observed, heard, measured, or were told…\n\nUse your own shorthand. There is no need to make it polished yet.'}
-                  className="min-h-[120px] bg-sidebar leading-relaxed"
+                  className="bg-sidebar leading-relaxed"
                 />
                 <div className="flex items-center justify-between text-[11px] text-sidebar-foreground/70">
                   <span>
@@ -5744,13 +6767,35 @@ function Home() {
                 </div>
               </div>
 
-              {currentSection.rows && (
-                <RowEditor
+              {currentSection.rows && currentSection.id === '4.3' ? (
+                <HomeVisitCardEditor
+                  rowDef={currentSection.rows}
+                  rows={getSectionRows()}
+                  educationSuggestions={
+                    stagedSection?.sectionId === '4.3' ? homeVisitEducationSuggestions : undefined
+                  }
+                  onChange={setRowData}
+                />
+              ) : currentSection.rows && currentSection.id === '5.1' ? (
+                <OutcomeEvaluationCardEditor
+                  rowDef={currentSection.rows}
+                  rows={getSectionRows()}
+                  onChange={setRowData}
+                  onOutcomeStatusesChanged={(derived) => {
+                    // Auto-write the overall statement as statuses are
+                    // selected — but never clobber a hand-written one.
+                    if (canAutoWriteOverall(getFieldValue('overallEvaluation'))) {
+                      setFieldValue('overallEvaluation', derived);
+                    }
+                  }}
+                />
+              ) : currentSection.rows ? (
+                <RowCardEditor
                   rowDef={currentSection.rows}
                   rows={getSectionRows()}
                   onChange={setRowData}
                 />
-              )}
+              ) : null}
 
               <div className="flex items-center justify-between gap-3 border-t border-sidebar-border/60 pt-4">
                 <span
@@ -5804,7 +6849,7 @@ function Home() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm">
                     {isFrontMatterChapter(activeChapter)
-                      ? 'Preliminary pages'
+                      ? 'Additional pages'
                       : `Chapter ${chapterOrdinal(activeChapter) + 1}`}
                   </CardTitle>
                   <Badge variant="outline" className="tabular">
@@ -6011,6 +7056,26 @@ function Home() {
                           <Button onClick={() => setCollectOpen(true)} variant="outline" className="h-9 gap-1.5">
                             <ClipboardList className="size-4" /> Collect data
                           </Button>
+                          {isChapter4 && currentSection.id === '4.3' && (
+                            <Button
+                              onClick={prefillHomeVisits}
+                              disabled={aiBusy}
+                              variant="outline"
+                              className="h-9 gap-1.5"
+                            >
+                              <Sparkles className="size-4" /> Pre-fill 3 visits
+                            </Button>
+                          )}
+                          {isChapter5 && currentSection.id === '5.3' && (
+                            <Button
+                              onClick={prefillTermination}
+                              disabled={aiBusy}
+                              variant="outline"
+                              className="h-9 gap-1.5"
+                            >
+                              <Sparkles className="size-4" /> Pre-fill termination
+                            </Button>
+                          )}
                           <Button
                             onClick={draftSection}
                             disabled={!draftAvailable || aiBusy}
@@ -6744,10 +7809,10 @@ function Home() {
                     size="sm"
                     className="h-6 gap-1 px-2 text-[10px] text-muted-foreground"
                     onClick={() => setShowPreliminaryPages((visible) => !visible)}
-                    title={showPreliminaryPages ? 'Hide preliminary pages' : 'Show preliminary pages'}
+                    title={showPreliminaryPages ? 'Hide additional pages' : 'Show additional pages'}
                   >
                     <Eye className="size-3" />
-                    {showPreliminaryPages ? 'Hide preliminary' : 'Show preliminary'}
+                    {showPreliminaryPages ? 'Hide additional pages' : 'Show additional pages'}
                   </Button>
                 </div>
               </div>
