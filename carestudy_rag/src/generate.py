@@ -171,6 +171,10 @@ FORMAT_CARE_PLAN = (
     "EXACTLY these column headers, in this order: Date/Time | Nursing Diagnosis | "
     "Objectives/Outcome Criteria | Nursing Orders | Nursing Interventions | "
     "Date/Time — Evaluation | Evaluation | Rationale. One row per diagnosis. "
+    "Every data row MUST have 8 cells matching the 8 headers: begin each data "
+    "row with an EMPTY first cell ('| | Diagnosis | ...') — the Date/Time — "
+    "diagnosis column is left blank until evaluation; the diagnosis itself "
+    "goes in the SECOND cell. Never drop that leading empty cell. "
     "GRAMMAR (follow the sample care studies exactly):\n"
     "- NURSING ORDERS are 5-8 DISCRETE, action-oriented, imperative activities "
     "the nurse plans to do, numbered in the cell like '1) Reassure patient ... "
@@ -207,6 +211,19 @@ FORMAT_ANALYSIS_LIST = (
     "\"Patient is at risk for deficient fluid volume\", \"Patient maintains adequate "
     "fluid intake\". Do not merge the items into a prose paragraph, even when the "
     "source notes are written as prose."
+)
+
+FORMAT_OBJECTIVES = (
+    "FORMAT (Objectives for Patient/Family Care): Output this section as bullet "
+    "lists, never as a prose paragraph. Each objective is its own \"- \" bullet — "
+    "one SMART objective per bullet, even when the source notes describe the "
+    "objectives in continuous sentences. Use bold subheadings for the groups "
+    "(**Long-term objectives**, **Short-term objectives**, **Outcome criteria", 
+    "**Family objectives**) and place a separate bullet under each for every "
+    "individual objective. Write each objective in the samples' SMART grammar: "
+    "'Patient will ... within <time frame> as evidenced by; A) <patient "
+    "verbalisation> B) <nurse observation>'. Never merge several objectives into "
+    "one bullet and never dissolve the list back into a prose paragraph."
 )
 
 CHAPTER_INTRO_FORMAT = (
@@ -412,6 +429,14 @@ def is_analysis_list_section(heading: str) -> bool:
     )
 
 
+def is_objectives_section(heading: str) -> bool:
+    """Whether a heading is the Chapter 3 objectives/outcome-criteria section."""
+    normalized = heading.strip().lower()
+    # The Studio sends headings without the "3.1"-style numeric prefix
+    # (e.g. "Objectives for Patient/Family Care"), so match both forms.
+    return "objective" in normalized or normalized.startswith("3.1")
+
+
 def build_prompt(
     heading: str,
     patient_notes: str,
@@ -476,6 +501,8 @@ def build_prompt(
         format_instruction = FORMAT_TABLE
     elif is_analysis_list_section(heading):
         format_instruction = FORMAT_ANALYSIS_LIST
+    elif is_objectives_section(heading):
+        format_instruction = FORMAT_OBJECTIVES
     elif is_admission_section(heading):
         format_instruction = ADMISSION_FORMAT
     else:
@@ -800,7 +827,9 @@ def _rewrite_as_section(
 ) -> str:
     """Convert an exposed planning response into content for the requested section."""
     format_instruction = FORMAT_TABLE if tabular else (
-        ADMISSION_FORMAT if is_admission_section(heading) else FORMAT_PROSE
+        FORMAT_OBJECTIVES if is_objectives_section(heading)
+        else ADMISSION_FORMAT if is_admission_section(heading)
+        else FORMAT_PROSE
     )
     response = client.messages.create(
         model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
@@ -974,15 +1003,16 @@ def draft_section(
             print(f"[generate] meta-response rewrite failed, keeping original draft: {exc}", file=sys.stderr)
 
     # Prose enforcement: if the model still dumped the data as bullets/labels,
-    # run one corrective rewrite. The literature review and Chapter 2 analysis
-    # sections are excluded — their format instructions explicitly want bulleted
-    # lists, not prose. On failure the original draft is kept rather than lost —
-    # the student can still edit it by hand — and an empty rewrite never
-    # clobbers a real draft.
+    # run one corrective rewrite. The literature review, Chapter 2 analysis,
+    # and Chapter 3 objectives sections are excluded — their format
+    # instructions explicitly want bulleted lists, not prose. On failure the
+    # original draft is kept rather than lost — the student can still edit it
+    # by hand — and an empty rewrite never clobbers a real draft.
     if (
         not tabular
         and not is_lit
         and not is_analysis_list_section(heading)
+        and not is_objectives_section(heading)
         and _looks_like_data_dump(draft)
     ):
         try:

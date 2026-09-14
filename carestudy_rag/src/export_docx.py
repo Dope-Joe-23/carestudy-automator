@@ -395,6 +395,25 @@ def _add_markdown_table(doc, table_lines, theme):
         return
 
     width = max(len(row) for row in rows)
+
+    # Self-heal a common model mistake: the header names a date/time first
+    # column but every data row dropped the leading empty cell (the diagnosis
+    # landed in the date column), so every cell sits one column left of its
+    # header. Only heals the unambiguous shape: every data row short by
+    # exactly one and a date-labelled first header. Real ragged tables keep
+    # their original alignment (right-pad only).
+    data_rows = rows[1:]
+    first_header = (rows[0][0] if rows[0] else "").lower()
+    first_header_is_date = "date" in first_header or "time" in first_header
+    if (
+        data_rows
+        and first_header_is_date
+        and len(rows[0]) > 1
+        and all(len(row) == len(rows[0]) - 1 for row in data_rows)
+    ):
+        rows = [rows[0]] + [[""] + row for row in data_rows]
+        width = len(rows[0])
+
     header = rows[0] + [""] * (width - len(rows[0]))
     data = [row + [""] * (width - len(row)) for row in rows[1:]]
     _add_data_table(doc, header, data, theme)

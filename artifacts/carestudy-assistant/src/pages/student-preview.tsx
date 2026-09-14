@@ -145,6 +145,20 @@ function MarkdownTable({ text }: { text: string }) {
   const headerCells = parseRow(dataLines[0]);
   const bodyRows = dataLines.slice(1).map(parseRow);
 
+  // Self-heal a common model mistake: the header names a date/time first
+  // column but every data row dropped the leading empty cell (the diagnosis
+  // landed in the date column), shifting every cell one column left of its
+  // header. Only heals the unambiguous shape: every data row short by exactly
+  // one and a date-labelled first header. Ragged tables keep their alignment.
+  const firstHeader = (headerCells[0] ?? "").toLowerCase();
+  const firstHeaderIsDate = firstHeader.includes("date") || firstHeader.includes("time");
+  const needsShift =
+    headerCells.length > 1 &&
+    firstHeaderIsDate &&
+    bodyRows.length > 0 &&
+    bodyRows.every((row) => row.length === headerCells.length - 1);
+  const shiftedRows = needsShift ? bodyRows.map((row) => ["", ...row]) : bodyRows;
+
   return (
     <div className="my-3 overflow-x-auto rounded-lg border">
       <table className="w-full text-[11px] leading-relaxed">
@@ -158,7 +172,7 @@ function MarkdownTable({ text }: { text: string }) {
           </tr>
         </thead>
         <tbody>
-          {bodyRows.map((row, ri) => (
+          {shiftedRows.map((row, ri) => (
             <tr
               key={ri}
               className={cn(

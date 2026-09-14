@@ -1503,9 +1503,23 @@ function parsePreviewTable(lines: string[]): { header: string[]; rows: string[][
     parsed.push(cells);
   }
   if (parsed.length === 0) return null;
-  const width = Math.max(...parsed.map((row) => row.length));
-  const header = parsed[0].concat(Array(Math.max(width - parsed[0].length, 0)).fill(''));
-  const rows = parsed
+  // Self-heal a common model mistake: the header names a date/time first
+  // column but every data row dropped the leading empty cell (the diagnosis
+  // landed in the date column), shifting every cell one column left of its
+  // header. Only heals the unambiguous shape: every data row short by exactly
+  // one and a date-labelled first header. Ragged tables keep their alignment.
+  const dataRows = parsed.slice(1);
+  const firstHeader = (parsed[0][0] ?? '').toLowerCase();
+  const firstHeaderIsDate = firstHeader.includes('date') || firstHeader.includes('time');
+  const healed =
+    dataRows.length > 0 &&
+    firstHeaderIsDate &&
+    parsed[0].length > 1 &&
+    dataRows.every((row) => row.length === parsed[0].length - 1);
+  const normalized = healed ? [parsed[0], ...dataRows.map((row) => ['', ...row])] : parsed;
+  const width = Math.max(...normalized.map((row) => row.length));
+  const header = normalized[0].concat(Array(Math.max(width - normalized[0].length, 0)).fill(''));
+  const rows = normalized
     .slice(1)
     .map((row) => row.concat(Array(Math.max(width - row.length, 0)).fill('')));
   return { header, rows };
