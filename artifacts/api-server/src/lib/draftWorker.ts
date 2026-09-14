@@ -598,6 +598,7 @@ class DraftWorker {
       imported?: ImportStudyResult;
       recommendations?: Chapter2Recommendations;
       pharmacology?: PharmacologyRecommendations;
+      carePlan?: CarePlanRecommendations;
       error?: string;
     };
     try {
@@ -632,6 +633,9 @@ class DraftWorker {
     } else if (msg.pharmacology && typeof msg.pharmacology === "object") {
       // PharmacologyRecommendations — same unwrapping pattern as above.
       pending.resolve(msg.pharmacology);
+    } else if (msg.carePlan && Array.isArray(msg.carePlan.rows)) {
+      // CarePlanRecommendations — the worker emits { carePlan: { rows } }.
+      pending.resolve(msg.carePlan);
     } else if (msg.recommendations && typeof msg.recommendations === "object") {
       // Resolve the sections object itself — callers type it directly as
       // Chapter2Recommendations (same unwrapping as the bank branch above).
