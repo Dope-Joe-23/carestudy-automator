@@ -2824,6 +2824,7 @@ function Home() {
   const [planningProposal, setPlanningProposal] = useState<PlanningProposal | null>(null);
   const [planningProposalOpen, setPlanningProposalOpen] = useState(false);
   const [planningBusy, setPlanningBusy] = useState(false);
+  const [additionalPagesBusy, setAdditionalPagesBusy] = useState(false);
   const [implementationBusy, setImplementationBusy] = useState(false);
   const [evaluationProposal, setEvaluationProposal] = useState<EvaluationProposal | null>(null);
   const [evaluationProposalOpen, setEvaluationProposalOpen] = useState(false);
@@ -3282,6 +3283,7 @@ function Home() {
     isIntroDrafting ||
     isChapterDrafting ||
     chapter2RecommendationBusy ||
+    additionalPagesBusy ||
     pharmacologyBusy ||
     planningBusy ||
     implementationBusy ||
@@ -3661,6 +3663,41 @@ function Home() {
   const updateCurrentSection = (updates: Partial<Section>) =>
     updateSection(activeChapter, activeSection, updates);
 
+  const populateAvailableBibliography = () => {
+    const references = chapters.flatMap((chapter) => [
+      ...(chapter.introReferences ?? []),
+      ...chapter.sections.flatMap((section) => section.references ?? []),
+    ]);
+    if (references.length === 0) return false;
+
+    const bibliographyLocation = locateSection('6.3');
+    if (!bibliographyLocation) return false;
+    const bibliography = chapters[bibliographyLocation.chapterIndex]?.sections[bibliographyLocation.sectionIndex];
+    if (!bibliography) return false;
+
+    const rows = [...bibliography.rowData];
+    const seen = new Set(
+      rows
+        .map((row) => row.cells[0]?.trim().toLocaleLowerCase())
+        .filter(Boolean),
+    );
+    for (const reference of references) {
+      const label = reference.label?.trim();
+      if (!label) continue;
+      const key = label.toLocaleLowerCase();
+      if (seen.has(key)) continue;
+      rows.push({ id: nextRowId(), cells: [label] });
+      seen.add(key);
+    }
+    if (rows.length === bibliography.rowData.length) return false;
+    updateSection(
+      bibliographyLocation.chapterIndex,
+      bibliographyLocation.sectionIndex,
+      { rowData: rows },
+    );
+    return true;
+  };
+
   const updateChapterName = (chapterIndex: number, name: string) => {
     setChapters((previous) =>
       previous.map((chapter, ci) => (ci === chapterIndex ? { ...chapter, name } : chapter)),
@@ -3731,6 +3768,58 @@ function Home() {
       });
     } finally {
       setChapter2RecommendationBusy(false);
+    }
+  };
+
+  /** Stage safe, editable suggestions for the three preliminary pages. */
+  const recommendAdditionalPages = () => {
+    if (additionalPagesBusy || aiBusy) return;
+    const facts = studyFacts;
+    const patient = facts.patient.initials || exportMeta.patientName || 'the patient';
+    const diagnosis = facts.patient.diagnosis || exportMeta.diagnosis || 'the documented condition';
+    const admission = facts.patient.admissionDateTime || '[insert the interaction start date]';
+    const complaint = facts.assessment.fields.chiefComplaint || facts.assessment.fields.presentingSymptoms || '[insert the chief complaint]';
+    const discharge = facts.implementation.fields.dischargeDate
+      ? `The patient was discharged on ${facts.implementation.fields.dischargeDate}.`
+      : '[insert the patient\'s condition on discharge]';
+
+    setAdditionalPagesBusy(true);
+    try {
+      beginStagedPreview([
+        {
+          sectionId: 'P.1',
+          data: {
+            reasonForStudy: 'This care study was carried out to meet the requirements for the nursing programme and to apply classroom knowledge in the provision of individualised patient and family care.',
+            necessityForStudy: `The study was necessary to organise comprehensive care for ${patient} with ${diagnosis} from assessment through evaluation and follow-up.`,
+            helpToStudent: 'The study is expected to strengthen the student\'s skills in assessment, nursing diagnosis, planning, implementation, evaluation, documentation, and communication with the patient and family.',
+          },
+        },
+        {
+          sectionId: 'P.2',
+          data: {
+            ackPatientFamily: `I express my sincere gratitude to ${patient} and the family for their cooperation and for the information provided during the care study.`,
+            ackTutors: '[insert the tutor or supervisor names and the guidance they provided]',
+            ackWardStaff: '[insert the ward staff and facility whose support should be acknowledged]',
+            ackOthers: '[insert any family members, colleagues, or friends to acknowledge]',
+          },
+        },
+        {
+          sectionId: 'P.3',
+          data: {
+            pseudonym: patient,
+            interactionStart: `The interaction started around ${admission} during the patient\'s care and continued through the documented care period.`,
+            conditionOnAdmission: `The patient was admitted with ${complaint}.`,
+            chiefComplaint: complaint,
+            conditionOnDischarge: discharge,
+            areasCovered: 'The report covers assessment, analysis of data, planning, implementation, evaluation, summary, conclusion, and recommendations for the patient and family care study.',
+          },
+        },
+      ]);
+      toast('Previewing Additional Pages suggestions', {
+        description: 'Review each staged page and replace bracketed prompts before pressing Done. Nothing is saved until you apply it.',
+      });
+    } finally {
+      setAdditionalPagesBusy(false);
     }
   };
 
@@ -4490,11 +4579,32 @@ function Home() {
     // navigate to another chapter before it resolves.
     const targetChapterIndex = activeChapter;
     const chapter = chapters[targetChapterIndex];
+    const bibliographyPopulated = isFrontMatterChapter(targetChapterIndex)
+      ? populateAvailableBibliography()
+      : false;
+    const studyContext = chapters
+      .flatMap((candidateChapter) =>
+        candidateChapter.sections
+          .filter((section) => !['6.1', '6.2'].includes(section.id) && section.draft.trim())
+          .map((section) => `${candidateChapter.name} — ${section.id} ${section.heading}\n${section.draft.trim()}`),
+      )
+      .join('\n\n');
     const readySections = chapter.sections
       .map((section, sectionIndex) => ({ section, sectionIndex }))
-      .filter(({ section }) => sectionFilledCount(section) > 0 && !section.draft.trim());
+      .filter(
+        ({ section }) =>
+          !section.draft.trim() &&
+          (sectionFilledCount(section) > 0 ||
+            (hasCompletedStudyContext && isStudySynthesisSection(section))),
+      );
     const needsIntro = !isFrontMatterChapter(targetChapterIndex) && !chapter.intro.trim();
     if (readySections.length === 0 && !needsIntro) {
+      if (bibliographyPopulated) {
+        toast.success('Bibliography populated', {
+          description: 'Available references from drafted sections were added to section 6.3.',
+        });
+        return;
+      }
       toast('Nothing to draft in this chapter', {
         description:
           'Collect data in at least one section that has no draft yet, then try again.',
@@ -4549,7 +4659,9 @@ function Home() {
       for (const { section, sectionIndex } of readySections) {
         setChapterDraftProgress({ done, total, current: `${section.id} ${section.heading}` });
         try {
-          const composed = composeSectionInput(section);
+          const composed = isStudySynthesisSection(section)
+            ? `COMPLETED CARE-STUDY SECTIONS:\n${studyContext}`
+            : composeSectionInput(section);
           // Pure row-data sections (2.2 drugs, 3.2 care plan) are drafted as
           // tables; mixed sections stay prose. 4.3 is row-data but the school's
           // samples write it as per-visit narrative — keep it prose too.
@@ -5570,11 +5682,18 @@ function Home() {
   const collectedCount = sectionCollectedCount(currentSection);
   const collectedTotal = sectionCollectedTotal(currentSection);
   const rowCount = currentSection.rowData.length;
-  // Whole-chapter drafting: enabled when there is at least one section with
-  // collected data that has no draft yet (or a missing chapter introduction
-  // that can be generated).
+  const isStudySynthesisSection = (section: Section) =>
+    section.id === '6.1' || section.id === '6.2';
+  const hasCompletedStudyContext = chapters.some((candidateChapter) =>
+    candidateChapter.sections.some((section) => section.draft.trim().length > 0),
+  );
+  // Whole-chapter drafting: enabled when there is collected data, a missing
+  // chapter introduction, or a synthesis page with completed study context.
   const chapterReadyCount = currentChapter.sections.filter(
-    (section) => sectionFilledCount(section) > 0 && !section.draft.trim(),
+    (section) =>
+      !section.draft.trim() &&
+      (sectionFilledCount(section) > 0 ||
+        (hasCompletedStudyContext && isStudySynthesisSection(section))),
   ).length;
   const chapterIntroPending =
     !isFrontMatterChapter(activeChapter) && !currentChapter.intro.trim();
@@ -5995,6 +6114,19 @@ function Home() {
               </span>
             </p>
             <div className="flex shrink-0 items-center gap-2">
+              {isFrontMatterChapter(activeChapter) && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7 gap-0 p-0 text-primary"
+                  onClick={recommendAdditionalPages}
+                  disabled={aiBusy}
+                  title="Recommend Additional Pages fields"
+                  aria-label="Recommend Additional Pages fields"
+                >
+                  {additionalPagesBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+                </Button>
+              )}
               {isChapter2 && (
                 <Button
                   variant="outline"
@@ -6090,7 +6222,8 @@ function Home() {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="size-3.5" /> Draft all
+                        <Sparkles className="size-3.5" />
+                        {isFrontMatterChapter(activeChapter) ? 'Draft pages' : 'Draft all'}
                     </>
                   )}
                 </Button>
@@ -6279,7 +6412,8 @@ function Home() {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="size-3.5" /> Draft chapter
+                        <Sparkles className="size-3.5" />
+                        {isFrontMatterChapter(activeChapter) ? 'Draft pages' : 'Draft chapter'}
                       </>
                     )}
                   </Button>

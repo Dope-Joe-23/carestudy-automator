@@ -57,11 +57,22 @@ introduction.
 (definition, pathophysiology, drug class, normal range, standard intervention) \
 that comes from a reference chunk, attach that chunk's citation in EXACTLY the \
 format shown in the REFERENCE MATERIAL block, e.g. "(WHO, 2024)", "(MedlinePlus, 2026)".
+- DEFINITIONS AND FRAMING STATEMENTS (reputable-source allow-list): where the \
+REFERENCE MATERIAL does not cover a topic, you MAY supply the opening definition \
+or framing statement of a section or chapter from a well-established reputable \
+source, but every such statement MUST carry an in-text APA citation chosen \
+EXACTLY from this allow-list: "(Jarvis, 2020)", "(Santrock, 2022)", \
+"(Erikson, 1963)", "(Potter & Perry, 2021)", "(Open RN, 2024)", "(NANDA-I, 2021)", \
+"(Hockenberry et al., 2021)". Every definition or framing statement you write \
+from your own knowledge must be cited this way — never output an uncited \
+definition. Sources you cite from the allow-list are added to the section's \
+reference list automatically, so the REFERENCES page always matches.
 - NEVER fabricate a citation. Cite only sources that appear in the REFERENCE \
-MATERIAL block. Do not invent author names, years, or sources, and do not put \
-a citation on patient-specific facts from the student's notes. If a general \
-fact has no supporting reference chunk, state it plainly without inventing a \
-citation.
+MATERIAL block or in the reputable-source allow-list above. Do not invent \
+author names, years, or sources, and do not put a citation on patient-specific \
+facts from the student's notes. If a general fact is neither in a reference \
+chunk nor covered by an allow-list source, state it plainly without inventing \
+a citation.
 - Do not mention the reference material, example passages, or any source file \
 names in the draft ("see reference" and similar phrases are forbidden).
 - When prose is required: write complete, grammatically correct sentences \
@@ -111,8 +122,19 @@ These sections contain ONLY the patient's own collected data. You MUST:
 - Do NOT compare the patient's data to general standards or norms.
 - Present the data in clear, factual prose — the student collected this \
   information and you are writing it up, not analysing it.
-- The ONLY exception is the Admission of the Patient section (1.8), where \
-  you may add recommended/labelled care when notes are incomplete.
+- The ONLY exceptions are the Admission of the Patient section (1.8), where \
+  you may add recommended/labelled care when notes are incomplete, and the \
+  Patient's Developmental History section (1.4), which follows its own FORMAT \
+  instruction: the documented milestones are compared with Erik Erikson's \
+  stages of psychosocial development and the theory is cited.
+
+ADDITIONAL PAGES:
+- For Preface, Acknowledgement, and Introduction pages, follow the dedicated \
+    FORMAT instruction. Do not add clinical definitions, literature-review \
+    sections, or invented patient facts.
+- For Summary, Conclusion, and Recommendations pages, use only the completed \
+    study context supplied in the notes. Do not introduce facts that are absent \
+    from that context.
 
 INFERENCE-ALLOWED SECTIONS (sections not marked DATA_ONLY):
 These sections may include evidence-based inferences, analysis, clinical \
@@ -265,14 +287,196 @@ FORMAT_HOME_VISIT = (
     "visits as a pipe table."
 )
 
+FORMAT_PREFACE = (
+    "FORMAT (Preface): Write one concise first-person academic paragraph. Explain "
+    "why the care study was carried out, its necessity, and how it benefits the "
+    "student, using only the supplied fields. Do not add a clinical definition, "
+    "citation, heading, or bullet list."
+)
+
+FORMAT_ACKNOWLEDGEMENT = (
+    "FORMAT (Acknowledgement): Write a warm but formal first-person acknowledgement "
+    "in flowing prose. Thank each person or group represented in the supplied fields "
+    "without inventing names, roles, events, or contributions. Do not add a clinical "
+    "definition, citation, heading, or bullet list."
+)
+
+FORMAT_INTRODUCTION = (
+    "FORMAT (Introduction): Write a coherent formal introduction in flowing prose "
+    "using the supplied pseudonym, interaction history, admission condition, chief "
+    "complaint, discharge condition, and areas covered. Preserve every supplied "
+    "fact, do not invent missing details, and do not add a clinical definition, "
+    "citation, heading, or bullet list."
+)
+
+FORMAT_SUMMARY = (
+    "FORMAT (Study Summary): Write a concise third-person summary of the completed "
+    "care study in flowing prose. Cover the patient's documented presentation, key "
+    "assessment findings, care planning, implementation, evaluation, and outcome "
+    "only when present in the supplied study context. Do not invent facts or add "
+    "citations. Do not use headings, bullets, or a table."
+)
+
+FORMAT_CONCLUSION = (
+    "FORMAT (Conclusion and Recommendations): Write formal flowing prose with two "
+    "bold subheadings, **Conclusion** and **Recommendations**. Base both parts only "
+    "on the supplied completed-study context. State what the care study established "
+    "and give practical recommendations supported by that context. Do not invent "
+    "patient facts, citations, or completed actions."
+)
+
+# ---------------------------------------------------------------------------
+# Reputable-source allow-list for LLM-supplied definitions
+# ---------------------------------------------------------------------------
+# Most section/chapter-intro opening definitions in the sample care studies
+# come from Open RN, but the model is free to frame a topic from any of the
+# reputable nursing/developmental-psychology sources below — as long as it
+# always cites in-text (APA style) and the cited source lands in the
+# section's reference list (see append_reputable_sources, called from
+# draft_section).
+REPUTABLE_SOURCES: Dict[str, dict] = {
+    "jarvis": {
+        "label": (
+            "Jarvis, C. (2020). Physical examination and health assessment "
+            "(8th ed.). Elsevier."
+        ),
+        "inText": "(Jarvis, 2020)",
+        "url": None,
+    },
+    "santrock": {
+        "label": (
+            "Santrock, J. W. (2022). A topical approach to life-span development "
+            "(11th ed.). McGraw-Hill Education."
+        ),
+        "inText": "(Santrock, 2022)",
+        "url": None,
+    },
+    "erikson": {
+        "label": (
+            "Erikson, E. H. (1963). Childhood and society (2nd ed.). W. W. "
+            "Norton & Company."
+        ),
+        "inText": "(Erikson, 1963)",
+        "url": None,
+    },
+    "potter_perry": {
+        "label": (
+            "Potter, P. A., & Perry, A. G. (2021). Fundamentals of nursing (10th "
+            "ed.). Elsevier."
+        ),
+        "inText": "(Potter & Perry, 2021)",
+        "url": None, 
+    },
+    "open_rn": {
+        "label": (
+            "Open RN. (2024). Nursing fundamentals (2nd ed.). WisTech Open. "
+            "Retrieved from https://wtcs.pressbooks.pub/nursingfundamentals/"
+        ),
+        "inText": "(Open RN, 2024)",
+        "url": "https://wtcs.pressbooks.pub/nursingfundamentals/",
+    },
+    "nanda": {
+        "label": (
+            "Herdman, T. H., Kamitsuru, S., & Lopes, C. T. (Eds.). (2021). "
+            "NANDA International nursing diagnoses: Definitions and "
+            "classification, 2021–2023 (12th ed.). Thieme."
+        ),
+        "inText": "(NANDA-I, 2021)",
+    },
+    "hockenberry": {
+        "label": (
+            "Hockenberry, M. J., Rodgers, C. C., & Wilson, D. (2021). Wong's "
+            "essentials of pediatric nursing (11th ed.). Elsevier."
+        ),
+        "inText": "(Hockenberry et al., 2021)",
+        "url": None,
+    },
+}
+
+# Order allow-list entries are listed in prompt text and deduped into the
+# references list.
+REPUTABLE_SOURCE_ORDER = ("jarvis", "santrock", "erikson", "potter_perry", "open_rn", "nanda", "hockenberry")
+
+
+def append_reputable_sources(references: List[dict], draft: str) -> List[dict]:
+    """Add allow-list sources the draft actually cited to the references list.
+
+    The model may open a section with a definition from Jarvis, Open RN,
+    Santrock, Erikson, etc. even when no retrieved chunk carries that source,
+    so the in-text marker would otherwise dangle on the REFERENCES page. This
+    scans the finished draft for each allow-list in-text marker and appends the
+    source's full APA entry when (a) the draft cites it and (b) the references
+    list does not already carry the same in-text marker (the dedupe in
+    build_references keeps a bundled-library entry authoritative).
+    """
+    existing_intext = {ref.get("inText") for ref in references}
+    for key in REPUTABLE_SOURCE_ORDER:
+        source = REPUTABLE_SOURCES[key]
+        in_text = source["inText"]
+        if in_text in existing_intext:
+            continue
+        if in_text in draft:
+            references.append({
+                "label": source["label"],
+                "inText": in_text,
+                "url": source.get("url"),
+            })
+    return references
+
+
+# ---------------------------------------------------------------------------
+# Developmental History (1.4) — Erikson-grounded format
+# ---------------------------------------------------------------------------
+# The sample care studies open 1.4 with growth/development/maturation
+# definitions (Santrock; Tanner) and then benchmark every stage of the
+# patient's documented milestones against Erik Erikson's stages of
+# psychosocial development, citing both. Section 1.4 is therefore NOT a
+# plain data-only recap: it must analyse the collected milestones against
+# the theory and cite it.
+ERIKSON_STAGES = (
+    "Erik Erikson's stages of psychosocial development (Erikson, 1963): "
+    "1) Trust versus mistrust (birth–18 months). 2) Autonomy versus shame and "
+    "doubt (18 months–3 years). 3) Initiative versus guilt (3–5 years). "
+    "4) Industry versus inferiority (6–11 years). 5) Identity versus role "
+    "confusion (12–18 years). 6) Intimacy versus isolation (18–40 years). "
+    "7) Generativity versus stagnation (40–65 years). 8) Ego integrity versus "
+    "despair (65 years to death)."
+)
+
+FORMAT_DEVELOPMENTAL_HISTORY = (
+    "FORMAT (Patient's Developmental History): This section MUST be built around "
+    "Erik Erikson's theory of psychosocial development. Write it in this order: "
+    "1) Open with short definitions of human growth, human development, and "
+    "maturation, each carrying an in-text citation from the REFERENCE MATERIAL "
+    "or the reputable-source allow-list (e.g. \"(Santrock, 2022)\"). 2) Report the "
+    "patient's documented developmental data (pregnancy and delivery, "
+    "milestones — sitting, crawling, walking, teething, speech, weaning — "
+    "childhood illnesses and immunisation, education, puberty and, for older "
+    "patients, menopausal/ageing milestones) exactly as provided in the notes. "
+    "3) Compare each documented stage of the patient's growth with the "
+    "corresponding theoretical stage of Erik Erikson's work: state the stage "
+    "the patient's age falls under, describe what successful vs unsuccessful "
+    "resolution looks like according to Erikson (Erikson, 1963), and assess "
+    "whether the patient's documented milestones indicate successful or "
+    "unsuccessful resolution of that stage. Cite \"(Erikson, 1963)\" for the "
+    "theory and \"(Santrock, 2022)\" for general developmental facts. Every "
+    "theoretical claim MUST carry its citation. Write flowing narrative prose "
+    "with bold subheadings (**Growth and development**, **Developmental "
+    "milestones**, **Developmental theory comparison**) — never a table, never "
+    "a \"Label: value\" data dump. Keep every documented milestone fact exactly "
+    "as provided; never invent milestones the notes do not contain."
+)
+
 CHAPTER_INTRO_FORMAT = (
     "FORMAT (Chapter Introduction): Write ONE short paragraph (3-5 sentences) "
     "that opens this chapter of the patient/family care study, in the formal "
     "academic style of the sample care studies. State what the chapter covers "
     "and why it matters to the study. Begin with a definition or framing "
-    "statement; where the reference material covers the chapter's topic, include "
-    "one in-text citation in the format shown in the REFERENCE MATERIAL block "
-    "(never fabricate a citation). Do not use subheadings, bullet lists, or "
+    "statement that ALWAYS carries an in-text citation — from the REFERENCE "
+    "MATERIAL block where it covers the topic, otherwise from the reputable-"
+    "source allow-list (e.g. \"(Open RN, 2024)\", \"(Jarvis, 2020)\", \"(Potter "
+    "& Perry, 2021)\") — in APA style. Never fabricate a citation and never "
+    "leave the definition uncited. Do not use subheadings, bullet lists, or "
     "tables, and do not mention patient-specific facts from the notes."
 )
 
@@ -312,7 +516,9 @@ LITERATURE_REVIEW_FORMAT = (
     "one citation in every subsection and several in the longer ones; a deep "
     "review reads as an interplay of statement and source. Use the EXACT "
     "citation formats given in the REFERENCE MATERIAL block, never fabricate a "
-    "citation, and never cite a source that is not in the block."
+    "citation, and never cite a source that is neither in the block nor in the "
+    "reputable-source allow-list — the allow-list may only be used for the "
+    "**Definition** subheading when the reference material lacks a definition."
 )
 
 # A literature review has ten subsections and must be citation-dense, so it
@@ -497,6 +703,37 @@ def is_home_visit_section(heading: str) -> bool:
     )
 
 
+def is_developmental_history(heading: str) -> bool:
+    """Whether a heading is section 1.4 Patient's Developmental History.
+
+    The Studio sends headings without the "1.4" numeric prefix
+    (e.g. "Patient's Developmental History"), so match both forms. This
+    section gets the Erikson-grounded format instruction.
+    """
+    normalized = heading.strip().lower()
+    return (
+        normalized.startswith("1.4")
+        or "developmental history" in normalized
+        or "developmental milestones" in normalized
+    )
+
+
+def additional_page_format(heading: str):
+    """Return the dedicated format for a front-matter or closing page."""
+    normalized = (heading or "").strip().lower()
+    if normalized.startswith("p.1") or normalized == "preface":
+        return FORMAT_PREFACE
+    if normalized.startswith("p.2") or "acknowledgement" in normalized or "acknowledgment" in normalized:
+        return FORMAT_ACKNOWLEDGEMENT
+    if normalized.startswith("p.3") or normalized == "introduction":
+        return FORMAT_INTRODUCTION
+    if normalized.startswith("6.1") or normalized == "summary":
+        return FORMAT_SUMMARY
+    if normalized.startswith("6.2") or "conclusion" in normalized or "recommendation" in normalized:
+        return FORMAT_CONCLUSION
+    return None
+
+
 def build_prompt(
     heading: str,
     patient_notes: str,
@@ -555,6 +792,8 @@ def build_prompt(
     is_care_plan_section = "care plan" in heading_lower
     if chapter_intro:
         format_instruction = CHAPTER_INTRO_FORMAT
+    elif additional_page_format(heading):
+        format_instruction = additional_page_format(heading)
     elif is_care_plan_section:
         format_instruction = FORMAT_CARE_PLAN
     elif tabular:
@@ -569,6 +808,10 @@ def build_prompt(
         format_instruction = FORMAT_HOME_VISIT
     elif is_admission_section(heading):
         format_instruction = ADMISSION_FORMAT
+    elif is_developmental_history(heading):
+        # 1.4 is theory-anchored: the student's milestones are benchmarked
+        # against Erikson's stages of psychosocial development, with citations.
+        format_instruction = FORMAT_DEVELOPMENTAL_HISTORY + "\n\n" + ERIKSON_STAGES
     else:
         format_instruction = FORMAT_PROSE
     if not chapter_intro and is_literature_review(heading, tabular):
@@ -1002,7 +1245,9 @@ def draft_section(
     # All model traffic goes through the shared gateway (model_gateway.py):
     # ordered candidates from ANTHROPIC_MODEL / ANTHROPIC_FALLBACK_MODELS, per-
     # model retries with backoff, fail-fast on retired model slugs, and a
-    # diagnostic RuntimeError naming every attempted model. The previous    # inline loop had zero retries, so a single transient 429 from a free-tier    # provider killed the whole request even though the next model was healthy.
+    # diagnostic RuntimeError naming every attempted model. The previous
+    # inline loop had zero retries, so a single transient 429 from a free-tier
+    # provider killed the whole request even though the next model was healthy.
     draft = _chat_model(
         SYSTEM_PROMPT,
         prompt,
@@ -1070,6 +1315,12 @@ def draft_section(
     # Word-count validation: check the final draft against the target range
     # and log a warning when it falls outside.  The draft is always returned
     # regardless of word count — the warning is informational only.
+    # The model may have cited a reputable-source allow-list entry (Jarvis,
+    # Santrock, Erikson, Open RN, ...) that no retrieved chunk carried. Append
+    # those cited sources so every in-text citation resolves on the REFERENCES
+    # page. Cheap scan; dedupe keeps bundled-library entries authoritative.
+    references = append_reputable_sources(references, draft)
+
     wc, wc_min, wc_max, wc_status = _validate_word_count(
         heading, draft, tabular=tabular, chapter_intro=chapter_intro,
     )

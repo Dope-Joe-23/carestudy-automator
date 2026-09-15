@@ -873,6 +873,39 @@ def _add_toc(doc, chapters, theme):
     doc.add_page_break()
 
 
+def _collect_tables(chapters):
+    """Return table titles for structured and markdown table sections."""
+    tables = []
+    for chapter in chapters:
+        for section in chapter.get("sections", []):
+            rows = section.get("rows") or {}
+            draft = (section.get("draft") or "").strip()
+            has_structured_table = bool(rows.get("data"))
+            has_markdown_table = _draft_table_row_count(draft) > 0
+            if not has_structured_table and not has_markdown_table:
+                continue
+            section_id = section.get("id", "").strip()
+            heading = section.get("heading", "").strip()
+            title = " ".join(part for part in (section_id, heading) if part).strip()
+            if title:
+                tables.append(title)
+    return tables
+
+
+def _add_list_of_tables(doc, chapters, theme):
+    """Add a static list of the tables present in the exported study."""
+    tables = _collect_tables(chapters)
+    if not tables:
+        return
+    heading = doc.add_paragraph(style=STYLE_TOC_TITLE)
+    _add_run(heading, "LIST OF TABLES", theme)
+    for index, title in enumerate(tables, start=1):
+        paragraph = doc.add_paragraph(style=STYLE_BODY)
+        paragraph.paragraph_format.left_indent = Inches(0.3)
+        _add_run(paragraph, f"Table {index}. {title}", theme)
+    doc.add_page_break()
+
+
 def _strip_duplicate_heading(draft, section):
     """Drop a leading draft line that merely repeats the section heading."""
     lines = draft.split("\n")
@@ -1157,6 +1190,64 @@ def _collect_references(chapters):
     return refs
 
 
+def _reference_key(label):
+    """Normalize a bibliography label for duplicate detection."""
+    return re.sub(r"\s+", " ", (label or "")).strip().casefold()
+
+
+def _populate_bibliography(chapters):
+    """Merge generated references into the editable Bibliography section.
+
+    Draft references are authoritative for sources actually cited in the study;
+    manually entered rows are retained so students can add sources not yet
+    represented by a drafted section.
+    """
+    generated = _collect_references(chapters)
+    populated = []
+
+    for chapter in chapters:
+        new_chapter = dict(chapter)
+        new_sections = []
+        for section in chapter.get("sections", []):
+            if section.get("id") != "6.3":
+                new_sections.append(section)
+                continue
+
+            new_section = dict(section)
+            rows = dict(section.get("rows") or {})
+            existing_rows = []
+            seen = set()
+            for row in rows.get("data") or []:
+                if isinstance(row, dict):
+                    label = str(row.get("reference") or "").strip()
+                    normalized_row = [label]
+                elif isinstance(row, (list, tuple)):
+                    label = str(row[0] if row else "").strip()
+                    normalized_row = list(row)
+                else:
+                    label = str(row).strip()
+                    normalized_row = [label]
+                if not label or _reference_key(label) in seen:
+                    continue
+                seen.add(_reference_key(label))
+                existing_rows.append(normalized_row)
+
+            for label in generated:
+                key = _reference_key(label)
+                if key and key not in seen:
+                    existing_rows.append([label])
+                    seen.add(key)
+
+            rows["data"] = existing_rows
+            new_section["rows"] = rows
+            new_sections.append(new_section)
+
+        new_chapter["sections"] = new_sections
+        populated.append(new_chapter)
+
+    return populated
+
+
 def _has_bibliography(chapters):
     """True when the student's Bibliography section (6.3) has entries. The
     curated bibliography then replaces the auto-generated REFERENCES page, so
@@ -1206,7 +1297,7 @@ def build_docx(payload):
     section.right_margin = Inches(theme.right_margin)
 
     title = payload.get("title") or {}
-    chapters = payload.get("chapters") or []
+    chapters = _populate_bibliography(payload.get("chapters") or [])
     scope = payload.get("scope") or {}
     scope_type = scope.get("type") or "full"
     # Unknown/invalid scope types render the full study — degrade gracefully
@@ -1232,6 +1323,7 @@ def build_docx(payload):
     if scope_type == "full":
         _add_title_page(doc, title, theme)
         _add_toc(doc, chapters, theme)
+        _add_list_of_tables(doc, chapters, theme)
         for chapter_index, chapter in enumerate(chapters):
             _add_chapter(doc, chapters, chapter_index, chapter, theme)
         if not _has_bibliography(chapters):

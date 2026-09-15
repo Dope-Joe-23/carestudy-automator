@@ -501,8 +501,13 @@ _SECTION_CLASSIFICATION: dict = {
     "family's medical/surgical history": "data_only",
     "family\u2019s socio-economic history": "data_only",
     "family's socio-economic history": "data_only",
-    "patient\u2019s developmental history": "data_only",
-    "patient's developmental history": "data_only",
+    "patient\u2019s developmental history": "allows_inference",
+    "patient's developmental history": "allows_inference",
+    # 1.4 is theory-anchored: milestones are benchmarked against Erikson's
+    # stages of psychosocial development, with citations — analysis is the
+    # point of the section, not a data-only recap.
+    "patient\u2019s developmental": "allows_inference",
+    "patient's developmental": "allows_inference",
     "patient\u2019s lifestyle": "data_only",
     "patient's lifestyle": "data_only",
     "past medical/surgical/obstetric history": "data_only",
@@ -591,8 +596,12 @@ WORD_COUNT_RANGES: dict = {
     "family\u2019s socio-economic history": (75, 200),
     "family's socio-economic history": (75, 200),
     # 1.4 Patient's Developmental History: observed 114–687 words (6 samples)
-    "patient\u2019s developmental history": (100, 500),
-    "patient's developmental history": (100, 500),
+    # 1.4 Patient's Developmental History: observed 114–687 words (6 samples).
+    # Raised to 150–800: the section now benchmarks milestones against
+    # Erikson's psychosocial stages with citations, adding theory text on top
+    # of the collected data.
+    "patient\u2019s developmental history": (150, 800),
+    "patient's developmental history": (150, 800),
     # 1.5 Patient's Lifestyle & Hobbies: observed 138–408 words (5 samples)
     "patient\u2019s lifestyle": (130, 500),
     "patient's lifestyle": (130, 500),
