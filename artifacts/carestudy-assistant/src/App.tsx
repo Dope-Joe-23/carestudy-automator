@@ -311,6 +311,7 @@ const nextRowId = () => ++rowIdCounter;
  *  positions and numbering are unchanged from the pre-merge layout. */
 function exportChaptersForDocument(chapters: Chapter[]): Chapter[] {
   const out: Chapter[] = [];
+  const closingChapters: Chapter[] = [];
   for (const chapter of chapters) {
     const hasClosing =
       chapter.isFrontMatter && chapter.sections.some((section) => section.id.startsWith('6.'));
@@ -329,9 +330,10 @@ function exportChaptersForDocument(chapters: Chapter[]): Chapter[] {
       sections: chapter.sections.filter((section) => section.id.startsWith('6.')),
     };
     if (preliminary.sections.length > 0) out.push(preliminary);
-    if (closing.sections.length > 0) out.push(closing);
+    // The editor groups these pages, but Chapter VI belongs after Chapter V.
+    if (closing.sections.length > 0) closingChapters.push(closing);
   }
-  return out;
+  return [...out, ...closingChapters];
 }
 
 function makeChapters(): Chapter[] {
@@ -649,6 +651,30 @@ function composeSectionInput(section: Section): string {
   if (notes) parts.push(`Free-form clinical notes:\n${notes}`);
 
   return parts.join('\n');
+}
+
+/** Chapter 2.1 must compare the patient against the student's own Chapter 1
+ * literature review. Supplying that review as a separate benchmark prevents a
+ * generic "not specified in the references" draft when 1.10 is already filled. */
+function composeDraftInput(section: Section, chapters: Chapter[]): string {
+  const sectionInput = composeSectionInput(section);
+  if (section.id !== '2.1') return sectionInput;
+
+  const literatureReview = chapters
+    .flatMap((chapter) => chapter.sections)
+    .find((candidate) => candidate.id === '1.10');
+  if (!literatureReview) return sectionInput;
+
+  const benchmark = [composeSectionInput(literatureReview), literatureReview.draft.trim()]
+    .filter(Boolean)
+    .join('\n\n');
+  if (!benchmark) return sectionInput;
+
+  return [
+    sectionInput,
+    'LITERATURE REVIEW BENCHMARK (Chapter 1.10 — use this to compare standards; it is not patient-specific data):',
+    benchmark,
+  ].filter(Boolean).join('\n\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -2838,6 +2864,8 @@ function Home() {
   const [implementationProposalOpen, setImplementationProposalOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [showPreliminaryPages, setShowPreliminaryPages] = useState(false);
+  const [previewSearch, setPreviewSearch] = useState('');
+  const [previewSearchIndex, setPreviewSearchIndex] = useState(0);
   const [exportMeta, setExportMeta] = useState({
     patientName: '',
     diagnosis: '',
@@ -3555,6 +3583,104 @@ function Home() {
   const studyFacts = useMemo(() => deriveStudyFacts(chapters, exportMeta), [chapters, exportMeta]);
   const studyFactIssues = useMemo(() => validateStudyFacts(studyFacts), [studyFacts]);
   const allSections = useMemo(() => chapters.flatMap((chapter) => chapter.sections), [chapters]);
+
+  // Search is occurrence-based (not merely one result per matching section),
+  // so Enter can walk through every use of a word in document order.
+  const previewSearchResults = useMemo(() => {
+    const query = previewSearch.trim().toLocaleLowerCase();
+    if (!query) return [];
+    return chapters.flatMap((chapter, chapterIndex) =>
+      chapter.sections.flatMap((section, sectionIndex) => {
+        const searchable = [
+          chapter.name,
+          section.id,
+          section.heading,
+          section.draft,
+          section.notes,
+          ...Object.values(section.data),
+          ...section.rowData.flatMap((row) => row.cells),
+        ].join(' ').toLocaleLowerCase();
+        let from = 0;
+        let count = 0;
+        while ((from = searchable.indexOf(query, from)) !== -1) {
+          count += 1;
+          from += query.length;
+        }
+        const chapterNumber = chapters.slice(0, chapterIndex).filter((item) => !item.isFrontMatter).length + 1;
+        const chapterLabel = chapter.isFrontMatter ? chapter.name : `Chapter ${chapterNumber}`;
+        return Array.from({ length: count }, (_, matchIndex) => ({
+          chapterIndex,
+          sectionIndex,
+          matchIndex,
+          location: `${chapterLabel} · ${section.id} ${section.heading}`,
+        }));
+      }),
+    );
+  }, [chapters, previewSearch]);
+
+  const scrollPreviewTo = (targetId: string) => {
+    const target = document.getElementById(targetId);
+    // The document is inside the inner scroller; the outer .print-scroll is
+    // only the layout shell. Scrolling that shell leaves the visible document
+    // unchanged, which made the chapter buttons appear to stop working.
+    const scrollHost = document.getElementById('preview-document-scroll');
+    if (!target || !(scrollHost instanceof HTMLElement)) return;
+    const hostRect = scrollHost.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    scrollHost.scrollTo({
+      top: scrollHost.scrollTop + targetRect.top - hostRect.top - 24,
+      behavior: 'smooth',
+    });
+  };
+
+  const focusPreviewSearchResult = (result: (typeof previewSearchResults)[number]) => {
+    const targetId = `preview-section-${result.chapterIndex}-${result.sectionIndex}`;
+    scrollPreviewTo(targetId);
+    const query = previewSearch.trim().toLocaleLowerCase();
+    if (!query) return;
+    window.setTimeout(() => {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT);
+      let seen = 0;
+      let node = walker.nextNode();
+      while (node) {
+        const text = node.textContent ?? '';
+        let start = 0;
+        let found = text.toLocaleLowerCase().indexOf(query, start);
+        while (found !== -1) {
+          if (seen === result.matchIndex) {
+            const range = document.createRange();
+            range.setStart(node, found);
+            range.setEnd(node, found + query.length);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            return;
+          }
+          seen += 1;
+          start = found + query.length;
+          found = text.toLocaleLowerCase().indexOf(query, start);
+        }
+        node = walker.nextNode();
+      }
+    }, 280);
+  };
+
+  const movePreviewSearch = (direction: 1 | -1 = 1) => {
+    if (!previewSearchResults.length) return;
+    const next = (previewSearchIndex + direction + previewSearchResults.length) % previewSearchResults.length;
+    setPreviewSearchIndex(next);
+    focusPreviewSearchResult(previewSearchResults[next]);
+  };
+
+  // Start every new query at its first visible occurrence, then let Enter
+  // advance through the remaining matches in order.
+  useEffect(() => {
+    if (!previewSearch.trim() || !previewSearchResults.length) return;
+    setPreviewSearchIndex(0);
+    focusPreviewSearchResult(previewSearchResults[0]);
+  }, [previewSearch, previewSearchResults]);
   // Every chapter gets a tab — including the merged front-matter chapter
   // ("Additional Pages"), which renders as 'Pages' in the strip.
   const navigableChapterIndices = chapters.map((_, index) => index);
@@ -3828,6 +3954,14 @@ function Home() {
     if (!chapter2Recommendations) return;
     setChapter2RecommendationOpen(false);
     beginStagedPreview([
+      {
+        sectionId: '2.1',
+        data: chapter2Recommendations.section_21,
+      },
+      {
+        sectionId: '2.2',
+        rowData: chapter2Recommendations.section_22.rows,
+      },
       {
         sectionId: '2.3',
         data: {
@@ -4385,7 +4519,7 @@ function Home() {
     setIsDrafting(true);
     setDraftError(null);
     try {
-      const composed = composeSectionInput(currentSection);
+      const composed = composeDraftInput(currentSection, chapters);
       // Pure row-data sections (2.2 drugs, 3.2 care plan) are drafted as tables.
       // Mixed sections like 5.1 (narrative fields + an outcomes grid) stay prose
       // — their grid still exports as a structured table. 4.3 stays prose too:
@@ -4661,7 +4795,7 @@ function Home() {
         try {
           const composed = isStudySynthesisSection(section)
             ? `COMPLETED CARE-STUDY SECTIONS:\n${studyContext}`
-            : composeSectionInput(section);
+            : composeDraftInput(section, chapters);
           // Pure row-data sections (2.2 drugs, 3.2 care plan) are drafted as
           // tables; mixed sections stay prose. 4.3 is row-data but the school's
           // samples write it as per-visit narrative — keep it prose too.
@@ -6140,19 +6274,7 @@ function Home() {
                   {chapter2RecommendationBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
                 </Button>
               )}
-              {isChapter2 && currentSection.id === '2.2' && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-7 w-7 gap-0 p-0 text-primary"
-                  onClick={() => void recommendPharmacology()}
-                  disabled={aiBusy}
-                  title="Pharmacology rows"
-                  aria-label="Pharmacology rows"
-                >
-                  {pharmacologyBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
-                </Button>
-              )}                {isChapter3 && (
+              {isChapter3 && (
                 <Button variant="outline" size="icon" className="h-7 w-7 gap-0 p-0 text-primary" onClick={() => void recommendChapter3()} disabled={aiBusy} title="Build from Ch. 2" aria-label="Build from Ch. 2">
                   {planningBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
                 </Button>
@@ -6480,12 +6602,13 @@ function Home() {
                   <Sparkles className="size-4 text-primary" /> Chapter 2 recommendations
                 </DialogTitle>
                 <DialogDescription>
-                  These suggestions were derived from the collected Chapter 1 assessment. Review them before applying them to sections 2.3, 2.4, and 2.5.
+                  These suggestions were derived from the collected Chapter 1 assessment and literature review. Review them before applying them to all Chapter 2 sections.
                 </DialogDescription>
               </DialogHeader>
               {chapter2Recommendations && (
                 <div className="space-y-3">
                   {([
+                    ['2.1 · Comparison with standards', chapter2Recommendations.section_21],
                     ['2.3 · Health problems', chapter2Recommendations.section_23],
                     ['2.4 · Patient/family strengths', chapter2Recommendations.section_24],
                     ['2.5 · Nursing diagnoses', chapter2Recommendations.section_25],
@@ -6497,6 +6620,17 @@ function Home() {
                       </pre>
                     </div>
                   ))}
+                  <div className="rounded-lg border p-3">
+                    <h3 className="text-sm font-semibold">2.2 · Pharmacology of drugs prescribed</h3>
+                    {chapter2Recommendations.section_22.rows.length > 0 ? (
+                      <div className="mt-2 overflow-x-auto">
+                        <table className="w-full min-w-[760px] text-[11px]">
+                          <thead><tr className="border-b">{['Drug', 'Class', 'Dose, route & frequency', 'Indication', 'Side effects', 'Nursing responsibility'].map((heading) => <th key={heading} className="px-2 py-1 text-left">{heading}</th>)}</tr></thead>
+                          <tbody>{chapter2Recommendations.section_22.rows.map((row, index) => <tr key={index} className="border-b align-top last:border-0">{row.map((cell, cellIndex) => <td key={cellIndex} className="px-2 py-1 text-muted-foreground">{cell}</td>)}</tr>)}</tbody>
+                        </table>
+                      </div>
+                    ) : <p className="mt-2 text-xs text-muted-foreground">No documented drugs were available to propose pharmacology rows.</p>}
+                  </div>
                   <div className="flex justify-end gap-2 pt-2">
                     <Button variant="outline" onClick={() => setChapter2RecommendationOpen(false)}>
                       Cancel
@@ -7930,41 +8064,6 @@ function Home() {
           }
         >
           <div className="no-print shrink-0 border-b bg-background">
-            <div className="mx-auto w-full max-w-[820px] px-6 pt-4 md:px-10">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-primary">
-                  Preview / Export
-                </p>
-                <div className="mt-0.5 flex items-center gap-2">
-                  <h2 className="text-xl font-semibold">Your care study</h2>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 gap-1 px-2 text-[10px] text-muted-foreground"
-                    onClick={() => setShowPreliminaryPages((visible) => !visible)}
-                    title={showPreliminaryPages ? 'Hide additional pages' : 'Show additional pages'}
-                  >
-                    <Eye className="size-3" />
-                    {showPreliminaryPages ? 'Hide additional pages' : 'Show additional pages'}
-                  </Button>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="size-9"
-                onClick={() => {
-                  setPreviewOpen(false);
-                  setTitlePageOpen(false);
-                }}
-                aria-label="Close preview"
-              >
-                <X className="size-4" />
-              </Button>
-              </div>
-            </div>
-
             <Dialog open={titlePageOpen} onOpenChange={setTitlePageOpen}>
               <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
@@ -8023,14 +8122,24 @@ function Home() {
                 </div>
               </DialogContent>
             </Dialog>
-            <div className="w-full px-6 pb-4 md:px-10">
-              <div className="rounded-lg border bg-card p-1.5">
+            <div className="w-full pb-2">
+              <div className="border-b border-primary/30 bg-primary/[0.08] px-3 py-1.5 shadow-sm">
                 <Collapsible open={formatOpen} onOpenChange={setFormatOpen} className="group/collapsible">
-                <div className="flex items-center justify-between gap-1.5 px-1">
-                  <span className="text-[10px] font-semibold text-muted-foreground">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">
                     Document formatting
                   </span>
                   <div className="flex shrink-0 items-center gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 px-2 text-[10px] text-muted-foreground hover:bg-primary/10"
+                      onClick={() => setShowPreliminaryPages((visible) => !visible)}
+                      title={showPreliminaryPages ? 'Hide additional pages' : 'Show additional pages'}
+                    >
+                      <Eye className="size-3" />
+                      {showPreliminaryPages ? 'Hide pages' : 'Show pages'}
+                    </Button>
                     <CollapsibleTrigger asChild>
                       <Button
                         variant="ghost"
@@ -8043,10 +8152,71 @@ function Home() {
                         <ChevronRight className="size-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                       </Button>
                     </CollapsibleTrigger>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 hover:bg-primary/10"
+                      onClick={() => {
+                        setPreviewOpen(false);
+                        setTitlePageOpen(false);
+                      }}
+                      aria-label="Close preview"
+                    >
+                      <X className="size-4" />
+                    </Button>
                   </div>
                 </div>
                 <CollapsibleContent className="overflow-hidden">
-                  <div className="mt-1 flex min-w-max items-end gap-1.5 overflow-x-auto pb-1">
+                  <div className="mt-1.5 grid gap-1.5 rounded-md border border-primary/20 bg-background/70 p-1.5 lg:grid-cols-[minmax(300px,1fr)_auto]">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <Search className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+                        <Input
+                          value={previewSearch}
+                          onChange={(event) => {
+                            setPreviewSearch(event.target.value);
+                            setPreviewSearchIndex(0);
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault();
+                              movePreviewSearch(event.shiftKey ? -1 : 1);
+                            }
+                          }}
+                          className="h-7 text-xs"
+                          placeholder="Search document — Enter for next match"
+                          aria-label="Search this document"
+                        />
+                        <Button variant="outline" size="icon" className="size-7 shrink-0" onClick={() => movePreviewSearch(-1)} disabled={!previewSearchResults.length} title="Previous match" aria-label="Previous search match">
+                          <ChevronLeft className="size-3.5" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="size-7 shrink-0" onClick={() => movePreviewSearch(1)} disabled={!previewSearchResults.length} title="Next match" aria-label="Next search match">
+                          <ChevronRight className="size-3.5" />
+                        </Button>
+                      </div>
+                      {previewSearch.trim() && (
+                        <p className="mt-1 truncate text-[10px] text-muted-foreground" title={previewSearchResults[Math.min(previewSearchIndex, Math.max(previewSearchResults.length - 1, 0))]?.location}>
+                          {previewSearchResults.length
+                            ? `${Math.min(previewSearchIndex + 1, previewSearchResults.length)} of ${previewSearchResults.length} occurrences · ${previewSearchResults[Math.min(previewSearchIndex, previewSearchResults.length - 1)].location}`
+                            : 'No occurrences found'}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex max-w-full items-center gap-1 overflow-x-auto pb-0.5 lg:justify-end">
+                      <span className="mr-1 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Chapters</span>
+                      {chapters.map((chapter, chapterIndex) =>
+                        !showPreliminaryPages && chapter.isFrontMatter ? null : (
+                          <Button key={`${chapter.name}-${chapterIndex}`} variant="outline" size="sm" className="h-7 shrink-0 px-2 text-[10px]" onClick={() => scrollPreviewTo(`preview-chapter-${chapterIndex}`)}>
+                            {chapter.isFrontMatter ? chapter.name : `Ch. ${chapterOrdinal(chapterIndex) + 1}`}
+                          </Button>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-1.5 grid gap-1.5 xl:grid-cols-[minmax(230px,0.8fr)_minmax(270px,1fr)_minmax(370px,1.35fr)]">
+                    <div className="rounded-md border bg-muted/30 p-1.5">
+                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Document defaults</p>
+                      <div className="flex items-end gap-2">
                     <label className="w-[112px] shrink-0 space-y-1">
                       <span className="block text-[9px] font-medium text-muted-foreground">
                         Font
@@ -8095,7 +8265,11 @@ function Home() {
                       </Select>
                     </label>
 
-                  <div className="contents">
+                      </div>
+                    </div>
+                  <div className="rounded-md border bg-muted/30 p-1.5">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Document actions</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
                     <Button
                       variant="outline"
                       size="icon"
@@ -8151,7 +8325,11 @@ function Home() {
                     <span className={cn('mr-1 font-mono text-[9px] tabular', saveStatus.tone)} title="Edits save automatically">
                       {saveStatus.label}
                     </span>
-                    <span className="mr-1 text-[9px] font-semibold text-muted-foreground">Text</span>
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-1.5">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Selected text</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
                     {TEXT_TOOLS.map((tool) => (
                       <Button
                         key={tool.key}
@@ -8167,8 +8345,11 @@ function Home() {
                         <tool.icon className="size-3.5" />
                       </Button>
                     ))}
-                    <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
-                    <span className="mr-1 text-[9px] font-semibold text-muted-foreground">Paragraph</span>
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-1.5 xl:col-span-2">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Selected paragraph</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
                     <Button
                       variant={previewParaState.list === 'ul' ? 'secondary' : 'outline'}
                       size="icon"
@@ -8250,7 +8431,11 @@ function Home() {
                         </SelectContent>
                       </Select>
                     </label>
-                    <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-1.5">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Page layout</p>
+                    <div className="flex flex-wrap items-center gap-2">
                     <label className="flex items-center gap-1.5">
                       <span className="text-[9px] font-medium text-muted-foreground">Bottom margin</span>
                       <Select
@@ -8269,8 +8454,6 @@ function Home() {
                         </SelectContent>
                       </Select>
                     </label>
-                  </div>
-                  <div className="contents">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -8282,6 +8465,7 @@ function Home() {
                     </Button>
                   </div>
                   </div>
+                  </div>
                 </CollapsibleContent>
                 </Collapsible>
               </div>
@@ -8289,7 +8473,7 @@ function Home() {
           </div>
 
           <div className="print-scroll flex-1 overflow-y-auto flex">
-            <div className="flex-1 min-w-0 overflow-y-auto">
+            <div id="preview-document-scroll" className="flex-1 min-w-0 overflow-y-auto">
             <div className="mx-auto w-full max-w-[820px] px-6 py-8 md:px-10">
             <div
               className="print-doc rounded-xl border p-8 shadow-sm md:p-12"
@@ -8310,7 +8494,7 @@ function Home() {
               </header>
 
               {chapters.map((chapter, chapterIndex) => !showPreliminaryPages && chapter.isFrontMatter ? null : (
-                <section key={chapter.name} className="mt-8">
+                <section id={`preview-chapter-${chapterIndex}`} key={chapter.name} className="mt-8 scroll-mt-6">
                   <h2 className="flex items-baseline gap-2 pb-1.5">
                     <span className="font-mono text-xs text-primary">
                       {isFrontMatterChapter(chapterIndex)
@@ -8372,7 +8556,7 @@ function Home() {
                       hasRows ||
                       section.notes.trim().length > 0;
                     return (
-                      <div key={section.id} className="mt-4 break-inside-avoid">
+                      <div id={`preview-section-${chapterIndex}-${sectionIndex}`} key={section.id} className="mt-4 break-inside-avoid scroll-mt-6">
                         <h3 className="font-semibold">
                           {section.id}{' '}
                           <span

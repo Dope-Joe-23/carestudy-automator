@@ -57,6 +57,8 @@ export type VivaBankResult = {
 export type StudyAssistantResult = { answer: string; edits?: { sectionId: string; draft?: string; notes?: string; data?: Record<string, string> }[] };
 
 export type Chapter2Recommendations = {
+  section_21: Record<string, string>;
+  section_22: PharmacologyRecommendations;
   section_23: { actualProblems: string; potentialProblems: string; problemPriority: string };
   section_24: { generalStrengths: string; specificStrengths: string };
   section_25: { nursingDiagnoses: string; diagnosisPriority: string };

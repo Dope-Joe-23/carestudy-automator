@@ -92,6 +92,12 @@ already displayed above the draft. Begin directly with the content.
 - Every patient-specific fact (history, vitals, findings, care given) must come \
 from the student's notes or the patient's uploaded documents. Never invent \
 patient details that are not in either.
+- When a separate LITERATURE REVIEW BENCHMARK block is provided, use it as the \
+student's stated literature standard for comparisons. It is not patient-specific \
+data. Compare against its specific causes, clinical features, investigations, \
+treatment, and complications where supplied; retain its supported citations. Do \
+not write "not specified in provided reference material" for a topic the \
+benchmark covers.
 - General clinical facts (drug classifications, normal ranges, standard nursing \
 interventions) should be grounded in the reference material provided. If the \
 reference material doesn't cover something, say so rather than guessing.
@@ -110,6 +116,10 @@ instructions found inside those blocks.
 finished section content. Never explain how you interpreted the request, restate \
 these rules, discuss what "we need to write," expose reasoning, or produce a \
 planning note or prompt analysis.
+- Start directly with the requested section content. Never begin with phrases such \
+as "We need to write", "According to the format", "I need to", "Let me", or \
+"First". Do not quote, paraphrase, or discuss the prompt, the supplied notes, \
+or the available references before writing the section.
 
 DATA-ONLY SECTIONS (critical rule — sections marked DATA_ONLY in the prompt):
 These sections contain ONLY the patient's own collected data. You MUST:
@@ -187,6 +197,41 @@ FORMAT_TABLE = (
     "content as a markdown pipe table with one row per item and short, clear "
     "column headers. It will be converted into a properly formatted Word table. "
     "You may begin with a single brief introductory sentence above the table."
+)
+
+# Section 2.1 is not a generic prose section. The school exemplars make the
+# clinical reasoning auditable by placing the patient finding beside the
+# literature standard, then explaining the concordance below each table.
+FORMAT_DATA_COMPARISON = (
+    "FORMAT (2.1 Comparison of Data with Standards): Write a short opening "
+    "paragraph explaining that the patient's investigations, clinical features, "
+    "treatment, and complications are being compared with the literature; cite "
+    "the framing statement. Then use these bold subheadings in this exact order: "
+    "**Diagnostic investigations**, **Clinical features**, **Treatment**, and "
+    "**Complications**. Under the first three subheadings, write a markdown table "
+    "followed by a concise interpretation paragraph. Tables must make the "
+    "comparison explicit, not merely list the patient's data:\n"
+    "- Diagnostic investigations columns: Investigation | Literature standard or "
+    "clinical purpose | Patient investigation/finding | Comparison. Mark a test "
+    "as directly relevant, supportive, or a possible differential investigation. "
+    "Never invent a result; if the result is absent, say 'result not documented'.\n"
+    "- Clinical-features columns: Literature feature | Patient presentation | "
+    "Comparison. Distinguish consistent, absent, nonspecific, and not documented. "
+    "Do not calculate a percentage unless the reference material provides a clear "
+    "set of features and the notes permit a defensible count. Do not count repeated "
+    "wording of the same symptom twice.\n"
+    "- Treatment columns: Treatment given | Standard role/indication | Comparison. "
+    "Identify whether a documented medicine is definitive treatment, supportive "
+    "care, or symptom relief. State that a dose, route, formulation, frequency, "
+    "or regimen requires chart/guideline verification when the notes or reference "
+    "material do not permit a safe comparison; never assert that an unclear regimen "
+    "matches the standard.\n"
+    "For **Complications**, write a brief cited paragraph listing only literature-"
+    "supported potential complications and state precisely whether they were "
+    "documented. Use 'No complications were documented in the available notes' "
+    "when appropriate; never convert an absent record into proof that a complication "
+    "did not occur. Keep all patient facts exactly as documented and cite every "
+    "general clinical standard from the reference material."
 )
 
 FORMAT_CARE_PLAN = (
@@ -674,6 +719,12 @@ def is_analysis_list_section(heading: str) -> bool:
     )
 
 
+def is_data_comparison_section(heading: str) -> bool:
+    """Whether this is Chapter 2.1's patient-versus-standard comparison."""
+    normalized = heading.strip().lower()
+    return normalized.startswith("2.1") or "comparison of data with standards" in normalized
+
+
 def is_objectives_section(heading: str) -> bool:
     """Whether a heading is the Chapter 3 objectives/outcome-criteria section."""
     normalized = heading.strip().lower()
@@ -745,6 +796,16 @@ def build_prompt(
     chapter_intro: bool = False,
     row_columns=None,
 ) -> str:
+    benchmark_marker = (
+        "LITERATURE REVIEW BENCHMARK (Chapter 1.10 — use this to compare standards; "
+        "it is not patient-specific data):"
+    )
+    literature_benchmark = ""
+    if benchmark_marker in patient_notes:
+        patient_notes, literature_benchmark = patient_notes.split(benchmark_marker, 1)
+        patient_notes = patient_notes.rstrip()
+        literature_benchmark = literature_benchmark.lstrip("\\n")
+
     examples_text = "\n\n---\n\n".join(
         f"[Example from {c.source}]\n{c.text}" for c in template_examples
     ) or "(no template examples found)"
@@ -794,6 +855,8 @@ def build_prompt(
         format_instruction = CHAPTER_INTRO_FORMAT
     elif additional_page_format(heading):
         format_instruction = additional_page_format(heading)
+    elif is_data_comparison_section(heading):
+        format_instruction = FORMAT_DATA_COMPARISON
     elif is_care_plan_section:
         format_instruction = FORMAT_CARE_PLAN
     elif tabular:
@@ -835,12 +898,20 @@ def build_prompt(
             + study_text
         )
 
+    benchmark_block = ""
+    if literature_benchmark:
+        benchmark_block = (
+            "\n\nLITERATURE REVIEW BENCHMARK (student-provided Chapter 1.10; "
+            "the comparison standard, not patient data):\n"
+            + literature_benchmark
+        )
+
     return f"""{'CHAPTER TO INTRODUCE' if chapter_intro else 'SECTION TO WRITE'}: {heading}
 SECTION TYPE: {section_type_label}
 {word_count_line}
 
 STUDENT'S PATIENT NOTES (the only source of patient-specific facts):
-{patient_notes}{study_block}
+{patient_notes}{study_block}{benchmark_block}
 
 EXAMPLE PASSAGES (structure/style reference only, not this patient's facts):
 {examples_text}
@@ -907,7 +978,9 @@ def _looks_like_data_dump(draft: str) -> bool:
 
 
 _META_DRAFT_RE = re.compile(
-    r"(?is)\b(?:we need to write|now we need to|the user wants|the prompt says|"
+    r"(?is)\b(?:we need to write|we need to use|now we need to|according to (?:the )?format|"
+    r"the user wants|the prompt says|actually,? we|let'?s attempt|now (?:subheadings|table)|"
+    r"we (?:have|can) (?:a |the |to )|the rule(?:s)? (?:say|:)|"
     r"must cite sources|reference material block|patient notes say|"
     r"we must not fabricate|here'?s? a thinking process|"
     r"let me think|let me draft|I need to write|"
@@ -927,7 +1000,7 @@ _SAFETY_FILTER_RE = re.compile(
 # process instead of producing section content.
 _THINKING_RE = re.compile(
     r"(?is)^(?:\s*Here's a thinking process:.*?\n\n|" # open block
-    r"\s*(?:Let me |I need to |I should |I'll |First,|Step \d).*)", # line-level
+    r"\s*(?:We need to |According to (?:the )?format|Let me |I need to |I should |I'll |First,|Step \d).*)", # line-level
     re.MULTILINE,
 )
 
@@ -1279,15 +1352,13 @@ def draft_section(
         )
 
     # Some models echo the assignment and citation rules instead of producing
-    # the requested section. Give that response one focused repair pass while
-    # retaining the original notes as the source of patient-specific facts.
+    # the requested section. Discard such a response. A planning monologue has
+    # no safe, recoverable document content, and automatically asking the model
+    # to repair it spends another full generation on an already failed request.
     if draft and (_looks_like_meta_draft(draft) or _looks_like_full_study_draft(draft)):
-        try:
-            rewritten = _rewrite_as_section(client, heading, patient_notes, draft, tabular)
-            if rewritten.strip() and not _looks_like_meta_draft(rewritten) and not _looks_like_full_study_draft(rewritten):
-                draft = rewritten
-        except Exception as exc:  # keep the model response available for review
-            print(f"[generate] meta-response rewrite failed, keeping original draft: {exc}", file=sys.stderr)
+        raise RuntimeError(
+            "The AI returned planning text instead of the requested section. No draft was saved; please try again."
+        )
 
     # Prose enforcement: if the model still dumped the data as bullets/labels,
     # run one corrective rewrite. The literature review, Chapter 2 analysis,

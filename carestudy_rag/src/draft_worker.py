@@ -34,7 +34,10 @@ from viva import generate_viva_bank  # noqa: E402
 from reference_chunker import chunk_reference_text, ref_chunks_to_dicts  # noqa: E402
 from retrieval import SimpleIndex  # noqa: E402
 from import_worker import import_study, import_study_with_fields  # noqa: E402
-from nanda_mapper import build_chapter2_analysis_from_chapter1  # noqa: E402
+from nanda_mapper import (  # noqa: E402
+    build_chapter2_analysis_from_chapter1,
+    build_comparison_section_from_chapter1_and_lit,
+)
 from pharm_mapper import build_pharmacology_rows  # noqa: E402
 from care_plan import generate_care_plan_recommendations  # noqa: E402
 from implementation_mapper import (  # noqa: E402
@@ -507,13 +510,21 @@ def generate_chapter2_recommendations(chapter1_fields: Dict[str, str], condition
     """
     rules_result = build_chapter2_analysis_from_chapter1(chapter1_fields, condition)
     try:
-        return _chapter2_with_llm(chapter1_fields, condition, rules_result)
+        result = _chapter2_with_llm(chapter1_fields, condition, rules_result)
     except Exception as exc:
         print(
             f"[worker] chapter2 recommendations: model call failed, using rule-based output: {exc}",
             file=sys.stderr, flush=True,
         )
-        return rules_result
+        result = rules_result
+
+    # The Chapter 1 payload includes the student's literature-review fields.
+    # Keep every Chapter 2 suggestion together under its single action.
+    result["section_21"] = build_comparison_section_from_chapter1_and_lit(
+        chapter1_fields, chapter1_fields, condition,
+    )
+    result["section_22"] = generate_pharmacology_recommendations(chapter1_fields)
+    return result
 
 
 _DISCHARGE_SYSTEM = (

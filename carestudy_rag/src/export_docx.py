@@ -75,6 +75,15 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
 ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
+CHAPTER_WORDS = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN"]
+PRINTED_CHAPTER_TITLES = {
+    "assessment": "ASSESSMENT OF PATIENT AND FAMILY",
+    "analysis of data": "ANALYSIS OF DATA",
+    "planning": "PLANNING FOR PATIENT AND FAMILY CARE",
+    "implementation": "IMPLEMENTATION OF PATIENT/FAMILY CARE",
+    "evaluation": "EVALUATION OF CARE RENDERED TO PATIENT AND FAMILY",
+    "summary and conclusion": "SUMMARY AND CONCLUSION",
+}
 
 # ---------------------------------------------------------------------------
 # Document theme — every formatting decision flows through this one object so
@@ -792,11 +801,14 @@ def _chapter_heading(chapters, chapter_index, chapter):
     The ordinal counts only non-front-matter chapters, so adding the
     preliminary pages never shifts the I–VI numbering."""
     if chapter.get("isFrontMatter"):
-        return chapter.get("name", "").upper()
+        return ""
     ordinal = sum(
         1 for c in chapters[:chapter_index] if not c.get("isFrontMatter")
     )
-    return f"CHAPTER {ROMAN[ordinal]}: {chapter.get('name', '').upper()}"
+    number = CHAPTER_WORDS[ordinal] if ordinal < len(CHAPTER_WORDS) else ROMAN[ordinal]
+    name = chapter.get("name", "").strip()
+    printed_name = PRINTED_CHAPTER_TITLES.get(name.casefold(), name.upper())
+    return f"CHAPTER {number}\n{printed_name}"
 
 
 def _add_toc(doc, chapters, theme):
@@ -811,15 +823,17 @@ def _add_toc(doc, chapters, theme):
 
     entries = []
     for chapter_index, chapter in enumerate(chapters):
-        p = doc.add_paragraph(style=STYLE_BODY)
-        p.paragraph_format.space_before = Pt(8)
-        _add_run(p, _chapter_heading(chapters, chapter_index, chapter), theme, bold=True)
-        entries.append(p)
+        if not chapter.get("isFrontMatter"):
+            p = doc.add_paragraph(style=STYLE_BODY)
+            p.paragraph_format.space_before = Pt(8)
+            _add_run(p, _chapter_heading(chapters, chapter_index, chapter), theme, bold=True)
+            entries.append(p)
         for section in chapter.get("sections", []):
             sp = doc.add_paragraph(style=STYLE_BODY)
             sp.paragraph_format.left_indent = Inches(0.4)
             sp.paragraph_format.space_after = Pt(2)
-            _add_run(sp, f"{section.get('id', '')} {section.get('heading', '')}", theme)
+            section_id = "" if chapter.get("isFrontMatter") else section.get("id", "")
+            _add_run(sp, f"{section_id} {section.get('heading', '')}".strip(), theme)
             entries.append(sp)
 
     # Field begin/instruction/separate runs lead the first entry paragraph so
@@ -1115,9 +1129,10 @@ def _field_prose(fields, section_id=""):
     return _generic_prose(parts)
 
 
-def _render_section(doc, section, theme):
-    section_heading = doc.add_paragraph(style=STYLE_HEADING_2)
-    _add_run(section_heading, f"{section.get('id', '')} {section.get('heading', '')}".strip(), theme)
+def _render_section(doc, section, theme, include_heading=True):
+    if include_heading:
+        section_heading = doc.add_paragraph(style=STYLE_HEADING_2)
+        _add_run(section_heading, f"{section.get('id', '')} {section.get('heading', '')}".strip(), theme)
 
     draft = _strip_duplicate_heading((section.get("draft") or "").strip(), section)
     fields = [f for f in section.get("fields") or [] if (f.get("value") or "").strip()]
@@ -1153,7 +1168,19 @@ def _render_section(doc, section, theme):
 
 
 def _add_chapter(doc, chapters, chapter_index, chapter, theme, include_intro=True):
+    # Preliminary material is made of individually titled pages. "Additional
+    # Pages" is an editor-only workspace label and must never be printed.
+    if chapter.get("isFrontMatter"):
+        for section_index, section in enumerate(chapter.get("sections", [])):
+            if section_index:
+                doc.add_page_break()
+            page_title = doc.add_paragraph(style=STYLE_TOC_TITLE)
+            _add_run(page_title, section.get("heading", "").upper(), theme)
+            _render_section(doc, section, theme, include_heading=False)
+        return
+
     chapter_heading = doc.add_paragraph(style=STYLE_HEADING_1)
+    chapter_heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
     _add_run(chapter_heading, _chapter_heading(chapters, chapter_index, chapter), theme)
 
     intro = (chapter.get("intro") or "").strip()
@@ -1248,6 +1275,41 @@ def _populate_bibliography(chapters):
     return populated
 
 
+def _arrange_chapters(chapters):
+    """Split the editor's merged front/closing workspace into print order.
+
+    Older saved studies and direct API callers may still send one front-matter
+    chapter containing both P.* and 6.* sections.  Keeping this safeguard in
+    the exporter prevents an invalid document even when the client is stale.
+    """
+    arranged, closing = [], []
+    for chapter in chapters:
+        sections = chapter.get("sections") or []
+        is_additional_pages = (
+            chapter.get("isFrontMatter")
+            or str(chapter.get("name", "")).strip().casefold() == "additional pages"
+            or any(str(section.get("id", "")).startswith("P.") for section in sections)
+        )
+        has_combined_pages = is_additional_pages and any(
+            str(section.get("id", "")).startswith("6.") for section in sections
+        )
+        if not has_combined_pages:
+            arranged.append(chapter)
+            continue
+        preliminary_sections = [s for s in sections if not str(s.get("id", "")).startswith("6.")]
+        closing_sections = [s for s in sections if str(s.get("id", "")).startswith("6.")]
+        if preliminary_sections:
+            arranged.append({**chapter, "isFrontMatter": True, "sections": preliminary_sections})
+        if closing_sections:
+            closing.append({
+                **chapter,
+                "name": "Summary and Conclusion",
+                "isFrontMatter": False,
+                "sections": closing_sections,
+            })
+    return arranged + closing
+
+
 def _has_bibliography(chapters):
     """True when the student's Bibliography section (6.3) has entries. The
     curated bibliography then replaces the auto-generated REFERENCES page, so
@@ -1297,7 +1359,7 @@ def build_docx(payload):
     section.right_margin = Inches(theme.right_margin)
 
     title = payload.get("title") or {}
-    chapters = _populate_bibliography(payload.get("chapters") or [])
+    chapters = _arrange_chapters(_populate_bibliography(payload.get("chapters") or []))
     scope = payload.get("scope") or {}
     scope_type = scope.get("type") or "full"
     # Unknown/invalid scope types render the full study — degrade gracefully
@@ -1325,6 +1387,11 @@ def build_docx(payload):
         _add_toc(doc, chapters, theme)
         _add_list_of_tables(doc, chapters, theme)
         for chapter_index, chapter in enumerate(chapters):
+            # Each formal chapter starts on a fresh page, as in the samples.
+            # The title/TOC/list pages already leave us on a new page for the
+            # first preliminary page; every later physical chapter needs one.
+            if chapter_index and not (chapter.get("isFrontMatter") and chapters[chapter_index - 1].get("isFrontMatter")):
+                doc.add_page_break()
             _add_chapter(doc, chapters, chapter_index, chapter, theme)
         if not _has_bibliography(chapters):
             _add_references(doc, chapters, theme, page_break_before=True)
