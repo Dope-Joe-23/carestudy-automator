@@ -1,5 +1,5 @@
 /**
- * Admin dashboard API client — stats, staff management, and invite links.
+ * Admin dashboard API client — stats, staff/student management, and invite links.
  *
  * Uses the same auth pattern as lib/adminAuth.ts (bearer token from localStorage).
  */
@@ -60,6 +60,7 @@ export type DashboardStats = {
     status: string;
     paymentStatus: string;
     createdAt: string;
+    studentName: string | null;
   }[];
 };
 
@@ -164,4 +165,38 @@ export function registerStaff(input: {
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+// ---------------------------------------------------------------------------
+// Student invites
+// ---------------------------------------------------------------------------
+
+export type StudentInvite = {
+  id: number;
+  token: string;
+  label: string | null;
+  staffName: string | null;
+  createdBy: string;
+  usedAt: string | null;
+  usedBy: number | null;
+  createdAt: string;
+  registrationUrl: string;
+};
+
+/** Generate a new student registration link (tied to the current staff/admin). */
+export function createStudentInvite(label?: string): Promise<{ invite: StudentInvite }> {
+  return requestJson("/admin/student-invites", {
+    method: "POST",
+    body: JSON.stringify({ label: label || null }),
+  });
+}
+
+/** List all student invite links. */
+export function listStudentInvites(): Promise<{ invites: StudentInvite[] }> {
+  return requestJson("/admin/student-invites");
+}
+
+/** Validate a student invite token (public — no auth needed). */
+export function validateStudentInvite(token: string): Promise<{ valid: boolean; staffName: string | null }> {
+  return requestJson(`/admin/student-invites/${encodeURIComponent(token)}`);
 }

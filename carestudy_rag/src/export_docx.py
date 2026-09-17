@@ -67,6 +67,7 @@ import sys
 from dataclasses import dataclass, fields
 
 from docx import Document
+from docx.enum.section import WD_ORIENT
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -681,6 +682,38 @@ def _add_rows_table(doc, rows, theme):
     _add_data_table(doc, rows.get("columns") or [], rows.get("data") or [], theme)
 
 
+# Section IDs whose tables are wide enough to benefit from landscape pages.
+_LANDSCAPE_SECTION_IDS = {"2.2", "3.2"}
+
+
+def _begin_landscape_section(doc, theme):
+    """End the current section with a section break and switch to landscape.
+
+    The new section inherits the header/footer of the previous one and uses
+    the same margins.  Any content added after this call lands on a fresh
+    landscape page.
+    """
+    doc.add_page_break()
+    current = doc.sections[-1]
+    current.orientation = WD_ORIENT.LANDSCAPE
+    # Swap width and height for landscape (11" × 8.5" for US Letter).
+    current.page_width, current.page_height = current.page_height, current.page_width
+    current.left_margin = Inches(theme.left_margin)
+    current.right_margin = Inches(theme.right_margin)
+    current.top_margin = Inches(theme.top_margin)
+    current.bottom_margin = Inches(theme.bottom_margin)
+    # New section after this one returns to portrait.
+    new_section = doc.add_section()
+    new_section.orientation = WD_ORIENT.PORTRAIT
+    new_section.page_width = Inches(8.5)
+    new_section.page_height = Inches(11)
+    new_section.left_margin = Inches(theme.left_margin)
+    new_section.right_margin = Inches(theme.right_margin)
+    new_section.top_margin = Inches(theme.top_margin)
+    new_section.bottom_margin = Inches(theme.bottom_margin)
+    return new_section
+
+
 def _add_page_number(doc):
     footer = doc.sections[0].footer
     paragraph = footer.paragraphs[0]
@@ -1130,9 +1163,15 @@ def _field_prose(fields, section_id=""):
 
 
 def _render_section(doc, section, theme, include_heading=True):
+    section_id = section.get("id", "")
+    use_landscape = section_id in _LANDSCAPE_SECTION_IDS
+
+    if use_landscape:
+        _begin_landscape_section(doc, theme)
+
     if include_heading:
         section_heading = doc.add_paragraph(style=STYLE_HEADING_2)
-        _add_run(section_heading, f"{section.get('id', '')} {section.get('heading', '')}".strip(), theme)
+        _add_run(section_heading, f"{section_id} {section.get('heading', '')}".strip(), theme)
 
     draft = _strip_duplicate_heading((section.get("draft") or "").strip(), section)
     fields = [f for f in section.get("fields") or [] if (f.get("value") or "").strip()]
@@ -1155,7 +1194,7 @@ def _render_section(doc, section, theme, include_heading=True):
         # replaces the field list, while any structured rows still render.
         _add_draft(doc, draft, theme)
     elif fields:
-        for label, text in _field_prose(fields, section.get("id", "")):
+        for label, text in _field_prose(fields, section_id):
             p = doc.add_paragraph(style=STYLE_BODY)
             if label:
                 _add_run(p, f"{label}: ", theme, bold=True)

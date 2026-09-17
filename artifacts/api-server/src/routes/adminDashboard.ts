@@ -98,14 +98,21 @@ router.get(
     const pendingInvites = invites.filter((i) => !i.usedAt).length;
     const usedInvites = invites.filter((i) => i.usedAt).length;
 
-    // Recent orders (last 5)
-    const recentOrders = orders.slice(0, 5).map((o) => ({
-      id: o.id,
-      title: o.title,
-      status: o.status,
-      paymentStatus: o.paymentStatus,
-      createdAt: o.createdAt.toISOString(),
-    }));
+    // Recent orders (last 5) — include student name for each
+    const recentOrdersRaw = orders.slice(0, 5);
+    const recentOrders = await Promise.all(
+      recentOrdersRaw.map(async (o) => {
+        const student = await db.getStudent(o.studentId);
+        return {
+          id: o.id,
+          title: o.title,
+          status: o.status,
+          paymentStatus: o.paymentStatus,
+          createdAt: o.createdAt.toISOString(),
+          studentName: student?.name ?? null,
+        };
+      }),
+    );
 
     res.json({
       orders: {
@@ -412,6 +419,91 @@ router.post(
         name: admin.name,
         role: admin.role,
       },
+    });
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Student invite links (staff + admin)
+// ---------------------------------------------------------------------------
+
+// POST /api/admin/student-invites — generate a student registration link.
+router.post(
+  "/admin/student-invites",
+  requireAdmin,
+  asyncRoute(async (req, res) => {
+    const admin = (req as AuthedAdminRequest).admin;
+    const label = str(req.body?.label) || null;
+    const token = randomBytes(24).toString("hex");
+    const db = studyStore();
+    const invite = await db.createStudentInvite({
+      token,
+      createdBy: admin.id,
+      label,
+      staffName: admin.name || admin.username,
+    });
+    res.status(201).json({
+      invite: {
+        id: invite.id,
+        token: invite.token,
+        label: invite.label,
+        staffName: invite.staffName,
+        createdAt: invite.createdAt.toISOString(),
+        registrationUrl: `/student/register?staff=${invite.token}`,
+      },
+    });
+  }),
+);
+
+// GET /api/admin/student-invites — list all student invite links.
+router.get(
+  "/admin/student-invites",
+  requireAdmin,
+  asyncRoute(async (_req, res) => {
+    const db = studyStore();
+    const invites = await db.listStudentInvites();
+    const admins = await db.listAdmins();
+    const adminMap = new Map(admins.map((a) => [a.id, a]));
+
+    res.json({
+      invites: invites.map((i) => ({
+        id: i.id,
+        token: i.token,
+        label: i.label,
+        staffName: i.staffName,
+        createdBy: adminMap.get(i.createdBy)?.name ?? adminMap.get(i.createdBy)?.username ?? "Unknown",
+        usedAt: i.usedAt ? i.usedAt.toISOString() : null,
+        usedBy: i.usedBy ? i.usedBy : null,
+        createdAt: i.createdAt.toISOString(),
+        registrationUrl: `/student/register?staff=${i.token}`,
+      })),
+    });
+  }),
+);
+
+// GET /api/admin/student-invites/:token — validate a student invite token (public).
+router.get(
+  "/admin/student-invites/:token",
+  asyncRoute(async (req, res) => {
+    const token = str(req.params.token);
+    if (!token) {
+      res.status(400).json({ error: "Invalid invite token." });
+      return;
+    }
+    const db = studyStore();
+    const invite = await db.getStudentInviteByToken(token);
+    if (!invite) {
+      res.status(404).json({ error: "This registration link is invalid or has expired." });
+      return;
+    }
+    if (invite.usedAt) {
+      res.status(409).json({ error: "This registration link has already been used." });
+      return;
+    }
+    res.json({
+      valid: true,
+      staffName: invite.staffName,
+      registrationUrl: `/student/register?staff=${token}`,
     });
   }),
 );

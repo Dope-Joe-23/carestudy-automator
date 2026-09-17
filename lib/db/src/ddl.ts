@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS "students" (
   "college" text NOT NULL,
   "program" text NOT NULL,
   "year" text,
+  "staff_id" integer,
   "created_at" integer NOT NULL
 );
 
@@ -139,4 +140,15 @@ CREATE TABLE IF NOT EXISTS "student_order_files" (
 );
 
 CREATE INDEX IF NOT EXISTS "student_order_files_order_id_idx" ON "student_order_files" ("order_id");
+
+CREATE TABLE IF NOT EXISTS "student_invites" (
+  "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  "token" text NOT NULL UNIQUE,
+  "created_by" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+  "label" text,
+  "staff_name" text,
+  "used_at" integer,
+  "used_by" integer,
+  "created_at" integer NOT NULL
+);
 `;

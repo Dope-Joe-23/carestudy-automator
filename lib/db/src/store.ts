@@ -145,6 +145,8 @@ export type StudentRow = {
   college: string;
   program: string;
   year: string | null;
+  /** The staff member who registered this student (null if registered independently). */
+  staffId: number | null;
   createdAt: Date;
 };
 
@@ -156,6 +158,7 @@ export type NewStudent = {
   college: string;
   program: string;
   year?: string | null;
+  staffId?: number | null;
 };
 
 /** "submitted" | "in_production" | "ready" | "cancelled". */
@@ -244,6 +247,34 @@ export type NewOrderFile = {
   storedPath: string;
   mime: string;
   size: number;
+};
+
+// ---------------------------------------------------------------------------
+// Student invite rows
+// ---------------------------------------------------------------------------
+
+export type StudentInviteRow = {
+  id: number;
+  /** Unique invite token (URL-safe). */
+  token: string;
+  /** The staff/admin who created this invite. */
+  createdBy: number;
+  /** Optional label (e.g. "Student intake — Week 5"). */
+  label: string | null;
+  /** The staff member's display name (shown to the student on registration). */
+  staffName: string | null;
+  /** null = unused; timestamp = when the student registered. */
+  usedAt: Date | null;
+  /** The student id that was created from this invite (null until used). */
+  usedBy: number | null;
+  createdAt: Date;
+};
+
+export type NewStudentInvite = {
+  token: string;
+  createdBy: number;
+  label?: string | null;
+  staffName?: string | null;
 };
 
 export interface StudyStore {
@@ -338,6 +369,22 @@ export interface StudyStore {
   listOrders(studentId: number): Promise<OrderRow[]>;
   /** Every order, newest first (studio order bin). */
   listAllOrders(): Promise<OrderRow[]>;
+  /** Orders for students tied to a specific staff member, newest first. */
+  listOrdersByStaff(staffId: number): Promise<OrderRow[]>;
+  /** List all students tied to a specific staff member. */
+  listStudentsByStaff(staffId: number): Promise<StudentRow[]>;
+
+  // --- Student invites -----------------------------------------------------
+
+  /** Create a student invite link. */
+  createStudentInvite(invite: NewStudentInvite): Promise<StudentInviteRow>;
+  /** All student invite links, newest first. */
+  listStudentInvites(): Promise<StudentInviteRow[]>;
+  /** Resolve a student invite token, or null. */
+  getStudentInviteByToken(token: string): Promise<StudentInviteRow | null>;
+  /** Mark a student invite as used. */
+  useStudentInvite(id: number, usedByStudentId: number): Promise<StudentInviteRow | null>;
+
   /** One order, or null. */
   getOrder(id: number): Promise<OrderRow | null>;
   /** Update an order's status (+ optional note). */

@@ -19,11 +19,13 @@ import {
   Download,
   ExternalLink,
   FileText,
+  GraduationCap,
   HeartPulse,
   Loader2,
   Mail,
   Play,
   RefreshCw,
+  Send,
   Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,8 +47,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { StudentInviteDialog } from "@/components/student-invite-dialog";
 import {
   attachOrderDelivery,
+  autoDeliverOrder,
   getStudioOrder,
   getStudioStudySnapshot,
   listStudioOrders,
@@ -103,6 +107,7 @@ function OrderRow({ order }: { order: StudioOrder }) {
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [note, setNote] = useState(order.note ?? "");
   const [deliveryFile, setDeliveryFile] = useState<File | null>(null);
+  const [deliverySuccess, setDeliverySuccess] = useState(false);
   const [materialsOpen, setMaterialsOpen] = useState(false);
   const [productionReport, setProductionReport] = useState<{
     mapped: number;
@@ -161,7 +166,9 @@ function OrderRow({ order }: { order: StudioOrder }) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["studio-orders"] });
       setDeliveryFile(null);
+      setDeliverySuccess(true);
       toast.success(`Study delivered for order #${order.id} — student can now download it.`);
+      setTimeout(() => setDeliverySuccess(false), 3000);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Delivery failed"),
   });
@@ -170,6 +177,17 @@ function OrderRow({ order }: { order: StudioOrder }) {
     setDeliveryFile(event.target.files?.[0] ?? null);
     event.target.value = "";
   };
+
+  const autoDeliver = useMutation({
+    mutationFn: async () => autoDeliverOrder(order.id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["studio-orders"] });
+      setDeliverySuccess(true);
+      toast.success(`Study exported and delivered for order #${order.id} — student can now download it.`);
+      setTimeout(() => setDeliverySuccess(false), 3000);
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Auto-deliver failed"),
+  });
 
   const dirty = status !== order.status || note.trim() !== (order.note ?? "");
 
@@ -453,23 +471,44 @@ function OrderRow({ order }: { order: StudioOrder }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {/* Auto-deliver: exports the study and delivers in one step */}
+            <Button
+              size="sm"
+              onClick={() => autoDeliver.mutate()}
+              disabled={!order.producedStudyId || status !== "ready" || autoDeliver.isPending || uploadDelivery.isPending}
+              title={status !== "ready" ? "Set status to 'Ready' first, then save, to enable delivery" : "Export the produced study as a Word document and deliver it to the student"}
+            >
+              {autoDeliver.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : deliverySuccess ? (
+                <CheckCircle2 className="size-4 text-emerald-500" />
+              ) : (
+                <Send className="size-4" />
+              )}
+              {autoDeliver.isPending ? "Exporting…" : deliverySuccess ? "Delivered!" : "Deliver study"}
+            </Button>
+
+            {/* Manual upload fallback */}
             <Input
               type="file"
-              className="h-8 max-w-[220px] text-xs"
+              className="h-8 max-w-[180px] text-xs"
               onChange={onPickDelivery}
-              disabled={uploadDelivery.isPending}
+              disabled={status !== "ready" || uploadDelivery.isPending || autoDeliver.isPending}
+              title={status !== "ready" ? "Set status to 'Ready' first, then save, to enable delivery" : "Upload a .docx file manually (fallback)"}
             />
             <Button
               size="sm"
+              variant="outline"
               onClick={() => uploadDelivery.mutate()}
-              disabled={!deliveryFile || uploadDelivery.isPending}
+              disabled={!deliveryFile || status !== "ready" || uploadDelivery.isPending || autoDeliver.isPending}
+              title={status !== "ready" ? "Set status to 'Ready' first, then save, to enable delivery" : "Deliver the manually uploaded file"}
             >
               {uploadDelivery.isPending ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 <Upload className="size-4" />
               )}
-              Deliver study
+              Upload
             </Button>
           </div>
         </div>
@@ -479,6 +518,7 @@ function OrderRow({ order }: { order: StudioOrder }) {
 }
 
 export function StudioBin() {
+  const [studentInviteOpen, setStudentInviteOpen] = useState(false);
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["studio-orders"],
     queryFn: async () => (await listStudioOrders()).orders,
@@ -514,6 +554,9 @@ export function StudioBin() {
             </span>
           </span>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setStudentInviteOpen(true)} className="gap-1.5">
+              <GraduationCap className="size-4" /> Invite student
+            </Button>
             <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching}>
               <RefreshCw className={isFetching ? "size-4 animate-spin" : "size-4"} />
               Refresh
@@ -524,6 +567,8 @@ export function StudioBin() {
           </div>
         </div>
       </header>
+
+      <StudentInviteDialog open={studentInviteOpen} onClose={() => setStudentInviteOpen(false)} />
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="mb-6">
@@ -581,8 +626,8 @@ export function StudioBin() {
         <Separator className="my-8" />
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <FileText className="size-3.5" />
-          Delivering a study marks the order ready — the student immediately sees the download on
-          their dashboard.
+          Click "Deliver study" to auto-export the produced study as a Word document and deliver it
+          to the student. The student immediately sees the download on their dashboard.
         </p>
       </main>
     </div>

@@ -70,6 +70,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { CollegeSelector } from "@/components/college-selector";
 import {
   Dialog,
   DialogContent,
@@ -765,11 +766,11 @@ function NewOrderPage({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="order-college">Nursing college / school *</Label>
-                <Input
+                <CollegeSelector
                   id="order-college"
                   value={college}
-                  onChange={(e) => setCollege(e.target.value)}
-                  required
+                  onChange={setCollege}
+                  placeholder="Search for your institution…"
                 />
               </div>
               <div className="space-y-1.5">

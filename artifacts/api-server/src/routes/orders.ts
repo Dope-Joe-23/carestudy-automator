@@ -16,7 +16,9 @@ import {
 } from "../lib/uploads";
 import { indexStudyFiles } from "./uploads";
 import { requireStudent, type AuthedRequest } from "../lib/studentAuth";
+import { type AuthedAdminRequest } from "../lib/adminAuth";
 import { draftWorker, type VivaQuestion } from "../lib/draftWorker";
+import { buildDocx } from "./export";
 
 // Paystack configuration — the secret key lives in the API server's env,
 // never in the frontend. The frontend only sees the publishable key.
@@ -27,7 +29,7 @@ function getPaystackSecret(): string {
 const PAYSTACK_BASE = "https://api.paystack.co";
 
 /** Pricing (Ghana cedis). */
-const PRICE_FULL_STUDY = 250;
+const PRICE_FULL_STUDY = 300;
 const PRICE_CHAPTER = 50;
 
 // Two routers from one file: the student-facing half (orders the signed-in
@@ -1086,12 +1088,15 @@ studioRouter.post(
   }),
 );
 
-// GET /api/studio/orders — every order with the student's name/email.
+// GET /api/studio/orders — orders for the order bin.
+// Admins see all orders; staff only see orders from their tied students.
 studioRouter.get(
   "/studio/orders",
-  asyncRoute(async (_req, res) => {
+  asyncRoute(async (req, res) => {
+    const admin = (req as AuthedAdminRequest).admin;
     const db = studyStore();
-    const orders = await db.listAllOrders();
+    const isAdmin = admin.role === "admin";
+    const orders = isAdmin ? await db.listAllOrders() : await db.listOrdersByStaff(admin.id);
     const students = new Map(
       (await Promise.all(
         [...new Set(orders.map((order) => order.studentId))].map((id) => db.getStudent(id)),
@@ -1136,6 +1141,59 @@ studioRouter.patch(
       return;
     }
     res.json({ order: publicOrder(updated) });
+  }),
+);
+
+// POST /api/studio/orders/:id/auto-deliver — automatically export the produced
+// study as a .docx and deliver it to the student. No file upload required.
+studioRouter.post(
+  "/studio/orders/:id/auto-deliver",
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    const db = studyStore();
+    const order = await db.getOrder(id);
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    if (!order.producedStudyId) {
+      res.status(409).json({ error: "No study has been produced for this order yet. Click 'Create study workspace' first." });
+      return;
+    }
+    // Retrieve the stored study data (title + chapters).
+    const study = await db.get(order.producedStudyId);
+    if (!study) {
+      res.status(404).json({ error: "Produced study not found." });
+      return;
+    }
+    const payload = study.data as Record<string, unknown> | null;
+    if (!payload || !Array.isArray(payload.chapters) || payload.chapters.length === 0) {
+      res.status(409).json({ error: "The study has no chapters yet. Open it in the studio and draft some content first." });
+      return;
+    }
+    try {
+      const buffer = await buildDocx(payload);
+      if (!buffer || buffer.length === 0) {
+        res.status(500).json({ error: "The export engine produced an empty document." });
+        return;
+      }
+      const filename = `care-study-${order.id}.docx`;
+      const stored = await storeOrderDelivery(id, buffer, filename);
+      const updated = await db.setOrderDelivery(id, {
+        filename: stored.filename,
+        storedPath: stored.storedPath,
+        size: stored.size,
+      });
+      res.json({ order: publicOrder(updated ?? order) });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Export failed";
+      req.log?.error?.({ err }, "auto-deliver export failed");
+      res.status(500).json({ error: message });
+    }
   }),
 );
 

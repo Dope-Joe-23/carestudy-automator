@@ -31,6 +31,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import * as adminDashboardApi from "@/lib/adminDashboardApi";
 import * as studentApi from "@/lib/studentApi";
 import { getAdminToken, fetchAdminMe, type Admin } from "@/lib/adminAuth";
+import { StudentInviteDialog } from "@/components/student-invite-dialog";
 
 // ---------------------------------------------------------------------------
 // Animation variants
@@ -150,38 +151,50 @@ function ActionCard({
   title,
   description,
   href,
+  onClick,
   color,
 }: {
   icon: React.ElementType;
   title: string;
   description: string;
-  href: string;
+  href?: string;
+  onClick?: () => void;
   color?: string;
 }) {
+  const inner = (
+    <Card className="group cursor-pointer transition-all hover:border-primary/40 hover:shadow-md">
+      <CardContent className="flex items-start gap-4 py-5">
+        <span className={cn("grid size-10 shrink-0 place-items-center rounded-lg", color ?? "bg-primary/10")}>
+          <Icon
+            className={cn(
+              "size-5",
+              color?.includes("emerald") ? "text-emerald-600"
+                : color?.includes("amber") ? "text-amber-600"
+                  : color?.includes("blue") ? "text-blue-600"
+                    : "text-primary",
+            )}
+          />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-semibold group-hover:text-primary">{title}</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+        </div>
+        <ArrowRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+      </CardContent>
+    </Card>
+  );
+
   return (
     <motion.div variants={staggerItem}>
-      <Link href={href}>
-        <Card className="group cursor-pointer transition-all hover:border-primary/40 hover:shadow-md">
-          <CardContent className="flex items-start gap-4 py-5">
-            <span className={cn("grid size-10 shrink-0 place-items-center rounded-lg", color ?? "bg-primary/10")}>
-              <Icon
-                className={cn(
-                  "size-5",
-                  color?.includes("emerald") ? "text-emerald-600"
-                    : color?.includes("amber") ? "text-amber-600"
-                      : color?.includes("blue") ? "text-blue-600"
-                        : "text-primary",
-                )}
-              />
-            </span>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-semibold group-hover:text-primary">{title}</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-            </div>
-            <ArrowRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-          </CardContent>
-        </Card>
-      </Link>
+      {onClick ? (
+        <button type="button" onClick={onClick} className="text-left">
+          {inner}
+        </button>
+      ) : (
+        <Link href={href ?? "/"}>
+          {inner}
+        </Link>
+      )}
     </motion.div>
   );
 }
@@ -226,6 +239,7 @@ export function WelcomePage() {
   const [, navigate] = useLocation();
   const [admin, setAdmin] = useState<Admin | null>(null);
   const [loading, setLoading] = useState(true);
+  const [studentInviteOpen, setStudentInviteOpen] = useState(false);
 
   const hasAdminToken = Boolean(getAdminToken());
   const hasStudentToken = Boolean(studentApi.getStudentToken());
@@ -329,10 +343,10 @@ export function WelcomePage() {
       {/* Content */}
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
         {/* ── Admin ── */}
-        {isAdmin && <AdminView admin={admin} />}
+        {isAdmin && <AdminView admin={admin} onInviteStudent={() => setStudentInviteOpen(true)} />}
 
         {/* ── Staff ── */}
-        {isStaff && <StaffView admin={admin} />}
+        {isStaff && <StaffView admin={admin} onInviteStudent={() => setStudentInviteOpen(true)} />}
 
         {/* ── Student ── */}
         {isStudent && <StudentView greeting={greeting} />}
@@ -349,6 +363,8 @@ export function WelcomePage() {
           </Button>
         </motion.div>
       </main>
+
+      <StudentInviteDialog open={studentInviteOpen} onClose={() => setStudentInviteOpen(false)} />
     </div>
   );
 }
@@ -357,7 +373,7 @@ export function WelcomePage() {
 // Admin view
 // ---------------------------------------------------------------------------
 
-function AdminView({ admin }: { admin: Admin }) {
+function AdminView({ admin, onInviteStudent }: { admin: Admin; onInviteStudent: () => void }) {
   const { data: stats, isLoading } = useQuery({
     queryKey: ["admin-dashboard"],
     queryFn: adminDashboardApi.getDashboardStats,
@@ -426,6 +442,7 @@ function AdminView({ admin }: { admin: Admin }) {
           <ActionCard icon={Stethoscope} title="Drafting studio" description="Open the care study drafting workspace" href="/studio" />
           <ActionCard icon={ShieldCheck} title="Admin dashboard" description="View stats, manage staff, and generate invites" href="/studio/dashboard" />
           <ActionCard icon={UserPlus} title="Invite staff" description="Generate a registration link for a new team member" href="/studio/dashboard" />
+          <ActionCard icon={GraduationCap} title="Invite students" description="Generate a student registration link" onClick={onInviteStudent} />
         </motion.div>
       </motion.div>
     </motion.div>
@@ -436,7 +453,7 @@ function AdminView({ admin }: { admin: Admin }) {
 // Staff view
 // ---------------------------------------------------------------------------
 
-function StaffView({ admin }: { admin: Admin }) {
+function StaffView({ admin, onInviteStudent }: { admin: Admin; onInviteStudent: () => void }) {
   const firstName = admin.name?.split(" ")[0] ?? admin.username;
 
   return (
@@ -471,6 +488,7 @@ function StaffView({ admin }: { admin: Admin }) {
         <motion.div className="grid gap-3 sm:grid-cols-2" variants={staggerContainer}>
           <ActionCard icon={ClipboardList} title="Order bin" description="Review incoming student orders and attach materials" href="/studio/bin" />
           <ActionCard icon={Stethoscope} title="Drafting studio" description="Open the care study drafting workspace" href="/studio" />
+          <ActionCard icon={GraduationCap} title="Invite students" description="Generate a registration link to send to students" onClick={onInviteStudent} />
         </motion.div>
       </motion.div>
 
@@ -482,9 +500,9 @@ function StaffView({ admin }: { admin: Admin }) {
             <div>
               <p className="text-sm font-semibold">Getting started</p>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Start by checking the order bin for new student orders. Open each order in the
-                studio to produce the care study from the student's materials. When the study is
-                ready, deliver it from the order bin.
+                Start by generating a student invite link from the dashboard, then share it with
+                your students. When they register, their orders will appear in your order bin.
+                Open each order in the studio to produce the care study from their materials.
               </p>
             </div>
           </CardContent>

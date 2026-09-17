@@ -136,6 +136,7 @@ export function registerStudent(input: {
   college: string;
   program: string;
   year?: string;
+  staffInviteToken?: string;
 }): Promise<{ token: string; student: Student }> {
   return requestJson("/students/register", {
     method: "POST",
@@ -167,7 +168,7 @@ export async function logoutStudent(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /** Pricing constants (in Ghana cedis). */
-export const PRICE_FULL_STUDY = 250;
+export const PRICE_FULL_STUDY = 300;
 export const PRICE_CHAPTER = 50;
 
 /** Initialize a Paystack payment for a delivered order.
@@ -446,6 +447,13 @@ export function attachOrderDelivery(
   return studioRequestJson(`/studio/orders/${id}/delivery`, {
     method: "POST",
     body: JSON.stringify({ filename, content }),
+  });
+}
+
+/** Auto-export the produced study as a .docx and deliver it to the student. */
+export function autoDeliverOrder(id: number): Promise<{ order: Order }> {
+  return studioRequestJson(`/studio/orders/${id}/auto-deliver`, {
+    method: "POST",
   });
 }
 

@@ -15,10 +15,12 @@ import type {
   NewOrder,
   NewOrderFile,
   NewStudent,
+  NewStudentInvite,
   NewStudyFile,
   OrderFileRow,
   OrderRow,
   OrderStatus,
+  StudentInviteRow,
   StudentRow,
   StudyFileRow,
   StudyRow,
@@ -91,6 +93,27 @@ function openSqlite(): DatabaseSync {
     sqlite.exec('ALTER TABLE "staff_invites" ADD COLUMN "role" text NOT NULL DEFAULT \'staff\'');
   } catch {
     // Column already exists
+  }
+  // Add staff_id column to students if missing (migration)
+  try {
+    sqlite.exec('ALTER TABLE "students" ADD COLUMN "staff_id" integer');
+  } catch {
+    // Column already exists
+  }
+  // Create student_invites table if it doesn't exist (migration)
+  try {
+    sqlite.exec(`CREATE TABLE IF NOT EXISTS "student_invites" (
+      "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+      "token" text NOT NULL UNIQUE,
+      "created_by" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+      "label" text,
+      "staff_name" text,
+      "used_at" integer,
+      "used_by" integer,
+      "created_at" integer NOT NULL
+    )`);
+  } catch {
+    // Table already exists
   }
   // Upgrade the bootstrap admin (from ADMIN_USERNAME env) to role="admin"
   // if it was created before the role column existed.
@@ -234,6 +257,20 @@ function toStudentRow(row: typeof schema.studentsTable.$inferSelect): StudentRow
     college: row.college,
     program: row.program,
     year: row.year,
+    staffId: row.staffId ?? null,
+    createdAt: row.createdAt,
+  };
+}
+
+function toStudentInviteRow(row: typeof schema.studentInvitesTable.$inferSelect): StudentInviteRow {
+  return {
+    id: row.id,
+    token: row.token,
+    createdBy: row.createdBy,
+    label: row.label ?? null,
+    staffName: row.staffName ?? null,
+    usedAt: row.usedAt ?? null,
+    usedBy: row.usedBy ?? null,
     createdAt: row.createdAt,
   };
 }
@@ -497,6 +534,15 @@ export function createSqliteStore(): StudyStore {
       return rows.map(toStudentRow);
     },
 
+    async listStudentsByStaff(staffId) {
+      const rows = await db
+        .select()
+        .from(students)
+        .where(eq(students.staffId, staffId))
+        .orderBy(desc(students.id));
+      return rows.map(toStudentRow);
+    },
+
     async getStudentByUsername(username) {
       const [row] = await db.select().from(students).where(eq(students.username, username));
       return row ? toStudentRow(row) : null;
@@ -547,6 +593,31 @@ export function createSqliteStore(): StudyStore {
 
     async listAllOrders() {
       const rows = await db.select().from(orders).orderBy(desc(orders.id));
+      return rows.map(toOrderRow);
+    },
+
+    async listOrdersByStaff(staffId) {
+      // Get all student IDs tied to this staff member
+      const staffStudents = await db
+        .select({ id: students.id })
+        .from(students)
+        .where(eq(students.staffId, staffId));
+      const studentIds = staffStudents.map((s) => s.id);
+      if (studentIds.length === 0) return [];
+      // Filter orders by those student IDs
+      const rows = await db
+        .select()
+        .from(orders)
+        .where(
+          studentIds.length === 1
+            ? eq(orders.studentId, studentIds[0])
+            : undefined, // If multiple, we need an IN clause — handled below
+        )
+        .orderBy(desc(orders.id));
+      // For multiple student IDs, filter in-memory (SQLite Drizzle IN support is limited)
+      if (studentIds.length > 1) {
+        return rows.filter((row) => studentIds.includes(row.studentId)).map(toOrderRow);
+      }
       return rows.map(toOrderRow);
     },
 
@@ -672,6 +743,38 @@ export function createSqliteStore(): StudyStore {
         .where(eq(orderFiles.orderId, orderId))
         .orderBy(orderFiles.id);
       return rows.map(toOrderFileRow);
+    },
+
+    // --- Student invites -----------------------------------------------------
+
+    async createStudentInvite(invite) {
+      const [row] = await db.insert(schema.studentInvitesTable).values(invite).returning();
+      return toStudentInviteRow(row);
+    },
+
+    async listStudentInvites() {
+      const rows = await db
+        .select()
+        .from(schema.studentInvitesTable)
+        .orderBy(desc(schema.studentInvitesTable.id));
+      return rows.map(toStudentInviteRow);
+    },
+
+    async getStudentInviteByToken(token) {
+      const [row] = await db
+        .select()
+        .from(schema.studentInvitesTable)
+        .where(eq(schema.studentInvitesTable.token, token));
+      return row ? toStudentInviteRow(row) : null;
+    },
+
+    async useStudentInvite(id, usedByStudentId) {
+      const [row] = await db
+        .update(schema.studentInvitesTable)
+        .set({ usedAt: new Date(), usedBy: usedByStudentId })
+        .where(eq(schema.studentInvitesTable.id, id))
+        .returning();
+      return row ? toStudentInviteRow(row) : null;
     },
   };
 }

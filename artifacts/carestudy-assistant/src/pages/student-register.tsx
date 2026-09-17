@@ -4,9 +4,9 @@
  * Accessible at /student/register. Creates a student account and
  * redirects to /welcome on success.
  */
-import { useState, type FormEvent } from "react";
-import { Link } from "wouter";
-import { HeartPulse, Loader2, UserPlus } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import { Link, useLocation } from "wouter";
+import { HeartPulse, Loader2, UserPlus, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { registerStudent, setStudentToken } from "@/lib/studentApi";
+import { validateStudentInvite } from "@/lib/adminDashboardApi";
+import { CollegeSelector } from "@/components/college-selector";
 
 const PROGRAMMES = [
   "RGN",
@@ -58,6 +60,7 @@ function BrandMark() {
 }
 
 export function StudentRegisterPage() {
+  const [location] = useLocation();
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -67,6 +70,35 @@ export function StudentRegisterPage() {
   const [program, setProgram] = useState("");
   const [year, setYear] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [staffName, setStaffName] = useState<string | null>(null);
+  const [staffToken, setStaffToken] = useState<string | null>(null);
+  const [tokenLoading, setTokenLoading] = useState(true);
+  const [tokenError, setTokenError] = useState<string | null>(null);
+
+  // Extract staff token from URL query params and validate it
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("staff");
+    if (!token) {
+      setTokenLoading(false);
+      return;
+    }
+    setStaffToken(token);
+    validateStudentInvite(token)
+      .then((result) => {
+        if (result.valid) {
+          setStaffName(result.staffName);
+        } else {
+          setTokenError("This registration link is invalid.");
+        }
+      })
+      .catch(() => {
+        setTokenError("This registration link is invalid or has expired.");
+      })
+      .finally(() => {
+        setTokenLoading(false);
+      });
+  }, []);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -84,6 +116,7 @@ export function StudentRegisterPage() {
         college,
         program,
         year: year || undefined,
+        staffInviteToken: staffToken ?? undefined,
       });
       setStudentToken(token);
       toast.success("Account created! Welcome to CareStudy.");
@@ -111,6 +144,23 @@ export function StudentRegisterPage() {
             <CardDescription>
               Your private dashboard for ordering and tracking your care study.
             </CardDescription>
+            {tokenLoading ? (
+              <div className="flex items-center justify-center gap-2 py-2">
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Verifying registration link…</span>
+              </div>
+            ) : tokenError ? (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-center text-xs text-destructive">
+                {tokenError}
+              </div>
+            ) : staffName ? (
+              <div className="flex items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
+                <ShieldCheck className="size-4 text-primary" />
+                <span className="text-xs text-muted-foreground">
+                  Registered by <span className="font-medium text-foreground">{staffName}</span>
+                </span>
+              </div>
+            ) : null}
           </CardHeader>
           <CardContent>
             <form onSubmit={submit} className="space-y-4">
@@ -181,12 +231,11 @@ export function StudentRegisterPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="reg-college">Nursing college / school *</Label>
-                <Input
+                <CollegeSelector
                   id="reg-college"
-                  placeholder="e.g. Nurses' Training College, Korle-Bu"
                   value={college}
-                  onChange={(e) => setCollege(e.target.value)}
-                  required
+                  onChange={setCollege}
+                  placeholder="Search for your institution…"
                 />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">

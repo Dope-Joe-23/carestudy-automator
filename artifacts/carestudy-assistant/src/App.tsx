@@ -43,6 +43,7 @@ import {
   FileText,
   Gauge,
   Globe,
+  GraduationCap,
   HeartPulse,
   Highlighter,
   History,
@@ -217,6 +218,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudiesPanel } from '@/components/studies-panel';
 import { useAdmin, getInitials, getDisplayName, getRoleLabel } from '@/lib/adminContext';
+import { StudentInviteDialog } from '@/components/student-invite-dialog';
 import { deriveStudyFacts, validateStudyFacts } from '@/lib/studyFacts';
 import {
   buildTerminationPrefill,
@@ -2856,6 +2858,7 @@ function Home() {
   const [evaluationProposalOpen, setEvaluationProposalOpen] = useState(false);
   const [qualityGateOpen, setQualityGateOpen] = useState(false);
   const [actualCareReviewOpen, setActualCareReviewOpen] = useState(false);
+  const [studentInviteOpen, setStudentInviteOpen] = useState(false);
   const [implementationProposal, setImplementationProposal] = useState<{
     careGiven: string;
     discharge: DischargeRecommendations | null;
@@ -6050,6 +6053,13 @@ function Home() {
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Invite student" onClick={() => setStudentInviteOpen(true)}>
+                  <GraduationCap className="size-4 shrink-0 text-sidebar-primary" />
+                  <span className="flex-1 truncate text-left">Invite student</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
@@ -7751,6 +7761,8 @@ function Home() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <StudentInviteDialog open={studentInviteOpen} onClose={() => setStudentInviteOpen(false)} />
 
       <Dialog open={newStudyOpen} onOpenChange={setNewStudyOpen}>
         <DialogContent className="sm:max-w-md">

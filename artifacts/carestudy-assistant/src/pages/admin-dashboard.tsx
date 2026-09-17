@@ -60,6 +60,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import * as adminApi from "@/lib/adminDashboardApi";
+import { StudentInviteDialog } from "@/components/student-invite-dialog";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -114,14 +115,15 @@ function PaymentBadge({ status }: { status: string }) {
 // Sidebar navigation
 // ---------------------------------------------------------------------------
 
-type TabId = "overview" | "orders" | "students" | "staff" | "invites" | "settings";
+type TabId = "overview" | "orders" | "students" | "staff" | "invites" | "student-invites" | "settings";
 
 const TABS: { id: TabId; label: string; icon: React.ElementType; adminOnly?: boolean }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
   { id: "orders", label: "Orders", icon: ClipboardList },
   { id: "students", label: "Students", icon: GraduationCap },
   { id: "staff", label: "Staff", icon: Users },
-  { id: "invites", label: "Invites", icon: UserPlus, adminOnly: true },
+  { id: "invites", label: "Staff invites", icon: UserPlus, adminOnly: true },
+  { id: "student-invites", label: "Student invites", icon: GraduationCap },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -382,6 +384,106 @@ function InviteDialog({
   );
 }
 
+// StudentInviteDialog is imported from @/components/student-invite-dialog
+// (used both here in the admin dashboard and in the studio sidebar).
+
+// ---------------------------------------------------------------------------
+// Tab: Student Invites
+// ---------------------------------------------------------------------------
+
+function StudentInvitesTab({ onInvite }: { onInvite: () => void }) {
+  const { data: inviteData, isLoading } = useQuery({
+    queryKey: ["admin-student-invites"],
+    queryFn: adminApi.listStudentInvites,
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-serif text-lg font-semibold">Student invites</h2>
+          <p className="text-sm text-muted-foreground">
+            Registration links for students. Students who register via these links are tied to your account.
+          </p>
+        </div>
+        <Button size="sm" className="gap-1.5" onClick={onInvite}>
+          <Plus className="size-3.5" /> New invite
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="py-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : inviteData?.invites && inviteData.invites.length > 0 ? (
+            <div className="divide-y">
+              {inviteData.invites.map((invite) => (
+                <div
+                  key={invite.id}
+                  className="flex items-center justify-between gap-4 px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">
+                        {invite.label || `Invite #${invite.id}`}
+                      </span>
+                      {invite.usedAt ? (
+                        <Badge variant="default" className="gap-1 bg-emerald-600">
+                          <CheckCircle2 className="size-3" /> Used
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="gap-1">
+                          <Globe className="size-3" /> Pending
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Created by {invite.createdBy} · {formatDate(invite.createdAt)}
+                      {invite.staffName ? ` · Staff: ${invite.staffName}` : ""}
+                    </p>
+                  </div>
+                  {!invite.usedAt && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 text-xs"
+                      onClick={() => {
+                        const url = `${window.location.origin}${invite.registrationUrl}`;
+                        navigator.clipboard.writeText(url).then(
+                          () => toast.success("Link copied."),
+                          () => toast.error("Could not copy."),
+                        );
+                      }}
+                    >
+                      <Copy className="size-3.5" /> Copy
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center py-12 text-center">
+              <span className="mb-3 grid size-10 place-items-center rounded-full bg-muted">
+                <GraduationCap className="size-5 text-muted-foreground" />
+              </span>
+              <p className="text-sm font-medium">No student invites yet</p>
+              <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                Create a registration link to invite your first student. Students who register
+                via this link will be tied to your account.
+              </p>
+              <Button size="sm" className="mt-3 gap-1.5" onClick={onInvite}>
+                <Plus className="size-3.5" /> Create invite
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Tab: Overview
 // ---------------------------------------------------------------------------
@@ -453,7 +555,12 @@ function OverviewTab({ stats }: { stats?: adminApi.DashboardStats }) {
                       <span className="font-mono text-xs text-muted-foreground">#{order.id}</span>
                       <span className="truncate text-sm font-medium">{order.title}</span>
                     </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {order.studentName && (
+                        <span className="font-medium text-foreground">{order.studentName}</span>
+                      )}
+                      {order.studentName && ' · '}{formatDate(order.createdAt)}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <PaymentBadge status={order.paymentStatus} />
@@ -544,7 +651,10 @@ function OrdersTab() {
                       <span className="truncate text-sm font-medium">{order.title}</span>
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {formatDate(order.createdAt)}
+                      {order.studentName && (
+                        <span className="font-medium text-foreground">{order.studentName}</span>
+                      )}
+                      {order.studentName && ' · '}{formatDate(order.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -965,8 +1075,19 @@ function SettingsTab() {
 
 export function AdminDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    // Check if the studio sidebar requested a specific tab
+    try {
+      const openTab = window.sessionStorage.getItem('carestudy_open_tab');
+      if (openTab && ['overview', 'orders', 'students', 'staff', 'invites', 'student-invites', 'settings'].includes(openTab)) {
+        window.sessionStorage.removeItem('carestudy_open_tab');
+        return openTab as TabId;
+      }
+    } catch {}
+    return 'overview';
+  });
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [studentInviteOpen, setStudentInviteOpen] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["admin-dashboard"],
@@ -1010,6 +1131,7 @@ export function AdminDashboard() {
           {activeTab === "students" && <StudentsTab />}
           {activeTab === "staff" && <StaffTab onInvite={() => setInviteOpen(true)} />}
           {activeTab === "invites" && <InvitesTab onInvite={() => setInviteOpen(true)} />}
+          {activeTab === "student-invites" && <StudentInvitesTab onInvite={() => setStudentInviteOpen(true)} />}
           {activeTab === "settings" && <SettingsTab />}
         </div>
       </main>
@@ -1020,8 +1142,9 @@ export function AdminDashboard() {
       {/* Mobile spacer */}
       <div className="h-14 lg:hidden" />
 
-      {/* Invite dialog */}
+      {/* Invite dialogs */}
       <InviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      <StudentInviteDialog open={studentInviteOpen} onClose={() => setStudentInviteOpen(false)} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { getStudyStore, type StudyRow, type StudyStore } from "@workspace/db";
+import { type AuthedAdminRequest } from "../lib/adminAuth";
 import { removeStoredFile, removeStudyArtifacts } from "../lib/uploads";
 
 const router: IRouter = Router();
@@ -78,11 +79,33 @@ function summarizeStudy(row: StudyRow) {
 }
 
 // GET /api/studies — list saved studies, most recently updated first.
+// Admins see all studies; staff only see studies from their tied students' orders.
 router.get(
   "/studies",
-  asyncRoute(async (_req, res) => {
-    const rows = await studyStore().list();
-    res.json(rows.map(summarizeStudy));
+  asyncRoute(async (req, res) => {
+    const admin = (req as AuthedAdminRequest).admin;
+    const db = studyStore();
+    
+    if (admin.role === "admin") {
+      // Admins see all studies
+      const rows = await db.list();
+      res.json(rows.map(summarizeStudy));
+    } else {
+      // Staff: get orders from their students, then filter studies
+      const staffOrders = await db.listOrdersByStaff(admin.id);
+      const studyIds = new Set(
+        staffOrders
+          .map((order) => order.producedStudyId)
+          .filter((id): id is number => id !== null),
+      );
+      if (studyIds.size === 0) {
+        res.json([]);
+        return;
+      }
+      const rows = await db.list();
+      const filtered = rows.filter((row) => studyIds.has(row.id));
+      res.json(filtered.map(summarizeStudy));
+    }
   }),
 );
 

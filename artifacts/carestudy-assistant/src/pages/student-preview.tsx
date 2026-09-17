@@ -7,7 +7,7 @@
  * chapters (GH₵ 50 each) or the full study (GH₵ 250). After payment,
  * download buttons unlock per chapter or for the whole study.
  */
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -54,6 +54,9 @@ import { payWithPaystack, getPaystackKey } from "@/lib/paystack";
 // ---------------------------------------------------------------------------
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+
+/** Section IDs whose tables are wide enough to need landscape-like width on the preview. */
+const LANDSCAPE_SECTION_IDS = new Set(["2.2", "3.2"]);
 
 function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
@@ -264,6 +267,44 @@ function DraftContent({ text }: { text: string }) {
 }
 
 // ---------------------------------------------------------------------------
+// Glimpse wrapper — shows the first ~3 lines then fades to a lock overlay
+// when the study is not yet purchased.
+// ---------------------------------------------------------------------------
+
+function GlimpseContent({
+  children,
+  locked,
+  onUnlock,
+}: {
+  children: React.ReactNode;
+  locked: boolean;
+  onUnlock?: () => void;
+}) {
+  if (!locked) return <>{children}</>;
+
+  return (
+    <div className="relative">
+      {/* Visible snippet — first ~80px of content, then a soft fade */}
+      <div className="pointer-events-none select-none" style={{ maxHeight: 80, overflow: 'hidden' }}>
+        {children}
+      </div>
+      {/* Gradient fade into lock overlay */}
+      <div className="relative -mt-8 h-16 bg-gradient-to-b from-transparent to-background" />
+      {/* Lock CTA */}
+      <div className="relative -mt-4 flex flex-col items-center rounded-lg border border-dashed border-primary/30 bg-primary/5 py-5">
+        <Lock className="mb-1.5 size-4 text-primary/60" />
+        <p className="text-xs font-medium text-muted-foreground">Purchase to view full content</p>
+        {onUnlock && (
+          <Button size="sm" className="mt-2 h-7 gap-1 text-xs" onClick={onUnlock}>
+            <ShoppingCart className="size-3" /> Unlock chapter
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Section prose renderer
 // ---------------------------------------------------------------------------
 
@@ -271,10 +312,12 @@ function SectionProse({
   data,
   rowData,
   rowColumns,
+  landscape = false,
 }: {
   data: Record<string, string>;
   rowData: { cells: string[] }[];
   rowColumns?: { id: string; label: string }[];
+  landscape?: boolean;
 }) {
   const fieldEntries = Object.entries(data).filter(([, v]) => v.trim());
 
@@ -288,8 +331,8 @@ function SectionProse({
       ))}
 
       {rowData.length > 0 && rowColumns && rowColumns.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-[11px] leading-relaxed">
+        <div className={cn("overflow-x-auto rounded-lg border", landscape && "border-primary/20 bg-background")}>
+          <table className={cn("w-full text-[11px] leading-relaxed", landscape && "min-w-[900px]")}>
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="px-3 py-2 text-left font-semibold text-foreground">#</th>
@@ -704,7 +747,7 @@ function PreviewSkeleton() {
 
       <div className="mx-auto flex max-w-7xl gap-0">
         {/* Sidebar skeleton */}
-        <aside className="hidden w-64 shrink-0 border-r py-4 lg:block">
+        <aside className="hidden w-64 shrink-0 border-r py-4 lg:block sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
           <div className="space-y-3 px-3">
             {/* Full study card */}
             <div className="rounded-lg border p-3">
@@ -862,6 +905,7 @@ export function StudentPreviewPage({ orderId }: { orderId: number }) {
   const queryClient = useQueryClient();
   const [showPreliminary, setShowPreliminary] = useState(false);
   const [activeChapter, setActiveChapter] = useState(0);
+  const chapterRefs = useRef<Map<number, HTMLElement>>(new Map());
 
   const [payDialog, setPayDialog] = useState<{
     open: boolean;
@@ -894,6 +938,14 @@ export function StudentPreviewPage({ orderId }: { orderId: number }) {
   }, [preview, showPreliminary]);
 
   const currentChapter = visibleChapters[activeChapter] ?? visibleChapters[0];
+
+  const scrollToChapter = useCallback((index: number) => {
+    setActiveChapter(index);
+    const el = chapterRefs.current.get(index);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
 
   // Download handlers
   const handleDownloadFull = useCallback(() => {
@@ -1043,11 +1095,11 @@ export function StudentPreviewPage({ orderId }: { orderId: number }) {
 
       <div className="mx-auto flex max-w-7xl gap-0">
         {/* Sidebar — chapter purchase panel (desktop) */}
-        <aside className="hidden w-64 shrink-0 border-r py-4 lg:block">
+        <aside className="hidden w-64 shrink-0 border-r py-4 lg:block sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
           <ChapterPurchasePanel
             visibleChapters={visibleChapters}
             activeIndex={activeChapter}
-            onSelect={setActiveChapter}
+            onSelect={scrollToChapter}
             isPaid={isPaid}
             paidScope={order.paidScope}
             onBuyFullStudy={handleBuyFullStudy}
@@ -1085,7 +1137,11 @@ export function StudentPreviewPage({ orderId }: { orderId: number }) {
               const roman = ROMAN[visibleChapters.findIndex((vc) => vc.i === i)] ?? String(i + 1);
 
               return (
-                <section key={i} className="mt-8 break-inside-avoid">
+                <section
+                  key={i}
+                  ref={(el) => { if (el) chapterRefs.current.set(i, el); }}
+                  className="mt-8 break-inside-avoid"
+                >
                   {/* Chapter heading with inline download button */}
                   <div className="flex items-center justify-between gap-3 pb-1.5">
                     <h2 className="font-serif text-lg font-semibold">
@@ -1120,11 +1176,20 @@ export function StudentPreviewPage({ orderId }: { orderId: number }) {
                     )}
                   </div>
 
-                  {/* Chapter intro */}
-                  {ch.intro?.trim() && <DraftContent text={ch.intro} />}
+                  {/* Chapter intro — glimpsed when unpaid */}
+                  {ch.intro?.trim() && (
+                    <GlimpseContent
+                      locked={!isPaid && !ch.isFrontMatter}
+                      onUnlock={() => setPayDialog({ open: true, scope: 'full' })}
+                    >
+                      <DraftContent text={ch.intro} />
+                    </GlimpseContent>
+                  )}
 
-                  {/* Sections */}
-                  {ch.sections.map((section) => {
+                  {/* Sections — first section glimpsed when unpaid, rest locked */}
+                  {(() => {
+                    let firstRendered = false;
+                    return ch.sections.map((section) => {
                     const hasDraft = Boolean(section.draft?.trim());
                     const hasData = Object.values(section.data).some((v) => v.trim());
                     const hasRows = section.rowData.length > 0;
@@ -1132,28 +1197,61 @@ export function StudentPreviewPage({ orderId }: { orderId: number }) {
 
                     if (!hasContent) return null;
 
-                    return (
-                      <div key={section.id} className="mt-4 break-inside-avoid">
-                        <h3 className="font-semibold text-foreground">
-                          {section.id} {section.heading}
-                        </h3>
+                    const isLandscape = LANDSCAPE_SECTION_IDS.has(section.id);
+                    const isChapterLocked = !isPaid && !ch.isFrontMatter;
+                    const isFirstSection = !firstRendered;
+                    if (isFirstSection) firstRendered = true;
+                    // First section: glimpse; remaining sections: fully locked
+                    const sectionLocked = isChapterLocked && !isFirstSection;
 
-                        {hasDraft ? (
-                          <div className="mt-2">
-                            <DraftContent text={section.draft} />
-                          </div>
-                        ) : hasData || hasRows ? (
-                          <div className="mt-2">
-                            <SectionProse
-                              data={section.data}
-                              rowData={section.rowData}
-                              rowColumns={section.rowColumns}
-                            />
-                          </div>
-                        ) : null}
+                    return (
+                      <div
+                        key={section.id}
+                        className={cn(
+                          "mt-4 break-inside-avoid",
+                          isLandscape && "relative -mx-[calc((100vw-780px)/2)] w-[100vw] max-w-[1100px] md:mx-auto md:w-[calc(100vw-4rem)]",
+                        )}
+                      >
+                        <div className={cn(
+                          "rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] p-3",
+                          !isLandscape && "border-0 bg-transparent p-0",
+                        )}>
+                          <h3 className="font-semibold text-foreground">
+                            {section.id} {section.heading}
+                          </h3>
+
+                          {sectionLocked ? (
+                            /* Fully locked — heading only, no content */
+                            <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground/60">
+                              <Lock className="size-3" />
+                              <span>Content locked</span>
+                            </div>
+                          ) : (
+                            <GlimpseContent
+                              locked={isChapterLocked}
+                              onUnlock={() => setPayDialog({ open: true, scope: 'full' })}
+                            >
+                              {hasDraft ? (
+                                <div className="mt-2">
+                                  <DraftContent text={section.draft} />
+                                </div>
+                              ) : hasData || hasRows ? (
+                                <div className="mt-2">
+                                  <SectionProse
+                                    data={section.data}
+                                    rowData={section.rowData}
+                                    rowColumns={section.rowColumns}
+                                    landscape={isLandscape}
+                                  />
+                                </div>
+                              ) : null}
+                            </GlimpseContent>
+                          )}
+                        </div>
                       </div>
                     );
-                  })}
+                  });
+                  })()}
                 </section>
               );
             })}
@@ -1273,7 +1371,7 @@ export function StudentPreviewPage({ orderId }: { orderId: number }) {
       <MobilePurchaseBar
         visibleChapters={visibleChapters}
         activeIndex={activeChapter}
-        onSelect={setActiveChapter}
+        onSelect={scrollToChapter}
         isPaid={isPaid}
         paidScope={order.paidScope}
         onBuyFullStudy={handleBuyFullStudy}

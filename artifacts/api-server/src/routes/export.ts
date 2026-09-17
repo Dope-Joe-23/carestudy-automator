@@ -15,7 +15,7 @@ const PYTHON_BIN = process.env.PYTHON_BIN || "python";
  * the Python engine writes the binary .docx to stdout, which we relay back
  * with a Word attachment content-type.
  */
-function buildDocx(payload: unknown): Promise<Buffer> {
+export function buildDocx(payload: unknown): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const child = execFile(
       PYTHON_BIN,

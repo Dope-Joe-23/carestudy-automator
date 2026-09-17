@@ -74,6 +74,7 @@ function publicStudent(student: {
 }
 
 // POST /api/students/register — create an account and sign the student in.
+// Accepts an optional staffInviteToken to tie the student to a staff member.
 router.post(
   "/students/register",
   asyncRoute(async (req, res) => {
@@ -84,6 +85,7 @@ router.post(
     const college = str(req.body?.college);
     const program = str(req.body?.program);
     const year = strOrNull(req.body?.year);
+    const staffInviteToken = str(req.body?.staffInviteToken);
 
     if (!name || name.length < 2) {
       res.status(400).json({ error: "Please enter your full name." });
@@ -111,6 +113,22 @@ router.post(
     }
 
     const db = studyStore();
+
+    // Validate staff invite token if provided
+    let staffId: number | null = null;
+    if (staffInviteToken) {
+      const invite = await db.getStudentInviteByToken(staffInviteToken);
+      if (!invite) {
+        res.status(400).json({ error: "This registration link is invalid or has expired." });
+        return;
+      }
+      if (invite.usedAt) {
+        res.status(409).json({ error: "This registration link has already been used." });
+        return;
+      }
+      staffId = invite.createdBy;
+    }
+
     const existingEmail = await db.getStudentByEmail(email);
     if (existingEmail) {
       res.status(409).json({ error: "An account with this email already exists — sign in instead." });
@@ -130,7 +148,17 @@ router.post(
       college,
       program,
       year,
+      staffId,
     });
+
+    // Mark the staff invite as used if one was provided
+    if (staffInviteToken && staffId) {
+      const invite = await db.getStudentInviteByToken(staffInviteToken);
+      if (invite) {
+        await db.useStudentInvite(invite.id, student.id);
+      }
+    }
+
     const token = createAuthToken();
     await db.createSession(student.id, token);
     res.status(201).json({ token, student: publicStudent(student) });
