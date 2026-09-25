@@ -96,6 +96,14 @@ services:
         value: /app/data/nurseflow/access.json
       - key: NURSEFLOW_CONTENT_PATH
         value: /app/data/nurseflow/question-bank.json
+      # ── NurseFlow Plus payments (Paystack) ──
+      # Without the secret key checkout answers 503 (fail-closed). The public
+      # key is a FRONTEND build var (VITE_PAYSTACK_PUBLIC_KEY) — set it where
+      # the carestudy-assistant is built, never here.
+      - key: PAYSTACK_SECRET_KEY
+        sync: false  # Set manually — secret
+      - key: NURSEFLOW_MONTHLY_PRICE_GHS
+        value: "35"
 
 databases:
   # ---------------------------------------------------------------------------
