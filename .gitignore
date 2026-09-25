@@ -75,3 +75,8 @@ carestudy.db-wal
 # Runtime data that ends up under the package dir when cwd-relative defaults
 # are used; the real stores live at <repo root>/data/nurseflow/
 artifacts/api-server/data/
+
+# NurseFlow runtime state (regenerated at runtime; seeds are committed)
+data/nurseflow/access.json
+data/nurseflow/video-jobs.json
+data/nurseflow/videos/
