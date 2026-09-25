@@ -94,6 +94,8 @@ import { StaffRegisterPage } from '@/pages/staff-register';
 import { LoginPage } from '@/pages/login';
 import { StudentRegisterPage } from '@/pages/student-register';
 import { WelcomePage } from '@/pages/welcome';
+import { NurseFlowPage } from '@/pages/nurseflow';
+import { NurseFlowQuestionBankPage } from '@/pages/nurseflow-question-bank';
 import { adminLogout } from '@/lib/adminAuth';
 import {
   CHAPTER_TEMPLATE,
@@ -8868,11 +8870,14 @@ function Router() {
       >
         <ErrorBoundary resetKey={location}>
           <Switch>
-            <Route path="/" component={LandingPage} />
+            <Route path="/" component={NurseFlowPage} />
+            <Route path="/carestudy" component={LandingPage} />
             <Route path="/studio">{() => <AdminGate><Home /></AdminGate>}</Route>
             <Route path="/studio/dashboard">{() => <AdminDashboardGate><AdminDashboard /></AdminDashboardGate>}</Route>
             <Route path="/studio/bin">{() => <AdminGate><StudioBin /></AdminGate>}</Route>
+            <Route path="/studio/nurseflow">{() => <AdminGate><NurseFlowQuestionBankPage /></AdminGate>}</Route>
             <Route path="/welcome" component={WelcomePage} />
+            <Route path="/nurseflow" component={NurseFlowPage} />
             <Route path="/login" component={LoginPage} />
             <Route path="/student/register" component={StudentRegisterPage} />
             <Route path="/staff/register" component={StaffRegisterPage} />

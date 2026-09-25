@@ -70,11 +70,19 @@ COPY --from=builder /app/artifacts/api-server/dist/ artifacts/api-server/dist/
 # Copy the Python RAG engine (needed by draftWorker at runtime)
 COPY --from=builder /app/carestudy_rag/ carestudy_rag/
 
+# NurseFlow seed content, copied onto the store volume on first boot by
+# ensureNurseFlowSeeds (src/lib/nurseflowContent.ts). It must live OUTSIDE
+# /app/data because Render mounts an empty persistent disk over that path,
+# which would shadow anything stored inside it. Only content ships here —
+# generated visuals and job records are per-deployment runtime state.
+COPY data/nurseflow/question-bank.json data/nurseflow/starter-questions.json /app/seeds/nurseflow/
+
 # Create data directories
 # NOTE: On Render, /app/data is overridden by a persistent disk mount
 # (see render.yaml) so these directories survive deploys. In local
 # development the directories are created here.
-RUN mkdir -p /app/data/uploads /app/data/studies /app/data/library
+RUN mkdir -p /app/data/uploads /app/data/studies /app/data/library \
+    && mkdir -p /app/data/nurseflow/videos
 
 # Expose the API server port
 EXPOSE 5000

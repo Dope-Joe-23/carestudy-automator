@@ -475,3 +475,50 @@ kbd {
     color: #0f172a !important;
   }
 }
+
+/*
+ * NurseFlow teaching visuals are still images, so they drift slowly to read as
+ * motion rather than a frozen frame — the stand-in for the silent clip the
+ * pipeline used to render. Pausing (via the card's play/pause control) holds
+ * the animation instead of removing it, so resuming stays where it left off.
+ */
+@keyframes nurseflow-visual-drift {
+  from {
+    transform: scale(1.07) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.18) translate3d(-1.8%, -1.8%, 0);
+  }
+}
+
+.nurseflow-visual-drift {
+  animation: nurseflow-visual-drift 14s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.nurseflow-visual-drift-paused {
+  animation-play-state: paused;
+}
+
+/*
+ * With reduced motion requested (e.g. Windows "Animation effects" off), use a
+ * much slower, smaller drift rather than a frozen frame: the drift is the
+ * card's core content — the stand-in for the video the pipeline no longer
+ * renders — so a completely still teaching visual defeats the card. 45s over
+ * a 3% zoom is a calm breath rather than a moving image.
+ */
+@keyframes nurseflow-visual-drift-soft {
+  from {
+    transform: scale(1.04) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.07) translate3d(-0.6%, -0.6%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nurseflow-visual-drift {
+    animation-name: nurseflow-visual-drift-soft;
+    animation-duration: 45s;
+  }
+}

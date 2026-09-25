@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "questions": [
+    {
+      "id": "nf-oxygen-assessment-001",
+      "topic": "Fundamentals",
+      "level": "NCLEX-style",
+      "title": "Safe oxygen therapy",
+      "question": "Before starting prescribed oxygen via nasal cannula, which assessment should the nurse prioritise?",
+      "options": ["Inspect the nasal passages and assess respiratory status", "Offer the patient a glass of water", "Place the patient flat in bed", "Measure the patient's height"],
+      "correctOptionIndex": 0,
+      "rationale": "A baseline respiratory assessment and checking the nares support safe application and later reassessment of oxygen therapy.",
+      "sourceTitle": "British Thoracic Society guideline for oxygen use in adults (2017)",
+      "sourceUrl": "https://www.brit-thoracic.org.uk/quality-improvement/guidelines/emergency-oxygen/",
+      "learningObjective": "Assess first, apply safely, then reassess the response.",
+      "visualBrief": "Simulated ward setting; nurse checks nasal cannula equipment and observation chart, no readable patient information.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-sepsis-escalation-001",
+      "topic": "Acute care",
+      "level": "NMC-aligned",
+      "title": "Recognising deterioration",
+      "question": "Which action is most appropriate when a patient shows signs of possible sepsis and clinical deterioration?",
+      "options": ["Escalate urgently using the local deterioration pathway", "Wait until the next routine observations", "Give oral fluids and review tomorrow", "Document it only after the shift ends"],
+      "correctOptionIndex": 0,
+      "rationale": "New confusion, fever and increased respiratory rate require timely assessment and escalation under local policy.",
+      "sourceTitle": "NICE guideline NG51: Sepsis: recognition, diagnosis and early management",
+      "sourceUrl": "https://www.nice.org.uk/guidance/ng51",
+      "learningObjective": "A changing patient needs timely escalation—not watchful waiting.",
+      "visualBrief": "Simulated nurse identifies changing observations and uses an escalation call bell; no patient body or clinical procedure.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-hand-hygiene-001",
+      "topic": "Infection prevention",
+      "level": "Foundation",
+      "title": "Clean hands, safer care",
+      "question": "When should hand hygiene be performed during preparation for an aseptic procedure?",
+      "options": ["Immediately before the aseptic task", "Only after the procedure", "At the end of the shift", "Only if hands look visibly soiled"],
+      "correctOptionIndex": 0,
+      "rationale": "Hand hygiene immediately before an aseptic task helps prevent microorganisms reaching a vulnerable site.",
+      "sourceTitle": "WHO: My 5 Moments for Hand Hygiene",
+      "sourceUrl": "https://www.who.int/publications/m/item/my-5-moments-for-hand-hygiene",
+      "learningObjective": "Know the moment: before touching the patient and before an aseptic task.",
+      "visualBrief": "Clean simulation hands and sink station; show preparation, not an invasive procedure.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-medication-discrepancy-001",
+      "topic": "Medication safety",
+      "level": "NCLEX-style",
+      "title": "Pause before administration",
+      "question": "A medication label does not match the electronic prescription. What should the nurse do first?",
+      "options": ["Stop and clarify the discrepancy before administration", "Administer the labelled dose to avoid delay", "Ask the patient which dose they usually take", "Document the dose as given"],
+      "correctOptionIndex": 0,
+      "rationale": "Do not administer when a discrepancy is present. Pause, verify the order and follow local medicines-management procedures.",
+      "sourceTitle": "NMC: Standards for medicines management",
+      "sourceUrl": "https://www.nmc.org.uk/standards/standards-for-post-registration/standards-for-medicines-management/",
+      "learningObjective": "A mismatch is a stop signal—clarify before giving medicine.",
+      "visualBrief": "Simulated medication trolley with deliberately blurred labels and a nurse pausing to verify; no drug names or dosage instructions.",
+      "reviewStatus": "draft"
+    }
+  ]
+}

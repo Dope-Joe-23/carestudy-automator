@@ -14,6 +14,9 @@ import importStudyRouter from "./importStudy";
 import studyAssistantRouter from "./studyAssistant";
 import uploadsRouter from "./uploads";
 import verifyRouter from "./verify";
+import nurseFlowRouter from "./nurseflow";
+import nurseFlowAdminRouter from "./nurseflowAdmin";
+import nurseFlowAccessRouter, { nurseFlowEntitlementRouter } from "./nurseflowAccess";
 
 const router: IRouter = Router();
 
@@ -24,6 +27,10 @@ router.use(adminRouter);
 router.use(adminDashboardRouter);
 router.use(studentsRouter);
 router.use(ordersRouter);
+// Public preview surface. Generation itself is constrained to reviewed cards;
+// production entitlement enforcement belongs in the payment/session layer.
+router.use(nurseFlowRouter);
+router.use(nurseFlowAccessRouter);
 // Document import is available to both students (correction flow) and the
 // studio, so it sits before the admin gate.
 router.use(importStudyRouter);
@@ -33,6 +40,8 @@ router.use(importStudyRouter);
 // from here on requires a studio admin session; visitors and students are
 // rejected with 401.
 router.use(requireAdmin);
+router.use(nurseFlowAdminRouter);
+router.use(nurseFlowEntitlementRouter);
 router.use(draftRouter);
 router.use(chapter2Router);
 router.use(exportRouter);

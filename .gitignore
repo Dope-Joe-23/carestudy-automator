@@ -68,3 +68,10 @@ carestudy.db
 carestudy.db-journal
 carestudy.db-shm
 carestudy.db-wal
+
+# Freebuff session state (local only)
+.freebuff/
+
+# Runtime data that ends up under the package dir when cwd-relative defaults
+# are used; the real stores live at <repo root>/data/nurseflow/
+artifacts/api-server/data/

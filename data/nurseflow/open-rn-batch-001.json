@@ -1,0 +1,305 @@
+{
+  "schemaVersion": 1,
+  "questions": [
+    {
+      "id": "nf-pain-report-001",
+      "topic": "Fundamentals",
+      "level": "Foundation",
+      "title": "Pain is what the patient says it is",
+      "question": "Which information is the most reliable indicator of how much pain a patient is experiencing?",
+      "options": [
+        "The nurse's impression of the patient's facial expression",
+        "The change in the patient's heart rate and blood pressure",
+        "The family's account of how much pain the patient usually reports",
+        "The patient's own description of the pain"
+      ],
+      "correctOptionIndex": 3,
+      "rationale": "Pain is subjective, so the only person who can report it reliably is the patient. Observation and vital signs may support the assessment but never replace the patient's own report, and a relative cannot report the pain on the patient's behalf.",
+      "sourceTitle": "Nursing Fundamentals 2e (Open RN, WisTech Open, CC BY 4.0, 2024)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingfundamentals/",
+      "learningObjective": "Treat the patient's self-report as the primary source when assessing pain.",
+      "visualBrief": "Simulated bedside scene: a nurse using a numbered pain scale with an adult client, with no readable documentation and no real patient data.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-falls-bed-safety-001",
+      "topic": "Fundamentals",
+      "level": "Foundation",
+      "title": "Leave the bed safe",
+      "question": "A patient is at risk of falling. Which measures should the nurse take before leaving the bedside?",
+      "options": [
+        "Leave the bed raised to a comfortable working height so staff can reach the patient quickly",
+        "Lower the bed to its lowest position, apply the brakes and keep the call bell within reach",
+        "Raise all four side rails and move the call bell out of the way so the patient cannot reach over it",
+        "Ask the family to stay with the patient at all times instead of taking any other measure"
+      ],
+      "correctOptionIndex": 1,
+      "rationale": "A bed at its lowest height with the brakes applied and the call bell within reach reduces both the chance and the severity of a fall. Side rails are not a substitute for these measures and can themselves cause injury or act as a restraint, and family presence does not replace them.",
+      "sourceTitle": "Nursing Fundamentals 2e (Open RN, WisTech Open, CC BY 4.0, 2024)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingfundamentals/",
+      "learningObjective": "Apply the core bed-safety measures for a patient at risk of falling.",
+      "visualBrief": "Simulated ward bed at its lowest setting with the brakes visible and a call bell resting on the mattress; no patient body in frame.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-documentation-objective-001",
+      "topic": "Fundamentals",
+      "level": "Foundation",
+      "title": "Chart what you observe",
+      "question": "Which entry is the most appropriate for the nurse to record in the patient's notes?",
+      "options": [
+        "Patient appears to be in pain and is probably exaggerating",
+        "Patient seems difficult today, much like yesterday",
+        "At 14:00 the patient rated pain 7/10 in the lower abdomen and declined analgesia",
+        "Patient was fine during the shift, nothing to report"
+      ],
+      "correctOptionIndex": 2,
+      "rationale": "Documentation must be objective, specific and timely. Recording the time, the patient's own rating and the decision the patient made is factual and useful to the next clinician, whereas impressions such as \"exaggerating\" and vague entries such as \"nothing to report\" are neither objective nor clinically useful.",
+      "sourceTitle": "Nursing Fundamentals 2e (Open RN, WisTech Open, CC BY 4.0, 2024)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingfundamentals/",
+      "learningObjective": "Write objective, specific and timely nursing documentation.",
+      "visualBrief": "Simulated nurse at a workstation writing a short note, with the screen deliberately blurred so no text is readable.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-bp-technique-001",
+      "topic": "Fundamentals",
+      "level": "NCLEX-style",
+      "title": "Support the arm",
+      "question": "Which action best improves the accuracy of a manual blood pressure measurement?",
+      "options": [
+        "Supporting the patient's arm at heart level",
+        "Inflating the cuff slowly over about 30 seconds",
+        "Placing the cuff over the patient's sleeve",
+        "Taking the reading immediately after the patient has walked to the chair"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "An unsupported arm, or one held below heart level, raises the reading. Supporting the arm at heart level with the patient rested is the action that prevents a falsely high result. A slow inflation, clothing under the cuff and measuring straight after activity all distort the reading as well.",
+      "sourceTitle": "Nursing Skills 2e (Open RN, WisTech Open, CC BY 4.0, 2023)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingskills/",
+      "learningObjective": "Identify the technique that keeps a manual blood pressure reading accurate.",
+      "visualBrief": "Simulated close-up of a blood pressure cuff on a supported arm at heart level, with the gauge blurred so no numbers are readable.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-ppe-doffing-001",
+      "topic": "Infection prevention",
+      "level": "NMC-aligned",
+      "title": "Taking off PPE in the right order",
+      "question": "Which item should the nurse remove first when removing personal protective equipment after patient care?",
+      "options": [
+        "The mask or respirator",
+        "The gown",
+        "The eye protection",
+        "The gloves"
+      ],
+      "correctOptionIndex": 3,
+      "rationale": "Gloves are the most heavily contaminated item, so they come off first and stop contaminated material being transferred to the face or to other surfaces. Eye protection, the gown and finally the mask or respirator follow, with hand hygiene once the last item is removed.",
+      "sourceTitle": "Nursing Skills 2e (Open RN, WisTech Open, CC BY 4.0, 2023)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingskills/",
+      "learningObjective": "Remove PPE in the order that keeps contamination away from the face.",
+      "visualBrief": "Simulated nurse removing gloves at a doorway in a training room; no patient and no clinical procedure in frame.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-hand-hygiene-water-001",
+      "topic": "Infection prevention",
+      "level": "Foundation",
+      "title": "Soap and water, or rub?",
+      "question": "For which situation must the nurse wash with soap and water rather than use an alcohol-based hand rub?",
+      "options": [
+        "After touching intact skin during a bed bath",
+        "When the hands are visibly soiled",
+        "Before and after giving an oral tablet",
+        "After removing non-sterile gloves"
+      ],
+      "correctOptionIndex": 1,
+      "rationale": "An alcohol-based rub is the first choice for routine hand hygiene when the hands are not visibly dirty, but it does not remove organic material. Hands that are visibly soiled, or contaminated with spore-forming organisms such as Clostridioides difficile, need soap and water.",
+      "sourceTitle": "Nursing Skills 2e (Open RN, WisTech Open, CC BY 4.0, 2023)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingskills/",
+      "learningObjective": "Choose correctly between soap and water and an alcohol-based hand rub.",
+      "visualBrief": "Simulated hands at a training sink with water running, one hand visibly soiled; no patient in frame.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-sharps-disposal-001",
+      "topic": "Infection prevention",
+      "level": "Foundation",
+      "title": "Dispose of the sharp, not the needle",
+      "question": "After giving an injection, what should the nurse do with the used needle?",
+      "options": [
+        "Recap it carefully using one hand before carrying it to the bin",
+        "Leave it on a tray to be cleared away at the end of the drug round",
+        "Bend the needle to one side so that it cannot be reused",
+        "Place it in the nearest puncture-resistant sharps container without recapping"
+      ],
+      "correctOptionIndex": 3,
+      "rationale": "Sharps are disposed of immediately at the point of use into a puncture-resistant container, without recapping or bending. Recapping and carrying a used needle are the main causes of needlestick injuries; single-handed recapping is only used where local policy explicitly permits it, and the safest practice is to avoid recapping altogether.",
+      "sourceTitle": "Nursing Skills 2e (Open RN, WisTech Open, CC BY 4.0, 2023)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingskills/",
+      "learningObjective": "Dispose of sharps immediately and safely at the point of use.",
+      "visualBrief": "Simulated sharps container on a trolley with a used syringe being dropped straight in; labels blurred and no needle contact with skin.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-equipment-cleaning-001",
+      "topic": "Infection prevention",
+      "level": "Foundation",
+      "title": "Clean between patients",
+      "question": "A blood pressure cuff and stethoscope have been used on a patient with a cough. What should the nurse do before using them on the next patient?",
+      "options": [
+        "Wipe the cuff and stethoscope with the detergent or disinfectant product specified for them",
+        "Rinse them under the tap in the clinical hand-wash basin",
+        "Store them in the utility room until the next shift",
+        "Use them straight away, because non-invasive items do not carry organisms"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "Reusable non-invasive equipment that touches skin is a recognised route for spreading organisms, so it is cleaned after use on one patient before it is used on another, using the product and method the manufacturer specifies. Clinical hand-wash basins are not for cleaning equipment, and \"clean patient\" status is not a reason to skip cleaning.",
+      "sourceTitle": "Nursing Skills 2e (Open RN, WisTech Open, CC BY 4.0, 2023)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingskills/",
+      "learningObjective": "Clean shared non-invasive equipment between patients.",
+      "visualBrief": "Simulated nurse wiping a blood pressure cuff and stethoscope on a tray; no patient in frame.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-medication-patch-001",
+      "topic": "Medication safety",
+      "level": "NMC-aligned",
+      "title": "One patch at a time",
+      "question": "The prescription requires a new transdermal patch and the patient is still wearing the previous one. What should the nurse do?",
+      "options": [
+        "Apply the new patch on the opposite arm and leave the old one in place until it falls off",
+        "Leave the old patch on and apply the new one directly over the top of it",
+        "Remove the old patch, apply the new one at a fresh site, and record the site and time",
+        "Remove the old patch and discard it without documenting, then apply the new patch"
+      ],
+      "correctOptionIndex": 2,
+      "rationale": "Leaving the previous patch in place keeps delivering the drug and can cause an overdose. The old patch is removed, the skin is checked, the new patch goes on a fresh site, and the site, the time and the removal of the old patch are recorded.",
+      "sourceTitle": "Nursing Skills 2e (Open RN, WisTech Open, CC BY 4.0, 2023)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingskills/",
+      "learningObjective": "Prevent duplicate dosing when administering transdermal medication.",
+      "visualBrief": "Simulated close-up of a transdermal patch being removed from an arm; no readable label and no drug name shown.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-medication-prn-001",
+      "topic": "Medication safety",
+      "level": "NCLEX-style",
+      "title": "Assess before the PRN",
+      "question": "Before administering a prescribed PRN analgesic, which action should the nurse take first?",
+      "options": [
+        "Offer the dose at the same time it was given the day before, to keep the routine steady",
+        "Assess the patient's current pain and check when the previous dose was given",
+        "Administer the dose and then assess the pain once it has started to work",
+        "Ask a colleague to give the dose while the nurse completes other tasks"
+      ],
+      "correctOptionIndex": 1,
+      "rationale": "A PRN medicine is given in response to the patient's current condition, so the nurse assesses the patient and confirms the prescribed dose and the timing of the previous dose before administering. Giving it to a fixed routine, giving it before assessing, or handing the dose to someone else does not meet the requirements of a PRN prescription.",
+      "sourceTitle": "Nursing Skills 2e (Open RN, WisTech Open, CC BY 4.0, 2023)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingskills/",
+      "learningObjective": "Assess the patient and the prescription before giving a PRN medicine.",
+      "visualBrief": "Simulated nurse checking a medication record beside a bed; the record and any labels are blurred with no readable drug names.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-medication-prepared-001",
+      "topic": "Medication safety",
+      "level": "NMC-aligned",
+      "title": "Only give what you prepared",
+      "question": "A colleague asks the nurse to give a patient the tablet the colleague has already prepared. What should the nurse do?",
+      "options": [
+        "Decline, and prepare the medication personally before administering it",
+        "Give the tablet, because the colleague has already checked it",
+        "Give the tablet, but record it under the colleague's name",
+        "Leave the tablet at the bedside for the patient to take later"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "The nurse who administers a medicine is accountable for it, and that includes preparing it. Accepting medication prepared by someone else removes the opportunity to check the patient, the medicine, the dose and the route, so the nurse declines and prepares it personally. Medicines are never left at the bedside for the patient to take later.",
+      "sourceTitle": "NMC: Standards for medicines management",
+      "sourceUrl": "https://www.nmc.org.uk/standards/standards-for-post-registration/standards-for-medicines-management/",
+      "learningObjective": "Retain personal accountability for every medicine you administer.",
+      "visualBrief": "Simulated medication trolley with two nurses and an unopened pack; no readable labels and no drug names.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-medication-allergy-001",
+      "topic": "Medication safety",
+      "level": "Foundation",
+      "title": "Check the allergy status first",
+      "question": "The nurse is preparing a medicine prescribed for a patient who has not had it before. Which check is essential before administering it?",
+      "options": [
+        "Confirm the patient's usual brand of the medicine",
+        "Confirm the patient's preferred time of day for taking medicines",
+        "Confirm whether the patient has any known allergies",
+        "Confirm whether a relative has taken the same medicine before"
+      ],
+      "correctOptionIndex": 2,
+      "rationale": "Checking for known allergies, and how the patient reacted previously, prevents a serious avoidable reaction. It is part of the checks made before every dose, and it is essential before giving a medicine the patient has not had before.",
+      "sourceTitle": "NMC: Standards for medicines management",
+      "sourceUrl": "https://www.nmc.org.uk/standards/standards-for-post-registration/standards-for-medicines-management/",
+      "learningObjective": "Check allergy status as part of the checks before administration.",
+      "visualBrief": "Simulated nurse checking an identification band and a record at the bedside; band and screen text blurred.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-oxygen-ignition-001",
+      "topic": "Acute care",
+      "level": "Foundation",
+      "title": "Oxygen needs respect",
+      "question": "Which precaution is essential for a patient receiving oxygen through a nasal cannula?",
+      "options": [
+        "Keep the patient away from other patients at all times",
+        "Keep the oxygen equipment away from sources of ignition and from oil or grease",
+        "Turn the oxygen off completely while the patient sleeps",
+        "Cover the cannula with a dry dressing between uses"
+      ],
+      "correctOptionIndex": 1,
+      "rationale": "Oxygen supports combustion, so the equipment is kept away from ignition sources such as smoking, naked flames and electrical equipment that may spark, and away from oil or grease. Turning oxygen off for sleep interrupts prescribed therapy, and covering the cannula is not a safe practice.",
+      "sourceTitle": "Nursing Fundamentals 2e (Open RN, WisTech Open, CC BY 4.0, 2024)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingfundamentals/",
+      "learningObjective": "Apply the fire and ignition precautions required for oxygen therapy.",
+      "visualBrief": "Simulated bedside scene with a nasal cannula and a no-smoking sign; no patient face and no readable documentation.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-fluid-output-001",
+      "topic": "Acute care",
+      "level": "NCLEX-style",
+      "title": "Watch the output",
+      "question": "Over the last two shifts a patient's urine output has fallen well below the expected amount. What is the nurse's priority?",
+      "options": [
+        "Report the fall promptly and assess the patient for signs of dehydration or fluid retention",
+        "Record it at the end of the day and review it tomorrow",
+        "Restrict the patient's fluids until the output returns to normal",
+        "Wait for the next set of routine observations before doing anything"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "A sustained fall in urine output is an early sign that fluid balance is changing or that renal perfusion is reduced, so it is reported promptly alongside an assessment rather than left for review. Changing a patient's fluid intake is a medical decision, not a nursing one.",
+      "sourceTitle": "Nursing Fundamentals 2e (Open RN, WisTech Open, CC BY 4.0, 2024)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingfundamentals/",
+      "learningObjective": "Recognise and escalate a sustained fall in urine output.",
+      "visualBrief": "Simulated nurse measuring fluid in a graduated container at the bedside; the scale markings are blurred.",
+      "reviewStatus": "draft"
+    },
+    {
+      "id": "nf-breathless-position-001",
+      "topic": "Acute care",
+      "level": "Foundation",
+      "title": "Ease the work of breathing",
+      "question": "A patient becomes short of breath while lying flat. Which action should the nurse take first?",
+      "options": [
+        "Leave the patient lying flat and offer a cup of water",
+        "Lower the head of the bed so that the patient can rest",
+        "Help the patient to sit upright and reassess the breathing",
+        "Wait for the doctor to prescribe a change of position"
+      ],
+      "correctOptionIndex": 2,
+      "rationale": "Sitting upright allows the diaphragm and accessory muscles to work more effectively and usually eases breathlessness, so it is the immediate nursing action, followed by reassessment. Leaving the patient flat worsens the problem, and positioning does not need to wait for a prescription.",
+      "sourceTitle": "Nursing Fundamentals 2e (Open RN, WisTech Open, CC BY 4.0, 2024)",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingfundamentals/",
+      "learningObjective": "Use upright positioning as the first response to breathlessness when lying flat.",
+      "visualBrief": "Simulated nurse raising the head of a ward bed with the client sitting forward; no identifiable face.",
+      "reviewStatus": "draft"
+    }
+  ]
+}

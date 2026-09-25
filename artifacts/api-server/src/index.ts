@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 
 import app from "./app";
 import { logger } from "./lib/logger";
+import { ensureNurseFlowSeeds } from "./lib/nurseflowContent";
 import { draftWorker } from "./lib/draftWorker";
 import { closeStudyStore, initializePostgres } from "@workspace/db";
 
@@ -69,6 +70,16 @@ const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+// Seed the NurseFlow content stores on first boot (a no-op when the store
+// files already exist, or when the seed directory itself is absent). Runs
+// before the server accepts traffic so the first feed request never sees an
+// empty bank on a fresh deployment.
+try {
+  await ensureNurseFlowSeeds();
+} catch (err) {
+  logger.error({ err }, "Failed to seed NurseFlow content stores");
 }
 
 try {

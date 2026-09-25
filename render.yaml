@@ -71,6 +71,31 @@ services:
         sync: false
       - key: R2_BUCKET_NAME
         sync: false
+      # ── NurseFlow teaching visuals ──
+      # Default provider: Cloudflare Workers AI still images (the learner page
+      # animates them with CSS). Needs a token whose permissions include
+      # Account -> Workers AI -> Edit. CLOUDFLARE_ACCOUNT_ID is shared with
+      # the R2 block above. Without the token the visual routes answer 503
+      # with setup guidance and the feed keeps using the placeholder.
+      - key: CLOUDFLARE_API_TOKEN
+        sync: false  # Set manually — secret
+      # Opt in to real 8-second clips instead (paid, no free tier):
+      # set NURSEFLOW_VISUAL_PROVIDER=veo plus a Gemini key in the dashboard.
+      - key: GEMINI_API_KEY
+        sync: false  # Set manually — secret
+      # Generated job records and cached images/clips. Both default under
+      # ./data, which is the mounted disk below; set them explicitly to keep
+      # assets across redeploys.
+      - key: NURSEFLOW_VIDEO_PATH
+        value: /app/data/nurseflow/video-jobs.json
+      - key: NURSEFLOW_VIDEO_DIR
+        value: /app/data/nurseflow/videos
+      # Anonymous trial + access records and the question bank. The mounted
+      # disk keeps trial counters and imported cards across redeploys.
+      - key: NURSEFLOW_ACCESS_PATH
+        value: /app/data/nurseflow/access.json
+      - key: NURSEFLOW_CONTENT_PATH
+        value: /app/data/nurseflow/question-bank.json
 
 databases:
   # ---------------------------------------------------------------------------
