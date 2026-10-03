@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +56,9 @@ type Question = {
   sourceUrl: string;
   learningObjective: string;
   visualBrief: string;
+  /** "document" means sourceUrl is only a reference (e.g. an uploaded PDF's
+   * name), so the card needs a real source before it can be approved. */
+  sourceKind?: "url" | "document";
   reviewStatus: ReviewStatus;
   reviewedBy?: string;
   reviewedAt?: string;
@@ -173,6 +177,20 @@ function timeAgo(iso: string | undefined): string {
 
 const fullDate = (iso: string | undefined) => (iso ? new Date(iso).toLocaleString() : "");
 
+/** Read a picked file as raw base64 (no data-URL prefix) for the extract endpoint. */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result ?? "");
+      const comma = result.indexOf(",");
+      resolve(comma >= 0 ? result.slice(comma + 1) : "");
+    };
+    reader.onerror = () => reject(new Error("That file could not be read."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function NurseFlowQuestionBankPage() {
   const reviewer = getDisplayName(useAdmin());
 
@@ -188,7 +206,14 @@ export function NurseFlowQuestionBankPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // The import editor lives in a modal so the review queue can use the full width.
+  const [importOpen, setImportOpen] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  // Optional public URL applied to every card extracted from a PDF. Left blank,
+  // cards come back flagged as needing a source before approval.
+  const [extractSourceUrl, setExtractSourceUrl] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
+  const documentInput = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
@@ -272,6 +297,7 @@ export function NurseFlowQuestionBankPage() {
       setPayload(EMPTY_PAYLOAD);
       setIssues([]);
       setValidation(null);
+      setImportOpen(false);
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Import failed.");
@@ -335,6 +361,57 @@ export function NurseFlowQuestionBankPage() {
     setValidation(null);
   }
 
+  /** Send an uploaded PDF or Word document to the extraction endpoint. */
+  async function extractDocument(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    if (!/\.(pdf|docx)$/i.test(file.name)) {
+      toast.error("Choose a PDF or Word (.docx) file.");
+      return;
+    }
+    try {
+      setExtracting(true);
+      const content = await fileToBase64(file);
+      const data = await request<{ questions?: unknown[] }>("/extract", {
+        method: "POST",
+        body: JSON.stringify({ filename: file.name, content, sourceUrl: extractSourceUrl.trim() }),
+      });
+      const cards = data.questions ?? [];
+      if (cards.length === 0) {
+        toast.error("The document produced no usable cards.");
+        return;
+      }
+      setPayload(JSON.stringify({ questions: cards }, null, 2));
+      setIssues([]);
+      setValidation(null);
+      toast.success(
+        `Extracted ${cards.length} card${cards.length === 1 ? "" : "s"} — review the JSON, validate, then import.`,
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Extraction failed.");
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  /** Attach a real source URL to a card so it can be approved. */
+  async function setSource(id: string, sourceUrl: string) {
+    try {
+      setBusyId(id);
+      await request(`/${encodeURIComponent(id)}/source`, {
+        method: "PATCH",
+        body: JSON.stringify({ sourceUrl }),
+      });
+      toast.success("Source URL saved.");
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save the source.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function review(id: string, reviewStatus: ReviewStatus) {
     try {
       setBusyId(id);
@@ -364,43 +441,34 @@ export function NurseFlowQuestionBankPage() {
           <ChevronLeft className="size-4" /> Studio
         </Link>
 
-        <div className="mt-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[.16em] text-primary">NurseFlow</p>
-            <h1 className="font-serif text-4xl tracking-tight">Question Bank</h1>
-            <p className="mt-2 max-w-2xl text-muted-foreground">
+        <header className="mt-4 flex flex-col gap-4 border-b pb-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <p className="font-mono text-[11px] uppercase tracking-[.18em] text-primary">NurseFlow</p>
+            <h1 className="mt-1 font-serif text-3xl tracking-tight sm:text-4xl">Question Bank</h1>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
               Validate, review and publish original learning cards. Only approved cards appear in the public feed.
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="hidden items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs text-muted-foreground sm:inline-flex">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <span className="hidden items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground sm:inline-flex">
               <ShieldCheck className="size-3.5 text-primary" /> Reviewing as {reviewer}
             </span>
             <Button variant="outline" onClick={() => void load()} disabled={loading}>
               <RefreshCw className={cn("mr-2 size-4", loading && "animate-spin")} /> Refresh
             </Button>
+            <Button onClick={() => setImportOpen(true)}>
+              <FileUp className="mr-2 size-4" /> Import cards
+            </Button>
           </div>
-        </div>
+        </header>
 
-        {/* Summary tiles double as the review-queue filter. */}
-        <div className="mt-8 flex items-baseline justify-between gap-3">
-          <h2 className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">
-            Bank status · pick one to filter the queue
-          </h2>
-          {filter !== "all" && (
-            <button
-              type="button"
-              onClick={() => setFilter("all")}
-              className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Show all cards
-            </button>
-          )}
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {/* Compact status pills double as the review-queue filter. */}
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <span className="mr-1 font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">
+            Bank status
+          </span>
           {FILTERS.map((option) => {
             const active = filter === option.value;
-            const primary = option.value === "draft" || option.value === "in_review";
             return (
               <button
                 key={option.value}
@@ -408,17 +476,24 @@ export function NurseFlowQuestionBankPage() {
                 onClick={() => setFilter(option.value)}
                 aria-pressed={active}
                 className={cn(
-                  "rounded-xl border bg-card p-3 text-left transition-colors",
-                  active ? "border-primary ring-1 ring-primary" : "hover:border-primary/40",
+                  "group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors",
+                  active
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-card hover:border-primary/40 hover:bg-accent",
                 )}
               >
-                <span className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground">
+                <span
+                  className={cn(
+                    "transition-colors",
+                    active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+                  )}
+                >
                   {option.label}
                 </span>
                 <span
                   className={cn(
-                    "mt-1 block text-2xl font-semibold tabular-nums",
-                    primary && counts[option.value] > 0 ? "text-primary" : "text-foreground",
+                    "min-w-6 rounded-full px-1.5 py-0.5 text-center font-mono text-[11px] tabular-nums",
+                    active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
                   )}
                 >
                   {counts[option.value]}
@@ -426,6 +501,15 @@ export function NurseFlowQuestionBankPage() {
               </button>
             );
           })}
+          {filter !== "all" && (
+            <button
+              type="button"
+              onClick={() => setFilter("all")}
+              className="ml-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Show all
+            </button>
+          )}
         </div>
         {pendingReview > 0 && (
           <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -434,22 +518,23 @@ export function NurseFlowQuestionBankPage() {
           </p>
         )}
 
-        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-          {/* ---------------------------------------------------------------- */}
-          {/* Import editor                                                    */}
-          {/* ---------------------------------------------------------------- */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+        {/* ---------------------------------------------------------------- */}
+        {/* Import editor (modal)                                            */}
+        {/* ---------------------------------------------------------------- */}
+        <Dialog open={importOpen} onOpenChange={setImportOpen}>
+          <DialogContent className="max-w-3xl gap-0 p-0">
+            <DialogHeader className="border-b px-6 py-5">
+              <DialogTitle className="flex items-center gap-2">
                 <FileUp className="size-5 text-primary" /> Import draft cards
-              </CardTitle>
-              <CardDescription>
-                Paste a JSON object with a <code>questions</code> array, or load the repository's starter batch.
-                Validate before importing — every card is stored as a draft, whatever <code>reviewStatus</code> the
-                payload carries, and is published only by an approval in the queue.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+              </DialogTitle>
+              <DialogDescription>
+                Paste a JSON object with a <code>questions</code> array, load the repository's starter batch, or
+                extract cards from an uploaded PDF or Word document. Validate before importing — every card is stored
+                as a draft, whatever <code>reviewStatus</code> the payload carries, and is published only by an
+                approval in the queue.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="px-6 py-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <PayloadPill state={payloadState} />
                 <span className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground">
@@ -471,6 +556,14 @@ export function NurseFlowQuestionBankPage() {
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()}>
                   <FileText className="mr-1.5 size-3.5" /> Choose .json
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => documentInput.current?.click()} disabled={extracting}>
+                  {extracting ? (
+                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-1.5 size-3.5" />
+                  )}
+                  Extract from PDF / Word
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => void loadStarter()} disabled={starterBusy}>
                   {starterBusy ? (
@@ -495,6 +588,29 @@ export function NurseFlowQuestionBankPage() {
                   accept=".json,application/json"
                   className="hidden"
                   onChange={(event) => void pickFile(event)}
+                />
+                <input
+                  ref={documentInput}
+                  type="file"
+                  accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  className="hidden"
+                  onChange={(event) => void extractDocument(event)}
+                />
+              </div>
+
+              <div className="mt-3">
+                <label
+                  htmlFor="extract-source"
+                  className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground"
+                >
+                  Source URL for document extraction (optional)
+                </label>
+                <Input
+                  id="extract-source"
+                  value={extractSourceUrl}
+                  onChange={(event) => setExtractSourceUrl(event.target.value)}
+                  placeholder="https://… — applied to every card; leave blank to flag them as needing a source"
+                  className="mt-1"
                 />
               </div>
 
@@ -532,29 +648,33 @@ export function NurseFlowQuestionBankPage() {
                   All {validation.received} cards passed validation — ready to import as drafts.
                 </div>
               ) : null}
-            </CardContent>
-          </Card>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-          {/* ---------------------------------------------------------------- */}
-          {/* Review queue                                                     */}
-          {/* ---------------------------------------------------------------- */}
+        {/* ---------------------------------------------------------------- */}
+        {/* Review queue                                                     */}
+        {/* ---------------------------------------------------------------- */}
+        <div className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between gap-3">
-                <span>Review queue</span>
-                <Badge variant="secondary" className="font-mono tabular-nums">
-                  {visible.length}
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                {questions.length === 0
-                  ? "Saved cards will collect here."
-                  : `${visible.length} of ${questions.length} saved card${questions.length === 1 ? "" : "s"}${
-                      savedAt ? ` · saved ${timeAgo(savedAt)}` : ""
-                    }`}
-              </CardDescription>
-              <div className="pt-2">
-                <div className="relative">
+            <CardHeader className="gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <CardTitle className="flex items-center gap-3">
+                    <span>Review queue</span>
+                    <Badge variant="secondary" className="font-mono tabular-nums">
+                      {visible.length}
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    {questions.length === 0
+                      ? "Saved cards will collect here."
+                      : `${visible.length} of ${questions.length} saved card${questions.length === 1 ? "" : "s"}${
+                          savedAt ? ` · saved ${timeAgo(savedAt)}` : ""
+                        }`}
+                  </CardDescription>
+                </div>
+                <div className="relative w-full sm:w-72 sm:shrink-0">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={query}
@@ -572,15 +692,10 @@ export function NurseFlowQuestionBankPage() {
               ) : questions.length === 0 ? (
                 <EmptyState
                   title="No cards in the bank yet"
-                  body="Load the starter batch into the editor, validate it, then import it as drafts."
+                  body="Open the importer to paste a batch, extract cards from a PDF or Word file, or load the starter questions."
                   action={
-                    <Button variant="outline" size="sm" onClick={() => void loadStarter()} disabled={starterBusy}>
-                      {starterBusy ? (
-                        <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-                      ) : (
-                        <RotateCcw className="mr-1.5 size-3.5" />
-                      )}
-                      Load starter questions
+                    <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+                      <FileUp className="mr-1.5 size-3.5" /> Import cards
                     </Button>
                   }
                 />
@@ -610,6 +725,7 @@ export function NurseFlowQuestionBankPage() {
                     expanded={expandedId === question.id}
                     onToggle={() => setExpandedId((current) => (current === question.id ? null : question.id))}
                     onReview={review}
+                    onSetSource={setSource}
                   />
                 ))
               )}
@@ -855,23 +971,67 @@ function VideoClipPanel({ question }: { question: Question }) {
  * expanded it shows the full item an educator needs to sign off on — options
  * with the correct answer marked, rationale, source and the visual brief.
  */
+/**
+ * Inline "needs source" fixer for a card imported from a document. Saving a
+ * real URL flips the card to a normal URL source so it can be approved.
+ */
+function SourceFixer({
+  questionId,
+  busy,
+  onSetSource,
+}: {
+  questionId: string;
+  busy: boolean;
+  onSetSource: (id: string, url: string) => void;
+}) {
+  const [value, setValue] = useState("");
+  const valid = /^https?:\/\/\S+$/i.test(value.trim());
+  return (
+    <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
+      <p className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-500">
+        <CircleAlert className="size-3.5" /> Needs a source URL before it can be approved
+      </p>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        This card was extracted from a document, so its source is only a reference. Add the document's public link to
+        publish it.
+      </p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <Input
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder="https://…"
+          className="h-9 min-w-[12rem] flex-1"
+          aria-label="Source URL"
+        />
+        <Button size="sm" onClick={() => onSetSource(questionId, value.trim())} disabled={busy || !valid}>
+          {busy ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : null}
+          Save source
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function QuestionCard({
   question,
   busy,
   expanded,
   onToggle,
   onReview,
+  onSetSource,
 }: {
   question: Question;
   busy: boolean;
   expanded: boolean;
   onToggle: () => void;
   onReview: (id: string, status: ReviewStatus) => void;
+  onSetSource: (id: string, url: string) => void;
 }) {
   const meta = statusMeta(question.reviewStatus);
   const StatusIcon = meta.icon;
   const status = question.reviewStatus;
   const options = Array.isArray(question.options) ? question.options : [];
+  const needsSource = question.sourceKind === "document";
 
   return (
     <article className={cn("rounded-xl border p-4 transition-colors", expanded && "bg-muted/30")}>
@@ -882,6 +1042,11 @@ function QuestionCard({
               <StatusIcon className="size-3" /> {meta.label}
             </Badge>
             {question.level && <Badge variant="outline">{question.level}</Badge>}
+            {needsSource && (
+              <Badge variant="outline" className="gap-1 border-amber-500/50 text-amber-700 dark:text-amber-500">
+                <CircleAlert className="size-3" /> Needs source
+              </Badge>
+            )}
             {question.topic && (
               <span className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground">
                 {question.topic}
@@ -948,6 +1113,8 @@ function QuestionCard({
             </div>
           )}
 
+          {needsSource && <SourceFixer questionId={question.id} busy={busy} onSetSource={onSetSource} />}
+
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailBlock label="Rationale">{question.rationale || "—"}</DetailBlock>
             <DetailBlock label="Learning objective">{question.learningObjective || "—"}</DetailBlock>
@@ -984,7 +1151,12 @@ function QuestionCard({
 
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
         {status !== "approved" && (
-          <Button size="sm" onClick={() => onReview(question.id, "approved")} disabled={busy}>
+          <Button
+            size="sm"
+            onClick={() => onReview(question.id, "approved")}
+            disabled={busy || needsSource}
+            title={needsSource ? "Add a source URL before approving" : undefined}
+          >
             {busy ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 size-3.5" />}
             Approve
           </Button>

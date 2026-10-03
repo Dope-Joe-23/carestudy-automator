@@ -15,6 +15,14 @@ export type NurseFlowQuestion = {
   sourceUrl: string;
   learningObjective: string;
   visualBrief: string;
+  /**
+   * Where the card's source came from. "url" means sourceUrl is a real link;
+   * "document" means it is a reference (e.g. an uploaded PDF's name) that has
+   * no link yet, so the review queue flags it as needing a source before
+   * approval. Absent on cards imported before this field existed — treat as
+   * "url" when sourceUrl parses as an absolute URL.
+   */
+  sourceKind?: "url" | "document";
   reviewStatus: "draft" | "in_review" | "approved" | "retired";
   reviewedBy?: string;
   reviewedAt?: string;

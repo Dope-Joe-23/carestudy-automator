@@ -203,6 +203,20 @@ carestudy_rag/
   study and print it as the document's REFERENCES section. Drug names/dosages
   can still be checked against the actual source before submission.
 
+## Tests
+
+The Python engine's unit tests use the standard library `unittest` runner — no
+extra dependency. Run them from the repository root:
+
+```bash
+python -m unittest discover -s carestudy_rag/tests -v
+```
+
+`carestudy_rag/tests/test_quiz_extract.py` covers the PDF/Word question
+extractor's parser, normalization, and end-to-end flow (both the native PDF
+document block and the text-based Word path) with the model call mocked out, so
+it needs no API key and no network.
+
 ## Upgrading retrieval
 
 TF-IDF works well once you have a handful of source documents. If your reference

@@ -14,6 +14,8 @@ Protocol (JSON lines, one object per line):
     ingest response -> {"id": <int>, "files": [{"path": ..., "textLength": <int|None>, "error": <str|None>}], "chunks": <int>}
     viva_bank request ->  {"id": <int>, "op": "viva_bank", "title": {..}, "chapters": [..]}
     viva_bank response -> {"id": <int>, "bank": {"questions": [{category, question, guidance, tip}, ...]}}
+    document_questions request ->  {"id": <int>, "op": "document_questions", "kind": "pdf"|"docx", "content": <base64 doc>, "filename": "...", "sourceUrl": "...", "sourceTitle": "...", "topic": "...", "level": "..."}
+    document_questions response -> {"id": <int>, "bank": {"questions": [{NurseFlow card}, ...]}}
     error response ->  {"id": <int>, "error": "..."}   (request failed, worker stays alive)
     error response ->  {"error": "..."}                  (unparseable line, no id to echo)
 
@@ -31,6 +33,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from generate import draft_section, load_indexes  # noqa: E402
 from loaders import load_as_text  # noqa: E402
 from viva import generate_viva_bank  # noqa: E402
+from quiz_extract import extract_questions_from_document  # noqa: E402
 from reference_chunker import chunk_reference_text, ref_chunks_to_dicts  # noqa: E402
 from retrieval import SimpleIndex  # noqa: E402
 from import_worker import import_study, import_study_with_fields  # noqa: E402
@@ -760,6 +763,26 @@ def main() -> None:
                     continue
                 bank = generate_viva_bank(title, chapters)
                 emit({"id": req.get("id"), "bank": bank})
+                continue
+            if op == "document_questions":
+                content = req.get("content", "")
+                kind = str(req.get("kind") or "pdf").lower()
+                if not isinstance(content, str) or not content.strip():
+                    emit({"id": req.get("id"), "error": "document_questions requires base64 content"})
+                    continue
+                if kind not in ("pdf", "docx"):
+                    emit({"id": req.get("id"), "error": "document_questions kind must be pdf or docx"})
+                    continue
+                result = extract_questions_from_document(
+                    content,
+                    kind=kind,
+                    filename=str(req.get("filename") or ""),
+                    source_url=str(req.get("sourceUrl") or ""),
+                    source_title=str(req.get("sourceTitle") or ""),
+                    topic=str(req.get("topic") or ""),
+                    level=str(req.get("level") or ""),
+                )
+                emit({"id": req.get("id"), "bank": result})
                 continue
             if op == "import_study":
                 raw_text = req.get("text", "")

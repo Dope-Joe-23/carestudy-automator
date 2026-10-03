@@ -54,6 +54,11 @@ export type VivaBankResult = {
   questions: VivaQuestion[];
 };
 
+/** Cards extracted from an uploaded document, already in the importer's shape. */
+export type ExtractedQuestionsResult = {
+  questions: Record<string, unknown>[];
+};
+
 export type StudyAssistantResult = { answer: string; edits?: { sectionId: string; draft?: string; notes?: string; data?: Record<string, string> }[] };
 
 export type Chapter2Recommendations = {
@@ -615,6 +620,51 @@ class DraftWorker {
       });
       try {
         child.stdin.write(JSON.stringify({ id, op: "viva_bank", title, chapters }) + "\n");
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /**
+   * Extract question cards from an uploaded PDF or Word document. The model
+   * reads the PDF directly (base64 document block); Word is converted to text
+   * first on the Python side. Cards come back in the importer's shape and
+   * still go through the normal validate + human-review queue.
+   */
+  async documentQuestions(payload: {
+    kind: "pdf" | "docx";
+    content: string;
+    filename: string;
+    sourceUrl?: string;
+    sourceTitle?: string;
+    topic?: string;
+    level?: string;
+  }): Promise<ExtractedQuestionsResult> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+
+    return new Promise<ExtractedQuestionsResult>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(
+          new Error(
+            "Document extraction timed out — the file may be very large. Please try again, or split it.",
+          ),
+        );
+      }, REQUEST_TIMEOUT_MS);
+
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as ExtractedQuestionsResult),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(JSON.stringify({ id, op: "document_questions", ...payload }) + "\n");
       } catch (writeErr) {
         this.pending.delete(id);
         clearTimeout(timer);

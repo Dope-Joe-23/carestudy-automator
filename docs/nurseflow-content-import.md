@@ -2,9 +2,16 @@
 
 Start from [starter-questions.json](../data/nurseflow/starter-questions.json).
 Every card requires four answer options, a zero-based `correctOptionIndex`, a
-source URL, a rationale, a learning objective and a visual brief. New cards
+source, a rationale, a learning objective and a visual brief. New cards
 must start as `draft`; a reviewer changes them to `approved` only after the
 question, rationale and source have been checked.
+
+A card's source is normally a real URL (`sourceKind` omitted or `"url"`). Cards
+extracted from a PDF start as `sourceKind: "document"`, where `sourceUrl` is a
+reference such as the document's filename rather than a link. Those cards are
+flagged **Needs source** in the review queue and cannot be approved until a
+real URL is attached with `PATCH /api/nurseflow/questions/:id/source`; the
+server rejects an approval attempt on a document-sourced card with `422`.
 
 The import endpoint enforces this rather than trusting the file. It accepts a
 `reviewStatus` field only to report typos, and ignores its value: every imported
@@ -29,6 +36,39 @@ The response returns every row and field error. After it is valid, import the
 same payload from the Studio Question Bank at `/studio/nurseflow`. Imported
 cards begin as drafts. They appear to learners only after an editor marks them
 `approved`.
+
+## Extract cards from a PDF or Word document (AI)
+
+Instead of authoring JSON by hand, a studio admin can upload a PDF or Word
+(`.docx`) file and have the configured AI model (the shared Python gateway —
+`ANTHROPIC_API_KEY` / `ANTHROPIC_BASE_URL` / `ANTHROPIC_MODEL`) turn it into
+candidate cards:
+
+```http
+POST /api/nurseflow/questions/extract
+Content-Type: application/json
+Authorization: Bearer <admin session token>
+
+{ "filename": "module-3.pdf", "content": "<base64 PDF>",
+  "sourceUrl": "https://…", "sourceTitle": "…", "topic": "…", "level": "…" }
+```
+
+The endpoint identifies the file by its magic bytes — PDF (`%PDF-`) or a real
+Word package (a zip containing `word/`); legacy binary `.doc` is not supported.
+It returns `{ "questions": [ ... ] }` in the import shape — it writes nothing. Drop
+the result into the Studio editor, validate, and import it as drafts like any
+other batch. The `sourceUrl` field is optional and, when given, is applied to
+every extracted card so they arrive publishable; left blank, the cards are
+flagged as needing a source. The model is instructed never to invent URLs.
+Because extraction is non-deterministic, the human approval step is what keeps
+an inaccurate card from reaching learners.
+
+PDFs are handed to the model as a native document block. The model cannot read
+the `.docx` container, so Word files are converted to text first (via the
+shared `loaders.load_as_text`, which also reads table cells) and sent as a plain
+prompt; very long documents are truncated before the call.
+
+## Storage
 
 The initial repository is an atomic JSON content store at
 `data/nurseflow/question-bank.json`. For deployment, set

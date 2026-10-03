@@ -104,6 +104,7 @@ def _chat_model(
     max_tokens: int = 3500,
     label: str = "request",
     _client=None,
+    document: dict | None = None,
 ) -> str:
     """Send one prompt to the configured model, with fallbacks and retries.
 
@@ -112,12 +113,31 @@ def _chat_model(
 
     _client lets a caller that already built an Anthropic client (generate.py's
     dry-run key handling) reuse it instead of building a second one.
+
+    document, when given, attaches a base64 file the model reads natively
+    alongside the prompt: {"data": <base64>, "media_type": "application/pdf"}.
+    Used by the PDF question extractor; the Anthropic messages format carries
+    it as a leading `document` content block.
     """
     import time
 
     # Belt-and-braces: no prompt containing lone surrogates can reach the SDK.
     system = sanitize_surrogates(system)
     prompt = sanitize_surrogates(prompt)
+
+    content: object = prompt
+    if document is not None:
+        content = [
+            {
+                "type": "document",
+                "source": {
+                    "type": "base64",
+                    "media_type": document.get("media_type") or "application/pdf",
+                    "data": document["data"],
+                },
+            },
+            {"type": "text", "text": prompt},
+        ]
 
     client = _client or _anthropic_client()
     max_retries = 2
@@ -130,7 +150,7 @@ def _chat_model(
                     model=candidate_model,
                     max_tokens=max_tokens,
                     system=system,
-                    messages=[{"role": "user", "content": prompt}],
+                    messages=[{"role": "user", "content": content}],
                 )
                 answer = _response_text(response)
                 if answer:
