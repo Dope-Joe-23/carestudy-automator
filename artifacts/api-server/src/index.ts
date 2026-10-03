@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { ensureNurseFlowSeeds } from "./lib/nurseflowContent";
+import { r2UploadMode } from "./lib/uploads";
 import { draftWorker } from "./lib/draftWorker";
 import { closeStudyStore, initializePostgres } from "@workspace/db";
 
@@ -88,6 +89,18 @@ try {
 } catch (err) {
   logger.error({ err }, "Failed to initialize Postgres schema");
   process.exit(1);
+}
+
+// Announce the active object-storage backend once at boot, so switching to R2
+// can be confirmed from the deploy logs (R2 activates only when all four env
+// vars are present; otherwise the app uses the local persistent disk).
+if (r2UploadMode() === "r2") {
+  logger.info("Object storage: Cloudflare R2");
+} else {
+  logger.warn(
+    "Object storage: local persistent disk — set CLOUDFLARE_ACCOUNT_ID, " +
+      "CLOUDFLARE_R2_ACCESS_KEY_ID, CLOUDFLARE_R2_SECRET_ACCESS_KEY and R2_BUCKET_NAME to enable R2.",
+  );
 }
 
 app.listen(port, (err) => {
