@@ -211,11 +211,53 @@ export function getPostgresDb(): NodePgDatabase<typeof schema> {
   return db;
 }
 
+// Fixed advisory-lock key (arbitrary, but must be stable across releases) used
+// to serialize schema provisioning between instances.
+const SCHEMA_LOCK_KEY = 0x63617265; // "care"
+/** how many times to retry a transient DDL failure before giving up. */
+const SCHEMA_INIT_ATTEMPTS = 5;
+
+/**
+ * Run the provisioning DDL while holding a session-level advisory lock, so two
+ * instances booting at once (a Render deploy starts the new container before
+ * the old one has fully stopped) take turns instead of deadlocking on the
+ * AccessExclusiveLock each CREATE TABLE needs. The DDL is idempotent, so a
+ * second runner is a harmless no-op.
+ */
+async function provisionSchemaWithLock(): Promise<void> {
+  const client = await pool!.connect();
+  try {
+    await client.query("SELECT pg_advisory_lock($1)", [SCHEMA_LOCK_KEY]);
+    try {
+      await client.query(POSTGRES_SCHEMA_SQL);
+    } finally {
+      await client
+        .query("SELECT pg_advisory_unlock($1)", [SCHEMA_LOCK_KEY])
+        .catch(() => {
+          // Connection already gone — the session lock releases with it.
+        });
+    }
+  } finally {
+    client.release();
+  }
+}
+
 /** Provision a fresh deployment database before accepting requests. */
 export async function initializePostgres(): Promise<void> {
   if ((process.env.DB_DRIVER || "sqlite").toLowerCase() !== "postgres") return;
   getPostgresDb();
-  await pool!.query(POSTGRES_SCHEMA_SQL);
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await provisionSchemaWithLock();
+      return;
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      // 40P01 deadlock, 40001 serialization failure, 55P03 lock not available.
+      const transient = code === "40P01" || code === "40001" || code === "55P03";
+      if (!transient || attempt >= SCHEMA_INIT_ATTEMPTS) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+    }
+  }
 }
 
 /**
