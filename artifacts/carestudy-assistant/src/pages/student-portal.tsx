@@ -657,19 +657,11 @@ function NewOrderPage({
       const files: studentApi.OrderFileInput[] = [];
       for (const kind of ["guidelines", "clinical", "reference"] as const) {
         for (const file of filesByKind[kind]) {
-          files.push({
-            kind,
-            filename: file.name,
-            content: await studentApi.readFileAsBase64(file),
-          });
+          files.push({ kind, filename: file.name, file });
         }
       }
       if (correctionScope && correctionFile) {
-        files.push({
-          kind: "correction",
-          filename: correctionFile.name,
-          content: await studentApi.readFileAsBase64(correctionFile),
-        });
+        files.push({ kind: "correction", filename: correctionFile.name, file: correctionFile });
       }
       return studentApi.placeOrder({
         title,

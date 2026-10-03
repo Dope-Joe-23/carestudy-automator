@@ -16,17 +16,20 @@ import { Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   ArrowLeft,
   BarChart3,
   BookOpen,
   CheckCircle2,
   ClipboardList,
+  Cloud,
   Copy,
   CreditCard,
   DollarSign,
   ExternalLink,
   Globe,
   GraduationCap,
+  HardDrive,
   HeartPulse,
   Loader2,
   Mail,
@@ -43,6 +46,15 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -1043,6 +1055,120 @@ function InvitesTab({ onInvite }: { onInvite: () => void }) {
 // Tab: Settings (placeholder)
 // ---------------------------------------------------------------------------
 
+/** "studyUploads" -> "Study uploads"; "nurseflowQuestionBank" -> "NurseFlow question bank". */
+function surfaceLabel(name: string): string {
+  const spaced = name.replace(/([a-z])([A-Z])/g, "$1 $2");
+  const titled = spaced.charAt(0).toUpperCase() + spaced.slice(1);
+  return titled.replace(/^Nurseflow/, "NurseFlow");
+}
+
+/**
+ * Storage diagnostics — reads `/storage/status` and shows, per media surface,
+ * which backend is live and how the bytes move. Every surface shares one switch
+ * (R2 configured or not), so this is really a config check plus a map.
+ */
+function StoragePanel() {
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: ["storage-status"], queryFn: adminApi.getStorageStatus });
+  const status = query.data;
+  const isR2 = status?.r2Configured ?? false;
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
+        <div>
+          <CardTitle className="text-base">Media storage</CardTitle>
+          <CardDescription>Where each surface stores its bytes right now.</CardDescription>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["storage-status"] })}
+          disabled={query.isFetching}
+        >
+          <RefreshCw className={cn("size-4", query.isFetching && "animate-spin")} />
+          Refresh
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {query.isPending ? (
+          <div className="space-y-2">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+        ) : query.isError ? (
+          <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />
+            <div>
+              <p className="text-sm font-medium">Could not read storage status</p>
+              <p className="text-xs text-muted-foreground">
+                {query.error instanceof Error ? query.error.message : "Try refreshing."}
+              </p>
+            </div>
+          </div>
+        ) : status ? (
+          <>
+            <div
+              className={cn(
+                "flex items-start gap-3 rounded-lg border p-4",
+                isR2
+                  ? "border-emerald-300/60 bg-emerald-50/60"
+                  : "border-amber-300/60 bg-amber-50/60",
+              )}
+            >
+              {isR2 ? (
+                <Cloud className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+              ) : (
+                <HardDrive className="mt-0.5 size-4 shrink-0 text-amber-600" />
+              )}
+              <div className="flex-1">
+                <p className="text-sm font-medium">
+                  {isR2 ? "Cloudflare R2 (durable object storage)" : "Local persistent disk only"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isR2
+                    ? "Files live in the R2 bucket; the server disk is only a cache."
+                    : "R2 is not configured — files live on the single Render disk, which is not backed up."}
+                </p>
+              </div>
+              <Badge variant={isR2 ? "default" : "secondary"}>{isR2 ? "R2" : "Disk"}</Badge>
+            </div>
+
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Surface</TableHead>
+                  <TableHead>Move</TableHead>
+                  <TableHead>Backend</TableHead>
+                  <TableHead>Key</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {status.surfaces.map((surface) => (
+                  <TableRow key={surface.name}>
+                    <TableCell className="font-medium">{surfaceLabel(surface.name)}</TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {surface.via.replace(/-/g, " ")}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={surface.backend === "r2" ? "default" : "secondary"}>
+                        {surface.backend}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">
+                      {surface.objectKey ?? surface.key}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
 function SettingsTab() {
   return (
     <div className="space-y-6">
@@ -1053,15 +1179,16 @@ function SettingsTab() {
         </p>
       </div>
 
+      <StoragePanel />
+
       <Card>
         <CardContent className="flex flex-col items-center py-12 text-center">
           <span className="mb-3 grid size-10 place-items-center rounded-full bg-muted">
             <Settings className="size-5 text-muted-foreground" />
           </span>
-          <p className="text-sm font-medium">Coming soon</p>
+          <p className="text-sm font-medium">More settings coming soon</p>
           <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-            Workspace settings, notification preferences, and branding configuration
-            will be available here.
+            Notification preferences and branding configuration will be available here.
           </p>
         </CardContent>
       </Card>

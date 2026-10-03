@@ -1,7 +1,9 @@
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -80,6 +82,56 @@ export async function createPresignedPutUrl(
   );
 }
 
+/** Upload bytes to the bucket (server-side put, used by the base64 path and
+ *  for generated files such as order deliveries). */
+export async function putObject(
+  key: string,
+  body: Buffer,
+  contentType: string,
+): Promise<void> {
+  await s3().send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  );
+}
+
+/** Server-side copy within the bucket — used to re-key a browser-uploaded
+ *  staging object into its final order scope without moving bytes through
+ *  the API server. */
+export async function copyObject(sourceKey: string, destKey: string): Promise<void> {
+  await s3().send(
+    new CopyObjectCommand({
+      Bucket: BUCKET,
+      CopySource: `${BUCKET}/${sourceKey}`,
+      Key: destKey,
+    }),
+  );
+}
+
+/** Every object key under a prefix (paginated), for prefix-scoped cleanup. */
+export async function listObjectKeys(prefix: string): Promise<string[]> {
+  const keys: string[] = [];
+  let token: string | undefined;
+  do {
+    const page = await s3().send(
+      new ListObjectsV2Command({
+        Bucket: BUCKET,
+        Prefix: prefix,
+        ContinuationToken: token,
+      }),
+    );
+    for (const obj of page.Contents ?? []) {
+      if (obj.Key) keys.push(obj.Key);
+    }
+    token = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (token);
+  return keys;
+}
+
 /** True when the object exists, plus its size (null when unknown). */
 export async function headObject(
   key: string,
@@ -93,6 +145,23 @@ export async function headObject(
     if (status === 404 || (err as { name?: string }).name === "NotFound") {
       return { exists: false, size: null };
     }
+    throw err;
+  }
+}
+
+/** Read an object as UTF-8 text, or null when the key doesn't exist. Used for
+ *  the small JSON stores (question bank, video jobs) held in the bucket. */
+export async function getObjectText(key: string): Promise<string | null> {
+  try {
+    const response = await s3().send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
+    if (!response.Body) return null;
+    const body = response.Body as unknown as { transformToString?: () => Promise<string> };
+    return typeof body.transformToString === "function" ? await body.transformToString() : null;
+  } catch (err) {
+    const status = (err as { $metadata?: { httpStatusCode?: number } })?.$metadata
+      ?.httpStatusCode;
+    const name = (err as { name?: string }).name;
+    if (status === 404 || name === "NotFound" || name === "NoSuchKey") return null;
     throw err;
   }
 }

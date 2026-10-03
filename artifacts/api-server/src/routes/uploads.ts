@@ -14,7 +14,7 @@ import {
   studyObjectKey,
   UploadError,
 } from "../lib/uploads";
-import { createPresignedPutUrl, headObject, R2_KEY_PREFIX } from "../lib/r2";
+import { createPresignedPutUrl, headObject, isR2Configured, R2_KEY_PREFIX } from "../lib/r2";
 
 const router: IRouter = Router();
 
@@ -116,6 +116,35 @@ router.get(
   "/uploads/config",
   asyncRoute(async (_req, res) => {
     res.json({ mode: r2UploadMode() });
+  }),
+);
+
+// GET /api/storage/status — a diagnostic view of where each media surface
+// stores its bytes right now. Every surface shares one switch (R2 configured
+// or not), so this mainly confirms the config and documents the strategy each
+// one uses. Admin-only (mounted behind requireAdmin).
+router.get(
+  "/storage/status",
+  asyncRoute(async (_req, res) => {
+    const configured = isR2Configured();
+    const backend = configured ? "r2" : "local";
+    const surfaces = [
+      { name: "studyUploads", via: "presigned", key: "uploads/<studyId>/" },
+      { name: "librarySources", via: "presigned", key: "library/" },
+      { name: "orderMaterials", via: "presigned", key: "orders/<orderId>/" },
+      { name: "orderDeliveries", via: "presigned", key: "orders/<orderId>/delivery/" },
+      { name: "nurseflowQuestionBank", via: "read-through-cache", key: "nurseflow/question-bank.json" },
+      { name: "nurseflowVideoJobs", via: "read-through-cache", key: "nurseflow/video-jobs.json" },
+      { name: "nurseflowVideoAssets", via: "mirror-and-hydrate", key: "nurseflow/videos/<file>" },
+      { name: "nurseflowAccessStore", via: "read-through-cache", key: "nurseflow/access.json" },
+    ].map((surface) => ({
+      ...surface,
+      backend,
+      // On the disk backend the key is a bucket path, so there is nothing to
+      // resolve; it is reported as null to avoid implying an R2 object exists.
+      objectKey: configured ? surface.key : null,
+    }));
+    res.json({ mode: r2UploadMode(), r2Configured: configured, surfaces });
   }),
 );
 

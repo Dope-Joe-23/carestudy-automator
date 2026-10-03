@@ -7,6 +7,7 @@
  */
 
 import { getAdminToken } from "./adminAuth";
+import { directUploadToBucket, getUploadMode } from "./api";
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || "/api";
 
@@ -276,10 +277,54 @@ export function getExportableChapters(orderId: number): Promise<{
 export type OrderFileInput = {
   kind: "guidelines" | "clinical" | "reference" | "correction";
   filename: string;
-  content: string; // base64
+  /** Base64 bytes — used on the local (non-R2) path. */
+  content?: string;
+  /** The raw file — uploaded straight to the bucket when R2 is active. */
+  file?: File;
 };
 
-export function placeOrder(input: {
+/**
+ * Presign + PUT one order material to the bucket using the *student* token,
+ * returning its staging object key. Returns null when R2 isn't configured so
+ * the caller can fall back to base64. */
+async function presignStudentUpload(filename: string, file: File): Promise<string | null> {
+  const token = getStudentToken();
+  const response = await fetch(`${API_URL}/orders/files/presign`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      filename,
+      size: file.size,
+      contentType: file.type || "application/octet-stream",
+    }),
+  });
+  if (response.status === 501) return null;
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `Upload setup failed (${response.status})`);
+  }
+  const { uploadUrl, objectKey } = (await response.json()) as {
+    uploadUrl: string;
+    objectKey: string;
+  };
+  const put = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  });
+  if (!put.ok) throw new Error(`Upload to storage failed (${put.status}).`);
+  return objectKey;
+}
+
+/**
+ * Place an order. When the server has R2 configured every material is PUT
+ * straight to the bucket via a presigned URL and sent as a staging object key
+ * (the same flow as study uploads); otherwise the bytes travel as base64.
+ */
+export async function placeOrder(input: {
   title: string;
   diagnosis?: string;
   college: string;
@@ -288,9 +333,31 @@ export function placeOrder(input: {
   correctionScope?: "chapter";
   files: OrderFileInput[];
 }): Promise<{ order: Order; files: OrderFile[] }> {
+  const useR2 = (await getUploadMode()) === "r2";
+  const files: Array<Record<string, unknown>> = [];
+  for (const entry of input.files) {
+    if (useR2 && entry.file) {
+      const objectKey = await presignStudentUpload(entry.filename, entry.file);
+      if (objectKey) {
+        files.push({ kind: entry.kind, filename: entry.filename, objectKey });
+        continue;
+      }
+    }
+    const content =
+      entry.content ?? (entry.file ? await readFileAsBase64(entry.file) : undefined);
+    files.push({ kind: entry.kind, filename: entry.filename, content });
+  }
   return requestJson("/orders", {
     method: "POST",
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      title: input.title,
+      diagnosis: input.diagnosis,
+      college: input.college,
+      program: input.program,
+      notes: input.notes,
+      correctionScope: input.correctionScope,
+      files,
+    }),
   });
 }
 
@@ -439,14 +506,28 @@ export function setOrderStatus(
   });
 }
 
-export function attachOrderDelivery(
-  id: number,
-  filename: string,
-  content: string,
-): Promise<{ order: Order }> {
+/** Attach the completed study to an order. Uploads straight to the bucket
+ *  when R2 is configured (presign + complete), else base64 in the body. */
+export async function attachOrderDelivery(id: number, file: File): Promise<{ order: Order }> {
+  if ((await getUploadMode()) === "r2") {
+    try {
+      const objectKey = await directUploadToBucket(
+        `/studio/orders/${id}/delivery/presign`,
+        file.name,
+        file,
+      );
+      return studioRequestJson(`/studio/orders/${id}/delivery/complete`, {
+        method: "POST",
+        body: JSON.stringify({ objectKey, filename: file.name }),
+      });
+    } catch (error) {
+      // R2 disabled since the config check — fall back to the base64 path.
+      if ((error as { status?: number }).status !== 501) throw error;
+    }
+  }
   return studioRequestJson(`/studio/orders/${id}/delivery`, {
     method: "POST",
-    body: JSON.stringify({ filename, content }),
+    body: JSON.stringify({ filename: file.name, content: await readFileAsBase64(file) }),
   });
 }
 

@@ -75,6 +75,10 @@ The initial repository is an atomic JSON content store at
 `NURSEFLOW_CONTENT_PATH` to a mounted persistent volume; do not keep this file
 only on ephemeral application storage.
 
+When R2 is configured, the store is also mirrored to the bucket
+(`nurseflow/question-bank.json`) and read from it first, with the local file as
+a write-through cache. See [r2-storage-setup.md](r2-storage-setup.md).
+
 ## Fast test workflow
 
 1. Copy the starter file and add 10–20 original cards from the Open RN OER,

@@ -109,6 +109,33 @@ export function getDashboardStats(): Promise<DashboardStats> {
   return requestJson("/admin/dashboard");
 }
 
+// ---------------------------------------------------------------------------
+// Storage diagnostics
+// ---------------------------------------------------------------------------
+
+/** One media surface and where its bytes are stored right now. */
+export type StorageSurface = {
+  name: string;
+  /** How the browser/server moves the bytes for this surface. */
+  via: "presigned" | "read-through-cache" | "mirror-and-hydrate" | string;
+  /** R2 key prefix / pattern, or the disk location when R2 is off. */
+  key: string;
+  backend: "r2" | "local";
+  /** The bucket key pattern when R2 is active, else null. */
+  objectKey: string | null;
+};
+
+export type StorageStatus = {
+  mode: "r2" | "local";
+  r2Configured: boolean;
+  surfaces: StorageSurface[];
+};
+
+/** Which storage backend each media surface is using (admin only). */
+export function getStorageStatus(): Promise<StorageStatus> {
+  return requestJson("/storage/status");
+}
+
 /** List all staff members. */
 export function listStaff(): Promise<{ staff: StaffMember[] }> {
   return requestJson("/admin/staff");

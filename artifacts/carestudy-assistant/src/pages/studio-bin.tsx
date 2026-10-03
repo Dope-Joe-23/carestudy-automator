@@ -55,7 +55,6 @@ import {
   getStudioStudySnapshot,
   listStudioOrders,
   produceOrder,
-  readFileAsBase64,
   setOrderStatus,
   type OrderFile,
   type OrderStatus,
@@ -157,11 +156,7 @@ function OrderRow({ order }: { order: StudioOrder }) {
   const uploadDelivery = useMutation({
     mutationFn: async () => {
       if (!deliveryFile) throw new Error("Choose a file first");
-      return attachOrderDelivery(
-        order.id,
-        deliveryFile.name,
-        await readFileAsBase64(deliveryFile),
-      );
+      return attachOrderDelivery(order.id, deliveryFile);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["studio-orders"] });

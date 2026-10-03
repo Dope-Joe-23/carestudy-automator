@@ -9,11 +9,31 @@ import {
 } from "@workspace/db";
 import {
   detectUploadType,
+  extFromFilename,
+  isPendingOrderKey,
+  materializeStored,
+  MAX_R2_UPLOAD_BYTES,
+  orderDeliveryObjectKey,
+  orderMaterialObjectKey,
+  orderPendingObjectKey,
+  orderPrefix,
+  readFileHead,
+  remoteStoredUpload,
   removeOrderArtifacts,
+  r2UploadMode,
+  sanitizeFilename,
   storeOrderDelivery,
   storeOrderUpload,
   UploadError,
+  type StoredUpload,
 } from "../lib/uploads";
+import {
+  copyObject,
+  createPresignedPutUrl,
+  deleteObject,
+  headObject,
+  R2_KEY_PREFIX,
+} from "../lib/r2";
 import { indexStudyFiles } from "./uploads";
 import { requireStudent, type AuthedRequest } from "../lib/studentAuth";
 import { type AuthedAdminRequest } from "../lib/adminAuth";
@@ -85,6 +105,55 @@ function strOrNull(value: unknown): string | null {
 const FILE_KINDS: OrderFileKind[] = ["guidelines", "clinical", "reference", "correction"];
 const MAX_ORDER_FILES = 10;
 const MAX_CORRECTION_WORDS = 7000;
+
+/** One validated material: either its base64 bytes or a staged bucket object
+ *  key (uploaded directly by the browser via a presigned URL). */
+type StagedOrderFile = {
+  kind: OrderFileKind;
+  filename: string;
+  content?: Buffer;
+  objectKey?: string;
+};
+
+/** Persist a staged material into the order's own scope, re-keying a
+ *  browser-uploaded staging object into orders/<id>/... . */
+async function persistOrderMaterial(
+  orderId: number,
+  file: StagedOrderFile,
+): Promise<StoredUpload> {
+  if (file.objectKey) {
+    const { size } = await headObject(file.objectKey);
+    const local = await materializeStored(R2_KEY_PREFIX + file.objectKey);
+    const head = await readFileHead(local, 4096);
+    const detected = detectUploadType(head, file.filename);
+    if (!detected) {
+      throw new UploadError(
+        415,
+        "Unsupported file type — upload a PDF, Word (.docx), EPUB ebook, Markdown, or plain text document only.",
+      );
+    }
+    const destKey = orderMaterialObjectKey(orderId, detected.ext);
+    await copyObject(file.objectKey, destKey);
+    await deleteObject(file.objectKey).catch(() => {
+      // staging object already gone — nothing to clean up
+    });
+    return remoteStoredUpload(destKey, file.filename, detected, size ?? head.length);
+  }
+  return storeOrderUpload(orderId, file.content as Buffer, file.filename);
+}
+
+/** Delete any staged (pending) bucket objects a failed request leaves behind. */
+async function discardPendingObjects(files: StagedOrderFile[]): Promise<void> {
+  await Promise.all(
+    files
+      .filter((file) => Boolean(file.objectKey))
+      .map((file) =>
+        deleteObject(file.objectKey as string).catch(() => {
+          // best-effort cleanup
+        }),
+      ),
+  );
+}
 
 /** Decode the client's base64 payload; null when it isn't valid base64. */
 function decodeBase64(raw: unknown): Buffer | null {
@@ -238,6 +307,41 @@ function parsePythonListLiteral(raw: string): string[] | null {
 // Student routes (bearer-token auth, scoped to the signed-in student)
 // ---------------------------------------------------------------------------
 
+// POST /api/orders/files/presign — a direct-to-bucket URL for a material the
+// student is about to attach. The object stages under orders/pending/ and is
+// re-keyed into the created order scope once POST /orders succeeds.
+studentRouter.post(
+  "/orders/files/presign",
+  requireStudent,
+  asyncRoute(async (req, res) => {
+    if (r2UploadMode() !== "r2") {
+      res.status(501).json({
+        error: "Direct uploads are not enabled on this server — R2 storage is not configured.",
+      });
+      return;
+    }
+    const filename = sanitizeFilename(req.body?.filename);
+    const size = Number(req.body?.size);
+    if (!Number.isFinite(size) || size <= 0) {
+      res.status(400).json({ error: "A valid file size is required" });
+      return;
+    }
+    if (size > MAX_R2_UPLOAD_BYTES) {
+      res.status(413).json({
+        error: `File is too large (max ${Math.round(MAX_R2_UPLOAD_BYTES / 1024 / 1024)} MB).`,
+      });
+      return;
+    }
+    const contentType =
+      typeof req.body?.contentType === "string" && req.body.contentType
+        ? req.body.contentType
+        : "application/octet-stream";
+    const objectKey = orderPendingObjectKey(extFromFilename(filename));
+    const uploadUrl = await createPresignedPutUrl(objectKey, contentType);
+    res.json({ uploadUrl, objectKey, expiresIn: 15 * 60, mode: "r2" });
+  }),
+);
+
 // POST /api/orders — place an order with your project information + materials.
 // Body: { title, diagnosis?, college, program, notes?, files?: [{ kind,
 // filename, content(base64) }] }.
@@ -277,31 +381,54 @@ studentRouter.post(
     }
 
     // Validate every file's payload up front (kind + magic bytes + size) so a
-    // bad document can never leave a half-registered order behind.
-    const staged: { kind: OrderFileKind; filename: string; content: Buffer }[] = [];
+    // bad document can never leave a half-registered order behind. A file is
+    // either base64 bytes (classic path) or a staging object key produced by a
+    // presigned direct-to-bucket upload.
+    const staged: StagedOrderFile[] = [];
+    const reject = async (status: number, error: string) => {
+      await discardPendingObjects(staged);
+      res.status(status).json({ error });
+    };
     for (const raw of rawFiles) {
       const rawKind = typeof raw?.kind === "string" ? raw.kind : "";
       if (!(FILE_KINDS as string[]).includes(rawKind)) {
-        res.status(400).json({ error: "Each file needs a valid kind (guidelines, clinical, reference, or correction)." });
+        await reject(400, "Each file needs a valid kind (guidelines, clinical, reference, or correction).");
         return;
       }
       const kind = rawKind as OrderFileKind;
       const filename = typeof raw?.filename === "string" ? raw.filename : "";
+
+      const rawKey = typeof raw?.objectKey === "string" ? raw.objectKey.trim() : "";
+      if (rawKey) {
+        // Presigned staging object — verify it exists, is ours, and is real.
+        if (!isPendingOrderKey(rawKey)) {
+          await reject(400, "Invalid upload reference.");
+          return;
+        }
+        const local = await materializeStored(R2_KEY_PREFIX + rawKey);
+        const head = await readFileHead(local, 4096);
+        if (!detectUploadType(head, filename)) {
+          await deleteObject(rawKey).catch(() => {});
+          await reject(415, "Unsupported file type — upload a PDF, Word (.docx), EPUB ebook, Markdown, or plain text document only.");
+          return;
+        }
+        staged.push({ kind, filename, objectKey: rawKey });
+        continue;
+      }
+
       const content = decodeBase64(raw?.content);
       if (!content) {
-        res.status(400).json({ error: "One of the uploaded documents could not be read — please try again." });
+        await reject(400, "One of the uploaded documents could not be read — please try again.");
         return;
       }
       if (!detectUploadType(content, filename)) {
-        res.status(415).json({
-          error: "Unsupported file type — upload a PDF, Word (.docx), EPUB ebook, Markdown, or plain text document only.",
-        });
+        await reject(415, "Unsupported file type — upload a PDF, Word (.docx), EPUB ebook, Markdown, or plain text document only.");
         return;
       }
       staged.push({ kind, filename, content });
     }
     if (correctionScope && staged.filter((file) => file.kind === "correction").length !== 1) {
-      res.status(400).json({ error: "A correction order needs exactly one uploaded study or chapter." });
+      await reject(400, "A correction order needs exactly one uploaded study or chapter.");
       return;
     }
     let correctionText: string | null = null;
@@ -314,21 +441,31 @@ studentRouter.post(
     if (correctionScope) {
       const correction = staged.find((file) => file.kind === "correction");
       if (correction) {
-        const temporary = await storeOrderUpload(0, correction.content, correction.filename);
+        // Materialize the correction to a local path the engine can read,
+        // whichever backend staged it. A presigned staging object is already
+        // in the bucket; a base64 payload is written under orders/0/ first.
+        let localPath: string;
+        let cleanup: () => Promise<void>;
+        if (correction.objectKey) {
+          localPath = await materializeStored(R2_KEY_PREFIX + correction.objectKey);
+          cleanup = async () => {};
+        } else {
+          const temporary = await storeOrderUpload(0, correction.content as Buffer, correction.filename);
+          localPath = await materializeStored(temporary.storedPath);
+          cleanup = () => removeOrderArtifacts(0);
+        }
         try {
           // Extract text from the uploaded document
-          const extracted = await draftWorker.extract(temporary.storedPath);
+          const extracted = await draftWorker.extract(localPath);
           correctionText = extracted.text.trim() || null;
           if (!correctionText) {
-            res.status(422).json({ error: "The uploaded document has no readable text. Please upload an editable text document or a text-based PDF." });
+            await reject(422, "The uploaded document has no readable text. Please upload an editable text document or a text-based PDF.");
             return;
           }
 
           const correctionWordCount = correctionText.split(/\s+/).filter(Boolean).length;
           if (correctionWordCount > MAX_CORRECTION_WORDS) {
-            res.status(413).json({
-              error: `A correction upload must contain one chapter of no more than ${MAX_CORRECTION_WORDS.toLocaleString()} words. This file contains about ${correctionWordCount.toLocaleString()} words.`,
-            });
+            await reject(413, `A correction upload must contain one chapter of no more than ${MAX_CORRECTION_WORDS.toLocaleString()} words. This file contains about ${correctionWordCount.toLocaleString()} words.`);
             return;
           }
 
@@ -342,7 +479,7 @@ studentRouter.post(
             }
           }
         } finally {
-          await removeOrderArtifacts(0);
+          await cleanup();
         }
       }
     }
@@ -362,7 +499,7 @@ studentRouter.post(
     const files = [];
     try {
       for (const file of staged) {
-        const stored = await storeOrderUpload(order.id, file.content, file.filename);
+        const stored = await persistOrderMaterial(order.id, file);
         files.push(
           await db.addOrderFile({
             orderId: order.id,
@@ -375,9 +512,12 @@ studentRouter.post(
         );
       }
     } catch (err) {
-      // Disk failure mid-upload — clean up what we wrote and report cleanly.
+      // Storage failure mid-upload — clean up what we wrote (and any staged
+      // bucket objects) and report cleanly.
       req.log?.error?.({ err }, "order file storage failed");
       await removeOrderArtifacts(order.id);
+      await discardPendingObjects(staged);
+      if (err instanceof UploadError) throw err;
       throw new UploadError(500, "Your documents could not be saved — please try again.");
     }
 
@@ -568,7 +708,10 @@ studentRouter.get(
       });
       return;
     }
-    res.download(order.deliveryPath, order.deliveryFilename);
+    // The delivery may live in the bucket (r2://...) — materialize it to a
+    // local path first so res.download can stream it.
+    const local = await materializeStored(order.deliveryPath);
+    res.download(local, order.deliveryFilename);
   }),
 );
 
@@ -1194,6 +1337,108 @@ studioRouter.post(
       req.log?.error?.({ err }, "auto-deliver export failed");
       res.status(500).json({ error: message });
     }
+  }),
+);
+
+// POST /api/studio/orders/:id/delivery/presign — a direct-to-bucket URL for
+// the completed study, so a large export never passes through the API body.
+studioRouter.post(
+  "/studio/orders/:id/delivery/presign",
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    if (r2UploadMode() !== "r2") {
+      res.status(501).json({
+        error: "Direct uploads are not enabled on this server — R2 storage is not configured.",
+      });
+      return;
+    }
+    const db = studyStore();
+    if (!(await db.getOrder(id))) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    const filename = sanitizeFilename(req.body?.filename);
+    const size = Number(req.body?.size);
+    if (!Number.isFinite(size) || size <= 0) {
+      res.status(400).json({ error: "A valid file size is required" });
+      return;
+    }
+    if (size > MAX_R2_UPLOAD_BYTES) {
+      res.status(413).json({
+        error: `File is too large (max ${Math.round(MAX_R2_UPLOAD_BYTES / 1024 / 1024)} MB).`,
+      });
+      return;
+    }
+    const contentType =
+      typeof req.body?.contentType === "string" && req.body.contentType
+        ? req.body.contentType
+        : "application/octet-stream";
+    const objectKey = orderDeliveryObjectKey(id, extFromFilename(filename));
+    const uploadUrl = await createPresignedPutUrl(objectKey, contentType);
+    res.json({ uploadUrl, objectKey, expiresIn: 15 * 60, mode: "r2" });
+  }),
+);
+
+// POST /api/studio/orders/:id/delivery/complete — the browser has PUT the
+// completed study to the bucket; register it as the order's delivery.
+studioRouter.post(
+  "/studio/orders/:id/delivery/complete",
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    const objectKey = typeof req.body?.objectKey === "string" ? req.body.objectKey : "";
+    // Object keys are scoped per order so one delivery can't attach to another's.
+    if (!objectKey || !objectKey.startsWith(`${orderPrefix(id)}delivery/`)) {
+      res.status(400).json({ error: "Invalid upload reference" });
+      return;
+    }
+    const db = studyStore();
+    const order = await db.getOrder(id);
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    const filename = sanitizeFilename(req.body?.filename);
+    const storedPath = R2_KEY_PREFIX + objectKey;
+    const { exists, size } = await headObject(objectKey);
+    if (!exists) {
+      res.status(404).json({
+        error: "The file was not found in storage — please upload it again.",
+      });
+      return;
+    }
+    if (size !== null && size > MAX_R2_UPLOAD_BYTES) {
+      await deleteObject(objectKey).catch(() => {});
+      res.status(413).json({
+        error: `File is too large (max ${Math.round(MAX_R2_UPLOAD_BYTES / 1024 / 1024)} MB).`,
+      });
+      return;
+    }
+
+    // Validate by magic bytes (not extension) before registering the delivery.
+    const local = await materializeStored(storedPath);
+    const head = await readFileHead(local, 4096);
+    const detected = detectUploadType(head, filename);
+    if (!detected) {
+      await deleteObject(objectKey).catch(() => {});
+      throw new UploadError(
+        415,
+        "Unsupported file type — upload a PDF, Word (.docx), EPUB ebook, Markdown, or plain text document only.",
+      );
+    }
+    const updated = await db.setOrderDelivery(id, {
+      filename,
+      storedPath,
+      size: size ?? head.length,
+    });
+    res.json({ order: publicOrder(updated ?? order) });
   }),
 );
 

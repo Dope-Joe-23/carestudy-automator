@@ -37,7 +37,7 @@ This project is deployed as two separate services:
      ANTHROPIC_AUTH_TOKEN=your-openrouter-or-anthropic-token
      ADMIN_PASSWORD=your-secure-admin-password
      ```
-   - Optional (for large file uploads):
+   - Optional (R2 object storage — see [docs/r2-storage-setup.md](docs/r2-storage-setup.md)):
      ```
      CLOUDFLARE_ACCOUNT_ID=xxx
      CLOUDFLARE_R2_ACCESS_KEY_ID=xxx
@@ -174,7 +174,7 @@ DB_DRIVER=postgres DATABASE_URL=postgresql://carestudy:carestudy_dev_password@lo
 | `ADMIN_USERNAME` | No | `admin` | Studio admin username |
 | `ADMIN_PASSWORD` | Yes | — | Studio admin password |
 | `MAX_UPLOAD_MB` | No | `250` | Max file upload size in MB |
-| `CLOUDFLARE_ACCOUNT_ID` | No | — | R2 storage (for large files) |
+| `CLOUDFLARE_ACCOUNT_ID` | No | — | R2 storage — [setup guide](docs/r2-storage-setup.md) |
 | `CLOUDFLARE_R2_ACCESS_KEY_ID` | No | — | R2 storage |
 | `CLOUDFLARE_R2_SECRET_ACCESS_KEY` | No | — | R2 storage |
 | `R2_BUCKET_NAME` | No | — | R2 storage |
@@ -187,6 +187,44 @@ DB_DRIVER=postgres DATABASE_URL=postgresql://carestudy:carestudy_dev_password@lo
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `VITE_API_URL` | No | `/api` | Backend API URL |
+
+---
+
+## File storage (R2 vs disk)
+
+For step-by-step bucket, CORS, and lifecycle-rule setup, see
+[docs/r2-storage-setup.md](docs/r2-storage-setup.md).
+
+When the four R2 variables are set, the browser uploads directly to the
+bucket via presigned URLs and the database stores `r2://<objectKey>`
+references. When they are unset, the same flows fall back to the persistent
+disk at `/app/data` (base64 uploads through the API).
+
+| Content | R2 key prefix | Disk fallback |
+|---------|---------------|---------------|
+| Study uploads | `uploads/<studyId>/` | `data/uploads/<studyId>/` |
+| Library sources | `library/` | `data/library/` |
+| Order materials | `orders/<orderId>/` | `data/orders/<orderId>/` |
+| Order deliveries | `orders/<orderId>/delivery/` | `data/orders/<orderId>/delivery/` |
+| NurseFlow question bank | `nurseflow/question-bank.json` | `data/nurseflow/question-bank.json` |
+| NurseFlow video jobs | `nurseflow/video-jobs.json` | `data/nurseflow/video-jobs.json` |
+| NurseFlow visual assets | `nurseflow/videos/<file>` | `data/nurseflow/videos/` |
+| NurseFlow access/trial store | `nurseflow/access.json` | `data/nurseflow/access.json` |
+
+Order materials stage under `orders/pending/` while the browser uploads them,
+then are re-keyed into `orders/<orderId>/` when the order is created.
+
+The NurseFlow JSON stores (question bank, video jobs, access) are read from the
+bucket first (the local file is a write-through cache and offline fallback) and
+are written to both. Visual assets are mirrored to the bucket and re-hydrated
+to the local cache on demand.
+
+Confirm the live backend per surface with the admin-only
+`GET /api/storage/status` endpoint.
+
+Still disk-only (not covered by R2): RAG retrieval indexes under
+`data/studies/` and the transient `data/r2-cache/` used to hand bucket objects
+to the Python engine.
 
 ---
 

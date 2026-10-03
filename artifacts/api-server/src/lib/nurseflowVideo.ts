@@ -31,9 +31,17 @@
  * rather than by renaming the surface.
  */
 import { randomBytes, randomInt } from "node:crypto";
-import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { mkdir, rename, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { nurseflowPath } from "./nurseflowPaths";
+import {
+  ensureLocalAsset,
+  nurseflowJsonKey,
+  nurseflowVideoKey,
+  readStoredText,
+  storeAssetToBucket,
+  writeStoredText,
+} from "./nurseflowStore";
 
 const DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 const DEFAULT_MODEL = "veo-3.1-generate-preview";
@@ -157,6 +165,7 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 
 const storePath = () => nurseflowPath(process.env.NURSEFLOW_VIDEO_PATH, "video-jobs.json");
 const videoDir = () => nurseflowPath(process.env.NURSEFLOW_VIDEO_DIR, "videos");
+const VIDEO_JOBS_OBJECT = "video-jobs.json";
 
 /** True when the legacy Pollinations tier will stamp a watermark, i.e. no token. */
 export const imageIsWatermarked = () => provider() === "image" && !imageToken();
@@ -262,21 +271,18 @@ const NEGATIVE_PROMPT = [
 // ---------------------------------------------------------------------------
 
 async function readStore(): Promise<VideoFile> {
-  try {
-    const file = JSON.parse(await readFile(storePath(), "utf8")) as VideoFile;
-    return Array.isArray(file.jobs) ? file : { schemaVersion: 1, jobs: [] };
-  } catch (error: unknown) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return { schemaVersion: 1, jobs: [] };
-    throw error;
-  }
+  const text = await readStoredText(storePath(), nurseflowJsonKey(VIDEO_JOBS_OBJECT));
+  if (text === null) return { schemaVersion: 1, jobs: [] };
+  const file = JSON.parse(text) as VideoFile;
+  return Array.isArray(file.jobs) ? file : { schemaVersion: 1, jobs: [] };
 }
 
 async function writeStore(jobs: NurseFlowVideoJob[]): Promise<void> {
-  const target = storePath();
-  await mkdir(dirname(target), { recursive: true });
-  const temporary = `${target}.tmp`;
-  await writeFile(temporary, JSON.stringify({ schemaVersion: 1, jobs }, null, 2), "utf8");
-  await rename(temporary, target);
+  await writeStoredText(
+    storePath(),
+    nurseflowJsonKey(VIDEO_JOBS_OBJECT),
+    JSON.stringify({ schemaVersion: 1, jobs }, null, 2),
+  );
 }
 
 // Serialise read-modify-write cycles so two concurrent polls cannot clobber
@@ -562,6 +568,8 @@ async function runImageJob(id: string, prompt: string): Promise<void> {
     const temporary = `${target}.tmp`;
     await writeFile(temporary, bytes);
     await rename(temporary, target);
+    // Mirror the asset into the bucket so it survives a lost disk.
+    await storeAssetToBucket(target, nurseflowVideoKey(file), mimeType);
 
     await mutate((jobs) => {
       const stored = jobs.find((candidate) => candidate.id === id);
@@ -731,7 +739,11 @@ export async function refreshVideoJob(id: string): Promise<NurseFlowVideoJob | n
  */
 export async function ensureVideoFile(job: NurseFlowVideoJob): Promise<string> {
   const target = videoFilePath(job);
-  if (await stat(target).then(() => true, () => false)) return target;
+  // Warm local cache — or pull the durable copy back from the bucket if the
+  // disk was rebuilt since the asset was generated.
+  if (await ensureLocalAsset(target, nurseflowVideoKey(job.storedFile ?? `${job.id}.mp4`))) {
+    return target;
+  }
 
   if (job.status !== "completed" || !job.videoUri) throw new Error("The video job has not finished yet.");
 
@@ -745,6 +757,11 @@ export async function ensureVideoFile(job: NurseFlowVideoJob): Promise<string> {
   const temporary = `${target}.tmp`;
   await writeFile(temporary, bytes);
   await rename(temporary, target);
+  await storeAssetToBucket(
+    target,
+    nurseflowVideoKey(`${job.id}.mp4`),
+    job.mimeType || (job.mediaType === "image" ? "image/jpeg" : "video/mp4"),
+  );
 
   await mutate((jobs) => {
     const stored = jobs.find((candidate) => candidate.id === job.id);

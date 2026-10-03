@@ -789,6 +789,19 @@ async function putToPresignedUrl(uploadUrl: string, file: File): Promise<void> {
   }
 }
 
+/** Presign + PUT a file straight to the bucket; returns its object key so the
+ *  caller can register it with the server. Throws with `.status = 501` when
+ *  R2 isn't configured (callers fall back to the base64 path). */
+export async function directUploadToBucket(
+  path: string,
+  filename: string,
+  file: File,
+): Promise<string> {
+  const { uploadUrl, objectKey } = await presignUpload(path, filename, file);
+  await putToPresignedUrl(uploadUrl, file);
+  return objectKey;
+}
+
 /** POST a JSON body and surface the server's `{ error }` message. */
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {

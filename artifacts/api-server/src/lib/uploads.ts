@@ -5,6 +5,8 @@ import {
   deleteObject,
   downloadObjectToFile,
   isR2Configured,
+  listObjectKeys,
+  putObject,
   R2_KEY_PREFIX,
 } from "./r2";
 
@@ -174,6 +176,63 @@ export function libraryObjectKey(ext: string): string {
   return `library/${randomUUID()}.${ext}`;
 }
 
+// Order files mirror the on-disk layout so the same prefix-scoped cleanup
+// works for both backends: materials live directly under orders/<id>/, the
+// delivered study under orders/<id>/delivery/.
+
+/** Object key prefix owning every file for one order. */
+export function orderPrefix(orderId: number): string {
+  return `orders/${orderId}/`;
+}
+
+/** An object key for one of an order's uploaded materials. */
+export function orderMaterialObjectKey(orderId: number, ext: string): string {
+  return `${orderPrefix(orderId)}${randomUUID()}.${ext}`;
+}
+
+/** An object key for an order's delivered study. */
+export function orderDeliveryObjectKey(orderId: number, ext: string): string {
+  return `${orderPrefix(orderId)}delivery/${randomUUID()}.${ext}`;
+}
+
+// Student materials are uploaded to the bucket *before* the order exists, so
+// the browser needs a scope that isn't tied to an order id yet. Objects land
+// under orders/pending/ and are re-keyed into orders/<id>/ once the order is
+// created (see rekeyPendingOrderObject).
+const ORDER_PENDING_PREFIX = "orders/pending/";
+
+/** A staging object key for a material uploaded before its order exists. */
+export function orderPendingObjectKey(ext: string): string {
+  return `${ORDER_PENDING_PREFIX}${randomUUID()}.${ext}`;
+}
+
+/** True when an object key is a pre-order staging key we own. */
+export function isPendingOrderKey(key: string): boolean {
+  return key.startsWith(ORDER_PENDING_PREFIX);
+}
+
+/** Build the stored reference for a browser-uploaded (presigned) object. */
+export function remoteStoredUpload(
+  key: string,
+  filename: unknown,
+  detected: { type: UploadType; mime: string },
+  size: number,
+): StoredUpload {
+  return {
+    filename: sanitizeFilename(filename),
+    storedPath: R2_KEY_PREFIX + key,
+    type: detected.type,
+    mime: detected.mime,
+    size,
+  };
+}
+
+/** A safe object-key extension derived from the display filename. */
+export function extFromFilename(filename: string): string {
+  const ext = path.extname(filename).toLowerCase().replace(/^\./, "");
+  return /^[a-z0-9]{1,8}$/.test(ext) ? ext : "bin";
+}
+
 export function isRemoteStored(storedPath: string): boolean {
   return storedPath.startsWith(R2_KEY_PREFIX);
 }
@@ -230,15 +289,11 @@ export async function removeStoredFile(storedPath: string): Promise<void> {
   await removeUploadFile(storedPath);
 }
 
-/**
- * Validate and persist an upload for a study. Throws UploadError (with an
- * HTTP status) on rejection; never throws for I/O — callers surface those.
- */
-async function storeBytes(
-  dir: string,
+/** Identify + size-check an upload, throwing UploadError on rejection. */
+function validateUpload(
   buffer: Buffer,
   rawFilename: unknown,
-): Promise<StoredUpload> {
+): { type: UploadType; mime: string; ext: string } {
   const detected = detectUploadType(buffer, rawFilename);
   if (!detected) {
     throw new UploadError(
@@ -252,6 +307,30 @@ async function storeBytes(
       `File is too large (max ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB).`,
     );
   }
+  return detected;
+}
+
+/** Store an upload server-side in the bucket (no browser involvement). */
+async function storeBytesInBucket(
+  key: string,
+  buffer: Buffer,
+  rawFilename: unknown,
+): Promise<StoredUpload> {
+  const detected = validateUpload(buffer, rawFilename);
+  await putObject(key, buffer, detected.mime);
+  return remoteStoredUpload(key, rawFilename, detected, buffer.length);
+}
+
+/**
+ * Validate and persist an upload for a study. Throws UploadError (with an
+ * HTTP status) on rejection; never throws for I/O — callers surface those.
+ */
+async function storeBytes(
+  dir: string,
+  buffer: Buffer,
+  rawFilename: unknown,
+): Promise<StoredUpload> {
+  const detected = validateUpload(buffer, rawFilename);
   await mkdir(dir, { recursive: true });
   const storedPath = path.join(dir, `${randomUUID()}.${detected.ext}`);
   await writeFile(storedPath, buffer);
@@ -281,12 +360,19 @@ export async function storeLibraryUpload(
   return storeBytes(LIBRARY_DIR, buffer, rawFilename);
 }
 
-/** Validate and persist a document attached to a student's care-study order. */
+/** Validate and persist a document attached to a student's care-study order.
+ *  When R2 is configured the bytes go to the bucket (orders/<id>/...);
+ *  otherwise they land on the local disk as before. */
 export async function storeOrderUpload(
   orderId: number,
   buffer: Buffer,
   rawFilename: unknown,
 ): Promise<StoredUpload> {
+  if (isR2Configured()) {
+    const detected = validateUpload(buffer, rawFilename);
+    const key = orderMaterialObjectKey(orderId, detected.ext);
+    return storeBytesInBucket(key, buffer, rawFilename);
+  }
   return storeBytes(path.join(ORDERS_DIR, String(orderId)), buffer, rawFilename);
 }
 
@@ -296,15 +382,35 @@ export async function storeOrderDelivery(
   buffer: Buffer,
   rawFilename: unknown,
 ): Promise<StoredUpload> {
+  if (isR2Configured()) {
+    const detected = validateUpload(buffer, rawFilename);
+    const key = orderDeliveryObjectKey(orderId, detected.ext);
+    return storeBytesInBucket(key, buffer, rawFilename);
+  }
   return storeBytes(path.join(ORDER_DELIVERY_DIR, String(orderId), "delivery"), buffer, rawFilename);
 }
 
-/** Remove an order's on-disk files (materials + delivery) — best-effort. */
+/** Remove an order's files (materials + delivery) wherever they live —
+ *  bucket objects under the order's prefix and/or the on-disk folder. */
 export async function removeOrderArtifacts(orderId: number): Promise<void> {
   try {
     await rm(path.join(ORDERS_DIR, String(orderId)), { recursive: true, force: true });
   } catch {
     // best-effort cleanup
+  }
+  if (isR2Configured()) {
+    try {
+      const keys = await listObjectKeys(orderPrefix(orderId));
+      await Promise.all(
+        keys.map((key) =>
+          deleteObject(key).catch(() => {
+            // object may already be gone
+          }),
+        ),
+      );
+    } catch {
+      // best-effort cleanup
+    }
   }
 }
 
