@@ -218,24 +218,32 @@ const SCHEMA_LOCK_KEY = 0x63617265; // "care"
 const SCHEMA_INIT_ATTEMPTS = 5;
 
 /**
- * Run the provisioning DDL while holding a session-level advisory lock, so two
- * instances booting at once (a Render deploy starts the new container before
- * the old one has fully stopped) take turns instead of deadlocking on the
- * AccessExclusiveLock each CREATE TABLE needs. The DDL is idempotent, so a
- * second runner is a harmless no-op.
+ * Run the provisioning DDL inside a single transaction that first takes a
+ * transaction-scoped advisory lock, so two instances booting at once (a Render
+ * deploy starts the new container before the old one has fully stopped) take
+ * turns instead of deadlocking on the AccessExclusiveLock each CREATE TABLE
+ * needs. The DDL is idempotent, so a second runner is a harmless no-op.
+ *
+ * A transaction-scoped lock (rather than a session lock) is deliberate: the
+ * deployed DATABASE_URL is a Supabase pooler in *transaction* mode (port 6543),
+ * where consecutive statements on one client can be routed to different server
+ * connections. Keeping the lock, the DDL, and the implicit release inside one
+ * transaction guarantees they share a single server connection. The lock frees
+ * automatically on COMMIT or ROLLBACK, so a crash can never strand it.
  */
 async function provisionSchemaWithLock(): Promise<void> {
   const client = await pool!.connect();
   try {
-    await client.query("SELECT pg_advisory_lock($1)", [SCHEMA_LOCK_KEY]);
+    await client.query("BEGIN");
     try {
+      await client.query("SELECT pg_advisory_xact_lock($1)", [SCHEMA_LOCK_KEY]);
       await client.query(POSTGRES_SCHEMA_SQL);
-    } finally {
-      await client
-        .query("SELECT pg_advisory_unlock($1)", [SCHEMA_LOCK_KEY])
-        .catch(() => {
-          // Connection already gone — the session lock releases with it.
-        });
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {
+        // Connection already gone — the transaction (and its lock) is gone too.
+      });
+      throw error;
     }
   } finally {
     client.release();
