@@ -206,15 +206,15 @@ disk at `/app/data` (base64 uploads through the API).
 | Library sources | `library/` | `data/library/` |
 | Order materials | `orders/<orderId>/` | `data/orders/<orderId>/` |
 | Order deliveries | `orders/<orderId>/delivery/` | `data/orders/<orderId>/delivery/` |
-| NurseFlow question bank | `nurseflow/question-bank.json` | `data/nurseflow/question-bank.json` |
-| NurseFlow video jobs | `nurseflow/video-jobs.json` | `data/nurseflow/video-jobs.json` |
-| NurseFlow visual assets | `nurseflow/videos/<file>` | `data/nurseflow/videos/` |
-| NurseFlow access/trial store | `nurseflow/access.json` | `data/nurseflow/access.json` |
+| NurseSpin question bank | `nurseflow/question-bank.json` | `data/nurseflow/question-bank.json` |
+| NurseSpin video jobs | `nurseflow/video-jobs.json` | `data/nurseflow/video-jobs.json` |
+| NurseSpin visual assets | `nurseflow/videos/<file>` | `data/nurseflow/videos/` |
+| NurseSpin access/trial store | `nurseflow/access.json` | `data/nurseflow/access.json` |
 
 Order materials stage under `orders/pending/` while the browser uploads them,
 then are re-keyed into `orders/<orderId>/` when the order is created.
 
-The NurseFlow JSON stores (question bank, video jobs, access) are read from the
+The NurseSpin JSON stores (question bank, video jobs, access) are read from the
 bucket first (the local file is a write-through cache and offline fallback) and
 are written to both. Visual assets are mirrored to the bucket and re-hydrated
 to the local cache on demand.

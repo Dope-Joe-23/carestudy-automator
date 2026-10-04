@@ -1,5 +1,5 @@
 /**
- * Studio → NurseFlow question bank (/studio/nurseflow).
+ * Studio → NurseSpin question bank (/studio/nurseflow).
  *
  * One screen with two jobs: bring new cards in from a validated JSON batch,
  * and review what is already stored. Only cards an educator marks `approved`
@@ -444,7 +444,7 @@ export function NurseFlowQuestionBankPage() {
 
         <header className="mt-4 flex flex-col gap-4 border-b pb-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <p className="font-mono text-[11px] uppercase tracking-[.18em] text-primary">NurseFlow</p>
+            <p className="font-mono text-[11px] uppercase tracking-[.18em] text-primary">NurseSpin</p>
             <h1 className="mt-1 font-serif text-3xl tracking-tight sm:text-4xl">Question Bank</h1>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
               Validate, review and publish original learning cards. Only approved cards appear in the public feed.

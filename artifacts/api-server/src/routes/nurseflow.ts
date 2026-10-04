@@ -141,10 +141,6 @@ nurseFlowRouter.get("/nurseflow/video-jobs/:id", async (req: Request, res: Respo
  * The content type follows the job, because the default provider is an image.
  */
 nurseFlowRouter.get("/nurseflow/video-jobs/:id/content", async (req: Request, res: Response) => {
-  if (!isVideoConfigured()) {
-    sendNotConfigured(res);
-    return;
-  }
   const id = clean(req.params.id, 160);
   if (!isValidJobId(id)) {
     res.status(400).json({ error: "Invalid video job id." });

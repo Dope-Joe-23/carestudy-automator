@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-25T06:49:52.170Z",
+  "updatedAt": "2026-10-04T01:48:55.833Z",
   "questions": [
     {
       "id": "nf-pain-report-001",
@@ -841,6 +841,190 @@
       "updatedAt": "2026-09-25T06:49:34.606Z",
       "reviewedBy": "admin",
       "reviewedAt": "2026-09-25T06:49:34.606Z"
+    },
+    {
+      "id": "docx-sample-quiz-questions-docx-pre-oxygen-nasal-assessment-1",
+      "topic": "Oxygen Therapy",
+      "level": "Undergraduate",
+      "title": "Pre‑oxygen Nasal Assessment",
+      "question": "Before starting prescribed oxygen via nasal cannula, which assessment should the nurse prioritise?",
+      "options": [
+        "Inspect the nasal passages and assess respiratory status",
+        "Offer the patient a glass of water",
+        "Place the patient flat in bed",
+        "Measure the patient's height"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "A baseline respiratory assessment and checking the nares support safe application and later reassessment of oxygen therapy.",
+      "sourceTitle": "Sample Nursing Practice Questions",
+      "sourceUrl": "https://www.brit-thoracic.org.uk/quality-improvement/guidelines/emergency-oxygen/",
+      "learningObjective": "Demonstrate the ability to perform a baseline respiratory and nasal inspection before initiating oxygen therapy.",
+      "visualBrief": "Illustration of a nurse examining a patient's nostrils while preparing a nasal cannula.",
+      "sourceKind": "url",
+      "reviewStatus": "draft",
+      "createdAt": "2026-10-04T01:48:55.832Z",
+      "updatedAt": "2026-10-04T01:48:55.832Z"
+    },
+    {
+      "id": "docx-sample-quiz-questions-docx-escalation-for-suspected-sepsis-2",
+      "topic": "Sepsis Recognition",
+      "level": "Undergraduate",
+      "title": "Escalation for Suspected Sepsis",
+      "question": "Which action is most appropriate when a patient shows signs of possible sepsis and clinical deterioration?",
+      "options": [
+        "Escalate urgently using the local deterioration pathway",
+        "Wait until the next routine observations",
+        "Give oral fluids and review tomorrow",
+        "Document it only after the shift ends"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "New confusion, fever and increased respiratory rate require timely assessment and escalation under local policy.",
+      "sourceTitle": "Sample Nursing Practice Questions",
+      "sourceUrl": "https://www.nice.org.uk/guidance/ng51",
+      "learningObjective": "Identify early signs of sepsis and initiate urgent escalation per local policy.",
+      "visualBrief": "Diagram showing a nurse calling a rapid response team when a patient exhibits fever, confusion, and tachycardia.",
+      "sourceKind": "url",
+      "reviewStatus": "draft",
+      "createdAt": "2026-10-04T01:48:55.833Z",
+      "updatedAt": "2026-10-04T01:48:55.833Z"
+    },
+    {
+      "id": "docx-sample-quiz-questions-docx-hand-hygiene-before-aseptic-task-3",
+      "topic": "Hand Hygiene",
+      "level": "Undergraduate",
+      "title": "Hand Hygiene Before Aseptic Task",
+      "question": "When should hand hygiene be performed during preparation for an aseptic procedure?",
+      "options": [
+        "Immediately before the aseptic task",
+        "Only after the procedure",
+        "At the end of the shift",
+        "Only if hands look visibly soiled"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "Hand hygiene immediately before an aseptic task helps prevent microorganisms reaching a vulnerable site.",
+      "sourceTitle": "Sample Nursing Practice Questions",
+      "sourceUrl": "https://www.who.int/publications/m/item/my-5-moments-for-hand-hygiene",
+      "learningObjective": "Perform hand hygiene at the correct moment before an aseptic procedure to prevent contamination.",
+      "visualBrief": "Image of a nurse applying alcohol-based rub to hands just before touching a sterile field.",
+      "sourceKind": "url",
+      "reviewStatus": "draft",
+      "createdAt": "2026-10-04T01:48:55.833Z",
+      "updatedAt": "2026-10-04T01:48:55.833Z"
+    },
+    {
+      "id": "docx-sample-quiz-questions-docx-addressing-label-prescription-mismatch-4",
+      "topic": "Medication Safety",
+      "level": "Undergraduate",
+      "title": "Addressing Label-Prescription Mismatch",
+      "question": "A medication label does not match the electronic prescription. What should the nurse do first?",
+      "options": [
+        "Stop and clarify the discrepancy before administration",
+        "Administer the labelled dose to avoid delay",
+        "Ask the patient which dose they usually take",
+        "Document the dose as given"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "Do not administer when a discrepancy is present. Pause, verify the order and follow local medicines-management procedures.",
+      "sourceTitle": "Sample Nursing Practice Questions",
+      "sourceUrl": "https://www.nmc.org.uk/standards/standards-for-post-registration/standards-for-medicines-management/",
+      "learningObjective": "Verify and reconcile medication label discrepancies before administration to prevent errors.",
+      "visualBrief": "Illustration of a nurse holding a medication package and checking it against a computer screen showing the prescription.",
+      "sourceKind": "url",
+      "reviewStatus": "draft",
+      "createdAt": "2026-10-04T01:48:55.833Z",
+      "updatedAt": "2026-10-04T01:48:55.833Z"
+    },
+    {
+      "id": "docx-sample-quiz-questions-docx-pain-assessment-and-nursing-process-5",
+      "topic": "Pain Management",
+      "level": "Undergraduate",
+      "title": "Pain Assessment and Nursing Process",
+      "question": "A patient reports pain rated 7 out of 10. Which action best reflects the nursing process?",
+      "options": [
+        "Assess the pain, then plan and evaluate interventions against a comfort-function goal",
+        "Record the score and take no further action",
+        "Delay all care until the pain subsides",
+        "Ask a colleague to score the pain instead"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "Pain assessment should lead to a documented plan and re-evaluation of the patient's comfort-function goal.",
+      "sourceTitle": "Sample Nursing Practice Questions",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingfundamentals/",
+      "learningObjective": "Apply the nursing process to pain management by assessing, planning, intervening, and evaluating.",
+      "visualBrief": "Flowchart showing steps: pain assessment → goal setting → intervention → reassessment.",
+      "sourceKind": "url",
+      "reviewStatus": "draft",
+      "createdAt": "2026-10-04T01:48:55.833Z",
+      "updatedAt": "2026-10-04T01:48:55.833Z"
+    },
+    {
+      "id": "docx-sample-quiz-questions-docx-signs-of-fluid-volume-deficit-6",
+      "topic": "Fluid Balance",
+      "level": "Undergraduate",
+      "title": "Signs of Fluid Volume Deficit",
+      "question": "Which finding most suggests fluid volume deficit in an adult patient?",
+      "options": [
+        "Dry mucous membranes with decreased urine output",
+        "Bounding pulse with peripheral oedema",
+        "Weight gain over two days",
+        "Crackles at the lung bases"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "Dry mucous membranes and reduced urine output are classic signs of dehydration and fluid volume deficit.",
+      "sourceTitle": "Sample Nursing Practice Questions",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingfundamentals/",
+      "learningObjective": "Recognize clinical indicators of fluid volume deficit in adult patients.",
+      "visualBrief": "Side-by-side illustrations: one showing dry lips and low urine output, the other showing normal hydration.",
+      "sourceKind": "url",
+      "reviewStatus": "draft",
+      "createdAt": "2026-10-04T01:48:55.833Z",
+      "updatedAt": "2026-10-04T01:48:55.833Z"
+    },
+    {
+      "id": "docx-sample-quiz-questions-docx-using-patient-sleep-report-7",
+      "topic": "Sleep Assessment",
+      "level": "Undergraduate",
+      "title": "Using Patient Sleep Report",
+      "question": "Why is a patient's own account of their sleep important when planning care?",
+      "options": [
+        "It identifies individual sleep needs and disturbances that guide interventions",
+        "It replaces the need for any nursing assessment",
+        "Sleep quality cannot be assessed any other way",
+        "It is only used for patients with diagnosed insomnia"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "Sleep is subjective; the patient's report helps the nurse individualise sleep-promotion strategies.",
+      "sourceTitle": "Sample Nursing Practice Questions",
+      "sourceUrl": "https://wtcs.pressbooks.pub/nursingfundamentals/",
+      "learningObjective": "Incorporate the patient's subjective sleep experience into individualized care planning.",
+      "visualBrief": "Illustration of a nurse discussing sleep patterns with a patient while holding a sleep diary.",
+      "sourceKind": "url",
+      "reviewStatus": "draft",
+      "createdAt": "2026-10-04T01:48:55.833Z",
+      "updatedAt": "2026-10-04T01:48:55.833Z"
+    },
+    {
+      "id": "docx-sample-quiz-questions-docx-addressing-hand-hygiene-lapse-8",
+      "topic": "Professional Communication",
+      "level": "Undergraduate",
+      "title": "Addressing Hand Hygiene Lapse",
+      "question": "A nurse notices a colleague has not performed hand hygiene. What is the most appropriate first step?",
+      "options": [
+        "Speak to the colleague directly and respectfully about the observation",
+        "Ignore it to avoid conflict",
+        "Report the colleague to the media",
+        "Document it in the patient's notes only"
+      ],
+      "correctOptionIndex": 0,
+      "rationale": "Professional accountability and speaking up for safety start with a direct, respectful conversation under local policy.",
+      "sourceTitle": "Sample Nursing Practice Questions",
+      "sourceUrl": "https://www.nmc.org.uk/standards/code/",
+      "learningObjective": "Demonstrate appropriate peer-to-peer communication to uphold hand hygiene standards.",
+      "visualBrief": "Scene of two nurses conversing politely near a hand sanitizer dispenser.",
+      "sourceKind": "url",
+      "reviewStatus": "draft",
+      "createdAt": "2026-10-04T01:48:55.833Z",
+      "updatedAt": "2026-10-04T01:48:55.833Z"
     }
   ]
 }

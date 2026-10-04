@@ -2,8 +2,6 @@ import { randomBytes } from "node:crypto";
 import { nurseflowPath } from "./nurseflowPaths";
 import { nurseflowJsonKey, readStoredText, writeStoredText } from "./nurseflowStore";
 
-const TRIAL_LIMIT = 10;
-
 export type NurseFlowAccess = {
   id: string;
   attempts: number;
@@ -148,13 +146,16 @@ export function createVisitorId(): string {
   return randomBytes(24).toString("base64url");
 }
 
+// Practice is open: every approved card is answerable, so the old
+// 10-question trial cap and its remaining count are gone. Counters are still
+// reported for display, and paid entitlements are unaffected.
 export function publicAccess(record: NurseFlowAccess) {
   const paid = hasPaidAccess(record);
   return {
-    trialLimit: TRIAL_LIMIT,
+    trialLimit: null,
     attemptsUsed: record.attempts,
-    attemptsRemaining: paid ? null : Math.max(0, TRIAL_LIMIT - record.attempts),
-    hasAccess: paid || record.attempts < TRIAL_LIMIT,
+    attemptsRemaining: null,
+    hasAccess: true,
     paidUntil: paid ? record.paidUntil : null,
   };
 }
@@ -170,10 +171,6 @@ export async function getAccess(id: string) {
 export async function recordAttempt(id: string, correct: boolean) {
   return mutate((state) => {
     const record = state.records[id] ?? newAccess(id);
-    if (!hasPaidAccess(record) && record.attempts >= TRIAL_LIMIT) {
-      state.records[id] = record;
-      return { accepted: false, access: publicAccess(record) };
-    }
     record.attempts += 1;
     if (correct) record.correct += 1;
     record.updatedAt = new Date().toISOString();

@@ -16,7 +16,7 @@ nurseFlowAccessRouter.get("/nurseflow/access", async (req, res) => {
 nurseFlowAccessRouter.post("/nurseflow/attempts", async (req, res) => {
   const questionId = typeof req.body?.questionId === "string" ? req.body.questionId.trim() : "";
   if (!/^[A-Za-z0-9_-]{3,160}$/.test(questionId)) { res.status(400).json({ error: "Invalid question." }); return; }
-  try { const result = await recordAttempt(visitor(req, res), req.body?.correct === true); if (!result.accepted) { res.status(402).json({ error: "Your free practice set is complete.", access: result.access }); return; } res.status(201).json(result); }
+  try { res.status(201).json(await recordAttempt(visitor(req, res), req.body?.correct === true)); }
   catch (error) { req.log?.error({ error }, "NurseFlow attempt record failed"); res.status(503).json({ error: "Your answer could not be saved. Please try again." }); }
 });
 

@@ -1,4 +1,4 @@
-# NurseFlow question-bank import
+# NurseSpin question-bank import
 
 Start from [starter-questions.json](../data/nurseflow/starter-questions.json).
 Every card requires four answer options, a zero-based `correctOptionIndex`, a

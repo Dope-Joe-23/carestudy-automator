@@ -18,10 +18,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "CareStudy Preview"
+args = "NurseAid Preview"
 
 [[workflows.workflow]]
-name = "CareStudy Preview"
+name = "NurseAid Preview"
 author = "agent"
 
 [workflows.workflow.metadata]

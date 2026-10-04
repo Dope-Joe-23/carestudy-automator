@@ -1055,11 +1055,11 @@ function InvitesTab({ onInvite }: { onInvite: () => void }) {
 // Tab: Settings (placeholder)
 // ---------------------------------------------------------------------------
 
-/** "studyUploads" -> "Study uploads"; "nurseflowQuestionBank" -> "NurseFlow question bank". */
+/** "studyUploads" -> "Study uploads"; "nurseflowQuestionBank" -> "NurseSpin question bank". */
 function surfaceLabel(name: string): string {
   const spaced = name.replace(/([a-z])([A-Z])/g, "$1 $2");
   const titled = spaced.charAt(0).toUpperCase() + spaced.slice(1);
-  return titled.replace(/^Nurseflow/, "NurseFlow");
+  return titled.replace(/^Nurseflow/, "NurseSpin");
 }
 
 /**
@@ -1175,7 +1175,7 @@ function SettingsTab() {
       <div>
         <h2 className="font-serif text-lg font-semibold">Settings</h2>
         <p className="text-sm text-muted-foreground">
-          Configure your CareStudy workspace.
+          Configure your NurseAid workspace.
         </p>
       </div>
 

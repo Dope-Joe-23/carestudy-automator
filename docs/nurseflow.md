@@ -1,7 +1,8 @@
-# NurseFlow
+# NurseSpin
 
-NurseFlow is CareStudy's short-form MCQ practice stream. It is mounted at
-`/nurseflow` and can be deployed independently because it only needs the
+NurseSpin is NurseAid's short-form MCQ practice stream. It is mounted at
+`/` and `/nursespin` (`/nurseflow` remains a compatibility alias) and can be
+deployed independently because it only needs the
 frontend plus the `/api/nurseflow` video-job boundary.
 
 ## Content safety and quality
@@ -38,8 +39,10 @@ Three providers sit behind one job contract:
   `NURSEFLOW_VIDEO_MODEL` (default `veo-3.1-generate-preview`). Google's
   pricing table lists no free tier for Veo.
 
-With the active provider unconfigured, every visual route answers 503 with a
-`setup` hint and nothing is charged.
+With the active provider unconfigured, generation and job-management routes
+answer 503 with a `setup` hint and nothing is charged. The content route can
+still serve completed visuals already cached locally or in R2; it only needs
+provider credentials if it must fetch a Veo clip that has not yet been cached.
 
 The API mirrors the job lifecycle:
 
