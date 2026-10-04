@@ -5,6 +5,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@keyframes nursespin-visual-drift {
+  0%, 100% { transform: scale(1.04) translate3d(0, 0, 0); }
+  50% { transform: scale(1.1) translate3d(-0.6%, 0.4%, 0); }
+}
+
+.nursespin-visual-image {
+  animation: nursespin-visual-drift 20s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nursespin-visual-image {
+    animation: none;
+  }
+}
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));

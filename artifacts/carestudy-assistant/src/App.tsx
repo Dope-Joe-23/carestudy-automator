@@ -8730,7 +8730,7 @@ function Home() {
               <div className="border-b bg-primary px-4 py-3 text-primary-foreground">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold">CareStudy editor</p>
+                    <p className="text-sm font-semibold">NurseAid editor</p>
                     <p className="mt-0.5 text-xs text-primary-foreground/80">
                       Reviews the complete work currently on screen.
                     </p>
@@ -8820,7 +8820,7 @@ function Home() {
       <Dialog open={onboardingOpen} onOpenChange={(open) => { setOnboardingOpen(open); if (!open) markOnboardingSeen(); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Welcome to CareStudy</DialogTitle>
+            <DialogTitle>Welcome to NurseAid</DialogTitle>
             <DialogDescription>
               Your patient/family care study, section by section.
             </DialogDescription>
@@ -8871,6 +8871,8 @@ function Router() {
         <ErrorBoundary resetKey={location}>
           <Switch>
             <Route path="/" component={NurseFlowPage} />
+            <Route path="/nurseaid" component={LandingPage} />
+            <Route path="/nursespin" component={NurseFlowPage} />
             <Route path="/carestudy" component={LandingPage} />
             <Route path="/studio">{() => <AdminGate><Home /></AdminGate>}</Route>
             <Route path="/studio/dashboard">{() => <AdminDashboardGate><AdminDashboard /></AdminDashboardGate>}</Route>
