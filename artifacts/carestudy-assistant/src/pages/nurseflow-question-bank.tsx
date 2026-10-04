@@ -37,7 +37,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { API_URL } from "@/lib/apiBase";
+import { API_URL, apiUrl } from "@/lib/apiBase";
 import { getAdminToken } from "@/lib/adminAuth";
 import { getDisplayName, useAdmin } from "@/lib/adminContext";
 import { cn } from "@/lib/utils";
@@ -907,7 +907,7 @@ function VideoClipPanel({ question }: { question: Question }) {
         <div className="mt-3 w-full max-w-[220px] overflow-hidden rounded-lg border bg-muted">
           <img
             key={job.id}
-            src={job.contentUrl}
+            src={apiUrl(job.contentUrl)}
             alt={`Teaching visual for ${question.title}`}
             style={{ aspectRatio: `${job.width ?? 9} / ${job.height ?? 16}` }}
             className="nurseflow-visual-drift size-full object-cover"
@@ -918,7 +918,7 @@ function VideoClipPanel({ question }: { question: Question }) {
       {job?.status === "completed" && job.contentUrl && job.mediaType === "video" && (
         <video
           key={job.id}
-          src={job.contentUrl}
+          src={apiUrl(job.contentUrl)}
           controls
           playsInline
           className="mt-3 w-full max-w-[260px] rounded-lg border bg-black"

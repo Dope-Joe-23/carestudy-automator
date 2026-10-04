@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { apiUrl } from "@/lib/apiBase";
 import { getPaystackKey, payWithPaystack } from "@/lib/paystack";
 
 type Question = {
@@ -123,7 +124,7 @@ export function NurseFlowPage() {
   // educator has approved content in the Question Bank. The fallback keeps the
   // visitor experience working before the first batch is published.
   useEffect(() => {
-    fetch("/api/nurseflow/feed")
+    fetch(apiUrl("/nurseflow/feed"))
       .then((response) => response.ok ? response.json() : null)
       .then((data: { questions?: PublishedQuestion[] } | null) => {
         if (!data?.questions?.length) return;
@@ -132,7 +133,8 @@ export function NurseFlowPage() {
           scene: "A reviewed NurseFlow learning visual is being prepared for this card.",
           question: item.question, options: item.options, answer: item.correctOptionIndex,
           rationale: item.rationale, source: item.sourceTitle, sourceUrl: item.sourceUrl,
-          learningPoint: item.learningObjective, visual: item.visual ?? null,
+          learningPoint: item.learningObjective,
+          visual: item.visual ? { ...item.visual, url: apiUrl(item.visual.url) } : null,
         })));
       })
       .catch(() => undefined);
