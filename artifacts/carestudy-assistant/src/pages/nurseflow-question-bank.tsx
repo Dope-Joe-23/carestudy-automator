@@ -37,6 +37,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { API_URL } from "@/lib/apiBase";
 import { getAdminToken } from "@/lib/adminAuth";
 import { getDisplayName, useAdmin } from "@/lib/adminContext";
 import { cn } from "@/lib/utils";
@@ -96,10 +97,10 @@ type PayloadState =
   | { kind: "invalid"; message: string }
   | { kind: "ready"; count: number };
 
-const api = "/api/nurseflow/questions";
+const api = `${API_URL}/nurseflow/questions`;
 /// The clip boundary is public (it is not behind the studio session), so it
 /// needs its own helper rather than the token-carrying `request` above.
-const videoApi = "/api/nurseflow/video-jobs";
+const videoApi = `${API_URL}/nurseflow/video-jobs`;
 const EMPTY_PAYLOAD = '{\n  "questions": []\n}';
 
 async function videoRequest<T>(path: string, init?: RequestInit): Promise<T> {

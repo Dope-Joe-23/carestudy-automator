@@ -5,8 +5,7 @@
  */
 
 import { getAdminToken } from "./adminAuth";
-
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || "/api";
+import { API_URL } from "./apiBase";
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAdminToken();

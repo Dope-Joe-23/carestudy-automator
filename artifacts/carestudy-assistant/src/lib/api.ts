@@ -6,8 +6,6 @@
  * relative. Set VITE_API_URL to point elsewhere (e.g. a deployed backend).
  */
 
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || "/api";
-
 // Slightly above the API server's 300s child-process timeout, so the client
 // gives up last and reports a clear error instead of spinning forever.
 const REQUEST_TIMEOUT_MS = 320_000;
@@ -16,6 +14,7 @@ const REQUEST_TIMEOUT_MS = 320_000;
 // admin's bearer token. When a call comes back 401 (session missing/expired)
 // the AdminGate is told to show the login screen again.
 import { getAdminToken, notifyAdminUnauthorized } from "./adminAuth";
+import { API_URL } from "./apiBase";
 
 /** JSON headers with the studio admin's bearer token when signed in. */
 function apiHeaders(): Record<string, string> {
