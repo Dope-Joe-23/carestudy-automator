@@ -40,12 +40,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { API_URL, apiUrl } from "@/lib/apiBase";
 import { getAdminToken } from "@/lib/adminAuth";
 import { getDisplayName, useAdmin } from "@/lib/adminContext";
+import {
+  NURSEFLOW_CATEGORIES,
+  categoryLabel,
+  nurseFlowCategoryOf,
+  type NurseFlowCategoryId,
+} from "@/lib/nurseflowCategories";
 import { cn } from "@/lib/utils";
 
 type ReviewStatus = "draft" | "in_review" | "approved" | "retired";
 
 type Question = {
   id: string;
+  /** Top-level area the card sits in; absent on cards stored before categories. */
+  category?: string;
   topic: string;
   level: string;
   title: string;
@@ -145,6 +153,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 /** Field names as the import endpoint spells them, in reader-friendly words. */
 const FIELD_LABELS: Record<string, string> = {
   id: "ID",
+  category: "Category",
   topic: "Topic",
   level: "Level",
   title: "Title",
@@ -213,6 +222,8 @@ export function NurseFlowQuestionBankPage() {
   // Optional public URL applied to every card extracted from a PDF. Left blank,
   // cards come back flagged as needing a source before approval.
   const [extractSourceUrl, setExtractSourceUrl] = useState("");
+  // The area every card in the next extracted batch is filed under.
+  const [extractCategory, setExtractCategory] = useState<NurseFlowCategoryId>("general-nursing");
   const fileInput = useRef<HTMLInputElement>(null);
   const documentInput = useRef<HTMLInputElement>(null);
 
@@ -264,7 +275,7 @@ export function NurseFlowQuestionBankPage() {
       .filter((question) =>
         !needle
           ? true
-          : [question.title, question.topic, question.id, question.question, question.sourceTitle]
+          : [question.title, question.topic, question.id, question.question, question.sourceTitle, question.category ? categoryLabel(question.category) : ""]
               .filter(Boolean)
               .some((value) => value.toLowerCase().includes(needle)),
       )
@@ -376,7 +387,12 @@ export function NurseFlowQuestionBankPage() {
       const content = await fileToBase64(file);
       const data = await request<{ questions?: unknown[] }>("/extract", {
         method: "POST",
-        body: JSON.stringify({ filename: file.name, content, sourceUrl: extractSourceUrl.trim() }),
+        body: JSON.stringify({
+          filename: file.name,
+          content,
+          sourceUrl: extractSourceUrl.trim(),
+          category: extractCategory,
+        }),
       });
       const cards = data.questions ?? [];
       if (cards.length === 0) {
@@ -408,6 +424,23 @@ export function NurseFlowQuestionBankPage() {
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save the source.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  /** Move a card between the learner picker's categories. */
+  async function setCategory(id: string, category: NurseFlowCategoryId) {
+    try {
+      setBusyId(id);
+      await request(`/${encodeURIComponent(id)}/category`, {
+        method: "PATCH",
+        body: JSON.stringify({ category }),
+      });
+      toast.success(`Filed under ${categoryLabel(category)}.`);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not change the category.");
     } finally {
       setBusyId(null);
     }
@@ -532,7 +565,8 @@ export function NurseFlowQuestionBankPage() {
                 Paste a JSON object with a <code>questions</code> array, load the repository's starter batch, or
                 extract cards from an uploaded PDF or Word document. Validate before importing — every card is stored
                 as a draft, whatever <code>reviewStatus</code> the payload carries, and is published only by an
-                approval in the queue.
+                approval in the queue. A card's <code>category</code> decides which area of the learner picker it
+                appears in; omitting it files the card under General Nursing.
               </DialogDescription>
             </DialogHeader>
             <div className="px-6 py-5">
@@ -599,20 +633,42 @@ export function NurseFlowQuestionBankPage() {
                 />
               </div>
 
-              <div className="mt-3">
-                <label
-                  htmlFor="extract-source"
-                  className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground"
-                >
-                  Source URL for document extraction (optional)
-                </label>
-                <Input
-                  id="extract-source"
-                  value={extractSourceUrl}
-                  onChange={(event) => setExtractSourceUrl(event.target.value)}
-                  placeholder="https://… — applied to every card; leave blank to flag them as needing a source"
-                  className="mt-1"
-                />
+              <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+                <div>
+                  <label
+                    htmlFor="extract-source"
+                    className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground"
+                  >
+                    Source URL for document extraction (optional)
+                  </label>
+                  <Input
+                    id="extract-source"
+                    value={extractSourceUrl}
+                    onChange={(event) => setExtractSourceUrl(event.target.value)}
+                    placeholder="https://… — applied to every card; leave blank to flag them as needing a source"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="extract-category"
+                    className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground"
+                  >
+                    Category for extracted cards
+                  </label>
+                  <select
+                    id="extract-category"
+                    value={extractCategory}
+                    onChange={(event) => setExtractCategory(event.target.value as NurseFlowCategoryId)}
+                    className="mt-1 h-9 w-full rounded-md border bg-background px-2 text-sm sm:w-48"
+                  >
+                    {NURSEFLOW_CATEGORIES.map((entry) => (
+                      <option key={entry.id} value={entry.id}>
+                        {entry.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
@@ -727,6 +783,7 @@ export function NurseFlowQuestionBankPage() {
                     onToggle={() => setExpandedId((current) => (current === question.id ? null : question.id))}
                     onReview={review}
                     onSetSource={setSource}
+                    onSetCategory={setCategory}
                   />
                 ))
               )}
@@ -1020,6 +1077,7 @@ function QuestionCard({
   onToggle,
   onReview,
   onSetSource,
+  onSetCategory,
 }: {
   question: Question;
   busy: boolean;
@@ -1027,6 +1085,7 @@ function QuestionCard({
   onToggle: () => void;
   onReview: (id: string, status: ReviewStatus) => void;
   onSetSource: (id: string, url: string) => void;
+  onSetCategory: (id: string, category: NurseFlowCategoryId) => void;
 }) {
   const meta = statusMeta(question.reviewStatus);
   const StatusIcon = meta.icon;
@@ -1043,6 +1102,7 @@ function QuestionCard({
               <StatusIcon className="size-3" /> {meta.label}
             </Badge>
             {question.level && <Badge variant="outline">{question.level}</Badge>}
+            <Badge variant="secondary">{categoryLabel(nurseFlowCategoryOf(question))}</Badge>
             {needsSource && (
               <Badge variant="outline" className="gap-1 border-amber-500/50 text-amber-700 dark:text-amber-500">
                 <CircleAlert className="size-3" /> Needs source
@@ -1115,6 +1175,32 @@ function QuestionCard({
           )}
 
           {needsSource && <SourceFixer questionId={question.id} busy={busy} onSetSource={onSetSource} />}
+
+          <div className="rounded-lg border bg-muted/40 p-3">
+            <label
+              htmlFor={`category-${question.id}`}
+              className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground"
+            >
+              Category
+            </label>
+            <select
+              id={`category-${question.id}`}
+              value={nurseFlowCategoryOf(question)}
+              disabled={busy}
+              onChange={(event) => onSetCategory(question.id, event.target.value as NurseFlowCategoryId)}
+              className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-sm disabled:opacity-60 sm:w-64"
+            >
+              {NURSEFLOW_CATEGORIES.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Where the card appears in the learner's category picker. Cards with no stored category read as General
+              Nursing.
+            </p>
+          </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailBlock label="Rationale">{question.rationale || "—"}</DetailBlock>

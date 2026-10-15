@@ -65,7 +65,15 @@ export type Order = {
   /** The studio study created from this order (null until produced). */
   producedStudyId: number | null;
   delivery: OrderDelivery | null;
-  /** Payment tracking — present when the order has a delivery. */
+  /**
+   * Delivery lock. The staff sets a PIN when they deliver and releases it once
+   * the student has paid them off-platform. The student can only export the
+   * study after `released` is true, by entering the PIN they were given.
+   */
+  pin: { set: boolean; released: boolean; releasedAt: string | null };
+  /** First time the student exported the released study. */
+  firstDownloadedAt: string | null;
+  /** Payment tracking — retained from the earlier student-paid model. */
   paymentStatus: PaymentStatus;
   paidScope: PaidScope;
   paidAmount: number | null;
@@ -77,6 +85,17 @@ export type Order = {
   vivaUpdatedAt: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+/** "none" | "due" | "paid" — the platform commission the staff owes. */
+export type CommissionStatus = "none" | "due" | "paid";
+
+/** The platform's per-delivery commission, visible only in the studio. */
+export type OrderCommission = {
+  status: CommissionStatus;
+  amount: number | null;
+  paidAt: string | null;
+  reference: string | null;
 };
 
 export type VivaQuestion = {
@@ -385,13 +404,14 @@ export function generateVivaBank(
   });
 }
 
-/** Download the completed study once the order is ready. */
-export async function downloadOrderStudy(order: Order): Promise<void> {
+/** Download the completed study once the order is ready and its PIN released. */
+export async function downloadOrderStudy(order: Order, pin: string): Promise<void> {
   const token = getStudentToken();
   if (!token) throw new Error("You must be signed in to download your study.");
-  const response = await fetch(`${API_URL}/orders/${order.id}/download`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await fetch(
+    `${API_URL}/orders/${order.id}/download?pin=${encodeURIComponent(pin)}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { error?: string } | null;
     throw new Error(body?.error ?? `Download failed (${response.status})`);
@@ -407,12 +427,16 @@ export async function downloadOrderStudy(order: Order): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
-/** Download a specific chapter of the study (post-payment). */
-export async function downloadOrderChapter(order: Order, chapterIndex: number): Promise<void> {
+/** Download a specific chapter of the study (after the PIN is released). */
+export async function downloadOrderChapter(
+  order: Order,
+  chapterIndex: number,
+  pin: string,
+): Promise<void> {
   const token = getStudentToken();
   if (!token) throw new Error("You must be signed in to download.");
   const response = await fetch(
-    `${API_URL}/orders/${order.id}/download?chapter=${chapterIndex}`,
+    `${API_URL}/orders/${order.id}/download?chapter=${chapterIndex}&pin=${encodeURIComponent(pin)}`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   if (!response.ok) {
@@ -438,6 +462,8 @@ export async function downloadOrderChapter(order: Order, chapterIndex: number): 
 export type StudioOrder = Order & {
   fileCount: number;
   student: { id: number; name: string; email: string } | null;
+  /** Present in studio responses: what this delivery owes the platform. */
+  commission?: OrderCommission;
 };
 
 /** Studio API calls use the admin bearer token, not the student token. */
@@ -505,9 +531,14 @@ export function setOrderStatus(
   });
 }
 
-/** Attach the completed study to an order. Uploads straight to the bucket
- *  when R2 is configured (presign + complete), else base64 in the body. */
-export async function attachOrderDelivery(id: number, file: File): Promise<{ order: Order }> {
+/** Attach the completed study to an order, locked behind a staff-set PIN.
+ *  Uploads straight to the bucket when R2 is configured (presign + complete),
+ *  else base64 in the body. */
+export async function attachOrderDelivery(
+  id: number,
+  file: File,
+  pin: string,
+): Promise<{ order: StudioOrder }> {
   if ((await getUploadMode()) === "r2") {
     try {
       const objectKey = await directUploadToBucket(
@@ -517,7 +548,7 @@ export async function attachOrderDelivery(id: number, file: File): Promise<{ ord
       );
       return studioRequestJson(`/studio/orders/${id}/delivery/complete`, {
         method: "POST",
-        body: JSON.stringify({ objectKey, filename: file.name }),
+        body: JSON.stringify({ objectKey, filename: file.name, pin }),
       });
     } catch (error) {
       // R2 disabled since the config check — fall back to the base64 path.
@@ -526,14 +557,53 @@ export async function attachOrderDelivery(id: number, file: File): Promise<{ ord
   }
   return studioRequestJson(`/studio/orders/${id}/delivery`, {
     method: "POST",
-    body: JSON.stringify({ filename: file.name, content: await readFileAsBase64(file) }),
+    body: JSON.stringify({ filename: file.name, content: await readFileAsBase64(file), pin }),
   });
 }
 
-/** Auto-export the produced study as a .docx and deliver it to the student. */
-export function autoDeliverOrder(id: number): Promise<{ order: Order }> {
+/** Auto-export the produced study as a .docx (locked behind `pin`) and deliver. */
+export function autoDeliverOrder(id: number, pin: string): Promise<{ order: StudioOrder }> {
   return studioRequestJson(`/studio/orders/${id}/auto-deliver`, {
     method: "POST",
+    body: JSON.stringify({ pin }),
+  });
+}
+
+/** Release the delivery PIN: opens the student's download and makes the
+ *  per-order commission due to the platform. */
+export function releaseOrderPin(id: number): Promise<{ order: StudioOrder; commissionDue: number }> {
+  return studioRequestJson(`/studio/orders/${id}/pin/release`, { method: "POST" });
+}
+
+/** What the signed-in staff member still owes the platform. */
+export function getCommissionSummary(): Promise<{
+  total: number;
+  /** Whether unpaid commission blocks this account from new deliveries. */
+  enforced: boolean;
+  amountPerOrder: number;
+  orders: StudioOrder[];
+}> {
+  return studioRequestJson("/studio/commissions");
+}
+
+/** Initialize a Paystack payment for this order's platform commission. */
+export function payOrderCommission(id: number): Promise<{
+  reference: string;
+  amount: number;
+  email: string;
+  authorization_url: string;
+}> {
+  return studioRequestJson(`/studio/orders/${id}/commission/pay`, { method: "POST" });
+}
+
+/** Confirm a commission payment against Paystack. */
+export function verifyOrderCommission(
+  id: number,
+  reference: string,
+): Promise<{ verified: boolean; order?: StudioOrder; message?: string }> {
+  return studioRequestJson(`/studio/orders/${id}/commission/verify`, {
+    method: "POST",
+    body: JSON.stringify({ reference }),
   });
 }
 

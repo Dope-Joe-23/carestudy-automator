@@ -171,6 +171,25 @@ export const studentOrdersTable = pgTable(
     paidAmount: integer("paid_amount"),
     /** Paystack transaction reference (unique). */
     paystackRef: text("paystack_ref"),
+    // --- Delivery PIN + platform commission ---
+    // The student never pays us directly. A delivered study is locked behind a
+    // PIN the staff sets; the staff releases that PIN once the student has paid
+    // them (off-platform), and the release makes our per-order commission due.
+    /** scrypt hash of the staff-set download PIN (null until a delivery sets one). */
+    deliveryPinHash: text("delivery_pin_hash"),
+    /** When the staff released the PIN to the student (null = still locked). */
+    pinReleasedAt: timestamp("pin_released_at", { withTimezone: true }),
+    /** First time the student downloaded the released study. */
+    firstDownloadedAt: timestamp("first_downloaded_at", { withTimezone: true }),
+    /** "none" | "due" | "paid" — platform commission on a released delivery. */
+    commissionStatus: text("commission_status").notNull().default("none"),
+    /** Commission owed in Ghana cedis (e.g. 100). */
+    commissionAmount: integer("commission_amount"),
+    /** The staff member who released the PIN and therefore owes the commission. */
+    commissionStaffId: integer("commission_staff_id"),
+    /** Paystack reference for the commission payment. */
+    commissionRef: text("commission_ref"),
+    commissionPaidAt: timestamp("commission_paid_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

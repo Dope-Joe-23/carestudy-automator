@@ -199,12 +199,32 @@ export type OrderRow = {
   paidAmount: number | null;
   /** Paystack transaction reference. */
   paystackRef: string | null;
+  // --- Delivery PIN + platform commission ---
+  /** scrypt hash of the staff-set download PIN (null until a delivery sets one). */
+  deliveryPinHash: string | null;
+  /** When the staff released the PIN to the student (null = still locked). */
+  pinReleasedAt: Date | null;
+  /** First time the student downloaded the released study. */
+  firstDownloadedAt: Date | null;
+  /** Platform commission lifecycle for this order's delivery. */
+  commissionStatus: CommissionStatus;
+  /** Commission owed in Ghana cedis (e.g. 100). */
+  commissionAmount: number | null;
+  /** The staff member who released the PIN and therefore owes the commission. */
+  commissionStaffId: number | null;
+  /** Paystack reference for the commission payment. */
+  commissionRef: string | null;
+  /** When the commission was settled. */
+  commissionPaidAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
 /** "none" | "pending" | "ready" | "error" — viva question bank lifecycle. */
 export type VivaStatus = "none" | "pending" | "ready" | "error";
+
+/** "none" | "due" | "paid" — the platform's per-delivery commission. */
+export type CommissionStatus = "none" | "due" | "paid";
 
 /** "none" | "pending" | "verified" | "failed" — payment lifecycle. */
 export type PaymentStatus = "none" | "pending" | "verified" | "failed";
@@ -393,10 +413,15 @@ export interface StudyStore {
     status: OrderStatus,
     note?: string | null,
   ): Promise<OrderRow | null>;
-  /** Attach the delivered study and mark the order ready. */
+  /** Attach the delivered study (+ its download PIN hash) and mark the order
+   *  ready. A fresh delivery always (re)locks the order: pinReleasedAt clears.
+   *  The delivering staff member is recorded as the one the commission is
+   *  charged to, whichever way the student ends up downloading. */
   setOrderDelivery(
     id: number,
     delivery: { filename: string; storedPath: string; size: number },
+    deliveryPinHash: string,
+    deliveryStaffId: number,
   ): Promise<OrderRow | null>;
   /** Record the studio study produced from this order (status → in_production). */
   setOrderProduced(
@@ -433,6 +458,37 @@ export interface StudyStore {
     id: number,
     paystackRef: string,
   ): Promise<OrderRow | null>;
+
+  // --- Delivery PIN + platform commission ---
+
+  /** Record an explicit in-app PIN release (the staff confirming payment).
+   *  Idempotent with a download-triggered charge. */
+  releaseOrderPin(
+    id: number,
+    staffId: number,
+    amount: number,
+  ): Promise<OrderRow | null>;
+  /**
+   * Make the platform commission due. Called when the student actually takes
+   * delivery (the first download), so we collect whether the PIN was released
+   * in-app or simply shared with the student off-platform. Never un-pays an
+   * already-settled commission.
+   */
+  markOrderCommissionDue(id: number, amount: number): Promise<OrderRow | null>;
+  /** Record the first successful student download of a released study. */
+  recordOrderDownload(id: number): Promise<OrderRow | null>;
+  /** Record a pending commission payment reference (Paystack initialized). */
+  setOrderCommissionPending(
+    id: number,
+    reference: string,
+  ): Promise<OrderRow | null>;
+  /** Mark the order's commission settled after Paystack confirmation. */
+  setOrderCommissionPaid(
+    id: number,
+    reference: string,
+  ): Promise<OrderRow | null>;
+  /** Orders whose commission is still due to one staff member, newest first. */
+  listCommissionDue(staffId: number): Promise<OrderRow[]>;
 
   /** Register a document attached to an order. */
   addOrderFile(file: NewOrderFile): Promise<OrderFileRow>;

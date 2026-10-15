@@ -4,6 +4,7 @@
     {
       "id": "nf-pain-report-001",
       "topic": "Fundamentals",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Pain is what the patient says it is",
       "question": "Which information is the most reliable indicator of how much pain a patient is experiencing?",
@@ -24,6 +25,7 @@
     {
       "id": "nf-falls-bed-safety-001",
       "topic": "Fundamentals",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Leave the bed safe",
       "question": "A patient is at risk of falling. Which measures should the nurse take before leaving the bedside?",
@@ -44,6 +46,7 @@
     {
       "id": "nf-documentation-objective-001",
       "topic": "Fundamentals",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Chart what you observe",
       "question": "Which entry is the most appropriate for the nurse to record in the patient's notes?",
@@ -64,6 +67,7 @@
     {
       "id": "nf-bp-technique-001",
       "topic": "Fundamentals",
+      "category": "general-nursing",
       "level": "NCLEX-style",
       "title": "Support the arm",
       "question": "Which action best improves the accuracy of a manual blood pressure measurement?",
@@ -84,6 +88,7 @@
     {
       "id": "nf-ppe-doffing-001",
       "topic": "Infection prevention",
+      "category": "general-nursing",
       "level": "NMC-aligned",
       "title": "Taking off PPE in the right order",
       "question": "Which item should the nurse remove first when removing personal protective equipment after patient care?",
@@ -104,6 +109,7 @@
     {
       "id": "nf-hand-hygiene-water-001",
       "topic": "Infection prevention",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Soap and water, or rub?",
       "question": "For which situation must the nurse wash with soap and water rather than use an alcohol-based hand rub?",
@@ -124,6 +130,7 @@
     {
       "id": "nf-sharps-disposal-001",
       "topic": "Infection prevention",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Dispose of the sharp, not the needle",
       "question": "After giving an injection, what should the nurse do with the used needle?",
@@ -144,6 +151,7 @@
     {
       "id": "nf-equipment-cleaning-001",
       "topic": "Infection prevention",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Clean between patients",
       "question": "A blood pressure cuff and stethoscope have been used on a patient with a cough. What should the nurse do before using them on the next patient?",
@@ -164,6 +172,7 @@
     {
       "id": "nf-medication-patch-001",
       "topic": "Medication safety",
+      "category": "general-nursing",
       "level": "NMC-aligned",
       "title": "One patch at a time",
       "question": "The prescription requires a new transdermal patch and the patient is still wearing the previous one. What should the nurse do?",
@@ -184,6 +193,7 @@
     {
       "id": "nf-medication-prn-001",
       "topic": "Medication safety",
+      "category": "general-nursing",
       "level": "NCLEX-style",
       "title": "Assess before the PRN",
       "question": "Before administering a prescribed PRN analgesic, which action should the nurse take first?",
@@ -204,6 +214,7 @@
     {
       "id": "nf-medication-prepared-001",
       "topic": "Medication safety",
+      "category": "general-nursing",
       "level": "NMC-aligned",
       "title": "Only give what you prepared",
       "question": "A colleague asks the nurse to give a patient the tablet the colleague has already prepared. What should the nurse do?",
@@ -224,6 +235,7 @@
     {
       "id": "nf-medication-allergy-001",
       "topic": "Medication safety",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Check the allergy status first",
       "question": "The nurse is preparing a medicine prescribed for a patient who has not had it before. Which check is essential before administering it?",
@@ -244,6 +256,7 @@
     {
       "id": "nf-oxygen-ignition-001",
       "topic": "Acute care",
+      "category": "medical-nursing",
       "level": "Foundation",
       "title": "Oxygen needs respect",
       "question": "Which precaution is essential for a patient receiving oxygen through a nasal cannula?",
@@ -264,6 +277,7 @@
     {
       "id": "nf-fluid-output-001",
       "topic": "Acute care",
+      "category": "medical-nursing",
       "level": "NCLEX-style",
       "title": "Watch the output",
       "question": "Over the last two shifts a patient's urine output has fallen well below the expected amount. What is the nurse's priority?",
@@ -284,6 +298,7 @@
     {
       "id": "nf-breathless-position-001",
       "topic": "Acute care",
+      "category": "medical-nursing",
       "level": "Foundation",
       "title": "Ease the work of breathing",
       "question": "A patient becomes short of breath while lying flat. Which action should the nurse take first?",

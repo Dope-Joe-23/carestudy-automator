@@ -4,6 +4,7 @@
     {
       "id": "nf-oxygen-assessment-001",
       "topic": "Fundamentals",
+      "category": "general-nursing",
       "level": "NCLEX-style",
       "title": "Safe oxygen therapy",
       "question": "Before starting prescribed oxygen via nasal cannula, which assessment should the nurse prioritise?",
@@ -19,6 +20,7 @@
     {
       "id": "nf-sepsis-escalation-001",
       "topic": "Acute care",
+      "category": "medical-nursing",
       "level": "NMC-aligned",
       "title": "Recognising deterioration",
       "question": "Which action is most appropriate when a patient shows signs of possible sepsis and clinical deterioration?",
@@ -34,6 +36,7 @@
     {
       "id": "nf-hand-hygiene-001",
       "topic": "Infection prevention",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Clean hands, safer care",
       "question": "When should hand hygiene be performed during preparation for an aseptic procedure?",
@@ -49,6 +52,7 @@
     {
       "id": "nf-medication-discrepancy-001",
       "topic": "Medication safety",
+      "category": "general-nursing",
       "level": "NCLEX-style",
       "title": "Pause before administration",
       "question": "A medication label does not match the electronic prescription. What should the nurse do first?",

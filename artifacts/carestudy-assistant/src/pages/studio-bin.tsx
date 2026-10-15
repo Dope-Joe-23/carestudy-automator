@@ -16,16 +16,21 @@ import {
   CircleAlert,
   ClipboardList,
   CheckCircle2,
+  CreditCard,
   Download,
   ExternalLink,
   FileText,
   GraduationCap,
   HeartPulse,
+  KeyRound,
   Loader2,
+  Lock,
   Mail,
   Play,
   RefreshCw,
   Send,
+  ShieldAlert,
+  Unlock,
   Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,14 +53,19 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { StudentInviteDialog } from "@/components/student-invite-dialog";
+import { getPaystackKey, payWithPaystack } from "@/lib/paystack";
 import {
   attachOrderDelivery,
   autoDeliverOrder,
+  getCommissionSummary,
   getStudioOrder,
   getStudioStudySnapshot,
   listStudioOrders,
+  payOrderCommission,
   produceOrder,
+  releaseOrderPin,
   setOrderStatus,
+  verifyOrderCommission,
   type OrderFile,
   type OrderStatus,
   type StudioOrder,
@@ -100,13 +110,23 @@ function formatBytes(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
-function OrderRow({ order }: { order: StudioOrder }) {
+function OrderRow({
+  order,
+  duesTotal,
+  duesBlocked,
+}: {
+  order: StudioOrder;
+  duesTotal: number;
+  duesBlocked: boolean;
+}) {
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [note, setNote] = useState(order.note ?? "");
   const [deliveryFile, setDeliveryFile] = useState<File | null>(null);
   const [deliverySuccess, setDeliverySuccess] = useState(false);
+  const [pin, setPin] = useState("");
+  const [redeliver, setRedeliver] = useState(false);
   const [materialsOpen, setMaterialsOpen] = useState(false);
   const [productionReport, setProductionReport] = useState<{
     mapped: number;
@@ -153,36 +173,96 @@ function OrderRow({ order }: { order: StudioOrder }) {
     onError: (err) => toast.error(err instanceof Error ? err.message : "Update failed"),
   });
 
+  /** Every delivery must install a fresh 4–8 digit download PIN. */
+  const requirePin = () => {
+    const trimmed = pin.trim();
+    if (!/^\d{4,8}$/.test(trimmed)) {
+      throw new Error("Set a 4–8 digit download PIN before delivering.");
+    }
+    return trimmed;
+  };
+
+  const afterDelivery = async (message: string) => {
+    await queryClient.invalidateQueries({ queryKey: ["studio-orders"] });
+    await queryClient.invalidateQueries({ queryKey: ["studio-commissions"] });
+    setDeliveryFile(null);
+    setDeliverySuccess(true);
+    setRedeliver(false);
+    setPin("");
+    toast.success(message);
+    setTimeout(() => setDeliverySuccess(false), 3000);
+  };
+
   const uploadDelivery = useMutation({
     mutationFn: async () => {
       if (!deliveryFile) throw new Error("Choose a file first");
-      return attachOrderDelivery(order.id, deliveryFile);
+      return attachOrderDelivery(order.id, deliveryFile, requirePin());
+    },
+    onSuccess: async () =>
+      afterDelivery(
+        `Study delivered for order #${order.id} — the PIN is set and the study stays locked until you release it.`,
+      ),
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Delivery failed"),
+  });
+
+  const autoDeliver = useMutation({
+    mutationFn: async () => autoDeliverOrder(order.id, requirePin()),
+    onSuccess: async () =>
+      afterDelivery(
+        `Study exported and delivered for order #${order.id} — the PIN is set and the study stays locked until you release it.`,
+      ),
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Auto-deliver failed"),
+  });
+
+  const release = useMutation({
+    mutationFn: async () => releaseOrderPin(order.id),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: ["studio-orders"] });
+      await queryClient.invalidateQueries({ queryKey: ["studio-commissions"] });
+      toast.success(`Download PIN released for order #${order.id}.`, {
+        description: `GH₵${result.commissionDue} commission is now due — settle it to keep delivering.`,
+      });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not release the PIN"),
+  });
+
+  const payCommission = useMutation({
+    mutationFn: async () => {
+      const key = getPaystackKey();
+      if (!key) throw new Error("Paystack is not configured — set VITE_PAYSTACK_PUBLIC_KEY.");
+      const init = await payOrderCommission(order.id);
+      const result = await payWithPaystack({
+        key,
+        reference: init.reference,
+        amount: init.amount,
+        email: init.email,
+        currency: "GHS",
+        label: `CareStudy commission — order #${order.id}`,
+      });
+      const verification = await verifyOrderCommission(order.id, result.reference);
+      if (!verification.verified) {
+        throw new Error(verification.message ?? "Payment was not confirmed.");
+      }
+      return verification;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["studio-orders"] });
-      setDeliveryFile(null);
-      setDeliverySuccess(true);
-      toast.success(`Study delivered for order #${order.id} — student can now download it.`);
-      setTimeout(() => setDeliverySuccess(false), 3000);
+      await queryClient.invalidateQueries({ queryKey: ["studio-commissions"] });
+      toast.success(`Commission settled for order #${order.id}.`);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Delivery failed"),
+    onError: (err) => {
+      if (err instanceof Error && err.message === "Payment was cancelled.") {
+        toast.info("Payment was cancelled.");
+        return;
+      }
+      toast.error(err instanceof Error ? err.message : "Commission payment failed");
+    },
   });
 
   const onPickDelivery = (event: ChangeEvent<HTMLInputElement>) => {
     setDeliveryFile(event.target.files?.[0] ?? null);
     event.target.value = "";
   };
-
-  const autoDeliver = useMutation({
-    mutationFn: async () => autoDeliverOrder(order.id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["studio-orders"] });
-      setDeliverySuccess(true);
-      toast.success(`Study exported and delivered for order #${order.id} — student can now download it.`);
-      setTimeout(() => setDeliverySuccess(false), 3000);
-    },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Auto-deliver failed"),
-  });
 
   const dirty = status !== order.status || note.trim() !== (order.note ?? "");
 
@@ -464,48 +544,179 @@ function OrderRow({ order }: { order: StudioOrder }) {
               </span>
             )}
           </div>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Auto-deliver: exports the study and delivers in one step */}
-            <Button
-              size="sm"
-              onClick={() => autoDeliver.mutate()}
-              disabled={!order.producedStudyId || status !== "ready" || autoDeliver.isPending || uploadDelivery.isPending}
-              title={status !== "ready" ? "Set status to 'Ready' first, then save, to enable delivery" : "Export the produced study as a Word document and deliver it to the student"}
-            >
-              {autoDeliver.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : deliverySuccess ? (
-                <CheckCircle2 className="size-4 text-emerald-500" />
-              ) : (
-                <Send className="size-4" />
-              )}
-              {autoDeliver.isPending ? "Exporting…" : deliverySuccess ? "Delivered!" : "Deliver study"}
-            </Button>
-
-            {/* Manual upload fallback */}
-            <Input
-              type="file"
-              className="h-8 max-w-[180px] text-xs"
-              onChange={onPickDelivery}
-              disabled={status !== "ready" || uploadDelivery.isPending || autoDeliver.isPending}
-              title={status !== "ready" ? "Set status to 'Ready' first, then save, to enable delivery" : "Upload a .docx file manually (fallback)"}
-            />
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => uploadDelivery.mutate()}
-              disabled={!deliveryFile || status !== "ready" || uploadDelivery.isPending || autoDeliver.isPending}
-              title={status !== "ready" ? "Set status to 'Ready' first, then save, to enable delivery" : "Deliver the manually uploaded file"}
-            >
-              {uploadDelivery.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Upload className="size-4" />
-              )}
-              Upload
-            </Button>
+        {/* Delivery PIN, release, and platform commission */}
+        <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="flex items-center gap-1.5 text-xs font-semibold">
+              <KeyRound className="size-3.5 text-primary" /> Delivery &amp; download PIN
+            </p>
+            {order.pin.set ? (
+              <Badge variant={order.pin.released ? "default" : "secondary"} className="gap-1">
+                {order.pin.released ? (
+                  <>
+                    <Unlock className="size-3" /> PIN released
+                  </>
+                ) : (
+                  <>
+                    <Lock className="size-3" /> PIN locked
+                  </>
+                )}
+              </Badge>
+            ) : (
+              <span className="text-[11px] text-muted-foreground">Not delivered yet</span>
+            )}
           </div>
+
+          {!order.pin.set || redeliver ? (
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-muted-foreground">
+                    New download PIN (4–8 digits)
+                  </label>
+                  <Input
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                    placeholder="e.g. 4821"
+                    inputMode="numeric"
+                    className="h-8 w-28"
+                    disabled={status !== "ready"}
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => autoDeliver.mutate()}
+                  disabled={
+                    !order.producedStudyId ||
+                    status !== "ready" ||
+                    duesBlocked ||
+                    autoDeliver.isPending ||
+                    uploadDelivery.isPending
+                  }
+                  title={
+                    duesBlocked
+                      ? `Settle GH₵${duesTotal} in commission before delivering`
+                      : status !== "ready"
+                        ? "Set status to 'Ready' first, then save, to enable delivery"
+                        : "Export the produced study as a Word document, locked behind the PIN, and deliver it"
+                  }
+                >
+                  {autoDeliver.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : deliverySuccess ? (
+                    <CheckCircle2 className="size-4 text-emerald-500" />
+                  ) : (
+                    <Send className="size-4" />
+                  )}
+                  {autoDeliver.isPending ? "Exporting…" : deliverySuccess ? "Delivered!" : "Deliver study"}
+                </Button>
+                <Input
+                  type="file"
+                  className="h-8 max-w-[170px] text-xs"
+                  onChange={onPickDelivery}
+                  disabled={status !== "ready" || duesBlocked || uploadDelivery.isPending || autoDeliver.isPending}
+                  title="Upload a .docx file manually (fallback)"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => uploadDelivery.mutate()}
+                  disabled={
+                    !deliveryFile ||
+                    status !== "ready" ||
+                    duesBlocked ||
+                    uploadDelivery.isPending ||
+                    autoDeliver.isPending
+                  }
+                >
+                  {uploadDelivery.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Upload className="size-4" />
+                  )}
+                  Upload
+                </Button>
+                {redeliver && (
+                  <Button size="sm" variant="ghost" onClick={() => setRedeliver(false)}>
+                    Cancel
+                  </Button>
+                )}
+              </div>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                The student opens the study with this PIN. Share it only once they have paid you —
+                our GH₵{order.commission?.amount ?? 100} commission is charged the moment they
+                download, whether you release it here or send it yourself.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span>
+                  {order.pin.released
+                    ? `Released ${order.pin.releasedAt ? formatDate(order.pin.releasedAt) : ""}`
+                    : "Locked — release it once the student has paid you."}
+                </span>
+                {order.firstDownloadedAt && (
+                  <span className="flex items-center gap-1 text-primary">
+                    <Download className="size-3.5" /> Downloaded {formatDate(order.firstDownloadedAt)}
+                  </span>
+                )}
+              </div>
+              {!order.pin.released && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" onClick={() => release.mutate()} disabled={release.isPending}>
+                    {release.isPending ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Unlock className="size-4" />
+                    )}
+                    Confirm payment &amp; release
+                  </Button>
+                  <span className="text-[11px] leading-relaxed text-muted-foreground">
+                    Optional — releasing here just marks the GH₵{order.commission?.amount ?? 100}
+                    commission due now instead of at download.
+                  </span>
+                </div>
+              )}
+              <button
+                type="button"
+                className="text-[11px] text-muted-foreground underline-offset-2 hover:underline"
+                onClick={() => setRedeliver(true)}
+              >
+                Replace delivery (new file + PIN)
+              </button>
+            </div>
+          )}
+
+          {order.commission && order.commission.status !== "none" && (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs">
+              <span className="flex items-center gap-1.5">
+                <CreditCard className="size-3.5" />
+                Platform commission <strong>GH₵{order.commission.amount ?? 100}</strong>
+              </span>
+              {order.commission.status === "paid" ? (
+                <Badge variant="default" className="gap-1">
+                  <CheckCircle2 className="size-3" /> Paid
+                </Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => payCommission.mutate()}
+                  disabled={payCommission.isPending}
+                >
+                  {payCommission.isPending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <CreditCard className="size-3.5" />
+                  )}
+                  Pay commission
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -519,6 +730,16 @@ export function StudioBin() {
     queryFn: async () => (await listStudioOrders()).orders,
     refetchInterval: 15_000,
   });
+
+  // Platform commission this account still owes. For staff it is a hard block
+  // on new deliveries; admins see it but are never blocked.
+  const commissions = useQuery({
+    queryKey: ["studio-commissions"],
+    queryFn: () => getCommissionSummary(),
+    refetchInterval: 15_000,
+  });
+  const duesTotal = commissions.data?.total ?? 0;
+  const duesBlocked = (commissions.data?.enforced ?? false) && duesTotal > 0;
 
   const counts = useMemo(() => {
     const result: Record<OrderStatus, number> = {
@@ -587,6 +808,29 @@ export function StudioBin() {
           </div>
         </div>
 
+        {duesTotal > 0 && (
+          <div
+            className={cn(
+              "mb-5 flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm",
+              duesBlocked
+                ? "border-destructive/40 bg-destructive/10 text-destructive"
+                : "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300",
+            )}
+          >
+            <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+            <div>
+              <p className="font-medium">
+                GH₵{duesTotal} platform commission outstanding
+              </p>
+              <p className="mt-0.5 text-xs leading-relaxed">
+                {duesBlocked
+                  ? "Settle it before delivering new work — use “Pay commission” on each downloaded order."
+                  : "These are your own accrued commissions. Admins are not blocked from delivering."}
+              </p>
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex min-h-[30vh] items-center justify-center">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -613,7 +857,12 @@ export function StudioBin() {
         ) : (
           <div className="space-y-4">
             {data.map((order) => (
-              <OrderRow key={order.id} order={order} />
+              <OrderRow
+                key={order.id}
+                order={order}
+                duesTotal={duesTotal}
+                duesBlocked={duesBlocked}
+              />
             ))}
           </div>
         )}
@@ -621,8 +870,10 @@ export function StudioBin() {
         <Separator className="my-8" />
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <FileText className="size-3.5" />
-          Click "Deliver study" to auto-export the produced study as a Word document and deliver it
-          to the student. The student immediately sees the download on their dashboard.
+          Set a download PIN, then "Deliver study" to export the produced study as a Word document
+          and lock it. Hand the PIN to the student once they have paid you — the GH₵
+          {commissions.data?.amountPerOrder ?? 100} platform commission is charged the moment they
+          download, however the PIN reached them.
         </p>
       </main>
     </div>

@@ -54,6 +54,14 @@ function openSqlite(): DatabaseSync {
     'ALTER TABLE "student_orders" ADD COLUMN "paid_scope" text',
     'ALTER TABLE "student_orders" ADD COLUMN "paid_amount" integer',
     'ALTER TABLE "student_orders" ADD COLUMN "paystack_ref" text',
+    'ALTER TABLE "student_orders" ADD COLUMN "delivery_pin_hash" text',
+    'ALTER TABLE "student_orders" ADD COLUMN "pin_released_at" integer',
+    'ALTER TABLE "student_orders" ADD COLUMN "first_downloaded_at" integer',
+    'ALTER TABLE "student_orders" ADD COLUMN "commission_status" text NOT NULL DEFAULT \'none\'',
+    'ALTER TABLE "student_orders" ADD COLUMN "commission_amount" integer',
+    'ALTER TABLE "student_orders" ADD COLUMN "commission_staff_id" integer',
+    'ALTER TABLE "student_orders" ADD COLUMN "commission_ref" text',
+    'ALTER TABLE "student_orders" ADD COLUMN "commission_paid_at" integer',
     'ALTER TABLE "admins" ADD COLUMN "role" text NOT NULL DEFAULT \'staff\'',
     'ALTER TABLE "admins" ADD COLUMN "email" text',
     'ALTER TABLE "admins" ADD COLUMN "invited_by" integer',
@@ -300,6 +308,14 @@ function toOrderRow(row: typeof schema.studentOrdersTable.$inferSelect): OrderRo
     paidScope: (row.paidScope ?? null) as OrderRow["paidScope"],
     paidAmount: row.paidAmount ?? null,
     paystackRef: row.paystackRef ?? null,
+    deliveryPinHash: row.deliveryPinHash ?? null,
+    pinReleasedAt: row.pinReleasedAt ?? null,
+    firstDownloadedAt: row.firstDownloadedAt ?? null,
+    commissionStatus: (row.commissionStatus ?? "none") as OrderRow["commissionStatus"],
+    commissionAmount: row.commissionAmount ?? null,
+    commissionStaffId: row.commissionStaffId ?? null,
+    commissionRef: row.commissionRef ?? null,
+    commissionPaidAt: row.commissionPaidAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -635,7 +651,7 @@ export function createSqliteStore(): StudyStore {
       return row ? toOrderRow(row) : null;
     },
 
-    async setOrderDelivery(id, delivery) {
+    async setOrderDelivery(id, delivery, deliveryPinHash, deliveryStaffId) {
       const [row] = await db
         .update(orders)
         .set({
@@ -643,6 +659,12 @@ export function createSqliteStore(): StudyStore {
           deliveryFilename: delivery.filename,
           deliveryPath: delivery.storedPath,
           deliverySize: delivery.size,
+          // A fresh delivery re-locks the order and installs the new PIN.
+          deliveryPinHash,
+          pinReleasedAt: null,
+          // Whoever delivered is the one the commission is charged to, even if
+          // the student only downloads after an off-platform PIN handover.
+          commissionStaffId: deliveryStaffId,
           updatedAt: new Date(),
         })
         .where(eq(orders.id, id))
@@ -729,6 +751,85 @@ export function createSqliteStore(): StudyStore {
         .where(eq(orders.id, id))
         .returning();
       return row ? toOrderRow(row) : null;
+    },
+
+    async releaseOrderPin(id, staffId, amount) {
+      const [row] = await db
+        .update(orders)
+        .set({
+          pinReleasedAt: new Date(),
+          commissionStatus: "due",
+          commissionAmount: amount,
+          commissionStaffId: staffId,
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async markOrderCommissionDue(id, amount) {
+      const [existing] = await db.select().from(orders).where(eq(orders.id, id));
+      if (!existing) return null;
+      // Already settled — never un-pay a commission.
+      if ((existing.commissionStatus ?? "none") === "paid") return toOrderRow(existing);
+      const [row] = await db
+        .update(orders)
+        .set({
+          commissionStatus: "due",
+          commissionAmount: existing.commissionAmount ?? amount,
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async recordOrderDownload(id) {
+      const existing = await db.select().from(orders).where(eq(orders.id, id));
+      const current = existing[0];
+      if (!current) return null;
+      if (current.firstDownloadedAt) return toOrderRow(current);
+      const [row] = await db
+        .update(orders)
+        .set({ firstDownloadedAt: new Date(), updatedAt: new Date() })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async setOrderCommissionPending(id, reference) {
+      const [row] = await db
+        .update(orders)
+        .set({ commissionRef: reference, updatedAt: new Date() })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async setOrderCommissionPaid(id, reference) {
+      const [row] = await db
+        .update(orders)
+        .set({
+          commissionStatus: "paid",
+          commissionRef: reference,
+          commissionPaidAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async listCommissionDue(staffId) {
+      const rows = await db.select().from(orders).orderBy(desc(orders.id));
+      return rows
+        .filter(
+          (row) =>
+            (row.commissionStatus ?? "none") === "due" &&
+            row.commissionStaffId === staffId,
+        )
+        .map(toOrderRow);
     },
 
     async addOrderFile(file) {

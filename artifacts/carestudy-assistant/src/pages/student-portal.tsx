@@ -100,8 +100,9 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import * as studentApi from "@/lib/studentApi";
+import { PinDownloadDialog } from "@/components/pin-download-dialog";
 import { StudentPreviewPage } from "@/pages/student-preview";
-import { PaymentHistoryPage } from "@/pages/payment-history";
+import { DownloadHistoryPage } from "@/pages/download-history";
 
 // ---------------------------------------------------------------------------
 // Shared bits
@@ -265,12 +266,12 @@ function useAuth(): AuthContextValue {
 // Sidebar navigation
 // ---------------------------------------------------------------------------
 
-type TabId = "projects" | "new-order" | "payments";
+type TabId = "projects" | "new-order" | "downloads";
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: "projects", label: "My projects", icon: ClipboardList },
   { id: "new-order", label: "Place an order", icon: Plus },
-  { id: "payments", label: "Payments", icon: Receipt },
+  { id: "downloads", label: "Downloads", icon: Receipt },
 ];
 
 function PortalSidebar({
@@ -364,8 +365,8 @@ function PortalSidebar({
 function MobileBottomNav() {
   const [location] = useLocation();
   const isNew = location === "/student/orders/new";
-  const isPayments = location === "/student/payments";
-  const isProjects = !isNew && !isPayments && location.startsWith("/student");
+  const isDownloads = location === "/student/downloads";
+  const isProjects = !isNew && !isDownloads && location.startsWith("/student");
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
@@ -391,14 +392,14 @@ function MobileBottomNav() {
           <span>New order</span>
         </Link>
         <Link
-          href="/student/payments"
+          href="/student/downloads"
           className={cn(
             "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-            isPayments ? "text-primary" : "text-muted-foreground",
+            isDownloads ? "text-primary" : "text-muted-foreground",
           )}
         >
           <Receipt className="size-5" />
-          <span>Payments</span>
+          <span>Downloads</span>
         </Link>
       </div>
     </nav>
@@ -559,7 +560,15 @@ function OrdersList() {
                           navigate(`/student/orders/${order.id}/preview`);
                         }}
                       >
-                        <Lock className="size-4" /> Purchase
+                        {order.pin.set ? (
+                          <>
+                            <Download className="size-4" /> Download
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="size-4" /> Locked
+                          </>
+                        )}
                       </Button>
                     </>
                   )}
@@ -948,6 +957,7 @@ function StatusStepper({ status }: { status: OrderStatus }) {
 }
 
 function OrderDetailPage({ orderId }: { orderId: number }) {
+  const [pinDownloadOpen, setPinDownloadOpen] = useState(false);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["student-order", orderId],
     queryFn: async () => {
@@ -1051,25 +1061,27 @@ function OrderDetailPage({ orderId }: { orderId: number }) {
                   <Eye className="size-4" /> Preview study
                 </Link>
               </Button>
-              {order.paymentStatus === "verified" ? (
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    studentApi.downloadOrderStudy(order).catch((err) =>
-                      toast.error(err instanceof Error ? err.message : "Download failed"),
-                    )
-                  }
-                >
+              {order.pin.set ? (
+                <Button variant="outline" onClick={() => setPinDownloadOpen(true)}>
                   <Download className="size-4" /> Download Word
                 </Button>
               ) : (
-                <Button variant="outline" asChild>
-                  <Link href={`/student/orders/${order.id}/preview`}>
-                    <Lock className="size-4" /> Purchase to download
-                  </Link>
+                <Button
+                  variant="outline"
+                  disabled
+                  title="Your completed study has not been delivered yet"
+                >
+                  <Lock className="size-4" /> Awaiting delivery
                 </Button>
               )}
             </div>
+            <p className="text-xs text-muted-foreground">
+              {order.pin.released
+                ? "Your academic team confirmed your payment — enter the PIN they gave you to export your study."
+                : order.pin.set
+                  ? "Enter the download PIN your academic team gave you to export your study."
+                  : "Your completed study will appear here once it is delivered."}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -1115,6 +1127,12 @@ function OrderDetailPage({ orderId }: { orderId: number }) {
       </Card>
 
       <VivaPreparationPanel orderId={order.id} />
+
+      <PinDownloadDialog
+        open={pinDownloadOpen}
+        onClose={() => setPinDownloadOpen(false)}
+        order={order}
+      />
     </div>
   );
 }
@@ -1237,13 +1255,13 @@ function StudentPortalRouter() {
 
   // Route parsing
   const matchPreview = location.match(/^\/student\/orders\/(\d+)\/preview$/);
-  const matchPayments = location === "/student/payments";
+  const matchDownloads = location === "/student/downloads";
   const matchNew = location === "/student/orders/new";
   const matchOrder = location.match(/^\/student\/orders\/(\d+)$/);
 
   // Determine active tab
-  const activeTab: TabId | null = matchPayments
-    ? "payments"
+  const activeTab: TabId | null = matchDownloads
+    ? "downloads"
     : matchNew
       ? "new-order"
       : "projects";
@@ -1251,7 +1269,7 @@ function StudentPortalRouter() {
   const handleTabSelect = (tab: TabId) => {
     if (tab === "projects") navigate("/student/orders");
     else if (tab === "new-order") navigate("/student/orders/new");
-    else if (tab === "payments") navigate("/student/payments");
+    else if (tab === "downloads") navigate("/student/downloads");
   };
 
   // Full-page routes (preview, order detail) render without sidebar
@@ -1284,7 +1302,7 @@ function StudentPortalRouter() {
               <AuthGate>
                 {activeTab === "projects" && <OrdersList />}
                 {activeTab === "new-order" && <NewOrderPage />}
-                {activeTab === "payments" && <PaymentHistoryPage />}
+                {activeTab === "downloads" && <DownloadHistoryPage />}
               </AuthGate>
             </div>
           </main>

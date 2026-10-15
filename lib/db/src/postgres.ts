@@ -140,6 +140,14 @@ CREATE TABLE IF NOT EXISTS "student_orders" (
   "paid_scope" text,
   "paid_amount" integer,
   "paystack_ref" text,
+  "delivery_pin_hash" text,
+  "pin_released_at" timestamptz,
+  "first_downloaded_at" timestamptz,
+  "commission_status" text NOT NULL DEFAULT 'none',
+  "commission_amount" integer,
+  "commission_staff_id" integer,
+  "commission_ref" text,
+  "commission_paid_at" timestamptz,
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
@@ -176,6 +184,16 @@ ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "payment_status" text NOT 
 ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paid_scope" text;
 ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paid_amount" integer;
 ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "paystack_ref" text;
+
+-- Student orders: delivery PIN + platform commission columns
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "delivery_pin_hash" text;
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "pin_released_at" timestamptz;
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "first_downloaded_at" timestamptz;
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "commission_status" text NOT NULL DEFAULT 'none';
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "commission_amount" integer;
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "commission_staff_id" integer;
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "commission_ref" text;
+ALTER TABLE "student_orders" ADD COLUMN IF NOT EXISTS "commission_paid_at" timestamptz;
 
 -- Staff invites: add role column
 ALTER TABLE "staff_invites" ADD COLUMN IF NOT EXISTS "role" text NOT NULL DEFAULT 'staff';
@@ -403,6 +421,14 @@ function toOrderRow(row: typeof schema.studentOrdersTable.$inferSelect): OrderRo
     paidScope: (row.paidScope ?? null) as OrderRow["paidScope"],
     paidAmount: row.paidAmount ?? null,
     paystackRef: row.paystackRef ?? null,
+    deliveryPinHash: row.deliveryPinHash ?? null,
+    pinReleasedAt: row.pinReleasedAt ?? null,
+    firstDownloadedAt: row.firstDownloadedAt ?? null,
+    commissionStatus: (row.commissionStatus ?? "none") as OrderRow["commissionStatus"],
+    commissionAmount: row.commissionAmount ?? null,
+    commissionStaffId: row.commissionStaffId ?? null,
+    commissionRef: row.commissionRef ?? null,
+    commissionPaidAt: row.commissionPaidAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -719,7 +745,7 @@ export function createPostgresStore(): StudyStore {
       return row ? toOrderRow(row) : null;
     },
 
-    async setOrderDelivery(id, delivery) {
+    async setOrderDelivery(id, delivery, deliveryPinHash, deliveryStaffId) {
       const [row] = await db
         .update(orders)
         .set({
@@ -727,6 +753,12 @@ export function createPostgresStore(): StudyStore {
           deliveryFilename: delivery.filename,
           deliveryPath: delivery.storedPath,
           deliverySize: delivery.size,
+          // A fresh delivery re-locks the order and installs the new PIN.
+          deliveryPinHash,
+          pinReleasedAt: null,
+          // Whoever delivered is the one the commission is charged to, even if
+          // the student only downloads after an off-platform PIN handover.
+          commissionStaffId: deliveryStaffId,
           updatedAt: new Date(),
         })
         .where(eq(orders.id, id))
@@ -813,6 +845,84 @@ export function createPostgresStore(): StudyStore {
         .where(eq(orders.id, id))
         .returning();
       return row ? toOrderRow(row) : null;
+    },
+
+    async releaseOrderPin(id, staffId, amount) {
+      const [row] = await db
+        .update(orders)
+        .set({
+          pinReleasedAt: new Date(),
+          commissionStatus: "due",
+          commissionAmount: amount,
+          commissionStaffId: staffId,
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async markOrderCommissionDue(id, amount) {
+      const [existing] = await db.select().from(orders).where(eq(orders.id, id));
+      if (!existing) return null;
+      // Already settled — never un-pay a commission.
+      if ((existing.commissionStatus ?? "none") === "paid") return toOrderRow(existing);
+      const [row] = await db
+        .update(orders)
+        .set({
+          commissionStatus: "due",
+          commissionAmount: existing.commissionAmount ?? amount,
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async recordOrderDownload(id) {
+      const [existing] = await db.select().from(orders).where(eq(orders.id, id));
+      if (!existing) return null;
+      if (existing.firstDownloadedAt) return toOrderRow(existing);
+      const [row] = await db
+        .update(orders)
+        .set({ firstDownloadedAt: new Date(), updatedAt: new Date() })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async setOrderCommissionPending(id, reference) {
+      const [row] = await db
+        .update(orders)
+        .set({ commissionRef: reference, updatedAt: new Date() })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async setOrderCommissionPaid(id, reference) {
+      const [row] = await db
+        .update(orders)
+        .set({
+          commissionStatus: "paid",
+          commissionRef: reference,
+          commissionPaidAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, id))
+        .returning();
+      return row ? toOrderRow(row) : null;
+    },
+
+    async listCommissionDue(staffId) {
+      const rows = await db.select().from(orders).orderBy(desc(orders.id));
+      return rows
+        .filter(
+          (row) =>
+            (row.commissionStatus ?? "none") === "due" &&
+            row.commissionStaffId === staffId,
+        )
+        .map(toOrderRow);
     },
 
     async addOrderFile(file) {

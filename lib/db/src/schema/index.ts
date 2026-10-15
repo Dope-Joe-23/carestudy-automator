@@ -207,6 +207,25 @@ export const studentOrdersTable = sqliteTable(
     paidAmount: integer("paid_amount"),
     /** Paystack transaction reference (unique). */
     paystackRef: text("paystack_ref"),
+    // --- Delivery PIN + platform commission ---
+    // The student never pays us directly. A delivered study is locked behind a
+    // PIN the staff sets; the staff releases that PIN once the student has paid
+    // them (off-platform), and the release makes our per-order commission due.
+    /** scrypt hash of the staff-set download PIN (null until a delivery sets one). */
+    deliveryPinHash: text("delivery_pin_hash"),
+    /** When the staff released the PIN to the student (null = still locked). */
+    pinReleasedAt: integer("pin_released_at", { mode: "timestamp" }),
+    /** First time the student downloaded the released study. */
+    firstDownloadedAt: integer("first_downloaded_at", { mode: "timestamp" }),
+    /** "none" | "due" | "paid" — platform commission on a released delivery. */
+    commissionStatus: text("commission_status").notNull().$defaultFn(() => "none"),
+    /** Commission owed in Ghana cedis (e.g. 100). */
+    commissionAmount: integer("commission_amount"),
+    /** The staff member who released the PIN and therefore owes the commission. */
+    commissionStaffId: integer("commission_staff_id"),
+    /** Paystack reference for the commission payment. */
+    commissionRef: text("commission_ref"),
+    commissionPaidAt: integer("commission_paid_at", { mode: "timestamp" }),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   },

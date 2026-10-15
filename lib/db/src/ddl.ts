@@ -122,6 +122,14 @@ CREATE TABLE IF NOT EXISTS "student_orders" (
   "paid_scope" text,
   "paid_amount" integer,
   "paystack_ref" text,
+  "delivery_pin_hash" text,
+  "pin_released_at" integer,
+  "first_downloaded_at" integer,
+  "commission_status" text NOT NULL DEFAULT 'none',
+  "commission_amount" integer,
+  "commission_staff_id" integer,
+  "commission_ref" text,
+  "commission_paid_at" integer,
   "created_at" integer NOT NULL,
   "updated_at" integer NOT NULL
 );

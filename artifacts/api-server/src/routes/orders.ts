@@ -35,7 +35,12 @@ import {
   R2_KEY_PREFIX,
 } from "../lib/r2";
 import { indexStudyFiles } from "./uploads";
-import { requireStudent, type AuthedRequest } from "../lib/studentAuth";
+import {
+  hashPassword,
+  requireStudent,
+  verifyPassword,
+  type AuthedRequest,
+} from "../lib/studentAuth";
 import { type AuthedAdminRequest } from "../lib/adminAuth";
 import { draftWorker, type VivaQuestion } from "../lib/draftWorker";
 import { buildDocx } from "./export";
@@ -48,9 +53,29 @@ function getPaystackSecret(): string {
 }
 const PAYSTACK_BASE = "https://api.paystack.co";
 
-/** Pricing (Ghana cedis). */
+/** Pricing (Ghana cedis) — retained for the dormant student-payment routes. */
 const PRICE_FULL_STUDY = 300;
 const PRICE_CHAPTER = 50;
+
+/**
+ * Platform commission charged to the staff for each released delivery.
+ * The student pays the staff directly (off-platform); we collect our cut from
+ * the staff through Paystack once the PIN has been released. Override with
+ * CARE_COMMISSION_GHS; defaults to GH₵100.
+ */
+function getCommissionGhs(): number {
+  const value = Number(process.env.CARE_COMMISSION_GHS);
+  return Number.isFinite(value) && value > 0 ? Math.round(value) : 100;
+}
+
+/** A delivery PIN set by the staff: 4–8 digits. */
+const PIN_PATTERN = /^\d{4,8}$/;
+
+/** Read + validate the delivery PIN from a studio request body. */
+function readDeliveryPin(body: unknown): string | null {
+  const pin = str((body as { pin?: unknown } | null | undefined)?.pin);
+  return PIN_PATTERN.test(pin) ? pin : null;
+}
 
 // Two routers from one file: the student-facing half (orders the signed-in
 // student places, plus the viva preparation) and the studio half (the order
@@ -190,9 +215,17 @@ function publicOrder(order: {
   paidScope: string | null;
   paidAmount: number | null;
   paystackRef: string | null;
+  deliveryPinHash: string | null;
+  pinReleasedAt: Date | null;
+  firstDownloadedAt: Date | null;
+  commissionStatus: string;
+  commissionAmount: number | null;
+  commissionStaffId: number | null;
+  commissionRef: string | null;
+  commissionPaidAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-}) {
+}, audience: "student" | "staff" = "student") {
   return {
     id: order.id,
     title: order.title,
@@ -216,6 +249,31 @@ function publicOrder(order: {
     paidScope: order.paidScope ?? null,
     paidAmount: order.paidAmount ?? null,
     paystackRef: order.paystackRef ?? null,
+    // Delivery lock: the PIN is released once the staff confirms the student
+    // has paid them. The student only ever learns whether it is set/released —
+    // never the PIN itself.
+    pin: {
+      set: Boolean(order.deliveryPinHash),
+      released: order.pinReleasedAt !== null,
+      releasedAt: order.pinReleasedAt ? order.pinReleasedAt.toISOString() : null,
+    },
+    firstDownloadedAt: order.firstDownloadedAt
+      ? order.firstDownloadedAt.toISOString()
+      : null,
+    // Platform commission the staff owes once the PIN is released. Studio-only:
+    // the student never sees our billing arrangements with the staff.
+    ...(audience === "staff"
+      ? {
+          commission: {
+            status: order.commissionStatus ?? "none",
+            amount: order.commissionAmount ?? null,
+            paidAt: order.commissionPaidAt
+              ? order.commissionPaidAt.toISOString()
+              : null,
+            reference: order.commissionRef ?? null,
+          },
+        }
+      : {}),
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
   };
@@ -700,13 +758,31 @@ studentRouter.get(
       res.status(409).json({ error: "Your completed study is not ready for download yet." });
       return;
     }
-    // Payment gate: require verified payment for downloads
-    if (order.paymentStatus !== "verified") {
-      res.status(402).json({
-        error: "Please complete payment before downloading your study.",
-        paymentRequired: true,
+    // Delivery lock: the staff sets a PIN when they deliver and releases it
+    // only once the student has paid them. Until then — and without the right
+    // PIN — the file never leaves the server.
+    if (!order.deliveryPinHash) {
+      res.status(409).json({
+        error: "This delivery has no download PIN yet — contact your academic team.",
       });
       return;
+    }
+    // A correct PIN is all that is required. The staff may release it in-app
+    // or simply pass it to the student over another channel — either way, the
+    // download is what we watch, because that is when the work is taken.
+    const pin = str(req.query?.pin);
+    if (!pin || !verifyPassword(pin, order.deliveryPinHash)) {
+      res.status(403).json({
+        error: "That download PIN is not correct. Check the PIN your academic team gave you.",
+        pinInvalid: true,
+      });
+      return;
+    }
+    // The student has taken delivery: record it and demand our commission from
+    // the staff who delivered the work, however the PIN reached the student.
+    const downloaded = await db.recordOrderDownload(id);
+    if (downloaded && (downloaded.commissionStatus ?? "none") === "none") {
+      await db.markOrderCommissionDue(id, getCommissionGhs());
     }
     // The delivery may live in the bucket (r2://...) — materialize it to a
     // local path first so res.download can stream it.
@@ -1053,6 +1129,23 @@ studentRouter.get(
 // The order bin UI is the studio's inbox for incoming orders.
 // ---------------------------------------------------------------------------
 
+/**
+ * The commission a staff member still owes the platform, in Ghana cedis.
+ * Admins are never blocked (they oversee the studio) — only role="staff" is
+ * held to the "settle before delivering new work" rule.
+ */
+async function staffOutstandingDues(
+  db: StudyStore,
+  admin: { id: number; role: string },
+): Promise<number> {
+  if (admin.role === "admin") return 0;
+  const due = await db.listCommissionDue(admin.id);
+  return due.reduce(
+    (sum, order) => sum + (order.commissionAmount ?? getCommissionGhs()),
+    0,
+  );
+}
+
 // GET /api/studio/orders/:id — one order with its attached materials (studio).
 studioRouter.get(
   "/studio/orders/:id",
@@ -1070,7 +1163,7 @@ studioRouter.get(
     }
     const files = await db.listOrderFiles(id);
     res.json({
-      order: publicOrder(order),
+      order: publicOrder(order, "staff"),
       files: files.map((file) => ({
         id: file.id,
         kind: file.kind,
@@ -1250,7 +1343,7 @@ studioRouter.get(
         const student = students.get(order.studentId);
         const files = await db.listOrderFiles(order.id);
         return {
-          ...publicOrder(order),
+          ...publicOrder(order, "staff"),
           fileCount: files.length,
           student: student
             ? { id: student.id, name: student.name, email: student.email }
@@ -1283,7 +1376,7 @@ studioRouter.patch(
       res.status(404).json({ error: "Order not found" });
       return;
     }
-    res.json({ order: publicOrder(updated) });
+    res.json({ order: publicOrder(updated, "staff") });
   }),
 );
 
@@ -1297,7 +1390,23 @@ studioRouter.post(
       res.status(400).json({ error: "Invalid order id" });
       return;
     }
+    const admin = (req as AuthedAdminRequest).admin;
+    const pin = readDeliveryPin(req.body);
+    if (!pin) {
+      res.status(400).json({
+        error: "Set a download PIN for this delivery — 4 to 8 digits. The student needs it to open the study.",
+      });
+      return;
+    }
     const db = studyStore();
+    const outstanding = await staffOutstandingDues(db, admin);
+    if (outstanding > 0) {
+      res.status(402).json({
+        error: `You have GH₵${outstanding} in unpaid commission. Settle it under “Commission” before delivering new work.`,
+        outstandingDues: outstanding,
+      });
+      return;
+    }
     const order = await db.getOrder(id);
     if (!order) {
       res.status(404).json({ error: "Order not found" });
@@ -1326,12 +1435,17 @@ studioRouter.post(
       }
       const filename = `care-study-${order.id}.docx`;
       const stored = await storeOrderDelivery(id, buffer, filename);
-      const updated = await db.setOrderDelivery(id, {
-        filename: stored.filename,
-        storedPath: stored.storedPath,
-        size: stored.size,
-      });
-      res.json({ order: publicOrder(updated ?? order) });
+      const updated = await db.setOrderDelivery(
+        id,
+        {
+          filename: stored.filename,
+          storedPath: stored.storedPath,
+          size: stored.size,
+        },
+        hashPassword(pin),
+        admin.id,
+      );
+      res.json({ order: publicOrder(updated ?? order, "staff") });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Export failed";
       req.log?.error?.({ err }, "auto-deliver export failed");
@@ -1399,7 +1513,23 @@ studioRouter.post(
       res.status(400).json({ error: "Invalid upload reference" });
       return;
     }
+    const admin = (req as AuthedAdminRequest).admin;
+    const pin = readDeliveryPin(req.body);
+    if (!pin) {
+      res.status(400).json({
+        error: "Set a download PIN for this delivery — 4 to 8 digits. The student needs it to open the study.",
+      });
+      return;
+    }
     const db = studyStore();
+    const outstanding = await staffOutstandingDues(db, admin);
+    if (outstanding > 0) {
+      res.status(402).json({
+        error: `You have GH₵${outstanding} in unpaid commission. Settle it under “Commission” before delivering new work.`,
+        outstandingDues: outstanding,
+      });
+      return;
+    }
     const order = await db.getOrder(id);
     if (!order) {
       res.status(404).json({ error: "Order not found" });
@@ -1433,12 +1563,17 @@ studioRouter.post(
         "Unsupported file type — upload a PDF, Word (.docx), EPUB ebook, Markdown, or plain text document only.",
       );
     }
-    const updated = await db.setOrderDelivery(id, {
-      filename,
-      storedPath,
-      size: size ?? head.length,
-    });
-    res.json({ order: publicOrder(updated ?? order) });
+    const updated = await db.setOrderDelivery(
+      id,
+      {
+        filename,
+        storedPath,
+        size: size ?? head.length,
+      },
+      hashPassword(pin),
+      admin.id,
+    );
+    res.json({ order: publicOrder(updated ?? order, "staff") });
   }),
 );
 
@@ -1457,19 +1592,243 @@ studioRouter.post(
       res.status(400).json({ error: "A base64 file payload is required" });
       return;
     }
+    const admin = (req as AuthedAdminRequest).admin;
+    const pin = readDeliveryPin(req.body);
+    if (!pin) {
+      res.status(400).json({
+        error: "Set a download PIN for this delivery — 4 to 8 digits. The student needs it to open the study.",
+      });
+      return;
+    }
     const db = studyStore();
+    const outstanding = await staffOutstandingDues(db, admin);
+    if (outstanding > 0) {
+      res.status(402).json({
+        error: `You have GH₵${outstanding} in unpaid commission. Settle it under “Commission” before delivering new work.`,
+        outstandingDues: outstanding,
+      });
+      return;
+    }
     const order = await db.getOrder(id);
     if (!order) {
       res.status(404).json({ error: "Order not found" });
       return;
     }
     const stored = await storeOrderDelivery(id, content, req.body?.filename);
-    const updated = await db.setOrderDelivery(id, {
-      filename: stored.filename,
-      storedPath: stored.storedPath,
-      size: stored.size,
+    const updated = await db.setOrderDelivery(
+      id,
+      {
+        filename: stored.filename,
+        storedPath: stored.storedPath,
+        size: stored.size,
+      },
+      hashPassword(pin),
+      admin.id,
+    );
+    res.json({ order: publicOrder(updated ?? order, "staff") });
+  }),
+);
+
+// POST /api/studio/orders/:id/pin/release — open the student's download once
+// they have paid the staff (off-platform). This is the moment our per-order
+// commission becomes due.
+studioRouter.post(
+  "/studio/orders/:id/pin/release",
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    const admin = (req as AuthedAdminRequest).admin;
+    const db = studyStore();
+    const order = await db.getOrder(id);
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    if (!order.deliveryPinHash || !order.deliveryPath) {
+      res.status(409).json({
+        error: "Deliver the study (which sets its PIN) before releasing it.",
+      });
+      return;
+    }
+    if (order.pinReleasedAt) {
+      res.status(409).json({ error: "The PIN for this delivery has already been released." });
+      return;
+    }
+    const amount = getCommissionGhs();
+    const updated = await db.releaseOrderPin(id, admin.id, amount);
+    res.json({
+      order: publicOrder(updated ?? order, "staff"),
+      commissionDue: amount,
     });
-    res.json({ order: publicOrder(updated ?? order) });
+  }),
+);
+
+// GET /api/studio/commissions — what the signed-in staff member still owes the
+// platform, plus the orders that make up the balance.
+studioRouter.get(
+  "/studio/commissions",
+  asyncRoute(async (req, res) => {
+    const admin = (req as AuthedAdminRequest).admin;
+    const db = studyStore();
+    const due = await db.listCommissionDue(admin.id);
+    const total = due.reduce(
+      (sum, order) => sum + (order.commissionAmount ?? getCommissionGhs()),
+      0,
+    );
+    res.json({
+      total,
+      // Admins oversee the studio and are never blocked from delivering.
+      enforced: admin.role !== "admin",
+      amountPerOrder: getCommissionGhs(),
+      orders: due.map((order) => publicOrder(order, "staff")),
+    });
+  }),
+);
+
+// POST /api/studio/orders/:id/commission/pay — initialize a Paystack payment
+// for this order's commission. Returns the reference the staff passes to the
+// Paystack popup.
+studioRouter.post(
+  "/studio/orders/:id/commission/pay",
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    const admin = (req as AuthedAdminRequest).admin;
+    const db = studyStore();
+    const order = await db.getOrder(id);
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    const status = order.commissionStatus ?? "none";
+    if (status !== "due") {
+      res.status(409).json({
+        error:
+          status === "paid"
+            ? "This commission has already been paid."
+            : "There is no commission due on this order yet.",
+      });
+      return;
+    }
+    const secret = getPaystackSecret();
+    if (!secret) {
+      res.status(503).json({
+        error: "Payments are not configured yet — set PAYSTACK_SECRET_KEY.",
+      });
+      return;
+    }
+    const amountGhs = order.commissionAmount ?? getCommissionGhs();
+    const reference = `CSC-${id}-${randomBytes(8).toString("hex")}`;
+    const email = admin.email?.trim() || `${admin.username}@carestudy.local`;
+    try {
+      const response = await fetch(`${PAYSTACK_BASE}/transaction/initialize`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${secret}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          amount: amountGhs * 100, // pesewas
+          reference,
+          currency: "GHS",
+          metadata: { orderId: id, commission: true, adminId: admin.id },
+        }),
+      });
+      const data = (await response.json()) as {
+        status?: boolean;
+        data?: { authorization_url?: string };
+        message?: string;
+      };
+      if (!data.status) {
+        res.status(502).json({ error: data.message || "Unable to start checkout." });
+        return;
+      }
+      await db.setOrderCommissionPending(id, reference);
+      res.json({
+        reference,
+        amount: amountGhs * 100,
+        email,
+        authorization_url: data.data?.authorization_url ?? "",
+      });
+    } catch (err) {
+      req.log?.error?.({ err }, "commission payment initialization failed");
+      res.status(502).json({ error: "Unable to start checkout." });
+    }
+  }),
+);
+
+// POST /api/studio/orders/:id/commission/verify — confirm the Paystack
+// transaction and mark the order's commission settled.
+studioRouter.post(
+  "/studio/orders/:id/commission/verify",
+  asyncRoute(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid order id" });
+      return;
+    }
+    const db = studyStore();
+    const order = await db.getOrder(id);
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    const reference = str(req.body?.reference);
+    if (!reference) {
+      res.status(400).json({ error: "A payment reference is required." });
+      return;
+    }
+    const secret = getPaystackSecret();
+    if (!secret) {
+      res.status(503).json({
+        error: "Payments are not configured yet — set PAYSTACK_SECRET_KEY.",
+      });
+      return;
+    }
+    const expectedPesewas = (order.commissionAmount ?? getCommissionGhs()) * 100;
+    try {
+      const response = await fetch(
+        `${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(reference)}`,
+        { headers: { Authorization: `Bearer ${secret}` } },
+      );
+      const data = (await response.json()) as {
+        status?: boolean;
+        data?: { status?: string; amount?: number; reference?: string };
+      };
+      if (
+        data.status &&
+        data.data?.status === "success" &&
+        data.data.reference === reference
+      ) {
+        if (
+          typeof data.data.amount === "number" &&
+          data.data.amount < expectedPesewas
+        ) {
+          res.status(402).json({
+            verified: false,
+            message: "The amount paid is less than the commission due.",
+          });
+          return;
+        }
+        const updated = await db.setOrderCommissionPaid(id, reference);
+        res.json({ verified: true, order: publicOrder(updated ?? order, "staff") });
+        return;
+      }
+      res.status(402).json({
+        verified: false,
+        message: "Payment has not been confirmed yet. Please try again in a moment.",
+      });
+    } catch (err) {
+      req.log?.error?.({ err }, "commission payment verification failed");
+      res.status(502).json({ verified: false, message: "Payment verification failed." });
+    }
   }),
 );
 

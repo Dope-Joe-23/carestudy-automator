@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "wouter";
 import {
   ArrowRight,
   ArrowUp,
   Check,
+  ChevronDown,
   CreditCard,
   HeartPulse,
+  LayoutGrid,
   Sparkles,
   TimerReset,
   X,
@@ -16,11 +18,19 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { apiUrl } from "@/lib/apiBase";
 import { getPaystackKey, payWithPaystack } from "@/lib/paystack";
+import {
+  NURSEFLOW_CATEGORIES,
+  categoryLabel,
+  nurseFlowCategoryOf,
+  type NurseFlowCategoryId,
+} from "@/lib/nurseflowCategories";
 
 type Visual = { url: string; mediaType: "image" | "video" };
 
 type Question = {
   id: string;
+  /** Top-level area the card sits in; absent on cards stored before categories. */
+  category?: string;
   topic: string;
   level: "Foundation" | "NCLEX-style" | "NMC-aligned";
   title: string;
@@ -37,6 +47,7 @@ type Question = {
 
 type PublishedQuestion = {
   id: string;
+  category?: string;
   topic: string;
   level: Question["level"];
   title: string;
@@ -53,6 +64,7 @@ type PublishedQuestion = {
 const QUESTIONS: Question[] = [
   {
     id: "oxygen",
+    category: "medical-nursing",
     topic: "Fundamentals",
     level: "NCLEX-style",
     title: "Safe oxygen therapy",
@@ -67,6 +79,7 @@ const QUESTIONS: Question[] = [
   },
   {
     id: "sepsis",
+    category: "medical-nursing",
     topic: "Acute care",
     level: "NMC-aligned",
     title: "Recognising deterioration",
@@ -81,6 +94,7 @@ const QUESTIONS: Question[] = [
   },
   {
     id: "hand-hygiene",
+    category: "general-nursing",
     topic: "Infection prevention",
     level: "Foundation",
     title: "Clean hands, safer care",
@@ -95,6 +109,7 @@ const QUESTIONS: Question[] = [
   },
   {
     id: "medication",
+    category: "general-nursing",
     topic: "Medication safety",
     level: "NCLEX-style",
     title: "Pause before administration",
@@ -120,7 +135,15 @@ export function NurseFlowPage() {
   const [paymentError, setPaymentError] = useState("");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [publishedQuestions, setPublishedQuestions] = useState<Question[]>([]);
-  const touchStartY = useRef<number | null>(null);
+  // Which top-level area the learner is practising, and whether the picker that
+  // switches between them is open.
+  const [category, setCategory] = useState<NurseFlowCategoryId>("general-nursing");
+  const [pickerOpen, setPickerOpen] = useState(false);
+  // The card body is the only scrollable thing on the page, so the swipe
+  // gesture has to share the vertical drag with it: see finishSwipe().
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const rationaleRef = useRef<HTMLDivElement | null>(null);
+  const touchStart = useRef<{ x: number; y: number; inCardBody: boolean } | null>(null);
 
   useEffect(() => {
     document.title = "NurseSpin | NurseAid";
@@ -133,6 +156,7 @@ export function NurseFlowPage() {
         if (!data?.questions?.length) return;
         setPublishedQuestions(data.questions.map((item) => ({
           id: item.id,
+          category: item.category,
           topic: item.topic,
           level: item.level,
           title: item.title,
@@ -151,23 +175,82 @@ export function NurseFlowPage() {
   }, []);
 
   const questions = publishedQuestions.length ? publishedQuestions : QUESTIONS;
-  const questionIndex = index % questions.length;
-  const question = questions[questionIndex];
+  // The deck is the selected category's cards. Switching category filters the
+  // feed already in memory, so browsing between areas never refetches.
+  const deck = questions.filter((item) => nurseFlowCategoryOf(item) === category);
+  const deckSize = deck.length;
+  const questionIndex = deckSize ? index % deckSize : 0;
+  const question = deck[questionIndex];
+  /** How many cards each category holds — shown next to it in the picker. */
+  const categoryCounts = questions.reduce<Record<string, number>>((counts, item) => {
+    const id = nurseFlowCategoryOf(item);
+    counts[id] = (counts[id] ?? 0) + 1;
+    return counts;
+  }, {});
 
   function showQuestion(direction: -1 | 1) {
+    if (deckSize === 0) return;
     setTravelDirection(direction);
     setSelected(null);
-    setIndex((current) => (current + direction + questions.length) % questions.length);
+    setIndex((current) => (current + direction + deckSize) % deckSize);
   }
 
-  function finishSwipe(endY: number) {
-    const startY = touchStartY.current;
-    touchStartY.current = null;
-    if (startY === null) return;
-    const distance = endY - startY;
-    if (distance < -70) showQuestion(1);
-    if (distance > 70) showQuestion(-1);
+  /** Move to another area: the deck is rebuilt and starts at its first card. */
+  function chooseCategory(next: NurseFlowCategoryId) {
+    setCategory(next);
+    setPickerOpen(false);
+    setSelected(null);
+    setIndex(0);
   }
+
+  function startSwipe(event: React.TouchEvent) {
+    const touch = event.touches[0];
+    if (!touch) return;
+    const scroller = scrollRef.current;
+    touchStart.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      // A drag that begins on the card text is a scroll first. Only a drag that
+      // starts on the visual behind it is unambiguously a card swipe.
+      inCardBody: Boolean(scroller && event.target instanceof Node && scroller.contains(event.target)),
+    };
+  }
+
+  /**
+   * A vertical drag inside the card body scrolls it; it only advances the deck
+   * once the card has nothing left to scroll in that direction. Without this,
+   * scrolling down to read a rationale flipped to the next question mid-read.
+   */
+  function finishSwipe(event: React.TouchEvent) {
+    const start = touchStart.current;
+    touchStart.current = null;
+    const touch = event.changedTouches[0];
+    if (!start || !touch) return;
+    const dy = touch.clientY - start.y;
+    const dx = touch.clientX - start.x;
+    if (Math.abs(dy) < 70 || Math.abs(dy) < Math.abs(dx)) return;
+    const scroller = scrollRef.current;
+    if (start.inCardBody && scroller) {
+      const moreBelow = scroller.scrollTop + scroller.clientHeight < scroller.scrollHeight - 4;
+      const moreAbove = scroller.scrollTop > 4;
+      if (dy < 0 && moreBelow) return;
+      if (dy > 0 && moreAbove) return;
+    }
+    showQuestion(dy < 0 ? 1 : -1);
+  }
+
+  // The rationale is attached to the correct answer, but on a short screen it
+  // can still land below the fold — especially when the learner tapped a later
+  // option. Bring it into view once, after the reveal has laid out.
+  useEffect(() => {
+    if (selected === null) return;
+    const target = rationaleRef.current;
+    if (!target) return;
+    const timer = window.setTimeout(() => {
+      target.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }, 160);
+    return () => window.clearTimeout(timer);
+  }, [selected, question?.id]);
 
   async function choose(option: number) {
     if (selected !== null || answering) return;
@@ -276,9 +359,35 @@ export function NurseFlowPage() {
           className="relative min-h-0 flex-1 overflow-hidden bg-[#0b3038] touch-pan-y"
           aria-label="NurseSpin practice cards"
           style={{ backgroundColor: "#0b3038" }}
-          onTouchStart={(event) => { touchStartY.current = event.touches[0]?.clientY ?? null; }}
-          onTouchEnd={(event) => { finishSwipe(event.changedTouches[0]?.clientY ?? 0); }}
+          onTouchStart={startSwipe}
+          onTouchEnd={finishSwipe}
         >
+          {deckSize === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 grid place-items-center overflow-y-auto px-6 text-center"
+            >
+              <div className="max-w-xs">
+                <span className="mx-auto grid size-11 place-items-center rounded-2xl border border-teal-100/20 bg-teal-100/10">
+                  <LayoutGrid className="size-5 text-teal-200" />
+                </span>
+                <p className="mt-3 font-serif text-2xl leading-tight text-[#e1fff2]">
+                  No {categoryLabel(category)} cards yet.
+                </p>
+                <p className="mt-2 text-[12px] leading-snug text-white/70">
+                  This area fills up as reviewed cards are published. Practise another area in the meantime.
+                </p>
+                <Button
+                  onClick={() => setPickerOpen(true)}
+                  className="mt-4 rounded-full bg-teal-200 px-5 py-2 text-xs font-bold text-[#09271f] hover:bg-white"
+                >
+                  Browse categories
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
           <AnimatePresence initial={false} mode="wait" custom={travelDirection}>
             <motion.article
               key={question.id}
@@ -330,8 +439,8 @@ export function NurseFlowPage() {
               <div className="absolute inset-0 bg-gradient-to-b from-[#061216]/25 via-transparent to-[#041013]/70" />
 
               <div className="absolute inset-x-4 top-4 z-10">
-                <div className="flex gap-1.5" aria-label={`Card ${questionIndex + 1} of ${questions.length}`}>
-                  {questions.map((item, itemIndex) => (
+                <div className="flex gap-1.5" aria-label={`Card ${questionIndex + 1} of ${deckSize}`}>
+                  {deck.map((item, itemIndex) => (
                     <span
                       key={item.id}
                       className="relative h-1 flex-1 overflow-hidden rounded-full bg-white/25"
@@ -346,17 +455,30 @@ export function NurseFlowPage() {
                   ))}
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-[#071719]/45 px-3 py-1.5 text-[10px] font-semibold text-white/90 shadow-sm backdrop-blur-xl">
+                  {/* The current area doubles as the picker: tapping it shows
+                      the other two, so a learner always knows where they are
+                      and can move without leaving the card. */}
+                  <button
+                    type="button"
+                    onClick={() => setPickerOpen(true)}
+                    aria-haspopup="dialog"
+                    aria-expanded={pickerOpen}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-[#071719]/45 px-3 py-1.5 text-[10px] font-semibold text-white/90 shadow-sm backdrop-blur-xl transition-colors hover:border-teal-200/60 hover:bg-[#10332e]/70 active:scale-95"
+                  >
                     <span className="size-1.5 rounded-full bg-teal-200 shadow-[0_0_8px_rgba(153,246,228,.75)]" />
-                    {question.topic}
-                  </span>
+                    {categoryLabel(category)}
+                    <ChevronDown className={cn("size-3 text-white/55 transition-transform duration-200", pickerOpen && "rotate-180")} />
+                  </button>
                   <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-medium tabular-nums text-white/70 backdrop-blur">
-                    {String(questionIndex + 1).padStart(2, "0")} <span className="text-white/35">/</span> {String(questions.length).padStart(2, "0")}
+                    {String(questionIndex + 1).padStart(2, "0")} <span className="text-white/35">/</span> {String(deckSize).padStart(2, "0")}
                   </span>
                 </div>
               </div>
 
-              <div className="absolute inset-x-0 bottom-0 z-10 max-h-[78%] overflow-y-auto overscroll-contain px-3.5 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-12">
+              <div
+                ref={scrollRef}
+                className="absolute inset-x-0 bottom-0 z-10 max-h-[78%] overflow-y-auto overscroll-contain px-3.5 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-12"
+              >
                 <motion.div
                   initial="hidden"
                   animate="visible"
@@ -377,7 +499,7 @@ export function NurseFlowPage() {
                     <span className="grid size-6 place-items-center rounded-lg border border-teal-100/20 bg-teal-100/10">
                       <Sparkles className="size-3.5" />
                     </span>
-                    <span>{question.level} <span className="mx-1 text-white/35">·</span> Quick practice</span>
+                    <span>{question.level} <span className="mx-1 text-white/35">·</span> {question.topic}</span>
                   </motion.div>
                   <motion.h1
                     variants={{
@@ -406,8 +528,8 @@ export function NurseFlowPage() {
                       const correct = optionIndex === question.answer;
                       const chosen = optionIndex === selected;
                       return (
+                        <Fragment key={option}>
                         <motion.button
-                          key={option}
                           onClick={() => void choose(optionIndex)}
                           disabled={answering || revealed}
                           initial={{ opacity: 0, y: 10 }}
@@ -441,39 +563,50 @@ export function NurseFlowPage() {
                             <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-rose-100/80">Your choice</span>
                           )}
                         </motion.button>
+                        {/*
+                          The explanation is rendered with the answers, directly
+                          under the correct one, so it is never stranded below
+                          the fold. It is anchored to the correct option rather
+                          than the tapped one: a learner who guessed wrong sees
+                          where the right answer was and why, instead of the
+                          rationale hiding under their own (wrong) row.
+                        */}
+                        <AnimatePresence>
+                          {revealed && correct && (
+                            <motion.div
+                              ref={rationaleRef}
+                              initial={{ opacity: 0, y: 8, height: 0 }}
+                              animate={{ opacity: 1, y: 0, height: "auto" }}
+                              exit={{ opacity: 0, y: 6, height: 0 }}
+                              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-1.5 mb-0.5 rounded-xl border border-white/15 bg-gradient-to-br from-[#102a29]/85 to-[#071719]/85 p-3 shadow-[0_14px_38px_rgba(0,0,0,.16)] backdrop-blur-md">
+                                <div className="flex items-start gap-2.5">
+                                  <span className={cn(
+                                    "mt-0.5 grid size-6 shrink-0 place-items-center rounded-full",
+                                    selected === question.answer ? "bg-emerald-200/15 text-emerald-200" : "bg-amber-200/15 text-amber-200",
+                                  )}>
+                                    <Check className="size-3.5" />
+                                  </span>
+                                  <div>
+                                    <p className={cn(
+                                      "text-xs font-bold",
+                                      selected === question.answer ? "text-emerald-200" : "text-amber-200",
+                                    )}>
+                                      {selected === question.answer ? "That’s right." : "Here’s the key point."}
+                                    </p>
+                                    <p className="mt-1 text-xs leading-snug text-white/85">{question.rationale}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                        </Fragment>
                       );
                     })}
                   </div>
-
-                  <AnimatePresence>
-                    {selected !== null && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 6 }}
-                        transition={{ duration: 0.22 }}
-                        className="mt-2.5 rounded-xl border border-white/15 bg-gradient-to-br from-[#102a29]/85 to-[#071719]/85 p-3 shadow-[0_14px_38px_rgba(0,0,0,.16)] backdrop-blur-md"
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <span className={cn(
-                            "mt-0.5 grid size-6 shrink-0 place-items-center rounded-full",
-                            selected === question.answer ? "bg-emerald-200/15 text-emerald-200" : "bg-amber-200/15 text-amber-200",
-                          )}>
-                            <Check className="size-3.5" />
-                          </span>
-                          <div>
-                            <p className={cn(
-                              "text-xs font-bold",
-                              selected === question.answer ? "text-emerald-200" : "text-amber-200",
-                            )}>
-                              {selected === question.answer ? "That’s right." : "Here’s the key point."}
-                            </p>
-                            <p className="mt-1 text-xs leading-snug text-white/85">{question.rationale}</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
 
                   <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 pt-2.5">
                     <a
@@ -503,14 +636,104 @@ export function NurseFlowPage() {
                     >
                       <ArrowUp className="size-3" />
                     </motion.span>
-                    Swipe up for the next question
+                    {/* Once the card is answered it can be long enough to
+                        scroll, so a drag up reads before it advances. Say so
+                        rather than promising a swipe that no longer flips. */}
+                    {selected === null
+                      ? "Swipe up for the next question"
+                      : "Scroll to read, then swipe up at the end for the next question"}
                   </p>
                 </motion.div>
               </div>
             </motion.article>
           </AnimatePresence>
+          )}
         </section>
       </div>
+
+      {/* Category picker. The current area is the entry point, so the learner
+          can always see the other areas without losing the card they were on. */}
+      <AnimatePresence>
+        {pickerOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 p-3 backdrop-blur-sm sm:items-center"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) setPickerOpen(false);
+            }}
+          >
+            <motion.div
+              initial={{ y: 36, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 28, opacity: 0 }}
+              transition={{ duration: 0.24 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="nursespin-category-title"
+              className="w-full max-w-md rounded-[1.6rem] border border-white/10 bg-[#08222a] p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-white shadow-2xl"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[.16em] text-teal-200">Practice areas</p>
+                  <h2 id="nursespin-category-title" className="mt-1 font-serif text-2xl">Choose a category</h2>
+                </div>
+                <button
+                  onClick={() => setPickerOpen(false)}
+                  aria-label="Close"
+                  className="rounded-full p-2 text-white/70 transition-colors hover:bg-white/10"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+              <div className="mt-4 grid gap-2">
+                {NURSEFLOW_CATEGORIES.map((entry) => {
+                  const active = entry.id === category;
+                  const count = categoryCounts[entry.id] ?? 0;
+                  return (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      onClick={() => chooseCategory(entry.id)}
+                      aria-current={active ? "true" : undefined}
+                      className={cn(
+                        "flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors",
+                        active
+                          ? "border-teal-200/70 bg-teal-200/15"
+                          : "border-white/10 bg-white/[0.04] hover:border-teal-200/40 hover:bg-white/[0.08]",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "grid size-9 shrink-0 place-items-center rounded-xl",
+                          active ? "bg-teal-200 text-[#08231f]" : "bg-white/10 text-teal-100",
+                        )}
+                      >
+                        {active ? <Check className="size-4" /> : <LayoutGrid className="size-4" />}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold">{entry.label}</span>
+                        <span className="block text-[11px] text-white/60">
+                          {count === 1 ? "1 card" : `${count} cards`}
+                        </span>
+                      </span>
+                      {active && (
+                        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-teal-100/80">
+                          Now
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-4 text-[11px] leading-snug text-white/55">
+                General Nursing opens into individual courses — anatomy and physiology, pharmacology and more — as the bank grows.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {upgradeOpen && (

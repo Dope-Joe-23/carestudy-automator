@@ -3,8 +3,65 @@ import { dirname, resolve } from "node:path";
 import { nurseflowPath } from "./nurseflowPaths";
 import { nurseflowJsonKey, readStoredText, writeStoredText } from "./nurseflowStore";
 
+/**
+ * The learner-facing categories, in the order the picker shows them.
+ *
+ * These are the only top-level buckets: every card sits in exactly one. The
+ * finer subject stays in `topic` (Fundamentals, Medication safety …), which is
+ * what General Nursing is expected to open up into next — so adding sub-courses
+ * later is a navigation change, not a data migration.
+ */
+export const NURSEFLOW_CATEGORIES = [
+  { id: "general-nursing", label: "General Nursing" },
+  { id: "medical-nursing", label: "Medical Nursing" },
+  { id: "surgical-nursing", label: "Surgical Nursing" },
+] as const;
+
+export type NurseFlowCategoryId = (typeof NURSEFLOW_CATEGORIES)[number]["id"];
+
+/**
+ * Cards imported before categories existed carry no `category`, so they read as
+ * General Nursing — the bucket the flat topic list actually belonged to.
+ */
+export const DEFAULT_NURSEFLOW_CATEGORY: NurseFlowCategoryId = "general-nursing";
+
+const NURSEFLOW_CATEGORY_IDS: readonly string[] = NURSEFLOW_CATEGORIES.map((entry) => entry.id);
+
+/** True when `value` names one of the three categories (case-insensitive). */
+export function isNurseFlowCategory(value: string): boolean {
+  return NURSEFLOW_CATEGORY_IDS.includes(value.trim().toLowerCase());
+}
+
+/**
+ * Coerce import/request input to a category id. Anything missing or unrecognised
+ * falls back to General Nursing rather than failing: a batch written before the
+ * taxonomy existed must still import.
+ */
+export function normalizeNurseFlowCategory(value: unknown): NurseFlowCategoryId {
+  const candidate = typeof value === "string" ? value.trim().toLowerCase() : "";
+  return isNurseFlowCategory(candidate) ? (candidate as NurseFlowCategoryId) : DEFAULT_NURSEFLOW_CATEGORY;
+}
+
+/**
+ * A card's category, defaulted for legacy rows that predate the field. Read
+ * every card through this rather than touching `.category` directly, so no
+ * route has to remember the fallback.
+ */
+export function nurseFlowCategory(
+  question: Pick<NurseFlowQuestion, "category">,
+): NurseFlowCategoryId {
+  return normalizeNurseFlowCategory(question.category);
+}
+
 export type NurseFlowQuestion = {
   id: string;
+  /**
+   * The top-level category the card is filed under. Optional because cards
+   * stored before categories existed have none; read it through
+   * `nurseFlowCategory()` so they land in General Nursing.
+   */
+  category?: NurseFlowCategoryId;
+  /** The subject inside the category (e.g. "Fundamentals", "Pharmacology"). */
   topic: string;
   level: string;
   title: string;

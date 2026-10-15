@@ -16,7 +16,32 @@ frontend plus the `/api/nurseflow` video-job boundary.
   The generated clip is an explanatory visual, not the evidence source.
 - Do not send patient information to the video model. The server prompt blocks
   identifiable people, records, graphic procedures, dosage instructions and
-  diagnostic claims.## Visual setup
+  diagnostic claims.
+
+## Practice areas
+
+Learners browse the bank through three top-level categories, in the order
+`NURSEFLOW_CATEGORIES` lists them: **General Nursing**, **Medical Nursing** and
+**Surgical Nursing**. Every card belongs to exactly one, stored as its
+`category`. `topic` stays the finer subject inside a category ("Fundamentals",
+"Medication safety"), and it is what General Nursing is expected to open up
+into as individual courses — anatomy and physiology, pharmacology and so on —
+so that step is a navigation change rather than a data migration.
+
+The current category *is* the picker: tapping the chip on the learner card
+shows the other two with their card counts, and switching rebuilds the deck
+from the feed already in memory, so browsing between areas makes no request. An
+area with no published cards says so instead of showing an empty card.
+`GET /api/nurseflow/feed` also accepts `?category=` and `?topic=` for callers
+that want one deck straight from the server.
+
+Cards written before the taxonomy existed carry no `category` and read as
+General Nursing, which is why `nurseFlowCategory()` / `nurseFlowCategoryOf()` —
+not the raw field — is the supported way to read one. The Studio's review queue
+shows each card's area and moves it with
+`PATCH /api/nurseflow/questions/:id/category`.
+
+## Visual setup
 
 NurseFlow's "motion images" are AI-generated **still images** animated with a
 CSS drift on the learner card — the pipeline originally rendered silent 8-second

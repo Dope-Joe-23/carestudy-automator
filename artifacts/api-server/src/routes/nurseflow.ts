@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { readNurseFlowContent } from "../lib/nurseflowContent";
+import { nurseFlowCategory, readNurseFlowContent } from "../lib/nurseflowContent";
 import {
   completedClipsByCard,
   createVideoJob,
@@ -34,11 +34,17 @@ const nurseFlowRouter: IRouter = Router();
 
 // Public feed deliberately exposes approved content only. Draft/review data,
 // reviewer names and internal prompts remain inside the studio endpoint.
+//
+// Two optional filters narrow the deck, both matched case-insensitively:
+// `category` (one of the three top-level categories) and `topic` (the finer
+// subject inside a category). A card with no stored category reads as General
+// Nursing, so pre-category imports still answer `?category=general-nursing`.
 nurseFlowRouter.get("/nurseflow/feed", async (req: Request, res: Response) => {
   try {
     const topic = clean(req.query.topic, 80).toLowerCase();
+    const category = clean(req.query.category, 40).toLowerCase();
     const content = await readNurseFlowContent();
-    const questions = content.questions.filter((question) => question.reviewStatus === "approved" && (!topic || question.topic.toLowerCase() === topic));
+    const questions = content.questions.filter((question) => question.reviewStatus === "approved" && (!topic || question.topic.toLowerCase() === topic) && (!category || nurseFlowCategory(question) === category));
     // A card that has a finished visual carries a same-origin URL plus the
     // media type, so the learner page knows whether to use an <img> or a
     // <video> and never sees the provider's own URL. Visuals are read once for

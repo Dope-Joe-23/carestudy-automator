@@ -4,6 +4,7 @@
     {
       "id": "nf-delegation-ap-001",
       "topic": "Fundamentals",
+      "category": "general-nursing",
       "level": "NCLEX-style",
       "title": "Delegate the right task",
       "question": "Which task is appropriate for the registered nurse to delegate to an assistive personnel on a stable ward patient?",
@@ -24,6 +25,7 @@
     {
       "id": "nf-restraint-least-001",
       "topic": "Fundamentals",
+      "category": "general-nursing",
       "level": "NMC-aligned",
       "title": "Least restrictive option",
       "question": "A confused adult is pulling at their intravenous cannula. Which response reflects the least restrictive approach before any physical restraint is considered?",
@@ -44,6 +46,7 @@
     {
       "id": "nf-fire-race-001",
       "topic": "Fundamentals",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "First response to fire",
       "question": "A small fire starts in a ward utility room. According to the RACE sequence, what should the nurse do first?",
@@ -64,6 +67,7 @@
     {
       "id": "nf-delirium-reversible-001",
       "topic": "Fundamentals",
+      "category": "general-nursing",
       "level": "NCLEX-style",
       "title": "Confusion is a symptom",
       "question": "An older adult has become acutely confused overnight and had no cognitive problems previously. What should the nurse's assessment focus on first?",
@@ -84,6 +88,7 @@
     {
       "id": "nf-deterioration-news2-001",
       "topic": "Acute care",
+      "category": "medical-nursing",
       "level": "NMC-aligned",
       "title": "Score, then escalate",
       "question": "A patient's early-warning observations are trending worse across the shift. What should the nurse do with the score?",
@@ -104,6 +109,7 @@
     {
       "id": "nf-anaphylaxis-trigger-001",
       "topic": "Acute care",
+      "category": "medical-nursing",
       "level": "NCLEX-style",
       "title": "Stop the trigger, then adrenaline",
       "question": "A patient develops a widespread rash, facial swelling and difficulty breathing minutes after a medicine infusion begins. What is the nurse's priority?",
@@ -124,6 +130,7 @@
     {
       "id": "nf-hypo-fast-carbs-001",
       "topic": "Acute care",
+      "category": "medical-nursing",
       "level": "Foundation",
       "title": "Treat, wait, recheck",
       "question": "An adult with diabetes is alert and reports shakiness and sweating. Their glucose reading is below the individual target. What should the nurse do first?",
@@ -144,6 +151,7 @@
     {
       "id": "nf-chestpain-ecg-001",
       "topic": "Acute care",
+      "category": "medical-nursing",
       "level": "NCLEX-style",
       "title": "Ten minutes to the trace",
       "question": "An adult presents with sudden central chest pain. Which action should the nurse prioritise on arrival?",
@@ -164,6 +172,7 @@
     {
       "id": "nf-insulin-doublecheck-001",
       "topic": "Medication safety",
+      "category": "general-nursing",
       "level": "NMC-aligned",
       "title": "Two pairs of eyes for insulin",
       "question": "Before administering insulin to an inpatient, which practice is expected for this high-alert medicine?",
@@ -184,6 +193,7 @@
     {
       "id": "nf-polypharmacy-review-001",
       "topic": "Medication safety",
+      "category": "general-nursing",
       "level": "NCLEX-style",
       "title": "Twelve medicines and rising",
       "question": "An older adult takes twelve regular medicines and mentions feeling drowsy and unsteady. What is the most appropriate first response?",
@@ -204,6 +214,7 @@
     {
       "id": "nf-opioid-sedation-001",
       "topic": "Medication safety",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Sleepy is not pain-free",
       "question": "A patient prescribed regular opioid analgesia is becoming increasingly drowsy between doses. What should the nurse do before the next dose is due?",
@@ -224,6 +235,7 @@
     {
       "id": "nf-allergy-document-001",
       "topic": "Medication safety",
+      "category": "general-nursing",
       "level": "NMC-aligned",
       "title": "Name the reaction",
       "question": "A patient states they had a rash and swelling after penicillin as a child. What should the nurse do?",
@@ -244,6 +256,7 @@
     {
       "id": "nf-suicide-askdirect-001",
       "topic": "Psychosocial care",
+      "category": "general-nursing",
       "level": "NCLEX-style",
       "title": "Ask plainly, then act",
       "question": "A patient says life is not worth living. What is the best nursing response?",
@@ -264,6 +277,7 @@
     {
       "id": "nf-panic-physicalfirst-001",
       "topic": "Psychosocial care",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Rule out the body first",
       "question": "A patient reports sudden palpitations, chest tightness and a fear of dying. What should the nurse do first?",
@@ -284,6 +298,7 @@
     {
       "id": "nf-capacity-refusal-001",
       "topic": "Psychosocial care",
+      "category": "general-nursing",
       "level": "NMC-aligned",
       "title": "Consent can be refused",
       "question": "A capacitous adult refuses a recommended blood transfusion even after the risks are explained. What should the nurse do?",
@@ -304,6 +319,7 @@
     {
       "id": "nf-pph-measure-001",
       "topic": "Maternal & newborn",
+      "category": "general-nursing",
       "level": "NCLEX-style",
       "title": "Weigh the loss, call for help",
       "question": "After a vaginal birth, bleeding appears heavier than expected. What should the midwife or nurse do first?",
@@ -324,6 +340,7 @@
     {
       "id": "nf-newborn-warmth-001",
       "topic": "Maternal & newborn",
+      "category": "general-nursing",
       "level": "Foundation",
       "title": "Keep the first hours warm",
       "question": "Which set of measures best prevents heat loss in a healthy newborn immediately after birth?",
@@ -344,6 +361,7 @@
     {
       "id": "nf-breastfeed-attachment-001",
       "topic": "Maternal & newborn",
+      "category": "general-nursing",
       "level": "NMC-aligned",
       "title": "Watch a whole feed",
       "question": "A first-time mother says breastfeeding is painful and the baby feeds often but seems unsettled. What is the most appropriate response?",
@@ -364,6 +382,7 @@
     {
       "id": "nf-paed-weightdose-001",
       "topic": "Paediatric care",
+      "category": "general-nursing",
       "level": "NCLEX-style",
       "title": "Weight first, dose second",
       "question": "A prescription for a child is written in milligrams per kilogram. What must the nurse confirm before administering?",
@@ -384,6 +403,7 @@
     {
       "id": "nf-youngpeople-involvement-001",
       "topic": "Paediatric care",
+      "category": "general-nursing",
       "level": "NMC-aligned",
       "title": "Talk with, not at",
       "question": "A fourteen-year-old is admitted for day surgery and their parent answers every question on their behalf. What is the best approach?",

@@ -1,7 +1,15 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { draftWorker } from "../lib/draftWorker";
 import { detectUploadType } from "../lib/uploads";
-import { readNurseFlowContent, readNurseFlowStarterQuestions, saveNurseFlowContent, type NurseFlowQuestion } from "../lib/nurseflowContent";
+import {
+  isNurseFlowCategory,
+  NURSEFLOW_CATEGORIES,
+  normalizeNurseFlowCategory,
+  readNurseFlowContent,
+  readNurseFlowStarterQuestions,
+  saveNurseFlowContent,
+  type NurseFlowQuestion,
+} from "../lib/nurseflowContent";
 
 /**
  * A card as it arrives from an import payload. `reviewStatus` is read only so a
@@ -11,6 +19,7 @@ import { readNurseFlowContent, readNurseFlowStarterQuestions, saveNurseFlowConte
  */
 type ImportedQuestion = {
   id?: unknown;
+  category?: unknown;
   topic?: unknown;
   level?: unknown;
   title?: unknown;
@@ -83,6 +92,17 @@ function validateQuestion(item: ImportedQuestion, row: number): ImportIssue[] {
   if (!["draft", "in_review", "approved", "retired"].includes(status)) {
     issues.push({ row, field: "reviewStatus", message: "Use draft, in_review, approved, or retired." });
   }
+  // Optional. A batch may omit it — those cards land in General Nursing, which
+  // is where the pre-category bank belonged. When it is given it must name one
+  // of the three categories, so a typo cannot file a card somewhere unintended.
+  const category = text(item.category);
+  if (category && !isNurseFlowCategory(category)) {
+    issues.push({
+      row,
+      field: "category",
+      message: `Use one of: ${NURSEFLOW_CATEGORIES.map((entry) => entry.id).join(", ")} (or omit it for general-nursing).`,
+    });
+  }
   return issues;
 }
 
@@ -90,7 +110,7 @@ function normalizeQuestion(item: ImportedQuestion): NurseFlowQuestion {
   const now = new Date().toISOString();
   const sourceKind = text(item.sourceKind) === "document" ? "document" : "url";
   return {
-    id: text(item.id), topic: text(item.topic), level: text(item.level), title: text(item.title),
+    id: text(item.id), category: normalizeNurseFlowCategory(item.category), topic: text(item.topic), level: text(item.level), title: text(item.title),
     question: text(item.question), options: (item.options as string[]).map(text),
     correctOptionIndex: Number(item.correctOptionIndex), rationale: text(item.rationale),
     sourceTitle: text(item.sourceTitle), sourceUrl: text(item.sourceUrl), learningObjective: text(item.learningObjective),
@@ -137,6 +157,16 @@ nurseFlowAdminRouter.post("/nurseflow/questions/extract", async (req: Request, r
     res.status(413).json({ error: `Document is too large to extract (max ${Math.round(MAX_EXTRACT_BYTES / 1024 / 1024)} MB). Split it and try again.` });
     return;
   }
+  // The model has no notion of our categories, so the batch's category is
+  // stamped here and every extracted card arrives already filed. An
+  // unrecognised value is rejected rather than silently defaulted, because a
+  // typo would otherwise file the whole batch somewhere unintended.
+  const requestedCategory = text(req.body?.category);
+  if (requestedCategory && !isNurseFlowCategory(requestedCategory)) {
+    res.status(400).json({ error: `category must be one of: ${NURSEFLOW_CATEGORIES.map((entry) => entry.id).join(", ")}.` });
+    return;
+  }
+  const category = normalizeNurseFlowCategory(requestedCategory);
   try {
     const result = await draftWorker.documentQuestions({
       kind: doc.kind,
@@ -147,7 +177,7 @@ nurseFlowAdminRouter.post("/nurseflow/questions/extract", async (req: Request, r
       topic: text(req.body?.topic),
       level: text(req.body?.level),
     });
-    res.json(result);
+    res.json({ questions: result.questions.map((question) => ({ ...question, category })) });
   } catch (error) {
     req.log?.error({ error }, "NurseFlow document extraction failed");
     res.status(502).json({ error: error instanceof Error ? error.message : "The AI extraction failed." });
@@ -240,6 +270,32 @@ nurseFlowAdminRouter.patch("/nurseflow/questions/:id/source", async (req: Reques
     await saveNurseFlowContent(content.questions);
     res.json({ question: updated });
   } catch (error) { req.log?.error({ error }, "NurseFlow source update failed"); res.status(503).json({ error: "Question bank storage is unavailable." }); }
+});
+
+/**
+ * Move a card between the three categories. Cards imported before the taxonomy
+ * existed carry no stored category and read as General Nursing, so this is how
+ * the studio files an existing card under Medical or Surgical Nursing.
+ */
+nurseFlowAdminRouter.patch("/nurseflow/questions/:id/category", async (req: Request, res: Response) => {
+  const category = text(req.body?.category).toLowerCase();
+  if (!isNurseFlowCategory(category)) {
+    res.status(400).json({ error: `category must be one of: ${NURSEFLOW_CATEGORIES.map((entry) => entry.id).join(", ")}.` });
+    return;
+  }
+  try {
+    const content = await readNurseFlowContent();
+    const index = content.questions.findIndex((question) => question.id === req.params.id);
+    if (index < 0) { res.status(404).json({ error: "Question not found." }); return; }
+    const updated: NurseFlowQuestion = {
+      ...content.questions[index],
+      category: normalizeNurseFlowCategory(category),
+      updatedAt: new Date().toISOString(),
+    };
+    content.questions[index] = updated;
+    await saveNurseFlowContent(content.questions);
+    res.json({ question: updated });
+  } catch (error) { req.log?.error({ error }, "NurseFlow category update failed"); res.status(503).json({ error: "Question bank storage is unavailable." }); }
 });
 
 export default nurseFlowAdminRouter;

@@ -6,6 +6,22 @@ source, a rationale, a learning objective and a visual brief. New cards
 must start as `draft`; a reviewer changes them to `approved` only after the
 question, rationale and source have been checked.
 
+## Categories
+
+A card's `category` decides which area of the learner picker it appears in:
+`general-nursing`, `medical-nursing` or `surgical-nursing`. It is optional on
+import — omitting it files the card under General Nursing, which is where every
+card written before the taxonomy existed now reads — but a value that is not one
+of the three is rejected as a typo, so a batch cannot file itself somewhere
+unintended. `topic` is unchanged: it is the finer subject inside the category
+("Pharmacology", "Anatomy and physiology").
+
+The batch you upload to `POST /api/nurseflow/questions/extract` is stamped with
+the `category` you send along with it, so extracted cards arrive already filed.
+An existing card is moved with
+`PATCH /api/nurseflow/questions/:id/category` (`{ "category": "medical-nursing" }`),
+which is how the studio files the pre-category bank.
+
 A card's source is normally a real URL (`sourceKind` omitted or `"url"`). Cards
 extracted from a PDF start as `sourceKind: "document"`, where `sourceUrl` is a
 reference such as the document's filename rather than a link. Those cards are
