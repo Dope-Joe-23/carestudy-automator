@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { OrderStatusFilter } from "@/components/order-status-filter";
 import { getPaystackKey, payWithPaystack } from "@/lib/paystack";
 import {
   attachOrderDelivery,
@@ -122,6 +123,7 @@ function OrderRow({
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const [status, setStatus] = useState<OrderStatus>(order.status);
+  const [expanded, setExpanded] = useState(false);
   const [note, setNote] = useState(order.note ?? "");
   const [deliveryFile, setDeliveryFile] = useState<File | null>(null);
   const [deliverySuccess, setDeliverySuccess] = useState(false);
@@ -305,7 +307,45 @@ function OrderRow({
   });
 
   return (
-    <Card>
+    <Card className={cn("overflow-hidden rounded-xl transition-colors", expanded && "bg-muted/30")}>
+      <CardHeader className="p-0">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((open) => !open)}
+        >
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-center gap-1.5">
+              <span className="font-mono text-xs text-muted-foreground">#{order.id}</span>
+              <Badge variant={STATUS_VARIANT[order.status]} className="text-[10px]">
+                {order.status.replace("_", " ")}
+              </Badge>
+              {order.correctionScope && (
+                <Badge variant="outline" className="text-[10px]">
+                  Correction · {order.correctionScope}
+                </Badge>
+              )}
+            </span>
+            <span className="mt-2 block truncate text-sm font-semibold">{order.title}</span>
+            <span className="mt-1 block truncate text-xs text-muted-foreground">
+              {order.student?.name ?? "Unknown student"}
+              {order.program ? ` · ${order.program}` : ""}
+              {` · ${formatDate(order.createdAt)}`}
+              {` · ${order.fileCount} ${order.fileCount === 1 ? "file" : "files"}`}
+            </span>
+          </span>
+          <ChevronDown
+            aria-hidden="true"
+            className={cn(
+              "size-4 shrink-0 text-muted-foreground transition-transform",
+              expanded && "rotate-180",
+            )}
+          />
+        </button>
+      </CardHeader>
+      {expanded && (
+        <>
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
@@ -719,6 +759,8 @@ function OrderRow({
           )}
         </div>
       </CardContent>
+        </>
+      )}
     </Card>
   );
 }
@@ -739,6 +781,7 @@ export function StudioBin() {
   });
   const duesTotal = commissions.data?.total ?? 0;
   const duesBlocked = (commissions.data?.enforced ?? false) && duesTotal > 0;
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
 
   const counts = useMemo(() => {
     const result: Record<OrderStatus, number> = {
@@ -750,6 +793,10 @@ export function StudioBin() {
     for (const order of data ?? []) result[order.status] += 1;
     return result;
   }, [data]);
+  const filteredOrders = useMemo(
+    () => (data ?? []).filter((order) => statusFilter === "all" || order.status === statusFilter),
+    [data, statusFilter],
+  );
 
   return (
     <div className="flex-1 bg-background">
@@ -783,12 +830,13 @@ export function StudioBin() {
             producing to create the study in the studio with every document attached, then deliver
             the completed study when it's ready.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {STATUS_OPTIONS.map((option) => (
-              <Badge key={option.value} variant={STATUS_VARIANT[option.value]}>
-                {option.label}: {counts[option.value]}
-              </Badge>
-            ))}
+          <div className="mt-4">
+            <OrderStatusFilter
+              value={statusFilter}
+              counts={counts}
+              total={data?.length ?? 0}
+              onChange={setStatusFilter}
+            />
           </div>
         </div>
 
@@ -838,9 +886,17 @@ export function StudioBin() {
               </p>
             </CardContent>
           </Card>
+        ) : filteredOrders.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-sm text-muted-foreground">
+              {statusFilter === "all"
+                ? "No orders to show."
+                : `No ${STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label.toLowerCase()} orders to show.`}
+            </CardContent>
+          </Card>
         ) : (
-          <div className="space-y-4">
-            {data.map((order) => (
+          <div className="space-y-2">
+            {filteredOrders.map((order) => (
               <OrderRow
                 key={order.id}
                 order={order}

@@ -52,8 +52,9 @@ const STUDIO_LINKS: {
   icon: React.ElementType;
   adminOnly?: boolean;
 }[] = [
+  { href: "/studio", label: "Drafting studio", icon: HeartPulse },
   { href: "/studio/bin", label: "Order bin", icon: Inbox },
-  { href: "/studio/nurseflow", label: "Question bank", icon: ListChecks },
+  { href: "/studio/nurseflow", label: "Question bank", icon: ListChecks, adminOnly: true },
   { href: "/studio/dashboard", label: "Admin dashboard", icon: LayoutDashboard, adminOnly: true },
 ];
 

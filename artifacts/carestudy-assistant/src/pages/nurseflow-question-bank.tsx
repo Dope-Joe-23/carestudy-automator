@@ -1092,55 +1092,65 @@ function QuestionCard({
   const needsSource = question.sourceKind === "document";
 
   return (
-    <article className={cn("rounded-xl border p-4 transition-colors", expanded && "bg-muted/30")}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-1.5">
+    <article
+      className={cn(
+        "overflow-hidden rounded-xl border transition-colors",
+        expanded && "bg-muted/30",
+      )}
+    >
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        aria-label={`${expanded ? "Hide" : "Show"} details for ${question.title}`}
+      >
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-1.5">
             <Badge variant={meta.variant} className="gap-1">
               <StatusIcon className="size-3" /> {meta.label}
             </Badge>
             {question.level && <Badge variant="outline">{question.level}</Badge>}
             <Badge variant="secondary">{categoryLabel(nurseFlowCategoryOf(question))}</Badge>
-            {needsSource && (
-              <Badge variant="outline" className="gap-1 border-amber-500/50 text-amber-700 dark:text-amber-500">
-                <CircleAlert className="size-3" /> Needs source
-              </Badge>
-            )}
             {question.topic && (
               <span className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground">
                 {question.topic}
               </span>
             )}
-          </div>
-          <p className="mt-2 font-medium leading-snug">{question.title}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
+            {needsSource && (
+              <Badge variant="outline" className="gap-1 border-amber-500/50 text-amber-700 dark:text-amber-500">
+                <CircleAlert className="size-3" /> Needs source
+              </Badge>
+            )}
+          </span>
+          <span className="mt-2 block truncate text-sm font-semibold leading-snug">
+            {question.title}
+          </span>
+          <span className="mt-1 block truncate text-xs text-muted-foreground">
             <span className="font-mono">{question.id}</span>
             {question.sourceTitle ? ` · ${question.sourceTitle}` : ""}
-            {question.updatedAt ? (
-              <span title={fullDate(question.updatedAt)}> · updated {timeAgo(question.updatedAt)}</span>
-            ) : null}
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 shrink-0 text-muted-foreground"
-          onClick={onToggle}
-          aria-expanded={expanded}
-          aria-label={expanded ? "Hide card detail" : "Show card detail"}
-        >
-          <ChevronDown className={cn("size-4 transition-transform", expanded && "rotate-180")} />
-        </Button>
-      </div>
-
-      <p className={cn("mt-2 text-sm leading-relaxed text-muted-foreground", !expanded && "line-clamp-2")}>
-        {question.question}
-      </p>
+            {question.updatedAt ? ` · updated ${timeAgo(question.updatedAt)}` : ""}
+          </span>
+          <span className="mt-2 block line-clamp-2 text-left text-sm leading-relaxed text-muted-foreground">
+            {question.question}
+          </span>
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className={cn(
+            "size-4 shrink-0 text-muted-foreground transition-transform",
+            expanded && "rotate-180",
+          )}
+        />
+      </button>
 
       {expanded && (
         <div className="mt-3 space-y-3">
+          <div className="px-4">
+            <p className="text-sm leading-relaxed text-foreground">{question.question}</p>
+          </div>
           {options.length > 0 && (
-            <div>
+            <div className="px-4">
               <p className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground">
                 Answer options · correct answer marked
               </p>
@@ -1172,9 +1182,13 @@ function QuestionCard({
             </div>
           )}
 
-          {needsSource && <SourceFixer questionId={question.id} busy={busy} onSetSource={onSetSource} />}
+          {needsSource && (
+            <div className="px-4">
+              <SourceFixer questionId={question.id} busy={busy} onSetSource={onSetSource} />
+            </div>
+          )}
 
-          <div className="rounded-lg border bg-muted/40 p-3">
+          <div className="mx-4 rounded-lg border bg-muted/40 p-3">
             <label
               htmlFor={`category-${question.id}`}
               className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground"
@@ -1200,20 +1214,24 @@ function QuestionCard({
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 px-4 sm:grid-cols-2">
             <DetailBlock label="Rationale">{question.rationale || "—"}</DetailBlock>
             <DetailBlock label="Learning objective">{question.learningObjective || "—"}</DetailBlock>
           </div>
 
           {question.visualBrief && (
-            <DetailBlock label="Visual brief">
-              <span className="text-muted-foreground">{question.visualBrief}</span>
-            </DetailBlock>
+            <div className="px-4">
+              <DetailBlock label="Visual brief">
+                <span className="text-muted-foreground">{question.visualBrief}</span>
+              </DetailBlock>
+            </div>
           )}
 
-          <VideoClipPanel question={question} />
+          <div className="px-4">
+            <VideoClipPanel question={question} />
+          </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 text-xs text-muted-foreground">
             {question.sourceUrl ? (
               <a
                 href={question.sourceUrl}
@@ -1231,56 +1249,75 @@ function QuestionCard({
               </span>
             )}
           </div>
+
+          <div className="flex flex-wrap items-center gap-2 border-t px-4 py-3">
+            {status !== "approved" && (
+              <Button
+                size="sm"
+                onClick={() => onReview(question.id, "approved")}
+                disabled={busy || needsSource}
+                title={needsSource ? "Add a source URL before approving" : undefined}
+              >
+                {busy ? (
+                  <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="mr-1.5 size-3.5" />
+                )}
+                Approve
+              </Button>
+            )}
+            {status === "draft" && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onReview(question.id, "in_review")}
+                disabled={busy}
+              >
+                Send to review
+              </Button>
+            )}
+            {status === "in_review" && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onReview(question.id, "draft")}
+                disabled={busy}
+              >
+                Back to draft
+              </Button>
+            )}
+            {status === "retired" && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onReview(question.id, "draft")}
+                disabled={busy}
+              >
+                <RotateCcw className="mr-1.5 size-3.5" /> Restore as draft
+              </Button>
+            )}
+            {status === "approved" && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-muted-foreground"
+                onClick={() => onReview(question.id, "retired")}
+                disabled={busy}
+              >
+                <Trash2 className="mr-1.5 size-3.5" /> Retire
+              </Button>
+            )}
+            {status === "approved" && (
+              <span className="ml-auto text-xs text-muted-foreground">Live in the public feed</span>
+            )}
+            {status === "in_review" && (
+              <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <ShieldCheck className="size-3.5" /> Approval is stamped with your name and the date.
+              </span>
+            )}
+          </div>
         </div>
       )}
-
-      <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
-        {status !== "approved" && (
-          <Button
-            size="sm"
-            onClick={() => onReview(question.id, "approved")}
-            disabled={busy || needsSource}
-            title={needsSource ? "Add a source URL before approving" : undefined}
-          >
-            {busy ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 size-3.5" />}
-            Approve
-          </Button>
-        )}
-        {status === "draft" && (
-          <Button size="sm" variant="outline" onClick={() => onReview(question.id, "in_review")} disabled={busy}>
-            Send to review
-          </Button>
-        )}
-        {status === "in_review" && (
-          <Button size="sm" variant="outline" onClick={() => onReview(question.id, "draft")} disabled={busy}>
-            Back to draft
-          </Button>
-        )}
-        {status === "retired" && (
-          <Button size="sm" variant="outline" onClick={() => onReview(question.id, "draft")} disabled={busy}>
-            <RotateCcw className="mr-1.5 size-3.5" /> Restore as draft
-          </Button>
-        )}
-        {status === "approved" && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-muted-foreground"
-            onClick={() => onReview(question.id, "retired")}
-            disabled={busy}
-          >
-            <Trash2 className="mr-1.5 size-3.5" /> Retire
-          </Button>
-        )}
-        {status === "approved" && (
-          <span className="ml-auto text-xs text-muted-foreground">Live in the public feed</span>
-        )}
-        {status === "in_review" && (
-          <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <ShieldCheck className="size-3.5" /> Approval is stamped with your name and the date.
-          </span>
-        )}
-      </div>
     </article>
   );
 }

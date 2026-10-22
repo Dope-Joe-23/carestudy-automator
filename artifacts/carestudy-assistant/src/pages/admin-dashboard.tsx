@@ -124,6 +124,28 @@ function PaymentBadge({ status }: { status: string }) {
   return <Badge variant="secondary">Unpaid</Badge>;
 }
 
+type DashboardOrder = adminApi.DashboardStats["recentOrders"][number];
+
+function DashboardOrderRow({ order }: { order: DashboardOrder }) {
+  return (
+    <article className="rounded-xl border p-4 transition-colors hover:bg-muted/30">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="font-mono text-xs text-muted-foreground">#{order.id}</span>
+        <StatusBadge status={order.status} />
+        <PaymentBadge status={order.paymentStatus} />
+      </div>
+      <p className="mt-2 truncate text-sm font-medium leading-snug">{order.title}</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {order.studentName && (
+          <span className="font-medium text-foreground">{order.studentName}</span>
+        )}
+        {order.studentName && " · "}
+        {formatDate(order.createdAt)}
+      </p>
+    </article>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Sidebar navigation
 // ---------------------------------------------------------------------------
@@ -454,29 +476,9 @@ function OverviewTab({ stats }: { stats?: adminApi.DashboardStats }) {
             <CardTitle className="text-base">Recent orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="grid gap-2 sm:grid-cols-2">
               {stats.recentOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border px-4 py-2.5"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-muted-foreground">#{order.id}</span>
-                      <span className="truncate text-sm font-medium">{order.title}</span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {order.studentName && (
-                        <span className="font-medium text-foreground">{order.studentName}</span>
-                      )}
-                      {order.studentName && ' · '}{formatDate(order.createdAt)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <PaymentBadge status={order.paymentStatus} />
-                    <StatusBadge status={order.status} />
-                  </div>
-                </div>
+                <DashboardOrderRow key={order.id} order={order} />
               ))}
             </div>
           </CardContent>
@@ -549,29 +551,9 @@ function OrdersTab() {
         </CardHeader>
         <CardContent>
           {orders.length > 0 ? (
-            <div className="space-y-2">
+            <div className="grid gap-2 sm:grid-cols-2">
               {orders.map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-muted-foreground">#{order.id}</span>
-                      <span className="truncate text-sm font-medium">{order.title}</span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {order.studentName && (
-                        <span className="font-medium text-foreground">{order.studentName}</span>
-                      )}
-                      {order.studentName && ' · '}{formatDate(order.createdAt)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <PaymentBadge status={order.paymentStatus} />
-                    <StatusBadge status={order.status} />
-                  </div>
-                </div>
+                <DashboardOrderRow key={order.id} order={order} />
               ))}
             </div>
           ) : (
@@ -1145,38 +1127,55 @@ export function AdminDashboard() {
           </Button>
         </div>
 
-        {/* Section tabs */}
-        <nav className="mb-6 flex gap-1 overflow-x-auto border-b pb-2">
+        {/* Section pills */}
+        <nav
+          aria-label="Admin dashboard sections"
+          className="mb-6 flex flex-wrap items-center gap-2"
+        >
           {TABS.map((tab) => {
-            const Icon = tab.icon;
             const isActive = activeTab === tab.id;
+            const count =
+              tab.id === "orders"
+                ? stats?.orders.total
+                : tab.id === "students"
+                  ? stats?.students.total
+                  : tab.id === "staff"
+                    ? stats?.staff.total
+                    : tab.id === "invites"
+                      ? stats?.staff.pendingInvites
+                      : undefined;
             return (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
+                aria-pressed={isActive}
                 className={cn(
-                  "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
+                  "group inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors",
                   isActive
-                    ? "bg-primary/10 font-medium text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-card hover:border-primary/40 hover:bg-accent",
                 )}
               >
-                <Icon className="size-4 shrink-0" />
-                <span>{tab.label}</span>
-                {tab.id === "orders" && stats && (
-                  <span className="text-[10px] tabular text-muted-foreground">{stats.orders.total}</span>
-                )}
-                {tab.id === "students" && stats && (
-                  <span className="text-[10px] tabular text-muted-foreground">{stats.students.total}</span>
-                )}
-                {tab.id === "staff" && stats && (
-                  <span className="text-[10px] tabular text-muted-foreground">{stats.staff.total}</span>
-                )}
-                {tab.id === "invites" && stats && stats.staff.pendingInvites > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-                    {stats.staff.pendingInvites}
-                  </Badge>
+                <span
+                  className={cn(
+                    "transition-colors",
+                    isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+                  )}
+                >
+                  {tab.label}
+                </span>
+                {count !== undefined && (
+                  <span
+                    className={cn(
+                      "min-w-6 rounded-full px-1.5 py-0.5 text-center font-mono text-[11px] tabular-nums",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {count}
+                  </span>
                 )}
               </button>
             );
