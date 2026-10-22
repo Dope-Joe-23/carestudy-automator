@@ -8,12 +8,14 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, Loader2, ShieldAlert } from "lucide-react";
+import { AuthDialog, type AuthMode } from "@/components/auth-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchAdminMe, type Admin } from "@/lib/adminAuth";
 
 export function AdminDashboardGate({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<Admin | null | undefined>(undefined);
+  const [authMode, setAuthMode] = useState<AuthMode>("sign-in");
 
   useEffect(() => {
     let cancelled = false;
@@ -41,12 +43,18 @@ export function AdminDashboardGate({ children }: { children: ReactNode }) {
     );
   }
 
-  // Not signed in — redirect to the unified login page.
+  // Not signed in — the sign-in dialog sits over the gate.
   if (admin === null) {
-    window.location.href = "/login";
     return (
-      <div className="grid min-h-screen place-items-center bg-background">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      <div className="grid min-h-screen place-items-center bg-muted/30">
+        <AuthDialog
+          open
+          mode={authMode}
+          onModeChange={setAuthMode}
+          onClose={() => {
+            window.location.href = "/";
+          }}
+        />
       </div>
     );
   }

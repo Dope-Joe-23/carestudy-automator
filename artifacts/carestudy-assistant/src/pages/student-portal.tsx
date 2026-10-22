@@ -1,21 +1,23 @@
 /**
  * Student portal — sidebar layout with tab navigation.
  *
- * Accessible at /student/*  Left sidebar has navigation items;
- * the right content area renders the active section.
+ * The workspace is the application home at `/` and the hub for every student
+ * service; the other sections live under /student/*. Guests may browse the
+ * workspace, while the remaining sections require a signed-in student.
  *
  * Tabs:
- * - Projects (default) — list of care study orders
+ * - Workspace (home) — account summary and study tools
+ * - Projects — list of care study orders
  * - New Order — place a new order
- * - Order Detail — view a specific order (dynamic route)
- * - Payments — payment history
- * - Preview — study preview (dynamic route)
+ * - Downloads — delivered studies
+ * - Order Detail / Preview — dynamic routes rendered without the sidebar
  */
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ChangeEvent,
@@ -29,6 +31,10 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  MessageCircle,
+  Presentation,
+  FlaskConical,
+  ListChecks as QuizIcon,
   CheckCircle2,
   ClipboardList,
   Download,
@@ -101,6 +107,7 @@ import {
 } from "@/components/ui/sidebar";
 import * as studentApi from "@/lib/studentApi";
 import { PinDownloadDialog } from "@/components/pin-download-dialog";
+import { AuthDialog, type AuthMode } from "@/components/auth-dialog";
 import { StudentPreviewPage } from "@/pages/student-preview";
 import { DownloadHistoryPage } from "@/pages/download-history";
 
@@ -248,7 +255,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
     await studentApi.logoutStudent().catch(() => {});
     setToken(null);
     setStudent(null);
-    window.location.href = "/login";
+    window.location.href = "/";
   }, []);
 
   const value = useMemo(
@@ -266,27 +273,33 @@ function useAuth(): AuthContextValue {
 // Sidebar navigation
 // ---------------------------------------------------------------------------
 
-type TabId = "projects" | "new-order" | "downloads";
+type TabId = "workspace" | "projects" | "downloads";
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+  { id: "workspace", label: "Study workspace", icon: MessageCircle },
   { id: "projects", label: "My projects", icon: ClipboardList },
-  { id: "new-order", label: "Place an order", icon: Plus },
   { id: "downloads", label: "Downloads", icon: Receipt },
 ];
 
 function PortalSidebar({
   activeTab,
   onSelect,
+  onPlaceOrder,
+  onSignIn,
+  onSignUp,
 }: {
   activeTab: TabId | null;
   onSelect: (tab: TabId) => void;
+  onPlaceOrder: () => void;
+  onSignIn: () => void;
+  onSignUp: () => void;
 }) {
   const { student, signOut } = useAuth();
 
   return (
     <Sidebar>
       <SidebarHeader>
-        <Link href="/student/orders" className="px-2 py-1">
+        <Link href="/" className="px-2 py-1">
           <BrandMark />
         </Link>
       </SidebarHeader>
@@ -313,9 +326,32 @@ function PortalSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={onPlaceOrder}>
+                  <Plus className="size-4 shrink-0" />
+                  <span>Place an order</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarSeparator />
       <SidebarFooter>
+        {!student && (
+          <div className="space-y-2 px-3 py-2">
+            <p className="text-xs text-muted-foreground">Browsing as a guest</p>
+            <Button size="sm" className="w-full" onClick={onSignIn}>
+              Sign in
+            </Button>
+            <Button size="sm" variant="outline" className="w-full" onClick={onSignUp}>
+              Create an account
+            </Button>
+          </div>
+        )}
         {student && (
           <div className="px-3 py-2">
             <Popover>
@@ -362,15 +398,27 @@ function PortalSidebar({
 // Mobile bottom navigation bar
 // ---------------------------------------------------------------------------
 
-function MobileBottomNav() {
+function MobileBottomNav({ onPlaceOrder }: { onPlaceOrder: () => void }) {
   const [location] = useLocation();
+  const isWorkspace =
+    location === "/" || location === "/student" || location === "/student/" || location === "/student/workspace";
   const isNew = location === "/student/orders/new";
   const isDownloads = location === "/student/downloads";
-  const isProjects = !isNew && !isDownloads && location.startsWith("/student");
+  const isProjects = !isWorkspace && !isNew && !isDownloads && location.startsWith("/student");
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
       <div className="mx-auto flex h-14 max-w-lg items-stretch">
+        <Link
+          href="/"
+          className={cn(
+            "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+            isWorkspace ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          <MessageCircle className="size-5" />
+          <span>Workspace</span>
+        </Link>
         <Link
           href="/student/orders"
           className={cn(
@@ -381,16 +429,14 @@ function MobileBottomNav() {
           <ClipboardList className="size-5" />
           <span>Projects</span>
         </Link>
-        <Link
-          href="/student/orders/new"
-          className={cn(
-            "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-            isNew ? "text-primary" : "text-muted-foreground",
-          )}
+        <button
+          type="button"
+          onClick={onPlaceOrder}
+          className="flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium text-muted-foreground transition-colors"
         >
           <Plus className="size-5" />
           <span>New order</span>
-        </Link>
+        </button>
         <Link
           href="/student/downloads"
           className={cn(
@@ -410,18 +456,46 @@ function MobileBottomNav() {
 // Layout
 // ---------------------------------------------------------------------------
 
-function AuthGate({ children }: { children: ReactNode }) {
+function AuthGate({
+  children,
+  allowGuest = false,
+  onSignIn,
+}: {
+  children: ReactNode;
+  allowGuest?: boolean;
+  onSignIn: () => void;
+}) {
   const { student, ready } = useAuth();
-  useEffect(() => {
-    if (ready && !student) window.location.href = "/login";
-  }, [ready, student]);
-  if (!ready || !student) {
+
+  if (!ready) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <Loader2 className="size-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
+
+  if (!student) {
+    if (allowGuest) return <>{children}</>;
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center py-12 text-center">
+          <span className="mb-4 grid size-12 place-items-center rounded-full bg-primary/10">
+            <Lock className="size-6 text-primary" />
+          </span>
+          <h2 className="font-serif text-lg font-semibold">Sign in to continue</h2>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            Your projects and downloads are private to your account. Sign in to pick up where you
+            left off.
+          </p>
+          <Button className="mt-5" onClick={onSignIn}>
+            Sign in <ArrowRight className="size-4" />
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return <>{children}</>;
 }
 
@@ -434,10 +508,14 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   return <Badge variant={meta.variant}>{meta.label}</Badge>;
 }
 
-function OrdersList() {
+function OrdersList({
+  onPlaceOrder,
+  onStartCorrection,
+}: {
+  onPlaceOrder: () => void;
+  onStartCorrection: () => void;
+}) {
   const [, navigate] = useLocation();
-  const [orderOpen, setOrderOpen] = useState(false);
-  const [correctionOpen, setCorrectionOpen] = useState(false);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["student-orders"],
     queryFn: async () => (await studentApi.listOrders()).orders,
@@ -463,36 +541,14 @@ function OrdersList() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => setOrderOpen(true)}>
+          <Button onClick={onPlaceOrder}>
             <Plus className="size-4" /> Place an order
           </Button>
-          <Button variant="outline" onClick={() => setCorrectionOpen(true)}>
+          <Button variant="outline" onClick={onStartCorrection}>
             <RotateCcw className="size-4" /> Make correction
           </Button>
         </div>
       </div>
-
-      <Dialog open={orderOpen} onOpenChange={setOrderOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Place an order</DialogTitle>
-            <DialogDescription>Submit a new care study order.</DialogDescription>
-          </DialogHeader>
-          <NewOrderPage onClose={() => setOrderOpen(false)} />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={correctionOpen} onOpenChange={setCorrectionOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Make a correction</DialogTitle>
-            <DialogDescription>
-              Upload one prepared chapter and describe the changes required.
-            </DialogDescription>
-          </DialogHeader>
-          <NewOrderPage correctionMode onClose={() => setCorrectionOpen(false)} />
-        </DialogContent>
-      </Dialog>
 
       {isLoading ? (
         <div className="flex min-h-[30vh] items-center justify-center">
@@ -515,7 +571,7 @@ function OrdersList() {
               When you place your first order — with your clinical notes, guidelines, and reference
               documents — it will appear here so you can follow it to delivery.
             </p>
-            <Button className="mt-5" onClick={() => setOrderOpen(true)}>
+            <Button className="mt-5" onClick={onPlaceOrder}>
               Place your first order <ArrowRight className="size-4" />
             </Button>
           </CardContent>
@@ -685,6 +741,7 @@ function NewOrderPage({
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ["student-orders"] });
       toast.success("Your order has been submitted — our team will begin shortly.");
+      onClose?.();
       navigate(`/student/orders/${result.order.id}`, { replace: true });
     },
     onError: (err) => {
@@ -696,7 +753,7 @@ function NewOrderPage({
     <div>
       {correctionMode || onClose ? (
         <button type="button" onClick={onClose} className="mb-3 text-sm text-muted-foreground hover:text-foreground">
-          Close request
+          Close
         </button>
       ) : (
         <Link href="/student/orders" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-4 -ml-2 text-muted-foreground')}>
@@ -1238,6 +1295,134 @@ function VivaPreparationPanel({ orderId }: { orderId: number }) {
 }
 
 // ---------------------------------------------------------------------------
+// Student workspace
+// ---------------------------------------------------------------------------
+
+function StudentWorkspace({
+  onPlaceOrder,
+  onSignIn,
+  onSignUp,
+}: {
+  onPlaceOrder: () => void;
+  onSignIn: () => void;
+  onSignUp: () => void;
+}) {
+  const { student } = useAuth();
+  const firstName = student?.name.trim().split(/\s+/)[0];
+  const tools: {
+    title: string;
+    description: string;
+    action: string;
+    icon: React.ElementType;
+    ready: boolean;
+    href?: string;
+    onClick?: () => void;
+  }[] = [
+    { title: "Care-study service", description: "Place an order, follow its progress, and open a delivered study.", onClick: onPlaceOrder, action: "Start an order", icon: HeartPulse, ready: true },
+    { title: "Study with NurseFlow", description: "Practice with the existing nursing question bank and revision tools.", href: "/nurseflow", action: "Open NurseFlow", icon: QuizIcon, ready: true },
+    { title: "Assignment assistant", description: "Plan and refine an assignment with your course brief.", action: "Coming soon", icon: BookOpen, ready: false },
+    { title: "Presentation assistant", description: "Build a clear presentation outline from your topic.", action: "Coming soon", icon: Presentation, ready: false },
+    { title: "Research projects", description: "Organize a research question and project materials.", action: "Coming soon", icon: FlaskConical, ready: false },
+  ];
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-8 py-2 sm:py-6">
+      <section className="rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-background p-6 sm:p-9">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">NurseAid student workspace</p>
+        <h1 className="mt-3 font-serif text-3xl tracking-tight sm:text-4xl">
+          Welcome{firstName ? `, ${firstName}` : ""}. What are you studying today?
+        </h1>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          {student
+            ? "Start a care-study order, practice nursing questions, or return to your existing work. Your student services remain available directly from this workspace."
+            : "You're browsing as a guest. Sign in to order a care study, follow its progress, and download your work."}
+        </p>
+        {student ? (
+          <div className="mt-6 rounded-xl border bg-background p-3 shadow-sm">
+            <div className="flex min-h-14 items-center gap-3 rounded-lg bg-muted/40 px-4">
+              <MessageCircle className="size-5 shrink-0 text-primary" />
+              <p className="text-sm text-muted-foreground">General NurseAid chat is not connected yet. Choose a live tool below to continue.</p>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button size="sm" className="gap-2" onClick={onPlaceOrder}><HeartPulse className="size-4" /> Start a care study</Button>
+              <Link href="/student/orders" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}><ClipboardList className="size-4" /> View my orders</Link>
+              <Link href="/nurseflow" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}><QuizIcon className="size-4" /> Practice MCQs</Link>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Button size="sm" className="gap-2" onClick={onSignIn}><ShieldCheck className="size-4" /> Sign in</Button>
+            <Button size="sm" variant="outline" className="gap-2" onClick={onSignUp}>Create an account</Button>
+            <Link href="/nurseflow" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}><QuizIcon className="size-4" /> Practice MCQs</Link>
+          </div>
+        )}
+      </section>
+
+      {student && (
+        <section className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-4">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+            {student.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{student.name}</p>
+            <p className="truncate text-sm text-muted-foreground">{student.email}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {[student.college, student.program, student.year ? `Year ${student.year}` : null].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+          <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">Student</Badge>
+        </section>
+      )}
+
+      <section>
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Study tools</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Connected services are ready to use. Other assistants are clearly marked as planned.</p>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {tools.map((tool) => {
+            const Icon = tool.icon;
+            const content = (
+              <div className={cn("flex h-full flex-col rounded-xl border bg-card p-4 transition-colors", tool.ready && "hover:border-primary/40 hover:bg-accent/30")}>
+                <div className="flex items-start justify-between gap-3">
+                  <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></span>
+                  <span className={cn("rounded-full px-2 py-1 text-[10px] font-medium", tool.ready ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{tool.ready ? "Available" : "Planned"}</span>
+                </div>
+                <h3 className="mt-4 font-semibold">{tool.title}</h3>
+                <p className="mt-1 min-h-10 text-sm leading-relaxed text-muted-foreground">{tool.description}</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">{tool.action}{tool.ready && <ArrowRight className="size-4" />}</span>
+              </div>
+            );
+            if (!tool.ready) return <div key={tool.title} aria-disabled="true">{content}</div>;
+            if (tool.onClick) {
+              return (
+                <button key={tool.title} type="button" onClick={tool.onClick} className="block w-full text-left">
+                  {content}
+                </button>
+              );
+            }
+            return <Link key={tool.title} href={tool.href ?? "/"} className="block">{content}</Link>;
+          })}
+        </div>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2">
+        <Link href="/student/orders" className="flex items-center gap-4 rounded-xl border p-4 transition-colors hover:bg-accent/30">
+          <span className="grid size-10 place-items-center rounded-lg bg-muted"><ClipboardList className="size-5" /></span>
+          <span className="min-w-0 flex-1"><span className="block font-medium">My care-study orders</span><span className="mt-1 block text-sm text-muted-foreground">Track status and open order details</span></span><ArrowRight className="size-4 text-muted-foreground" />
+        </Link>
+        <Link href="/student/downloads" className="flex items-center gap-4 rounded-xl border p-4 transition-colors hover:bg-accent/30">
+          <span className="grid size-10 place-items-center rounded-lg bg-muted"><Download className="size-5" /></span>
+          <span className="min-w-0 flex-1"><span className="block font-medium">Study downloads</span><span className="mt-1 block text-sm text-muted-foreground">Review delivered studies and access status</span></span><ArrowRight className="size-4 text-muted-foreground" />
+        </Link>
+      </section>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 
@@ -1250,48 +1435,139 @@ export function StudentPortal() {
 }
 
 function StudentPortalRouter() {
-  const [location] = useLocation();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+  const { student, signIn } = useAuth();
+
+  const [authMode, setAuthMode] = useState<AuthMode | null>(null);
+  const [orderDialog, setOrderDialog] = useState<null | "order" | "correction">(null);
+  // The staff invite that arrived with a /student/register link.
+  const [inviteToken] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return new URLSearchParams(window.location.search).get("staff");
+  });
+
+  // Sign-in, registration, and the order form are dialogs. Their old URLs stay
+  // working: open the matching dialog, then settle on the real destination.
+  // A layout effect so the dialog is already open on the first paint.
+  useLayoutEffect(() => {
+    if (location === "/login") {
+      setAuthMode("sign-in");
+      navigate("/", { replace: true });
+    } else if (location === "/student/register") {
+      setAuthMode("sign-up");
+      navigate("/", { replace: true });
+    } else if (location === "/student/orders/new") {
+      if (student) setOrderDialog("order");
+      else setAuthMode("sign-in");
+      navigate("/student/orders", { replace: true });
+    }
+  }, [location, navigate, student]);
+
+  const openSignIn = () => setAuthMode("sign-in");
+  const openSignUp = () => setAuthMode("sign-up");
+  // Guests are asked to sign in before the order form opens.
+  const openOrder = () => {
+    if (student) setOrderDialog("order");
+    else setAuthMode("sign-in");
+  };
+  const closeAuth = () => setAuthMode(null);
+  const closeOrder = () => setOrderDialog(null);
 
   // Route parsing
   const matchPreview = location.match(/^\/student\/orders\/(\d+)\/preview$/);
-  const matchDownloads = location === "/student/downloads";
-  const matchNew = location === "/student/orders/new";
   const matchOrder = location.match(/^\/student\/orders\/(\d+)$/);
+  const matchWorkspace =
+    location === "/" || location === "/student" || location === "/student/" || location === "/student/workspace";
+  const matchDownloads = location === "/student/downloads";
 
-  // Determine active tab
-  const activeTab: TabId | null = matchDownloads
-    ? "downloads"
-    : matchNew
-      ? "new-order"
+  const activeTab: TabId = matchWorkspace
+    ? "workspace"
+    : matchDownloads
+      ? "downloads"
       : "projects";
 
   const handleTabSelect = (tab: TabId) => {
-    if (tab === "projects") navigate("/student/orders");
-    else if (tab === "new-order") navigate("/student/orders/new");
+    if (tab === "workspace") navigate("/");
+    else if (tab === "projects") navigate("/student/orders");
     else if (tab === "downloads") navigate("/student/downloads");
   };
 
-  // Full-page routes (preview, order detail) render without sidebar
-  const isFullPage = Boolean(matchPreview) || Boolean(matchOrder);
+  const authDialog = (
+    <AuthDialog
+      open={authMode !== null}
+      mode={authMode ?? "sign-in"}
+      onModeChange={setAuthMode}
+      onClose={closeAuth}
+      onStudentSignedIn={signIn}
+      staffToken={inviteToken}
+    />
+  );
 
-  if (isFullPage) {
+  const orderDialogEl = (
+    <Dialog
+      open={orderDialog !== null}
+      onOpenChange={(open) => {
+        if (!open) closeOrder();
+      }}
+    >
+      <DialogContent className={orderDialog === "correction" ? "max-w-2xl" : "max-w-3xl"}>
+        <DialogHeader className={orderDialog === "correction" ? undefined : "sr-only"}>
+          <DialogTitle>{orderDialog === "correction" ? "Make a correction" : "Place an order"}</DialogTitle>
+          <DialogDescription>
+            {orderDialog === "correction"
+              ? "Upload one prepared chapter and describe the changes required."
+              : "Submit a new care study order."}
+          </DialogDescription>
+        </DialogHeader>
+        {orderDialog === "correction" ? (
+          <NewOrderPage correctionMode onClose={closeOrder} />
+        ) : orderDialog === "order" ? (
+          <NewOrderPage onClose={closeOrder} />
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  );
+
+  // The study preview is a full-screen reading mode.
+  if (matchPreview) {
     return (
       <div className="min-h-screen bg-background">
-        <AuthGate>
-          {matchPreview && <StudentPreviewPage orderId={Number(matchPreview[1])} />}
-          {matchOrder && <OrderDetailPage orderId={Number(matchOrder[1])} />}
+        <AuthGate onSignIn={openSignIn}>
+          <StudentPreviewPage orderId={Number(matchPreview[1])} />
         </AuthGate>
-        <MobileBottomNav />
+        <MobileBottomNav onPlaceOrder={openOrder} />
         <div className="h-14 md:hidden" />
+        {authDialog}
+        {orderDialogEl}
       </div>
+    );
+  }
+
+  let content: ReactNode;
+  if (activeTab === "workspace") {
+    content = (
+      <StudentWorkspace onPlaceOrder={openOrder} onSignIn={openSignIn} onSignUp={openSignUp} />
+    );
+  } else if (activeTab === "downloads") {
+    content = <DownloadHistoryPage />;
+  } else if (matchOrder) {
+    content = <OrderDetailPage orderId={Number(matchOrder[1])} />;
+  } else {
+    content = (
+      <OrdersList onPlaceOrder={openOrder} onStartCorrection={() => setOrderDialog("correction")} />
     );
   }
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-background">
-        <PortalSidebar activeTab={activeTab} onSelect={handleTabSelect} />
+        <PortalSidebar
+          activeTab={activeTab}
+          onSelect={handleTabSelect}
+          onPlaceOrder={openOrder}
+          onSignIn={openSignIn}
+          onSignUp={openSignUp}
+        />
         <SidebarInset>
           <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-background/95 backdrop-blur px-4 md:hidden">
             <SidebarTrigger />
@@ -1299,10 +1575,8 @@ function StudentPortalRouter() {
           </header>
           <main className="flex-1 overflow-y-auto">
             <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6 md:pb-6">
-              <AuthGate>
-                {activeTab === "projects" && <OrdersList />}
-                {activeTab === "new-order" && <NewOrderPage />}
-                {activeTab === "downloads" && <DownloadHistoryPage />}
+              <AuthGate allowGuest={activeTab === "workspace"} onSignIn={openSignIn}>
+                {content}
               </AuthGate>
             </div>
           </main>
@@ -1317,8 +1591,10 @@ function StudentPortalRouter() {
           </footer>
         </SidebarInset>
       </div>
-      <MobileBottomNav />
+      <MobileBottomNav onPlaceOrder={openOrder} />
       <div className="h-14 md:hidden" />
+      {authDialog}
+      {orderDialogEl}
     </SidebarProvider>
   );
 }

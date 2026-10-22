@@ -1,21 +1,21 @@
 /**
- * Welcome page — shown after sign-in, greets the user and provides quick actions.
+ * Welcome page — post sign-in landing for admins and staff.
+ *
+ * Students go straight to the workspace home (`/`), which shows their account
+ * and tools, or a guest view when nobody is signed in.
  *
  * Fetches auth data directly (not via context) since /welcome sits outside
  * the AdminGate and StudentPortal auth providers.
  */
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, Redirect, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
   BookOpen,
-  CheckCircle2,
   ClipboardList,
-  Clock,
   DollarSign,
-  Download,
   GraduationCap,
   HeartPulse,
   Loader2,
@@ -29,7 +29,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import * as adminDashboardApi from "@/lib/adminDashboardApi";
-import * as studentApi from "@/lib/studentApi";
 import { getAdminToken, fetchAdminMe, type Admin } from "@/lib/adminAuth";
 import { StudentInviteDialog } from "@/components/student-invite-dialog";
 
@@ -242,7 +241,6 @@ export function WelcomePage() {
   const [studentInviteOpen, setStudentInviteOpen] = useState(false);
 
   const hasAdminToken = Boolean(getAdminToken());
-  const hasStudentToken = Boolean(studentApi.getStudentToken());
 
   // Fetch admin profile directly — no context needed
   useEffect(() => {
@@ -258,15 +256,11 @@ export function WelcomePage() {
 
   const isAdmin = admin !== null && admin.role === "admin";
   const isStaff = admin !== null && admin.role !== "admin";
-  const isStudent = hasStudentToken && !hasAdminToken;
 
   const handleContinue = () => {
     if (isAdmin) navigate("/studio/dashboard", { replace: true });
     else if (isStaff) navigate("/studio", { replace: true });
-    else if (isStudent) navigate("/student/orders", { replace: true });
   };
-
-  const greeting = getGreeting();
 
   // Loading
   if (loading) {
@@ -283,28 +277,8 @@ export function WelcomePage() {
     );
   }
 
-  // Not signed in at all
-  if (!admin && !isStudent) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-muted/30 px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.5, ease: EASE }}
-        >
-          <Card className="w-full max-w-sm text-center">
-            <CardContent className="flex flex-col items-center gap-4 py-12">
-              <BrandMark />
-              <p className="text-sm text-muted-foreground">You are not signed in.</p>
-              <Button asChild size="sm">
-                <Link href="/login">Sign in</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
+  // Students and guests belong in the workspace home, not here
+  if (!admin) return <Redirect to="/" />;
 
   return (
     <div className="min-h-screen bg-background">
@@ -324,7 +298,7 @@ export function WelcomePage() {
               transition={{ delay: 0.3, duration: 0.3 }}
             >
               <Badge variant="secondary" className="text-[10px]">
-                {isAdmin ? "Admin" : isStaff ? "Staff" : "Student"}
+                {isAdmin ? "Admin" : "Staff"}
               </Badge>
             </motion.div>
             <motion.div
@@ -347,9 +321,6 @@ export function WelcomePage() {
 
         {/* ── Staff ── */}
         {isStaff && <StaffView admin={admin} onInviteStudent={() => setStudentInviteOpen(true)} />}
-
-        {/* ── Student ── */}
-        {isStudent && <StudentView greeting={greeting} />}
 
         {/* Continue */}
         <motion.div
@@ -503,108 +474,6 @@ function StaffView({ admin, onInviteStudent }: { admin: Admin; onInviteStudent: 
                 Start by generating a student invite link from the dashboard, then share it with
                 your students. When they register, their orders will appear in your order bin.
                 Open each order in the studio to produce the care study from their materials.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Student view
-// ---------------------------------------------------------------------------
-
-function StudentView({ greeting }: { greeting: string }) {
-  const { data: meData } = useQuery({
-    queryKey: ["student-me-welcome"],
-    queryFn: async () => (await studentApi.fetchMe()).student,
-  });
-  const { data, isLoading } = useQuery({
-    queryKey: ["student-orders-welcome"],
-    queryFn: async () => (await studentApi.listOrders()).orders,
-  });
-
-  const firstName = meData?.name?.split(" ")[0] ?? "";
-  const orders = data ?? [];
-  const activeOrders = orders.filter((o) => o.status === "submitted" || o.status === "in_production");
-  const readyOrders = orders.filter((o) => o.status === "ready");
-
-  return (
-    <motion.div
-      className="space-y-8"
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
-      {/* Greeting */}
-      <motion.div variants={fadeUp} custom={0}>
-        <motion.p
-          className="font-mono text-[10px] uppercase tracking-[0.16em] text-primary"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-        >
-          The Care Study Support Programme
-        </motion.p>
-        <h1 className="mt-2 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
-          {greeting}{firstName ? `, ${firstName}` : ""}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Track your care study projects, download delivered work, and prepare for your viva.
-        </p>
-      </motion.div>
-
-      {/* Stats */}
-      {isLoading ? (
-        <motion.div className="grid gap-3 sm:grid-cols-3" variants={staggerContainer}>
-          {[1, 2, 3].map((i) => (
-            <motion.div key={i} variants={staggerItem}>
-              <Card>
-                <CardContent className="py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 animate-pulse rounded-lg bg-muted" />
-                    <div className="space-y-1.5">
-                      <div className="h-3 w-20 animate-pulse rounded bg-muted" />
-                      <div className="h-5 w-8 animate-pulse rounded bg-muted" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
-      ) : (
-        <motion.div className="grid gap-3 sm:grid-cols-3" variants={staggerContainer}>
-          <StatCard icon={ClipboardList} iconColor="bg-primary/10 text-primary" label="Total projects" value={orders.length} />
-          <StatCard icon={Clock} iconColor="bg-amber-500/10 text-amber-600" label="In progress" value={activeOrders.length} />
-          <StatCard icon={CheckCircle2} iconColor="bg-emerald-500/10 text-emerald-600" label="Ready to download" value={readyOrders.length} />
-        </motion.div>
-      )}
-
-      {/* Quick actions */}
-      <motion.div variants={fadeUp} custom={3}>
-        <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Quick actions</h2>
-        <motion.div className="grid gap-3 sm:grid-cols-2" variants={staggerContainer}>
-          <ActionCard icon={ClipboardList} title="My projects" description="View and track your care study orders" href="/student/orders" />
-          <ActionCard icon={BookOpen} title="Place an order" description="Submit a new care study order with your materials" href="/student/orders/new" />
-          {readyOrders.length > 0 && (
-            <ActionCard icon={Download} title="Download your study" description={`${readyOrders.length} completed ${readyOrders.length === 1 ? "study" : "studies"} ready for download`} href={`/student/orders/${readyOrders[0].id}/preview`} color="bg-emerald-500/10" />
-          )}
-        </motion.div>
-      </motion.div>
-
-      {/* Viva info */}
-      <motion.div variants={slideUp}>
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="flex items-start gap-3 py-4">
-            <GraduationCap className="mt-0.5 size-5 shrink-0 text-primary" />
-            <div>
-              <p className="text-sm font-semibold">Viva Preparation Programme</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Once your study is delivered, you can build a mock defense question bank and
-                practice for your viva — all from your project dashboard.
               </p>
             </div>
           </CardContent>

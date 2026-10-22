@@ -32,6 +32,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -466,14 +467,11 @@ export function NurseFlowQuestionBankPage() {
   const lines = payload.split("\n").length;
 
   return (
-    <main className="min-h-screen bg-background">
+    <div className="flex-1 bg-background">
       <div className="mx-auto max-w-6xl p-4 md:p-8">
-        <Link
-          href="/studio"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ChevronLeft className="size-4" /> Studio
-        </Link>
+        <div className="flex items-center gap-2 lg:hidden">
+          <SidebarTrigger />
+        </div>
 
         <header className="mt-4 flex flex-col gap-4 border-b pb-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
@@ -791,7 +789,7 @@ export function NurseFlowQuestionBankPage() {
           </Card>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 

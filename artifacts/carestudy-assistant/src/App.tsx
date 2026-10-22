@@ -88,11 +88,11 @@ import { LandingPage } from '@/pages/landing';
 import { StudentPortal } from '@/pages/student-portal';
 import { StudioBin } from '@/pages/studio-bin';
 import { AdminGate } from '@/components/admin-gate';
+import { StudioShell, StudioSidebarToolsPortal } from '@/components/studio-shell';
 import { AdminDashboardGate } from '@/components/admin-dashboard-gate';
 import { AdminDashboard } from '@/pages/admin-dashboard';
 import { StaffRegisterPage } from '@/pages/staff-register';
-import { LoginPage } from '@/pages/login';
-import { StudentRegisterPage } from '@/pages/student-register';
+
 import { WelcomePage } from '@/pages/welcome';
 import { NurseFlowPage } from '@/pages/nurseflow';
 import { NurseFlowQuestionBankPage } from '@/pages/nurseflow-question-bank';
@@ -5866,29 +5866,8 @@ function Home() {
   ];
 
   return (
-    <SidebarProvider>
-      <Sidebar collapsible="icon" className="no-print">
-        <SidebarHeader>
-          <button
-            onClick={() => setOverviewOpen(true)}
-            className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-sidebar-accent"
-            aria-label="Open study overview"
-          >
-            <span className="brand-tile grid size-9 shrink-0 place-items-center rounded-xl text-sidebar-primary-foreground">
-              <HeartPulse className="size-5" />
-            </span>
-            <span className="group-data-[collapsible=icon]:hidden">
-              <span className="block font-serif text-base leading-none tracking-tight text-sidebar-foreground">
-                care<span className="text-sidebar-primary">study</span>
-              </span>
-              <span className="mt-1.5 block font-mono text-[9px] uppercase tracking-[0.16em] text-sidebar-foreground/50">
-                drafting assistant
-              </span>
-            </span>
-          </button>
-        </SidebarHeader>
-
-        <SidebarContent>
+    <>
+      <StudioSidebarToolsPortal>
           <SidebarGroup>
             <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
               Chapters
@@ -6047,94 +6026,10 @@ function Home() {
                 </SidebarMenuItem>
               </Collapsible>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Orders">
-                  <a href="/studio/bin">
-                    <Inbox className="size-4 shrink-0 text-sidebar-primary" />
-                    <span className="flex-1 truncate text-left">Orders</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Invite student" onClick={() => setStudentInviteOpen(true)}>
-                  <GraduationCap className="size-4 shrink-0 text-sidebar-primary" />
-                  <span className="flex-1 truncate text-left">Invite student</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
-        </SidebarContent>
-
-        <SidebarFooter>
-          <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/40 p-3 group-data-[collapsible=icon]:hidden">
-            <div className="flex items-start gap-2.5">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-sidebar-primary" />
-              <div>
-                <p className="text-xs font-medium text-sidebar-foreground">Grounded by design</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-sidebar-foreground/70">
-                  No patient facts are invented.
-                </p>
-              </div>
-            </div>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-sidebar-accent">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-sidebar-primary font-mono text-[11px] font-medium text-sidebar-primary-foreground">
-                  {sidebarAdminInitials}
-                </span>
-                <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                  <span className="block truncate text-xs font-medium text-sidebar-foreground">
-                    {sidebarAdminName}
-                  </span>
-                  <span className="block truncate text-[11px] text-sidebar-foreground/60">
-                    {sidebarAdminRole}
-                  </span>
-                </span>
-                <ChevronsUpDown className="size-3.5 shrink-0 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Care study</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setOverviewOpen(true)}>
-                <Info /> Study overview
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportCollectedData}>
-                <FileDown /> Export data
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={aiBusy}
-                onClick={() => importInputRef.current?.click()}
-              >
-                <FileUp /> Import data
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled={aiBusy}
-                onClick={resetAll}
-              >
-                <RotateCcw /> Reset all progress
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => {
-                  void adminLogout().finally(() => {
-                    // Redirect to the unified login page.
-                    window.location.href = "/login";
-                  });
-                }}
-              >
-                <LogOut /> Sign out of the studio
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </SidebarFooter>
-        <SidebarRail />
-      </Sidebar>
-
-      <SidebarInset className="no-print">
+      </StudioSidebarToolsPortal>
         <header className="sticky top-0 z-20 flex h-11 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur-md md:px-5">
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-4" />
@@ -6233,6 +6128,9 @@ function Home() {
                 </DropdownMenuItem>
                 <DropdownMenuItem disabled={aiBusy} onClick={() => setDocImportOpen(true)}>
                   <FileText /> Import document
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={aiBusy} onClick={resetAll}>
+                  <RotateCcw /> Reset all progress
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
@@ -7664,8 +7562,6 @@ function Home() {
             <span className="opacity-60">Retrieval-grounded drafting · runs on your machine</span>
           </footer>
         </div>
-      </SidebarInset>
-
       <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
         <CommandInput placeholder="Search chapters, sections, actions…" />
         <CommandList>
@@ -8851,12 +8747,68 @@ function Home() {
           </Button>
         </DialogContent>
       </Dialog>
-    </SidebarProvider>
+    </>
+  );
+}
+
+/** Everything the student portal owns: its home, its sections, and its legacy
+ *  sign-in / registration entry points. */
+function isStudentArea(path: string): boolean {
+  return (
+    path === "/" ||
+    path === "/login" ||
+    path === "/student" ||
+    path.startsWith("/student/")
+  );
+}
+
+function isStudioArea(path: string): boolean {
+  return path === "/studio" || path.startsWith("/studio/");
+}
+
+/** The studio renders inside one gate and one shell so its sidebar persists. */
+function StudioArea() {
+  const [location] = useLocation();
+
+  return (
+    <AdminGate>
+      <StudioShell>
+        {/* A page-level error leaves the sidebar and navigation intact. */}
+        <ErrorBoundary resetKey={location}>
+          {location === "/studio/dashboard" ? (
+            <AdminDashboardGate>
+              <AdminDashboard />
+            </AdminDashboardGate>
+          ) : location === "/studio/bin" ? (
+            <StudioBin />
+          ) : location === "/studio/nurseflow" ? (
+            <NurseFlowQuestionBankPage />
+          ) : (
+            <Home />
+          )}
+        </ErrorBoundary>
+      </StudioShell>
+    </AdminGate>
   );
 }
 
 function Router() {
   const [location] = useLocation();
+
+  // The portal and the studio render their own persistent layouts (sidebar +
+  // content). Keeping them outside the keyed page transition stops the sidebar
+  // remounting every time the user moves between their sections.
+  if (isStudentArea(location)) {
+    return (
+      <ErrorBoundary resetKey={location}>
+        <StudentPortal />
+      </ErrorBoundary>
+    );
+  }
+
+  if (isStudioArea(location)) {
+    return <StudioArea />;
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -8870,20 +8822,12 @@ function Router() {
       >
         <ErrorBoundary resetKey={location}>
           <Switch>
-            <Route path="/" component={NurseFlowPage} />
             <Route path="/nurseaid" component={LandingPage} />
             <Route path="/nursespin" component={NurseFlowPage} />
             <Route path="/carestudy" component={LandingPage} />
-            <Route path="/studio">{() => <AdminGate><Home /></AdminGate>}</Route>
-            <Route path="/studio/dashboard">{() => <AdminDashboardGate><AdminDashboard /></AdminDashboardGate>}</Route>
-            <Route path="/studio/bin">{() => <AdminGate><StudioBin /></AdminGate>}</Route>
-            <Route path="/studio/nurseflow">{() => <AdminGate><NurseFlowQuestionBankPage /></AdminGate>}</Route>
             <Route path="/welcome" component={WelcomePage} />
             <Route path="/nurseflow" component={NurseFlowPage} />
-            <Route path="/login" component={LoginPage} />
-            <Route path="/student/register" component={StudentRegisterPage} />
             <Route path="/staff/register" component={StaffRegisterPage} />
-            <Route path="/student" nest component={StudentPortal} />
             <Route component={NotFound} />
           </Switch>
         </ErrorBoundary>

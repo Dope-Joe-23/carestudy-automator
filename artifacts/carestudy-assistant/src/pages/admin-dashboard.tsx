@@ -1,8 +1,8 @@
 /**
- * Admin dashboard — sidebar layout with tab navigation.
+ * Admin dashboard — section tabs inside the studio shell.
  *
- * Accessible at /studio/dashboard. Left sidebar has navigation tabs;
- * the right content area renders the active section.
+ * Accessible at /studio/dashboard. The studio shell owns the sidebar; this
+ * page renders its section tabs and content in the shell's content pane.
  *
  * Tabs:
  * - Overview (default) — stats summary
@@ -12,7 +12,7 @@
  * - Settings — placeholder for future admin settings
  */
 import { useCallback, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -42,7 +42,8 @@ import {
   UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -138,109 +139,6 @@ const TABS: { id: TabId; label: string; icon: React.ElementType; adminOnly?: boo
   { id: "student-invites", label: "Student invites", icon: GraduationCap },
   { id: "settings", label: "Settings", icon: Settings },
 ];
-
-function Sidebar({
-  activeTab,
-  onSelect,
-  stats,
-}: {
-  activeTab: TabId;
-  onSelect: (tab: TabId) => void;
-  stats?: adminApi.DashboardStats;
-}) {
-  return (
-    <aside className="hidden w-56 shrink-0 border-r bg-card/50 py-4 lg:block">
-      <div className="px-3 mb-4">
-        <Link href="/studio" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> Studio
-        </Link>
-      </div>
-      <nav className="space-y-0.5 px-2">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => onSelect(tab.id)}
-              className={cn(
-                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors",
-                isActive
-                  ? "bg-primary/10 font-medium text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              <Icon className="size-4 shrink-0" />
-              <span className="flex-1">{tab.label}</span>
-              {tab.id === "orders" && stats && (
-                <span className="text-[10px] tabular text-muted-foreground">
-                  {stats.orders.total}
-                </span>
-              )}
-              {tab.id === "students" && stats && (
-                <span className="text-[10px] tabular text-muted-foreground">
-                  {stats.students.total}
-                </span>
-              )}
-              {tab.id === "staff" && stats && (
-                <span className="text-[10px] tabular text-muted-foreground">
-                  {stats.staff.total}
-                </span>
-              )}
-              {tab.id === "invites" && stats && stats.staff.pendingInvites > 0 && (
-                <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-[10px]">
-                  {stats.staff.pendingInvites}
-                </Badge>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-    </aside>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Mobile tab bar (bottom)
-// ---------------------------------------------------------------------------
-
-function MobileTabBar({
-  activeTab,
-  onSelect,
-}: {
-  activeTab: TabId;
-  onSelect: (tab: TabId) => void;
-}) {
-  return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur lg:hidden">
-      <div className="mx-auto flex h-14 max-w-lg items-stretch">
-        {TABS.slice(0, 4).map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => onSelect(tab.id)}
-              className={cn(
-                "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-                isActive ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              <Icon className="size-5" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Stat card (reused in overview)
-// ---------------------------------------------------------------------------
 
 function StatCard({
   icon: Icon,
@@ -1222,52 +1120,78 @@ export function AdminDashboard() {
   });
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Desktop sidebar */}
-      <Sidebar activeTab={activeTab} onSelect={setActiveTab} stats={stats} />
-
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-3 lg:hidden">
-              <Link
-                href="/studio"
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-1.5 text-muted-foreground")}
-              >
-                <ArrowLeft className="size-4" /> Studio
-              </Link>
-            </div>
-            <div className="hidden lg:block" />
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-muted-foreground"
-                onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] })}
-              >
-                <RefreshCw className="size-3.5" />
-              </Button>
+    <div className="flex-1 bg-background">
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <SidebarTrigger className="lg:hidden" />
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                Studio
+              </p>
+              <h1 className="truncate font-serif text-xl font-semibold tracking-tight sm:text-2xl">
+                Admin dashboard
+              </h1>
             </div>
           </div>
-
-          {/* Tab content */}
-          {activeTab === "overview" && <OverviewTab stats={stats} />}
-          {activeTab === "orders" && <OrdersTab />}
-          {activeTab === "students" && <StudentsTab />}
-          {activeTab === "staff" && <StaffTab onInvite={() => setInviteOpen(true)} />}
-          {activeTab === "invites" && <InvitesTab onInvite={() => setInviteOpen(true)} />}
-          {activeTab === "student-invites" && <StudentInvitesTab onInvite={() => setStudentInviteOpen(true)} />}
-          {activeTab === "settings" && <SettingsTab />}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="shrink-0 gap-1.5 text-muted-foreground"
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] })}
+          >
+            <RefreshCw className="size-3.5" />
+          </Button>
         </div>
-      </main>
 
-      {/* Mobile tab bar */}
-      <MobileTabBar activeTab={activeTab} onSelect={setActiveTab} />
+        {/* Section tabs */}
+        <nav className="mb-6 flex gap-1 overflow-x-auto border-b pb-2">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
+                  isActive
+                    ? "bg-primary/10 font-medium text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                <Icon className="size-4 shrink-0" />
+                <span>{tab.label}</span>
+                {tab.id === "orders" && stats && (
+                  <span className="text-[10px] tabular text-muted-foreground">{stats.orders.total}</span>
+                )}
+                {tab.id === "students" && stats && (
+                  <span className="text-[10px] tabular text-muted-foreground">{stats.students.total}</span>
+                )}
+                {tab.id === "staff" && stats && (
+                  <span className="text-[10px] tabular text-muted-foreground">{stats.staff.total}</span>
+                )}
+                {tab.id === "invites" && stats && stats.staff.pendingInvites > 0 && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                    {stats.staff.pendingInvites}
+                  </Badge>
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-      {/* Mobile spacer */}
-      <div className="h-14 lg:hidden" />
+        {/* Tab content */}
+        {activeTab === "overview" && <OverviewTab stats={stats} />}
+        {activeTab === "orders" && <OrdersTab />}
+        {activeTab === "students" && <StudentsTab />}
+        {activeTab === "staff" && <StaffTab onInvite={() => setInviteOpen(true)} />}
+        {activeTab === "invites" && <InvitesTab onInvite={() => setInviteOpen(true)} />}
+        {activeTab === "student-invites" && <StudentInvitesTab onInvite={() => setStudentInviteOpen(true)} />}
+        {activeTab === "settings" && <SettingsTab />}
+      </div>
 
       {/* Invite dialogs */}
       <InviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />

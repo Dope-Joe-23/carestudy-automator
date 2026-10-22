@@ -9,10 +9,12 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { fetchAdminMe, type Admin } from "@/lib/adminAuth";
 import { AdminContext } from "@/lib/adminContext";
+import { AuthDialog, type AuthMode } from "@/components/auth-dialog";
 
 export function AdminGate({ children }: { children: ReactNode }) {
   // undefined = checking the stored session; null = signed out.
   const [admin, setAdmin] = useState<Admin | null | undefined>(undefined);
+  const [authMode, setAuthMode] = useState<AuthMode>("sign-in");
 
   useEffect(() => {
     let cancelled = false;
@@ -39,12 +41,18 @@ export function AdminGate({ children }: { children: ReactNode }) {
     );
   }
 
-  // Not signed in — redirect to the unified login page.
+  // Not signed in — the sign-in dialog sits over the gate.
   if (admin === null) {
-    window.location.href = "/login";
     return (
-      <div className="grid min-h-screen place-items-center bg-background">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      <div className="grid min-h-screen place-items-center bg-muted/30">
+        <AuthDialog
+          open
+          mode={authMode}
+          onModeChange={setAuthMode}
+          onClose={() => {
+            window.location.href = "/";
+          }}
+        />
       </div>
     );
   }

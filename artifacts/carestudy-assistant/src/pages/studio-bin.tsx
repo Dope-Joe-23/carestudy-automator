@@ -52,7 +52,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { StudentInviteDialog } from "@/components/student-invite-dialog";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { getPaystackKey, payWithPaystack } from "@/lib/paystack";
 import {
   attachOrderDelivery,
@@ -724,7 +724,6 @@ function OrderRow({
 }
 
 export function StudioBin() {
-  const [studentInviteOpen, setStudentInviteOpen] = useState(false);
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["studio-orders"],
     queryFn: async () => (await listStudioOrders()).orders,
@@ -753,48 +752,33 @@ export function StudioBin() {
   }, [data]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
-          <span className="flex items-center gap-2.5">
-            <span className="brand-tile grid size-9 shrink-0 place-items-center rounded-xl text-sidebar-primary-foreground">
-              <HeartPulse className="size-5" />
-            </span>
-            <span>
-              <span className="block font-serif text-base leading-none tracking-tight text-foreground">
-                care<span className="text-primary">study</span>
-              </span>
-              <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
-                studio · order bin
-              </span>
-            </span>
-          </span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setStudentInviteOpen(true)} className="gap-1.5">
-              <GraduationCap className="size-4" /> Invite student
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching}>
+    <div className="flex-1 bg-background">
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+        <div className="mb-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <SidebarTrigger className="lg:hidden" />
+              <div className="min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                  Incoming work
+                </p>
+                <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
+                  Order bin
+                </h1>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5"
+              onClick={() => void refetch()}
+              disabled={isFetching}
+            >
               <RefreshCw className={isFetching ? "size-4 animate-spin" : "size-4"} />
               Refresh
             </Button>
-            <Button asChild variant="ghost" size="sm">
-              <a href="/studio">Open studio</a>
-            </Button>
           </div>
-        </div>
-      </header>
-
-      <StudentInviteDialog open={studentInviteOpen} onClose={() => setStudentInviteOpen(false)} />
-
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-        <div className="mb-6">
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-            Incoming work
-          </p>
-          <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
-            Order bin
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             Student orders arrive here with their attached materials, ready to produce. Start
             producing to create the study in the studio with every document attached, then deliver
             the completed study when it's ready.
