@@ -17,6 +17,7 @@ import verifyRouter from "./verify";
 import nurseFlowRouter from "./nurseflow";
 import nurseFlowAdminRouter from "./nurseflowAdmin";
 import nurseFlowAccessRouter, { nurseFlowEntitlementRouter } from "./nurseflowAccess";
+import nurseLearnRouter from "./nurselearn";
 
 const router: IRouter = Router();
 
@@ -31,6 +32,7 @@ router.use(ordersRouter);
 // production entitlement enforcement belongs in the payment/session layer.
 router.use(nurseFlowRouter);
 router.use(nurseFlowAccessRouter);
+router.use(nurseLearnRouter);
 // Document import is available to both students (correction flow) and the
 // studio, so it sits before the admin gate.
 router.use(importStudyRouter);

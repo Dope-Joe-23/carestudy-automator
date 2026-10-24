@@ -1318,6 +1318,7 @@ function StudentWorkspace({
     href?: string;
     onClick?: () => void;
   }[] = [
+    { title: "NurseLearn", description: "Explore reviewed condition guides and educational videos for learners, families, and the public.", href: "/nurselearn", action: "Explore NurseLearn", icon: HeartPulse, ready: true },
     { title: "Care-study service", description: "Place an order, follow its progress, and open a delivered study.", onClick: onPlaceOrder, action: "Start an order", icon: HeartPulse, ready: true },
     { title: "Study with NurseFlow", description: "Practice with the existing nursing question bank and revision tools.", href: "/nurseflow", action: "Open NurseFlow", icon: QuizIcon, ready: true },
     { title: "Assignment assistant", description: "Plan and refine an assignment with your course brief.", action: "Coming soon", icon: BookOpen, ready: false },

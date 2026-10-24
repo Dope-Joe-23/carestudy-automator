@@ -92,6 +92,8 @@ import { StudioShell, StudioSidebarToolsPortal } from '@/components/studio-shell
 import { AdminDashboardGate } from '@/components/admin-dashboard-gate';
 import { AdminDashboard } from '@/pages/admin-dashboard';
 import { StaffRegisterPage } from '@/pages/staff-register';
+import { NurseLearnPage } from '@/pages/nurselearn';
+import { NurseLearnAdminPage } from '@/pages/nurselearn-admin';
 
 import { WelcomePage } from '@/pages/welcome';
 import { NurseFlowPage } from '@/pages/nurseflow';
@@ -8783,6 +8785,8 @@ function StudioArea() {
             <StudioBin />
           ) : location === "/studio/nurseflow" ? (
             <NurseFlowQuestionBankPage />
+          ) : location === "/studio/nurselearn" ? (
+            <NurseLearnAdminPage />
           ) : (
             <Home />
           )}
@@ -8823,6 +8827,7 @@ function Router() {
         <ErrorBoundary resetKey={location}>
           <Switch>
             <Route path="/nurseaid" component={LandingPage} />
+            <Route path="/nurselearn" component={NurseLearnPage} />
             <Route path="/nursespin" component={NurseFlowPage} />
             <Route path="/carestudy" component={LandingPage} />
             <Route path="/welcome" component={WelcomePage} />

@@ -16,6 +16,7 @@ import {
   Inbox,
   LayoutDashboard,
   ListChecks,
+  BookOpen,
   LogOut,
   ShieldCheck,
 } from "lucide-react";
@@ -55,6 +56,7 @@ const STUDIO_LINKS: {
   { href: "/studio", label: "Drafting studio", icon: HeartPulse },
   { href: "/studio/bin", label: "Order bin", icon: Inbox },
   { href: "/studio/nurseflow", label: "Question bank", icon: ListChecks, adminOnly: true },
+  { href: "/studio/nurselearn", label: "NurseLearn", icon: BookOpen, adminOnly: true },
   { href: "/studio/dashboard", label: "Admin dashboard", icon: LayoutDashboard, adminOnly: true },
 ];
 
