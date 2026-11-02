@@ -6,7 +6,8 @@
  * workspace, while the remaining sections require a signed-in student.
  *
  * Tabs:
- * - Workspace (home) — account summary and study tools
+ * - Workspace (home) — NurseAid chat
+ * - Explore — available and planned student tools
  * - Projects — list of care study orders
  * - New Order — place a new order
  * - Downloads — delivered studies
@@ -20,9 +21,9 @@ import {
   useLayoutEffect,
   useMemo,
   useState,
+  type ReactNode,
   type ChangeEvent,
   type FormEvent,
-  type ReactNode,
 } from "react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -37,8 +38,10 @@ import {
   ListChecks as QuizIcon,
   CheckCircle2,
   ClipboardList,
+  Copy,
   Download,
   Eye,
+  Compass,
   FileText,
   GraduationCap,
   HeartPulse,
@@ -46,11 +49,14 @@ import {
   Lock,
   Loader2,
   LogOut,
-  Menu,
+  MoreHorizontal,
+  Pencil,
+  Paperclip,
   Plus,
   Receipt,
   RotateCcw,
   ShieldCheck,
+  Send,
   Upload,
   X,
 } from "lucide-react";
@@ -89,6 +95,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -273,10 +286,11 @@ function useAuth(): AuthContextValue {
 // Sidebar navigation
 // ---------------------------------------------------------------------------
 
-type TabId = "workspace" | "projects" | "downloads";
+type TabId = "workspace" | "explore" | "projects" | "downloads";
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: "workspace", label: "Study workspace", icon: MessageCircle },
+  { id: "explore", label: "Explore", icon: Compass },
   { id: "projects", label: "My projects", icon: ClipboardList },
   { id: "downloads", label: "Downloads", icon: Receipt },
 ];
@@ -297,7 +311,7 @@ function PortalSidebar({
   const { student, signOut } = useAuth();
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <Link href="/" className="px-2 py-1">
           <BrandMark />
@@ -402,9 +416,10 @@ function MobileBottomNav({ onPlaceOrder }: { onPlaceOrder: () => void }) {
   const [location] = useLocation();
   const isWorkspace =
     location === "/" || location === "/student" || location === "/student/" || location === "/student/workspace";
+  const isExplore = location === "/student/explore";
   const isNew = location === "/student/orders/new";
   const isDownloads = location === "/student/downloads";
-  const isProjects = !isWorkspace && !isNew && !isDownloads && location.startsWith("/student");
+  const isProjects = !isWorkspace && !isExplore && !isNew && !isDownloads && location.startsWith("/student");
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
@@ -418,6 +433,16 @@ function MobileBottomNav({ onPlaceOrder }: { onPlaceOrder: () => void }) {
         >
           <MessageCircle className="size-5" />
           <span>Workspace</span>
+        </Link>
+        <Link
+          href="/student/explore"
+          className={cn(
+            "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+            isExplore ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          <Compass className="size-5" />
+          <span>Explore</span>
         </Link>
         <Link
           href="/student/orders"
@@ -1298,17 +1323,524 @@ function VivaPreparationPanel({ orderId }: { orderId: number }) {
 // Student workspace
 // ---------------------------------------------------------------------------
 
+type AssistantTurn = {
+  role: "user" | "assistant";
+  content: string;
+  attachmentName?: string;
+  attachmentFile?: File;
+  references?: studentApi.AssistantReference[];
+};
+
+const SUGGESTED_QUESTIONS = [
+  "Explain a nursing concept in simple terms",
+  "Help me review an assignment draft",
+  "Summarize my uploaded course material",
+];
+
+function randomizeQuestions(questions: string[]): string[] {
+  const shuffled = [...questions];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function renderAssistantInline(text: string): ReactNode[] {
+  const parts = text.split(/(\[[^\]]+\]\(https?:\/\/[^)]+\)|\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|https?:\/\/[^\s)]+)/g);
+  return parts.filter(Boolean).map((part, index) => {
+    const markdownLink = part.match(/^\[([^\]]+)\]\((https?:\/\/[^)]+)\)$/);
+    if (markdownLink) {
+      return <a key={index} href={markdownLink[2]} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">{markdownLink[1]}</a>;
+    }
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return <code key={index} className="rounded bg-muted px-1 py-0.5 text-[0.9em]">{part.slice(1, -1)}</code>;
+    }
+    if (part.startsWith("*") && part.endsWith("*")) {
+      return <em key={index}>{part.slice(1, -1)}</em>;
+    }
+    if (/^https?:\/\//i.test(part)) {
+      return <a key={index} href={part} target="_blank" rel="noreferrer" className="break-all text-primary underline underline-offset-2">{part}</a>;
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
+function AssistantMarkdown({ text }: { text: string }) {
+  const lines = text.split(/\r?\n/);
+  const blocks: ReactNode[] = [];
+  let paragraph: string[] = [];
+  let list: { ordered: boolean; items: string[] } | null = null;
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    blocks.push(
+      <p key={`p-${blocks.length}`} className="my-3 leading-7 text-foreground/90 first:mt-0 last:mb-0">
+        {paragraph.map((line, index) => (
+          <span key={index}>{index > 0 && " "}{renderAssistantInline(line)}</span>
+        ))}
+      </p>,
+    );
+    paragraph = [];
+  };
+  const flushList = () => {
+    if (!list) return;
+    const List = list.ordered ? "ol" : "ul";
+    blocks.push(
+      <List
+        key={`list-${blocks.length}`}
+        className={cn(
+          "my-3 space-y-1.5 pl-6 text-foreground/90 marker:text-primary",
+          list.ordered ? "list-decimal" : "list-disc",
+        )}
+      >
+        {list.items.map((item, index) => (
+          <li key={index} className="pl-1 leading-7">{renderAssistantInline(item)}</li>
+        ))}
+      </List>,
+    );
+    list = null;
+  };
+
+  lines.forEach((rawLine) => {
+    const line = rawLine.trim();
+    if (!line) {
+      flushParagraph();
+      flushList();
+      return;
+    }
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      flushList();
+      const level = heading[1].length;
+      const className = level === 1
+        ? "mb-2 mt-5 text-xl font-semibold tracking-tight first:mt-0"
+        : level === 2
+          ? "mb-2 mt-5 text-lg font-semibold tracking-tight first:mt-0"
+          : "mb-1.5 mt-4 text-base font-semibold first:mt-0";
+      blocks.push(<h3 key={`h-${blocks.length}`} className={className}>{renderAssistantInline(heading[2])}</h3>);
+      return;
+    }
+    const item = line.match(/^([-*]|\d+[.)])\s+(.+)$/);
+    if (item) {
+      flushParagraph();
+      const ordered = /^\d/.test(item[1]);
+      if (list && list.ordered !== ordered) flushList();
+      if (!list) list = { ordered, items: [] };
+      list.items.push(item[2]);
+      return;
+    }
+    flushList();
+    paragraph.push(line);
+  });
+
+  flushParagraph();
+  flushList();
+  return <div className="text-[15px] leading-7">{blocks}</div>;
+}
+
+function StudentAssistantChat() {
+  const [messages, setMessages] = useState<AssistantTurn[]>([]);
+  const [prompt, setPrompt] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [sourcesOpen, setSourcesOpen] = useState<number | null>(null);
+  const [suggestedQuestions, setSuggestedQuestions] = useState(() =>
+    randomizeQuestions(SUGGESTED_QUESTIONS),
+  );
+
+  const encodeAttachment = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) throw new Error("Files must be no larger than 10 MB.");
+    return {
+      filename: file.name,
+      content: await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result;
+          if (typeof result !== "string") {
+            reject(new Error("Could not read the selected file."));
+            return;
+          }
+          resolve(result.slice(result.indexOf(",") + 1));
+        };
+        reader.onerror = () => reject(new Error("Could not read the selected file."));
+        reader.readAsDataURL(file);
+      }),
+    };
+  };
+
+  const ask = async (
+    message: string,
+    history: AssistantTurn[],
+    file?: File,
+    replaceFromIndex?: number,
+  ) => {
+    if (busy) return;
+    setError(null);
+    setBusy(true);
+    const userTurn: AssistantTurn = {
+      role: "user",
+      content: message,
+      attachmentName: file?.name,
+      attachmentFile: file,
+    };
+    if (replaceFromIndex === undefined) {
+      setMessages((current) => [...current, userTurn]);
+    } else {
+      setMessages((current) => [...current.slice(0, replaceFromIndex), userTurn]);
+    }
+    try {
+      const encodedAttachment = file ? await encodeAttachment(file) : undefined;
+      const result = await studentApi.askStudentAssistant({
+        message,
+        history: history.slice(-6).map(({ role, content }) => ({ role, content })),
+        attachment: encodedAttachment,
+      });
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", content: result.answer, references: result.references },
+      ]);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "NurseAid could not answer right now.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sendMessage = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const message = prompt.trim() || (attachment ? "Summarize this document and identify its key nursing concepts." : "");
+    if (!message || busy) return;
+    const editedIndex = editingIndex;
+    const history = editedIndex === null ? messages : messages.slice(0, editedIndex);
+    const file = attachment ?? (editedIndex === null ? undefined : messages[editedIndex]?.attachmentFile);
+    void ask(message, history, file, editedIndex ?? undefined);
+    setPrompt("");
+    setAttachment(null);
+    setEditingIndex(null);
+  };
+
+  const copyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard");
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  };
+
+  const editMessage = (index: number) => {
+    const turn = messages[index];
+    if (turn.role !== "user") return;
+    setPrompt(turn.content);
+    setAttachment(turn.attachmentFile ?? null);
+    setEditingIndex(index);
+    setSourcesOpen(null);
+    setError(null);
+  };
+
+  const retryAnswer = (assistantIndex: number) => {
+    let userIndex = assistantIndex - 1;
+    while (userIndex >= 0 && messages[userIndex].role !== "user") userIndex -= 1;
+    if (userIndex < 0) return;
+    const userTurn = messages[userIndex];
+    setSourcesOpen(null);
+    void ask(userTurn.content, messages.slice(0, userIndex), userTurn.attachmentFile, userIndex);
+  };
+
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      {messages.length > 0 && (
+        <div className="flex justify-end pb-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            onClick={() => {
+              if (busy) return;
+              setMessages([]);
+              setError(null);
+              setSourcesOpen(null);
+              setPrompt("");
+              setAttachment(null);
+              setEditingIndex(null);
+              setSuggestedQuestions(randomizeQuestions(SUGGESTED_QUESTIONS));
+            }}
+          >
+            New chat
+          </Button>
+        </div>
+      )}
+      <div aria-live="polite" className="min-h-0 flex-1 space-y-6 overflow-y-auto py-6">
+        {messages.length === 0 ? (
+            <div className="flex h-full min-h-[20rem] w-full items-center justify-center">
+              <div className="w-full">
+                <form onSubmit={sendMessage} className="w-full">
+                  <div className="rounded-2xl border bg-card p-2 shadow-sm focus-within:ring-1 focus-within:ring-ring">
+                    <Textarea
+                      value={prompt}
+                      onChange={(event) => setPrompt(event.target.value)}
+                      placeholder="Ask a nursing or health-science question…"
+                      aria-label="Message NurseAid"
+                      rows={3}
+                      maxLength={4_000}
+                      disabled={busy}
+                      className="min-h-24 resize-y border-0 shadow-none focus-visible:ring-0"
+                    />
+                    <div className="flex items-center justify-between gap-2 px-1 pb-1">
+                      <div className="flex items-center gap-2">
+                        <label className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer gap-2")}>
+                          <Paperclip className="size-4" />
+                          Attach file
+                          <input
+                            type="file"
+                            accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
+                            className="sr-only"
+                            disabled={busy}
+                            onChange={(event) => {
+                              setAttachment(event.target.files?.[0] ?? null);
+                              event.target.value = "";
+                              setError(null);
+                            }}
+                          />
+                        </label>
+                        {attachment && (
+                          <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                            <FileText className="size-3.5 shrink-0" />
+                            <span className="max-w-40 truncate">{attachment.name}</span>
+                            <button type="button" aria-label="Remove attachment" onClick={() => setAttachment(null)}>
+                              <X className="size-3.5" />
+                            </button>
+                          </span>
+                        )}
+                      </div>
+                      <Button type="submit" size="sm" className="gap-2" disabled={busy || (!prompt.trim() && !attachment)}>
+                        {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                        Send
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+                <div className="mt-4">
+                  <p className="mb-2 text-sm font-medium text-muted-foreground">Try asking</p>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedQuestions.map((question) => (
+                      <Button
+                        key={question}
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-auto whitespace-normal text-left"
+                        onClick={() => setPrompt(question)}
+                      >
+                        {question}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            messages.map((turn, index) => (
+              <div key={`${turn.role}-${index}`} className={cn("flex", turn.role === "user" ? "justify-end" : "justify-start")}>
+                <div className={cn("w-full", turn.role === "user" ? "max-w-4xl" : "max-w-5xl")}>
+                  {turn.role === "user" ? (
+                    <div className="rounded-2xl bg-primary/10 px-4 py-3 text-foreground sm:px-5">
+                      <p className="whitespace-pre-wrap leading-7">{turn.content}</p>
+                      {turn.attachmentName && (
+                        <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <FileText className="size-3.5" /> {turn.attachmentName}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <AssistantMarkdown text={turn.content} />
+                  )}
+                  <div className={cn("mt-1 flex items-center gap-1", turn.role === "user" && "justify-end")}>
+                    {turn.role === "user" ? (
+                      <>
+                        <Button type="button" variant="ghost" size="icon" className="size-8" aria-label="Edit question" title="Edit question" onClick={() => editMessage(index)} disabled={busy}>
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button type="button" variant="ghost" size="icon" className="size-8" aria-label="Copy question" title="Copy question" onClick={() => void copyText(turn.content)}>
+                          <Copy className="size-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button type="button" variant="ghost" size="icon" className="size-8" aria-label="Copy answer" title="Copy answer" onClick={() => void copyText(turn.content)}>
+                          <Copy className="size-4" />
+                        </Button>
+                        <Button type="button" variant="ghost" size="icon" className="size-8" aria-label="Regenerate answer" title="Regenerate answer" onClick={() => retryAnswer(index)} disabled={busy}>
+                          <RotateCcw className="size-4" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon" className="size-8" aria-label="More answer options">
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            <DropdownMenuItem onSelect={() => void copyText(turn.content)}>
+                              <Copy className="size-4" /> Copy answer
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => retryAnswer(index)} disabled={busy}>
+                              <RotateCcw className="size-4" /> Regenerate answer
+                            </DropdownMenuItem>
+                            {turn.references && turn.references.length > 0 && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => setSourcesOpen(sourcesOpen === index ? null : index)}>
+                                  <Eye className="size-4" />
+                                  {sourcesOpen === index ? "Hide sources" : "View sources"}
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </>
+                    )}
+                  </div>
+                  {turn.role === "assistant" && sourcesOpen === index && turn.references && (
+                    <div className="mt-2 rounded-xl border bg-muted/20 p-4">
+                      <p className="mb-2 text-sm font-semibold">Sources</p>
+                      <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
+                        {turn.references.map((reference, referenceIndex) => {
+                          const url = reference.url && /^https?:\/\//i.test(reference.url)
+                            ? reference.url
+                            : null;
+                          return (
+                            <li key={`${reference.inText}-${referenceIndex}`}>
+                              {url ? (
+                                <a href={url} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">
+                                  {reference.label}
+                                </a>
+                              ) : reference.label}
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+        )}
+        {busy && (
+            <div className="flex items-center gap-2 px-2 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" /> Checking references and preparing an answer…
+            </div>
+        )}
+      </div>
+
+      {error && <p role="alert" className="mb-2 text-sm text-destructive">{error}</p>}
+
+      {messages.length > 0 && <form onSubmit={sendMessage} className="border-t bg-background pt-3">
+        {editingIndex !== null && (
+          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+            <span>Editing your question — submitting will regenerate the answer.</span>
+            <Button type="button" variant="ghost" size="sm" onClick={() => { setEditingIndex(null); setPrompt(""); setAttachment(null); }}>
+              Cancel
+            </Button>
+          </div>
+        )}
+        {attachment && (
+          <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <FileText className="size-3.5" />
+            <span className="max-w-60 truncate">{attachment.name}</span>
+            <button type="button" aria-label="Remove attachment" onClick={() => setAttachment(null)}>
+              <X className="size-3.5" />
+            </button>
+          </div>
+        )}
+        <div className="rounded-2xl border bg-card p-2 shadow-sm focus-within:ring-1 focus-within:ring-ring">
+          <Textarea
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            placeholder="Ask a nursing or health-science question…"
+            aria-label="Message NurseAid"
+            rows={2}
+            maxLength={4_000}
+            disabled={busy}
+            className="min-h-16 resize-y border-0 shadow-none focus-visible:ring-0"
+          />
+          <div className="flex items-center justify-between gap-2 px-1 pb-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <label className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer gap-2")}>
+                <Paperclip className="size-4" />
+                <span className="sr-only sm:not-sr-only">Attach file</span>
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
+                  className="sr-only"
+                  disabled={busy}
+                  onChange={(event) => {
+                    setAttachment(event.target.files?.[0] ?? null);
+                    event.target.value = "";
+                    setError(null);
+                  }}
+                />
+              </label>
+            </div>
+            <Button type="submit" size="sm" className="gap-2" disabled={busy || (!prompt.trim() && !attachment)}>
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              {editingIndex !== null ? "Regenerate" : "Send"}
+            </Button>
+          </div>
+        </div>
+      </form>}
+
+      <p className="mt-2 text-center text-xs leading-relaxed text-muted-foreground">
+        Educational support only. Avoid uploading identifiable patient information. Chat is not saved.
+      </p>
+    </div>
+  );
+}
+
 function StudentWorkspace({
-  onPlaceOrder,
   onSignIn,
   onSignUp,
 }: {
-  onPlaceOrder: () => void;
   onSignIn: () => void;
   onSignUp: () => void;
 }) {
   const { student } = useAuth();
-  const firstName = student?.name.trim().split(/\s+/)[0];
+  return (
+    <div className="flex h-[calc(100svh-8rem)] min-h-[28rem] flex-col md:h-[calc(100svh-2rem)]">
+      {!student && (
+        <div className="pb-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">NurseAid student workspace</p>
+          <h1 className="mt-2 font-serif text-2xl tracking-tight sm:text-3xl">What are you studying today?</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            You&apos;re browsing as a guest. Sign in to order a care study, follow its progress, and download your work.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button size="sm" className="gap-2" onClick={onSignIn}><ShieldCheck className="size-4" /> Sign in</Button>
+            <Button size="sm" variant="outline" className="gap-2" onClick={onSignUp}>Create an account</Button>
+          </div>
+        </div>
+      )}
+      <div className="min-h-0 flex-1">
+        {student ? (
+          <StudentAssistantChat />
+        ) : (
+          <div className="flex min-h-[45vh] items-center justify-center text-center text-sm text-muted-foreground">
+            Sign in to start a conversation with NurseAid.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StudentExplore({ onPlaceOrder }: { onPlaceOrder: () => void }) {
   const tools: {
     title: string;
     description: string;
@@ -1327,98 +1859,34 @@ function StudentWorkspace({
   ];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 py-2 sm:py-6">
-      <section className="rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-background p-6 sm:p-9">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">NurseAid student workspace</p>
-        <h1 className="mt-3 font-serif text-3xl tracking-tight sm:text-4xl">
-          Welcome{firstName ? `, ${firstName}` : ""}. What are you studying today?
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          {student
-            ? "Start a care-study order, practice nursing questions, or return to your existing work. Your student services remain available directly from this workspace."
-            : "You're browsing as a guest. Sign in to order a care study, follow its progress, and download your work."}
+    <div className="mx-auto w-full max-w-6xl space-y-6 py-2 sm:py-6">
+      <div>
+        <h1 className="font-serif text-3xl tracking-tight">Explore</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Discover learning tools and services across your NurseAid workspace.
         </p>
-        {student ? (
-          <div className="mt-6 rounded-xl border bg-background p-3 shadow-sm">
-            <div className="flex min-h-14 items-center gap-3 rounded-lg bg-muted/40 px-4">
-              <MessageCircle className="size-5 shrink-0 text-primary" />
-              <p className="text-sm text-muted-foreground">General NurseAid chat is not connected yet. Choose a live tool below to continue.</p>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button size="sm" className="gap-2" onClick={onPlaceOrder}><HeartPulse className="size-4" /> Start a care study</Button>
-              <Link href="/student/orders" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}><ClipboardList className="size-4" /> View my orders</Link>
-              <Link href="/nurseflow" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}><QuizIcon className="size-4" /> Practice MCQs</Link>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-6 flex flex-wrap gap-2">
-            <Button size="sm" className="gap-2" onClick={onSignIn}><ShieldCheck className="size-4" /> Sign in</Button>
-            <Button size="sm" variant="outline" className="gap-2" onClick={onSignUp}>Create an account</Button>
-            <Link href="/nurseflow" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}><QuizIcon className="size-4" /> Practice MCQs</Link>
-          </div>
-        )}
-      </section>
-
-      {student && (
-        <section className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-4">
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            {student.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold">{student.name}</p>
-            <p className="truncate text-sm text-muted-foreground">{student.email}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {[student.college, student.program, student.year ? `Year ${student.year}` : null].filter(Boolean).join(" · ")}
-            </p>
-          </div>
-          <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">Student</Badge>
-        </section>
-      )}
-
-      <section>
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">Study tools</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Connected services are ready to use. Other assistants are clearly marked as planned.</p>
-          </div>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {tools.map((tool) => {
-            const Icon = tool.icon;
-            const content = (
-              <div className={cn("flex h-full flex-col rounded-xl border bg-card p-4 transition-colors", tool.ready && "hover:border-primary/40 hover:bg-accent/30")}>
-                <div className="flex items-start justify-between gap-3">
-                  <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></span>
-                  <span className={cn("rounded-full px-2 py-1 text-[10px] font-medium", tool.ready ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{tool.ready ? "Available" : "Planned"}</span>
-                </div>
-                <h3 className="mt-4 font-semibold">{tool.title}</h3>
-                <p className="mt-1 min-h-10 text-sm leading-relaxed text-muted-foreground">{tool.description}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">{tool.action}{tool.ready && <ArrowRight className="size-4" />}</span>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {tools.map((tool) => {
+          const Icon = tool.icon;
+          const content = (
+            <div className={cn("flex h-full flex-col rounded-xl border bg-card p-5 transition-colors", tool.ready && "hover:border-primary/40 hover:bg-accent/30")}>
+              <div className="flex items-start justify-between gap-3">
+                <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></span>
+                <span className={cn("rounded-full px-2 py-1 text-[10px] font-medium", tool.ready ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{tool.ready ? "Available" : "Planned"}</span>
               </div>
-            );
-            if (!tool.ready) return <div key={tool.title} aria-disabled="true">{content}</div>;
-            if (tool.onClick) {
-              return (
-                <button key={tool.title} type="button" onClick={tool.onClick} className="block w-full text-left">
-                  {content}
-                </button>
-              );
-            }
-            return <Link key={tool.title} href={tool.href ?? "/"} className="block">{content}</Link>;
-          })}
-        </div>
-      </section>
-
-      <section className="grid gap-3 sm:grid-cols-2">
-        <Link href="/student/orders" className="flex items-center gap-4 rounded-xl border p-4 transition-colors hover:bg-accent/30">
-          <span className="grid size-10 place-items-center rounded-lg bg-muted"><ClipboardList className="size-5" /></span>
-          <span className="min-w-0 flex-1"><span className="block font-medium">My care-study orders</span><span className="mt-1 block text-sm text-muted-foreground">Track status and open order details</span></span><ArrowRight className="size-4 text-muted-foreground" />
-        </Link>
-        <Link href="/student/downloads" className="flex items-center gap-4 rounded-xl border p-4 transition-colors hover:bg-accent/30">
-          <span className="grid size-10 place-items-center rounded-lg bg-muted"><Download className="size-5" /></span>
-          <span className="min-w-0 flex-1"><span className="block font-medium">Study downloads</span><span className="mt-1 block text-sm text-muted-foreground">Review delivered studies and access status</span></span><ArrowRight className="size-4 text-muted-foreground" />
-        </Link>
-      </section>
+              <h2 className="mt-4 font-semibold">{tool.title}</h2>
+              <p className="mt-1 min-h-10 text-sm leading-relaxed text-muted-foreground">{tool.description}</p>
+              <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">{tool.action}{tool.ready && <ArrowRight className="size-4" />}</span>
+            </div>
+          );
+          if (!tool.ready) return <div key={tool.title} aria-disabled="true">{content}</div>;
+          if (tool.onClick) {
+            return <button key={tool.title} type="button" onClick={tool.onClick} className="block w-full text-left">{content}</button>;
+          }
+          return <Link key={tool.title} href={tool.href ?? "/"} className="block">{content}</Link>;
+        })}
+      </div>
     </div>
   );
 }
@@ -1479,16 +1947,20 @@ function StudentPortalRouter() {
   const matchOrder = location.match(/^\/student\/orders\/(\d+)$/);
   const matchWorkspace =
     location === "/" || location === "/student" || location === "/student/" || location === "/student/workspace";
+  const matchExplore = location === "/student/explore";
   const matchDownloads = location === "/student/downloads";
 
   const activeTab: TabId = matchWorkspace
     ? "workspace"
+    : matchExplore
+      ? "explore"
     : matchDownloads
       ? "downloads"
       : "projects";
 
   const handleTabSelect = (tab: TabId) => {
     if (tab === "workspace") navigate("/");
+    else if (tab === "explore") navigate("/student/explore");
     else if (tab === "projects") navigate("/student/orders");
     else if (tab === "downloads") navigate("/student/downloads");
   };
@@ -1547,8 +2019,10 @@ function StudentPortalRouter() {
   let content: ReactNode;
   if (activeTab === "workspace") {
     content = (
-      <StudentWorkspace onPlaceOrder={openOrder} onSignIn={openSignIn} onSignUp={openSignUp} />
+      <StudentWorkspace onSignIn={openSignIn} onSignUp={openSignUp} />
     );
+  } else if (activeTab === "explore") {
+    content = <StudentExplore onPlaceOrder={openOrder} />;
   } else if (activeTab === "downloads") {
     content = <DownloadHistoryPage />;
   } else if (matchOrder) {
@@ -1561,7 +2035,7 @@ function StudentPortalRouter() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-screen w-full min-w-0 bg-background">
         <PortalSidebar
           activeTab={activeTab}
           onSelect={handleTabSelect}
@@ -1569,27 +2043,32 @@ function StudentPortalRouter() {
           onSignIn={openSignIn}
           onSignUp={openSignUp}
         />
-        <SidebarInset>
-          <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-background/95 backdrop-blur px-4 md:hidden">
+        <SidebarInset className="min-w-0">
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur">
             <SidebarTrigger />
-            <BrandMark compact />
+            <span className="md:hidden"><BrandMark compact /></span>
           </header>
-          <main className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6 md:pb-6">
-              <AuthGate allowGuest={activeTab === "workspace"} onSignIn={openSignIn}>
+          <main className="min-h-0 flex-1 overflow-y-auto">
+            <div className={cn(
+              "py-4 sm:py-6",
+              activeTab === "workspace"
+                ? "w-full px-4 sm:px-6"
+                : "mx-auto max-w-5xl px-4 sm:px-6",
+            )}>
+              <AuthGate allowGuest={activeTab === "workspace" || activeTab === "explore"} onSignIn={openSignIn}>
                 {content}
               </AuthGate>
             </div>
           </main>
-          <footer className="hidden md:block">
+          {activeTab !== "workspace" && <footer className="hidden md:block">
             <div className="mx-auto max-w-4xl px-4 pb-8 sm:px-6">
               <Separator className="mb-6" />
               <p className="text-xs leading-relaxed text-muted-foreground">
                 CareStudy Institute supports nursing education — preparing the study, and preparing you to
-                defend it. Your materials stay yours and are used only to prepare your study.
+                defend it. Review AI-generated content and keep patient information de-identified.
               </p>
             </div>
-          </footer>
+          </footer>}
         </SidebarInset>
       </div>
       <MobileBottomNav onPlaceOrder={openOrder} />

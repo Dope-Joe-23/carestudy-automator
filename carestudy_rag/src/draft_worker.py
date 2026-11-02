@@ -51,6 +51,7 @@ from implementation_mapper import (  # noqa: E402
     skeleton_to_text,
 )
 from model_gateway import _chat_model  # noqa: E402  (shared gateway — see model_gateway.py)
+from student_assistant import answer_student_question  # noqa: E402
 
 # Per-study retrieval indexes, keyed by study id and cached in memory so each
 # draft doesn't reload the pickled index from disk. Lives at the project root
@@ -892,6 +893,32 @@ def main() -> None:
                     continue
                 result = assist_with_study(study, message.strip())
                 emit({"id": req.get("id"), "answer": result["message"], "edits": result["edits"]})
+                continue
+            if op == "student_chat":
+                message = req.get("message", "")
+                history = req.get("history", [])
+                attachment = req.get("attachment")
+                if not isinstance(message, str) or not message.strip():
+                    emit({"id": req.get("id"), "error": "student_chat requires a message"})
+                    continue
+                if not isinstance(history, list) or not all(
+                    isinstance(item, dict)
+                    and isinstance(item.get("role"), str)
+                    and isinstance(item.get("content"), str)
+                    for item in history
+                ):
+                    emit({"id": req.get("id"), "error": "student_chat history is invalid"})
+                    continue
+                if attachment is not None and not isinstance(attachment, dict):
+                    emit({"id": req.get("id"), "error": "student_chat attachment is invalid"})
+                    continue
+                result = answer_student_question(
+                    message.strip(),
+                    history,
+                    reference_index,
+                    attachment,
+                )
+                emit({"id": req.get("id"), **result})
                 continue
             if op == "chapter2_recommendations":
                 chapter1_fields = req.get("chapter1Fields") or {}

@@ -9,6 +9,7 @@ import healthRouter from "./health";
 import libraryRouter from "./library";
 import ordersRouter, { studioRouter } from "./orders";
 import studentsRouter from "./students";
+import studentAssistantRouter from "./studentAssistant";
 import studiesRouter from "./studies";
 import importStudyRouter from "./importStudy";
 import studyAssistantRouter from "./studyAssistant";
@@ -27,6 +28,7 @@ router.use(healthRouter);
 router.use(adminRouter);
 router.use(adminDashboardRouter);
 router.use(studentsRouter);
+router.use(studentAssistantRouter);
 router.use(ordersRouter);
 // Public preview surface. Generation itself is constrained to reviewed cards;
 // production entitlement enforcement belongs in the payment/session layer.

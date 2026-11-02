@@ -86,6 +86,15 @@ the current feature pages. Chat should act as the front door to specialized
 workflows; existing tools and pages should remain reachable and preserve their
 useful behavior.
 
+The student workspace now includes an authenticated NurseAid chat backed by
+the existing model gateway and curated reference index. Its first connected
+slice answers educational questions, accepts PDF, DOCX, TXT, and Markdown
+attachments, and returns source citations. Attachments are processed for the
+request and sent to the configured model provider; the app does not persist
+chat history. Web search, image generation, voice, and generated document
+exports remain future integrations and should be added as separately evaluated
+tools.
+
 ## Recommended implementation sequence
 
 ### Phase 1: Define the evaluation set

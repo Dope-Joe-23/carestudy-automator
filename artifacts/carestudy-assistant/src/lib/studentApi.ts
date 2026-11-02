@@ -122,6 +122,17 @@ export type OrderFile = {
   createdAt: string;
 };
 
+export type AssistantReference = {
+  label: string;
+  inText: string;
+  url?: string | null;
+};
+
+export type AssistantHistoryMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getStudentToken();
   const response = await fetch(`${API_URL}${path}`, {
@@ -172,6 +183,29 @@ export function loginStudent(identifier: string, password: string): Promise<{ to
 
 export function fetchMe(): Promise<{ student: Student }> {
   return requestJson("/students/me");
+}
+
+export async function askStudentAssistant(input: {
+  message: string;
+  history: AssistantHistoryMessage[];
+  attachment?: { filename: string; content: string };
+}): Promise<{ answer: string; references: AssistantReference[] }> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), 320_000);
+  try {
+    return await requestJson("/student/assistant", {
+      method: "POST",
+      body: JSON.stringify(input),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("NurseAid took too long to respond. Please try again.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+  }
 }
 
 export async function logoutStudent(): Promise<void> {
