@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { getStudyStore, type StudentChatMessage, type StudentChatReference } from "@workspace/db";
 import { generateStudentAssistantImage, isStudentAssistantImageConfigured } from "../lib/nurseflowVideo";
-import { requireStudent, type AuthedRequest } from "../lib/studentAuth";
+import { optionalStudent, requireStudent, type AuthedRequest } from "../lib/studentAuth";
 import { draftWorker, type DraftReference } from "../lib/draftWorker";
 
 const router: IRouter = Router();
@@ -220,7 +220,7 @@ function validateHistory(value: unknown): ChatMessage[] | null {
 
 router.post(
   "/student/assistant",
-  requireStudent,
+  optionalStudent,
   async (req: Request, res: Response): Promise<void> => {
     const message = typeof req.body?.message === "string" ? req.body.message.trim() : "";
     if (!message || message.length > MAX_MESSAGE_LENGTH) {
@@ -237,7 +237,7 @@ router.post(
     }
     const chatMessages = validateChatMessages(req.body?.messages);
     if (!chatMessages || chatMessages.at(-1)?.role !== "user" || chatMessages.at(-1)?.content !== message) {
-      res.status(422).json({ error: "The conversation could not be saved. Please start a new message." });
+      res.status(422).json({ error: "The conversation context is invalid. Please start a new message." });
       return;
     }
     const rawChatId = req.body?.conversationId;
@@ -250,6 +250,11 @@ router.post(
       res.status(422).json({ error: "The conversation id is invalid." });
       return;
     }
+    const student = (req as AuthedRequest).student;
+    if (!student && conversationId !== null) {
+      res.status(401).json({ error: "Sign in to open and continue saved conversations." });
+      return;
+    }
     const attachment = decodeAttachment(req.body?.attachment);
     if (attachment === null) {
       res.status(422).json({
@@ -259,11 +264,10 @@ router.post(
     }
 
     try {
-      const studentId = getStudentId(req);
-      const store = getStudyStore();
-      const existing = conversationId === null
-        ? null
-        : await store.getStudentChat(conversationId, studentId);
+      const store = student ? getStudyStore() : null;
+      const existing = student && conversationId !== null
+        ? await store?.getStudentChat(conversationId, student.id)
+        : null;
       if (conversationId !== null && !existing) {
         res.status(404).json({ error: "That conversation could not be found." });
         return;
@@ -277,17 +281,21 @@ router.post(
       const references: DraftReference[] = Array.isArray(result.references)
         ? result.references
         : [];
+      if (!student || !store) {
+        res.json({ answer: result.answer, references });
+        return;
+      }
       const updatedMessages = mergeStoredImages(
         [...chatMessages, { role: "assistant", content: result.answer, references }],
         existing?.messages,
       );
       const saved = existing
-        ? await store.updateStudentChat(existing.id, studentId, {
+        ? await store.updateStudentChat(existing.id, student.id, {
             title: chatTitle(updatedMessages),
             messages: updatedMessages,
           })
         : await store.addStudentChat({
-            studentId,
+            studentId: student.id,
             title: chatTitle(updatedMessages),
             messages: updatedMessages,
           });
@@ -297,7 +305,7 @@ router.post(
       }
       res.json({ answer: result.answer, references, conversationId: saved.id });
     } catch (err) {
-      req.log?.error?.({ err, studentId: getStudentId(req) }, "student assistant failed");
+      req.log?.error?.({ err, studentId: student?.id }, "student assistant failed");
       const isSearchSetupError = err instanceof Error && err.message.includes("BRAVE_SEARCH_API_KEY");
       const status = isSearchSetupError ? 503 : 502;
       res.status(status).json({
@@ -307,7 +315,7 @@ router.post(
   },
 );
 
-router.get("/student/assistant/tools", requireStudent, (_req, res) => {
+router.get("/student/assistant/tools", (_req, res) => {
   res.json({
     webSearch: Boolean(process.env.BRAVE_SEARCH_API_KEY?.trim()),
     imageGeneration: isStudentAssistantImageConfigured(),
@@ -372,7 +380,7 @@ router.delete("/student/chats/:chatId", requireStudent, async (req, res): Promis
   }
 });
 
-router.post("/student/assistant/image", requireStudent, async (req, res): Promise<void> => {
+router.post("/student/assistant/image", optionalStudent, async (req, res): Promise<void> => {
   const prompt = typeof req.body?.prompt === "string" ? req.body.prompt.trim() : "";
   if (!prompt || prompt.length > 2_000) {
     res.status(422).json({ error: "Enter an image prompt of up to 2,000 characters." });
@@ -387,17 +395,21 @@ router.post("/student/assistant/image", requireStudent, async (req, res): Promis
     res.status(422).json({ error: "The conversation id is invalid." });
     return;
   }
+  const student = (req as AuthedRequest).student;
+  if (!student && conversationId !== null) {
+    res.status(401).json({ error: "Sign in to open and continue saved conversations." });
+    return;
+  }
   const chatMessages = validateChatMessages(req.body?.messages);
   if (!chatMessages || chatMessages.at(-1)?.role !== "user" || chatMessages.at(-1)?.content !== prompt) {
-    res.status(422).json({ error: "The conversation could not be saved. Please start a new message." });
+    res.status(422).json({ error: "The conversation context is invalid. Please start a new message." });
     return;
   }
   try {
-    const studentId = getStudentId(req);
-    const store = getStudyStore();
-    const existing = conversationId === null
-      ? null
-      : await store.getStudentChat(conversationId, studentId);
+    const store = student ? getStudyStore() : null;
+    const existing = student && conversationId !== null
+      ? await store?.getStudentChat(conversationId, student.id)
+      : null;
     if (conversationId !== null && !existing) {
       res.status(404).json({ error: "That conversation could not be found." });
       return;
@@ -415,13 +427,20 @@ router.post("/student/assistant/image", requireStudent, async (req, res): Promis
       ],
       existing?.messages,
     );
+    if (!student || !store) {
+      res.json({
+        answer: updatedMessages.at(-1)?.content,
+        imageDataUrl,
+      });
+      return;
+    }
     const saved = existing
-      ? await store.updateStudentChat(existing.id, studentId, {
+      ? await store.updateStudentChat(existing.id, student.id, {
           title: chatTitle(updatedMessages),
           messages: updatedMessages,
         })
       : await store.addStudentChat({
-          studentId,
+          studentId: student.id,
           title: chatTitle(updatedMessages),
           messages: updatedMessages,
         });
@@ -435,7 +454,7 @@ router.post("/student/assistant/image", requireStudent, async (req, res): Promis
       imageDataUrl,
     });
   } catch (err) {
-    req.log?.error?.({ err, studentId: getStudentId(req) }, "student image generation failed");
+    req.log?.error?.({ err, studentId: student?.id }, "student image generation failed");
     const isSetupError = err instanceof Error && err.message.includes("CLOUDFLARE_API_TOKEN");
     res.status(isSetupError ? 503 : 502).json({
       error: err instanceof Error ? err.message : "Image generation failed.",

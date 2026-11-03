@@ -1493,7 +1493,9 @@ function randomizeQuestions(questions: string[]): string[] {
 
 function StudentAssistantChat() {
   const queryClient = useQueryClient();
+  const { student } = useAuth();
   const chatNavigation = useStudentChatNavigation();
+  const studentIdRef = useRef(student?.id ?? null);
   const [messages, setMessages] = useState<AssistantTurn[]>([]);
   const [prompt, setPrompt] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -1517,6 +1519,21 @@ function StudentAssistantChat() {
     queryFn: studentApi.getStudentAssistantTools,
     staleTime: 60_000,
   });
+
+  useEffect(() => {
+    const nextStudentId = student?.id ?? null;
+    if (studentIdRef.current === nextStudentId) return;
+    studentIdRef.current = nextStudentId;
+    setConversationId(null);
+    setMessages([]);
+    setError(null);
+    setSourcesOpen(null);
+    setPrompt("");
+    setAttachment(null);
+    setEditingIndex(null);
+    setPrintAnswer(null);
+    chatNavigation.setActiveChatId(null);
+  }, [student?.id, chatNavigation.setActiveChatId]);
 
   useEffect(() => {
     if (!printAnswer) return;
@@ -1579,6 +1596,7 @@ function StudentAssistantChat() {
     tool: "web" | "image" | null = webSearchMode ? "web" : null,
   ) => {
     if (busy) return;
+    const requestStudentId = student?.id ?? null;
     setError(null);
     setBusy(true);
     chatNavigation.setChatBusy(true);
@@ -1610,8 +1628,11 @@ function StudentAssistantChat() {
           messages: savedMessages,
           conversationId: conversationId ?? undefined,
         });
-        setConversationId(result.conversationId);
-        chatNavigation.setActiveChatId(result.conversationId);
+        if (studentIdRef.current !== requestStudentId) return;
+        if (result.conversationId !== undefined) {
+          setConversationId(result.conversationId);
+          chatNavigation.setActiveChatId(result.conversationId);
+        }
         setMessages((current) => [
           ...current,
           { role: "assistant", content: result.answer, imageDataUrl: result.imageDataUrl },
@@ -1626,16 +1647,23 @@ function StudentAssistantChat() {
           attachment: encodedAttachment,
           webSearch: tool === "web",
         });
-        setConversationId(result.conversationId);
-        chatNavigation.setActiveChatId(result.conversationId);
+        if (studentIdRef.current !== requestStudentId) return;
+        if (result.conversationId !== undefined) {
+          setConversationId(result.conversationId);
+          chatNavigation.setActiveChatId(result.conversationId);
+        }
         setMessages((current) => [
           ...current,
           { role: "assistant", content: result.answer, references: result.references },
         ]);
       }
-      await queryClient.invalidateQueries({ queryKey: ["studentAssistantChats"] });
+      if (student) {
+        await queryClient.invalidateQueries({ queryKey: ["studentAssistantChats"] });
+      }
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "NurseAid could not answer right now.");
+      if (studentIdRef.current === requestStudentId) {
+        setError(requestError instanceof Error ? requestError.message : "NurseAid could not answer right now.");
+      }
     } finally {
       setBusy(false);
       chatNavigation.setChatBusy(false);
@@ -2055,7 +2083,11 @@ function StudentAssistantChat() {
       </form>}
 
       <p className="mt-2 text-center text-xs leading-relaxed text-muted-foreground">
-        Educational support only. Avoid identifiable patient information. Prompts and answers are saved until deleted and sent to the configured AI provider; web searches also go to Brave. Uploaded file contents are processed for the request but not saved.
+        Educational support only. Avoid identifiable patient information.{" "}
+        {student
+          ? "Prompts and answers are saved until deleted and sent to the configured AI provider; web searches also go to Brave."
+          : "Guest chats are not saved. Prompts are sent to the configured AI provider; web searches also go to Brave. Sign in to keep a chat in your history."}{" "}
+        Uploaded file contents are processed for the request but not saved.
       </p>
       {printAnswer && (
         <div id="chat-answer-print-root">
@@ -2080,37 +2112,11 @@ function StudentAssistantChat() {
   );
 }
 
-function StudentWorkspace({
-  onSignIn,
-  onSignUp,
-}: {
-  onSignIn: () => void;
-  onSignUp: () => void;
-}) {
-  const { student } = useAuth();
+function StudentWorkspace() {
   return (
     <div className="flex h-[calc(100svh-8rem)] min-h-[28rem] flex-col md:h-[calc(100svh-2rem)]">
-      {!student && (
-        <div className="pb-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">NurseAid student workspace</p>
-          <h1 className="mt-2 font-serif text-2xl tracking-tight sm:text-3xl">What are you studying today?</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            You&apos;re browsing as a guest. Sign in to order a care study, follow its progress, and download your work.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button size="sm" className="gap-2" onClick={onSignIn}><ShieldCheck className="size-4" /> Sign in</Button>
-            <Button size="sm" variant="outline" className="gap-2" onClick={onSignUp}>Create an account</Button>
-          </div>
-        </div>
-      )}
       <div className="min-h-0 flex-1">
-        {student ? (
-          <StudentAssistantChat />
-        ) : (
-          <div className="flex min-h-[45vh] items-center justify-center text-center text-sm text-muted-foreground">
-            Sign in to start a conversation with NurseAid.
-          </div>
-        )}
+        <StudentAssistantChat />
       </div>
     </div>
   );
@@ -2324,7 +2330,7 @@ function StudentPortalRouter() {
   let content: ReactNode;
   if (activeTab === "workspace") {
     content = (
-      <StudentWorkspace onSignIn={openSignIn} onSignUp={openSignUp} />
+      <StudentWorkspace />
     );
   } else if (activeTab === "explore") {
     content = <StudentExplore onPlaceOrder={openOrder} />;

@@ -65,3 +65,41 @@ export async function requireStudent(
     res.status(503).json({ error: "Storage is unavailable — please try again." });
   }
 }
+
+/**
+ * Resolves a student session when present, but allows requests without a token.
+ * Invalid supplied tokens still fail explicitly rather than silently downgrading
+ * a signed-in request to guest access.
+ */
+export async function optionalStudent(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const header = req.headers.authorization ?? "";
+  if (!header) {
+    next();
+    return;
+  }
+  if (!header.startsWith("Bearer ")) {
+    res.status(401).json({ error: "You must be signed in to do that." });
+    return;
+  }
+  const token = header.slice("Bearer ".length).trim();
+  if (!token) {
+    res.status(401).json({ error: "You must be signed in to do that." });
+    return;
+  }
+  try {
+    const student = await getStudyStore().getStudentByToken(token);
+    if (!student) {
+      res.status(401).json({ error: "Your session has expired — please sign in again." });
+      return;
+    }
+    (req as AuthedRequest).student = student;
+    next();
+  } catch (err) {
+    req.log?.error?.({ err }, "optional session lookup failed");
+    res.status(503).json({ error: "Storage is unavailable — please try again." });
+  }
+}

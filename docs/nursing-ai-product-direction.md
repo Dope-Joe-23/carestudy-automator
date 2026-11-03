@@ -86,14 +86,13 @@ the current feature pages. Chat should act as the front door to specialized
 workflows; existing tools and pages should remain reachable and preserve their
 useful behavior.
 
-The student workspace now includes an authenticated NurseAid chat backed by
-the existing model gateway and curated reference index. Its first connected
-slice answers educational questions, accepts PDF, DOCX, TXT, and Markdown
-attachments, and returns source citations. Attachments are processed for the
-request and sent to the configured model provider; the app does not persist
-chat history. Web search, image generation, voice, and generated document
-exports remain future integrations and should be added as separately evaluated
-tools.
+The student workspace now includes NurseAid chat backed by the existing model
+gateway and curated reference index. Guests can ask educational questions,
+attach PDF, DOCX, TXT, and Markdown files, use configured web search and image
+generation tools, and export answers to Word or browser PDF. Guest conversations
+are temporary and are not persisted by the server; signed-in students can save,
+reopen, and delete their chat history. Uploaded file contents are processed for
+the request and are not stored in chat history.
 
 The chat filters retrieved passages with a minimum TF-IDF similarity score
 before presenting them as evidence. This is a conservative guard against
@@ -104,10 +103,9 @@ information that has not been verified against the library. Keep evaluating
 retrieval with both in-library questions and deliberate no-match questions;
 expand the source collection only with properly licensed, attributed material.
 
-The chat workspace now persists signed-in students' conversations, references,
-and generated illustrations in the configured SQLite/Postgres store. Students
-can reopen and delete their conversations; uploaded attachment contents are
-processed for the request but are not stored in chat history. Web search is an
+Signed-in students' conversations, references, and generated illustrations are
+stored in the configured SQLite/Postgres store. Guest chats remain only in the
+browser session and cannot access saved student conversations. Web search is an
 explicit Brave Search action, and image generation reuses the configured
 Cloudflare Workers AI credentials. Configure `BRAVE_SEARCH_API_KEY`,
 `CLOUDFLARE_API_TOKEN`, and `CLOUDFLARE_ACCOUNT_ID` on the API server to enable

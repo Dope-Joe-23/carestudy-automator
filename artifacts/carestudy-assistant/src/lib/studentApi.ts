@@ -212,7 +212,7 @@ export async function askStudentAssistant(input: {
   conversationId?: number;
   attachment?: { filename: string; content: string };
   webSearch?: boolean;
-}): Promise<{ answer: string; references: AssistantReference[]; conversationId: number }> {
+}): Promise<{ answer: string; references: AssistantReference[]; conversationId?: number }> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), 320_000);
   try {
@@ -251,7 +251,7 @@ export async function generateStudentAssistantImage(input: {
   prompt: string;
   messages: StudentChatMessage[];
   conversationId?: number;
-}): Promise<{ answer: string; imageDataUrl: string; conversationId: number }> {
+}): Promise<{ answer: string; imageDataUrl: string; conversationId?: number }> {
   return requestJson("/student/assistant/image", {
     method: "POST",
     body: JSON.stringify(input),

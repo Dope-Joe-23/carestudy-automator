@@ -2,7 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { execFile } from "node:child_process";
 import path from "node:path";
 import type { StudentChatReference } from "@workspace/db";
-import { requireStudent } from "../lib/studentAuth";
+import { optionalStudent } from "../lib/studentAuth";
 
 const router: IRouter = Router();
 const EXPORT_SCRIPT = path.resolve(__dirname, "../../../carestudy_rag/src/export_chat_docx.py");
@@ -32,7 +32,7 @@ function buildChatDocx(
 
 router.post(
   "/student/assistant/export/docx",
-  requireStudent,
+  optionalStudent,
   async (req: Request, res: Response): Promise<void> => {
     const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";
     const answer = typeof req.body?.answer === "string" ? req.body.answer : "";
