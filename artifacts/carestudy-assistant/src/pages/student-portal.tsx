@@ -1533,6 +1533,7 @@ function StudentAssistantChat() {
     queryFn: studentApi.getStudentAssistantTools,
     staleTime: 60_000,
   });
+  const welcomeName = student?.name.trim().split(/\s+/)[0] || student?.username.trim();
 
   useEffect(() => {
     const nextStudentId = student?.id ?? null;
@@ -1849,7 +1850,15 @@ function StudentAssistantChat() {
       <div aria-live="polite" className="min-h-0 flex-1 space-y-6 overflow-y-auto py-6">
         {messages.length === 0 ? (
             <div className="flex h-full min-h-[20rem] w-full items-center justify-center">
-              <div className="w-full">
+              <div className="w-full space-y-6">
+                <div className="space-y-2 text-center">
+                  <h1 className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+                    {welcomeName ? `Where do we begin, ${welcomeName}?` : "Where do we begin?"}
+                  </h1>
+                  <p className="text-sm text-muted-foreground sm:text-base">
+                    What is on your mind? Need help with a nursing concept, assignment, or course material? Ask NurseAid.
+                  </p>
+                </div>
                 <form onSubmit={sendMessage} className="w-full">
                   <div className="rounded-2xl border bg-card p-2 shadow-sm focus-within:ring-1 focus-within:ring-ring">
                     <Textarea
