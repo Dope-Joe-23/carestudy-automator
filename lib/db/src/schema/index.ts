@@ -10,6 +10,7 @@
 // are run automatically on first use.
 
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import type { StudentChatMessage } from "../store";
 
 export const studiesTable = sqliteTable("studies", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -164,6 +165,21 @@ export const studentSessionsTable = sqliteTable("student_sessions", {
     .references(() => studentsTable.id, { onDelete: "cascade" }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
+
+export const studentChatsTable = sqliteTable(
+  "student_chats",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    studentId: integer("student_id")
+      .notNull()
+      .references(() => studentsTable.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    messages: text("messages", { mode: "json" }).$type<StudentChatMessage[]>().notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  },
+  (table) => [index("student_chats_student_id_updated_at_idx").on(table.studentId, table.updatedAt)],
+);
 
 export const studentOrdersTable = sqliteTable(
   "student_orders",

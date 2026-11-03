@@ -1,5 +1,5 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import pg from "pg";
 import * as schema from "./schema/postgres";
 import type {
@@ -21,6 +21,7 @@ import type {
   StudyRow,
   StaffInviteRow,
   NewStaffInvite,
+  StudentChatRow,
   StudyStore,
   VivaStatus,
 } from "./store";
@@ -116,6 +117,16 @@ CREATE TABLE IF NOT EXISTS "student_sessions" (
   "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,
   "created_at" timestamptz NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS "student_chats" (
+  "id" serial PRIMARY KEY,
+  "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,
+  "title" text NOT NULL,
+  "messages" jsonb NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "updated_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS "student_chats_student_id_updated_at_idx"
+  ON "student_chats" ("student_id", "updated_at");
 CREATE TABLE IF NOT EXISTS "student_orders" (
   "id" serial PRIMARY KEY,
   "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,
@@ -380,6 +391,17 @@ function toStudentRow(row: typeof schema.studentsTable.$inferSelect): StudentRow
     year: row.year,
     staffId: row.staffId ?? null,
     createdAt: row.createdAt,
+  };
+}
+
+function toStudentChatRow(row: typeof schema.studentChatsTable.$inferSelect): StudentChatRow {
+  return {
+    id: row.id,
+    studentId: row.studentId,
+    title: row.title,
+    messages: row.messages,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }
 
@@ -696,6 +718,54 @@ export function createPostgresStore(): StudyStore {
 
     async removeSession(token) {
       const deleted = await db.delete(sessions).where(eq(sessions.token, token)).returning();
+      return deleted.length > 0;
+    },
+
+    async addStudentChat(chat) {
+      const [row] = await db.insert(schema.studentChatsTable).values(chat).returning();
+      return toStudentChatRow(row);
+    },
+
+    async listStudentChats(studentId) {
+      const rows = await db
+        .select()
+        .from(schema.studentChatsTable)
+        .where(eq(schema.studentChatsTable.studentId, studentId))
+        .orderBy(desc(schema.studentChatsTable.updatedAt), desc(schema.studentChatsTable.id));
+      return rows.map(toStudentChatRow);
+    },
+
+    async getStudentChat(id, studentId) {
+      const [row] = await db
+        .select()
+        .from(schema.studentChatsTable)
+        .where(and(
+          eq(schema.studentChatsTable.id, id),
+          eq(schema.studentChatsTable.studentId, studentId),
+        ));
+      return row ? toStudentChatRow(row) : null;
+    },
+
+    async updateStudentChat(id, studentId, fields) {
+      const [row] = await db
+        .update(schema.studentChatsTable)
+        .set({ ...fields, updatedAt: new Date() })
+        .where(and(
+          eq(schema.studentChatsTable.id, id),
+          eq(schema.studentChatsTable.studentId, studentId),
+        ))
+        .returning();
+      return row ? toStudentChatRow(row) : null;
+    },
+
+    async removeStudentChat(id, studentId) {
+      const deleted = await db
+        .delete(schema.studentChatsTable)
+        .where(and(
+          eq(schema.studentChatsTable.id, id),
+          eq(schema.studentChatsTable.studentId, studentId),
+        ))
+        .returning();
       return deleted.length > 0;
     },
 

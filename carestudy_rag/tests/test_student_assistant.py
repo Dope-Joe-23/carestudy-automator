@@ -53,6 +53,58 @@ class StudentAssistantTests(unittest.TestCase):
 
         self.assertEqual(result["references"][0]["label"], "wound-notes.txt")
 
+    def test_irrelevant_reference_is_not_cited_and_library_gap_is_disclosed(self):
+        index = SimpleIndex()
+        index.build([
+            {
+                "text": (
+                    "Pain can be assessed using verbal reports and nonverbal "
+                    "indicators. Cultural considerations are important in pain "
+                    "management."
+                ),
+                "heading": "Pain assessment",
+                "source": "openrn_comfort.txt",
+                "citation": {
+                    "label": "Open RN (2024)",
+                    "inText": "(Open RN, 2024)",
+                },
+            }
+        ])
+
+        with mock.patch.object(
+            assistant, "_chat_model", return_value="Pharmacokinetics describes drug movement."
+        ) as model:
+            result = assistant.answer_student_question(
+                "Explain pharmacokinetics.",
+                [],
+                index,
+            )
+
+        self.assertEqual(result["references"], [])
+        self.assertIn("No approved source passages were retrieved.", model.call_args.args[1])
+        self.assertNotIn("openrn_comfort.txt", model.call_args.args[1])
+        self.assertIn("not been verified against the library", result["answer"])
+        self.assertIn("Pharmacokinetics describes drug movement.", result["answer"])
+
+    def test_web_search_results_are_numbered_and_returned_as_references(self):
+        with mock.patch.object(assistant, "_chat_model", return_value="The source describes ADME [1].") as model:
+            result = assistant.answer_student_question(
+                "Explain pharmacokinetics.",
+                [],
+                SimpleIndex(),
+                web_sources=[{
+                    "title": "Pharmacokinetics overview",
+                    "url": "https://example.org/pharmacokinetics",
+                    "snippet": "Pharmacokinetics describes absorption, distribution, metabolism, and excretion.",
+                    "date": "2026-10-01",
+                }],
+            )
+
+        self.assertEqual(result["references"][0]["url"], "https://example.org/pharmacokinetics")
+        self.assertIn("[1] Pharmacokinetics overview", model.call_args.args[1])
+        self.assertIn("WEB SEARCH RESULTS", model.call_args.args[1])
+        self.assertNotIn("not been verified against the library", result["answer"])
+
     def test_unsupported_attachment_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "Supported attachments"):
             assistant.answer_student_question(

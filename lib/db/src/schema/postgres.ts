@@ -11,6 +11,7 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
+import type { StudentChatMessage } from "../store";
 
 export const studiesTable = pgTable("studies", {
   id: serial("id").primaryKey(),
@@ -135,6 +136,21 @@ export const studentSessionsTable = pgTable("student_sessions", {
     .references(() => studentsTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const studentChatsTable = pgTable(
+  "student_chats",
+  {
+    id: serial("id").primaryKey(),
+    studentId: integer("student_id")
+      .notNull()
+      .references(() => studentsTable.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    messages: jsonb("messages").$type<StudentChatMessage[]>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("student_chats_student_id_updated_at_idx").on(table.studentId, table.updatedAt)],
+);
 
 export const studentOrdersTable = pgTable(
   "student_orders",

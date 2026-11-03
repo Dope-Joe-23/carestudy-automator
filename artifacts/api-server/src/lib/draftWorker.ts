@@ -61,6 +61,12 @@ export type ExtractedQuestionsResult = {
 
 export type StudyAssistantResult = { answer: string; edits?: { sectionId: string; draft?: string; notes?: string; data?: Record<string, string> }[] };
 export type StudentChatResult = { answer: string; references: DraftReference[] };
+export type StudentChatWebSource = {
+  title: string;
+  url: string;
+  snippet: string;
+  date: string;
+};
 
 export type Chapter2Recommendations = {
   section_21: Record<string, string>;
@@ -270,6 +276,7 @@ class DraftWorker {
     message: string,
     history: { role: "user" | "assistant"; content: string }[],
     attachment?: { filename: string; content: string },
+    webSources: StudentChatWebSource[] = [],
   ): Promise<StudentChatResult> {
     const child = this.ensureWorker();
     const id = this.nextId++;
@@ -287,7 +294,7 @@ class DraftWorker {
       });
       try {
         child.stdin.write(
-          JSON.stringify({ id, op: "student_chat", message, history, attachment }) + "\n",
+          JSON.stringify({ id, op: "student_chat", message, history, attachment, webSources }) + "\n",
         );
       } catch (writeErr) {
         this.pending.delete(id);

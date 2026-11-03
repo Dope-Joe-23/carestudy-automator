@@ -161,6 +161,35 @@ export type NewStudent = {
   staffId?: number | null;
 };
 
+export type StudentChatReference = {
+  label: string;
+  inText: string;
+  url?: string | null;
+};
+
+export type StudentChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  attachmentName?: string;
+  references?: StudentChatReference[];
+  imageDataUrl?: string;
+};
+
+export type StudentChatRow = {
+  id: number;
+  studentId: number;
+  title: string;
+  messages: StudentChatMessage[];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type NewStudentChat = {
+  studentId: number;
+  title: string;
+  messages: StudentChatMessage[];
+};
+
 /** "submitted" | "in_production" | "ready" | "cancelled". */
 export type OrderStatus = "submitted" | "in_production" | "ready" | "cancelled";
 
@@ -382,6 +411,21 @@ export interface StudyStore {
   getStudentByToken(token: string): Promise<StudentRow | null>;
   /** Destroy a session token; false when nothing was deleted. */
   removeSession(token: string): Promise<boolean>;
+
+  /** Create and save a student's private chat history. */
+  addStudentChat(chat: NewStudentChat): Promise<StudentChatRow>;
+  /** List only the student's own chats, most recently updated first. */
+  listStudentChats(studentId: number): Promise<StudentChatRow[]>;
+  /** Get one of the student's chats; null for missing or another student's id. */
+  getStudentChat(id: number, studentId: number): Promise<StudentChatRow | null>;
+  /** Replace the saved messages and title for a student's chat. */
+  updateStudentChat(
+    id: number,
+    studentId: number,
+    fields: Pick<StudentChatRow, "title" | "messages">,
+  ): Promise<StudentChatRow | null>;
+  /** Delete only a chat owned by the student. */
+  removeStudentChat(id: number, studentId: number): Promise<boolean>;
 
   /** Place an order (status starts as "submitted"). */
   addOrder(order: NewOrder): Promise<OrderRow>;

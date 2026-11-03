@@ -898,6 +898,7 @@ def main() -> None:
                 message = req.get("message", "")
                 history = req.get("history", [])
                 attachment = req.get("attachment")
+                web_sources = req.get("webSources", [])
                 if not isinstance(message, str) or not message.strip():
                     emit({"id": req.get("id"), "error": "student_chat requires a message"})
                     continue
@@ -912,11 +913,19 @@ def main() -> None:
                 if attachment is not None and not isinstance(attachment, dict):
                     emit({"id": req.get("id"), "error": "student_chat attachment is invalid"})
                     continue
+                if not isinstance(web_sources, list) or not all(
+                    isinstance(source, dict)
+                    and all(isinstance(source.get(field, ""), str) for field in ("title", "url", "snippet", "date"))
+                    for source in web_sources
+                ):
+                    emit({"id": req.get("id"), "error": "student_chat webSources is invalid"})
+                    continue
                 result = answer_student_question(
                     message.strip(),
                     history,
                     reference_index,
                     attachment,
+                    web_sources,
                 )
                 emit({"id": req.get("id"), **result})
                 continue

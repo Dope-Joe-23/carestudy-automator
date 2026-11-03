@@ -95,6 +95,25 @@ chat history. Web search, image generation, voice, and generated document
 exports remain future integrations and should be added as separately evaluated
 tools.
 
+The chat filters retrieved passages with a minimum TF-IDF similarity score
+before presenting them as evidence. This is a conservative guard against
+obviously unrelated nearest matches, not a guarantee that a passage supports
+every claim. When neither the approved library nor an uploaded document yields
+a usable passage, the answer is explicitly labeled as general educational
+information that has not been verified against the library. Keep evaluating
+retrieval with both in-library questions and deliberate no-match questions;
+expand the source collection only with properly licensed, attributed material.
+
+The chat workspace now persists signed-in students' conversations, references,
+and generated illustrations in the configured SQLite/Postgres store. Students
+can reopen and delete their conversations; uploaded attachment contents are
+processed for the request but are not stored in chat history. Web search is an
+explicit Brave Search action, and image generation reuses the configured
+Cloudflare Workers AI credentials. Configure `BRAVE_SEARCH_API_KEY`,
+`CLOUDFLARE_API_TOKEN`, and `CLOUDFLARE_ACCOUNT_ID` on the API server to enable
+those optional tools. Assistant answers can be downloaded as Word documents or
+printed/saved to PDF from the browser.
+
 ## Recommended implementation sequence
 
 ### Phase 1: Define the evaluation set

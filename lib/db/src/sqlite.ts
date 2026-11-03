@@ -4,7 +4,7 @@ import {
   type AsyncRemoteCallback,
   type SqliteRemoteDatabase,
 } from "drizzle-orm/sqlite-proxy";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import * as schema from "./schema";
 import { SCHEMA_DDL } from "./ddl";
 import type {
@@ -26,6 +26,7 @@ import type {
   StudyRow,
   StaffInviteRow,
   NewStaffInvite,
+  StudentChatRow,
   StudyStore,
   VivaStatus,
 } from "./store";
@@ -270,6 +271,17 @@ function toStudentRow(row: typeof schema.studentsTable.$inferSelect): StudentRow
   };
 }
 
+function toStudentChatRow(row: typeof schema.studentChatsTable.$inferSelect): StudentChatRow {
+  return {
+    id: row.id,
+    studentId: row.studentId,
+    title: row.title,
+    messages: row.messages,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
 function toStudentInviteRow(row: typeof schema.studentInvitesTable.$inferSelect): StudentInviteRow {
   return {
     id: row.id,
@@ -343,6 +355,7 @@ export function createSqliteStore(): StudyStore {
   const adminSessions = schema.adminSessionsTable;
   const students = schema.studentsTable;
   const sessions = schema.studentSessionsTable;
+  const chats = schema.studentChatsTable;
   const orders = schema.studentOrdersTable;
   const orderFiles = schema.studentOrderFilesTable;
 
@@ -590,6 +603,46 @@ export function createSqliteStore(): StudyStore {
 
     async removeSession(token) {
       const deleted = await db.delete(sessions).where(eq(sessions.token, token)).returning().all();
+      return deleted.length > 0;
+    },
+
+    async addStudentChat(chat) {
+      const [row] = await db.insert(chats).values(chat).returning();
+      return toStudentChatRow(row);
+    },
+
+    async listStudentChats(studentId) {
+      const rows = await db
+        .select()
+        .from(chats)
+        .where(eq(chats.studentId, studentId))
+        .orderBy(desc(chats.updatedAt), desc(chats.id));
+      return rows.map(toStudentChatRow);
+    },
+
+    async getStudentChat(id, studentId) {
+      const [row] = await db
+        .select()
+        .from(chats)
+        .where(and(eq(chats.id, id), eq(chats.studentId, studentId)));
+      return row ? toStudentChatRow(row) : null;
+    },
+
+    async updateStudentChat(id, studentId, fields) {
+      const [row] = await db
+        .update(chats)
+        .set({ ...fields, updatedAt: new Date() })
+        .where(and(eq(chats.id, id), eq(chats.studentId, studentId)))
+        .returning();
+      return row ? toStudentChatRow(row) : null;
+    },
+
+    async removeStudentChat(id, studentId) {
+      const deleted = await db
+        .delete(chats)
+        .where(and(eq(chats.id, id), eq(chats.studentId, studentId)))
+        .returning()
+        .all();
       return deleted.length > 0;
     },
 

@@ -133,6 +133,26 @@ export type AssistantHistoryMessage = {
   content: string;
 };
 
+export type StudentChatMessage = AssistantHistoryMessage & {
+  attachmentName?: string;
+  references?: AssistantReference[];
+  imageDataUrl?: string;
+};
+
+export type StudentChatSummary = {
+  id: number;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type StudentChat = StudentChatSummary & { messages: StudentChatMessage[] };
+
+export type StudentAssistantTools = {
+  webSearch: boolean;
+  imageGeneration: boolean;
+};
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getStudentToken();
   const response = await fetch(`${API_URL}${path}`, {
@@ -188,8 +208,11 @@ export function fetchMe(): Promise<{ student: Student }> {
 export async function askStudentAssistant(input: {
   message: string;
   history: AssistantHistoryMessage[];
+  messages: StudentChatMessage[];
+  conversationId?: number;
   attachment?: { filename: string; content: string };
-}): Promise<{ answer: string; references: AssistantReference[] }> {
+  webSearch?: boolean;
+}): Promise<{ answer: string; references: AssistantReference[]; conversationId: number }> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), 320_000);
   try {
@@ -206,6 +229,54 @@ export async function askStudentAssistant(input: {
   } finally {
     window.clearTimeout(timer);
   }
+}
+
+export function getStudentAssistantTools(): Promise<StudentAssistantTools> {
+  return requestJson("/student/assistant/tools");
+}
+
+export function listStudentChats(): Promise<{ chats: StudentChatSummary[] }> {
+  return requestJson("/student/chats");
+}
+
+export function getStudentChat(id: number): Promise<{ chat: StudentChat }> {
+  return requestJson(`/student/chats/${id}`);
+}
+
+export function deleteStudentChat(id: number): Promise<void> {
+  return requestJson(`/student/chats/${id}`, { method: "DELETE" });
+}
+
+export async function generateStudentAssistantImage(input: {
+  prompt: string;
+  messages: StudentChatMessage[];
+  conversationId?: number;
+}): Promise<{ answer: string; imageDataUrl: string; conversationId: number }> {
+  return requestJson("/student/assistant/image", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function exportStudentChatDocx(input: {
+  title: string;
+  answer: string;
+  references?: AssistantReference[];
+}): Promise<Blob> {
+  const token = getStudentToken();
+  const response = await fetch(`${API_URL}/student/assistant/export/docx`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null) as { error?: string } | null;
+    throw new Error(body?.error ?? `Export failed (${response.status}).`);
+  }
+  return response.blob();
 }
 
 export async function logoutStudent(): Promise<void> {

@@ -98,6 +98,16 @@ CREATE TABLE IF NOT EXISTS "student_sessions" (
   "created_at" integer NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS "student_chats" (
+  "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,
+  "title" text NOT NULL,
+  "messages" text NOT NULL,
+  "created_at" integer NOT NULL,
+  "updated_at" integer NOT NULL
+);
+CREATE INDEX IF NOT EXISTS "student_chats_student_id_updated_at_idx" ON "student_chats" ("student_id", "updated_at");
+
 CREATE TABLE IF NOT EXISTS "student_orders" (
   "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,

@@ -19,7 +19,10 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  lazy,
+  Suspense,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
   type ChangeEvent,
@@ -44,7 +47,9 @@ import {
   Compass,
   FileText,
   GraduationCap,
+  Globe2,
   HeartPulse,
+  ImagePlus,
   ListChecks,
   Lock,
   Loader2,
@@ -52,11 +57,14 @@ import {
   MoreHorizontal,
   Pencil,
   Paperclip,
+  Printer,
   Plus,
   Receipt,
   RotateCcw,
   ShieldCheck,
+  Trash2,
   Send,
+  MessageSquareText,
   Upload,
   X,
 } from "lucide-react";
@@ -117,12 +125,23 @@ import {
   SidebarProvider,
   SidebarSeparator,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import * as studentApi from "@/lib/studentApi";
 import { PinDownloadDialog } from "@/components/pin-download-dialog";
 import { AuthDialog, type AuthMode } from "@/components/auth-dialog";
 import { StudentPreviewPage } from "@/pages/student-preview";
 import { DownloadHistoryPage } from "@/pages/download-history";
+
+const AssistantMarkdown = lazy(() => import("@/components/assistant-markdown"));
+
+function FormattedAssistantMarkdown({ text }: { text: string }) {
+  return (
+    <Suspense fallback={<p className="py-2 text-sm text-muted-foreground">Preparing formatted answer…</p>}>
+      <AssistantMarkdown text={text} />
+    </Suspense>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Shared bits
@@ -185,14 +204,20 @@ function formatDate(iso: string): string {
 }
 
 /** The brand mark used across the studio — carried into the portal. */
-function BrandMark({ compact = false }: { compact?: boolean }) {
+function BrandMark({
+  compact = false,
+  compactOnCollapse = false,
+}: {
+  compact?: boolean;
+  compactOnCollapse?: boolean;
+}) {
   return (
     <span className="flex items-center gap-2.5">
       <span className="brand-tile grid size-9 shrink-0 place-items-center rounded-xl text-sidebar-primary-foreground">
         <HeartPulse className="size-5" />
       </span>
       {!compact && (
-        <span>
+        <span className={compactOnCollapse ? "group-data-[collapsible=icon]:hidden" : undefined}>
           <span className="block font-serif text-base leading-none tracking-tight text-foreground">
             care<span className="text-primary">study</span>
           </span>
@@ -288,11 +313,29 @@ function useAuth(): AuthContextValue {
 
 type TabId = "workspace" | "explore" | "projects" | "downloads";
 
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: "workspace", label: "Study workspace", icon: MessageCircle },
-  { id: "explore", label: "Explore", icon: Compass },
-  { id: "projects", label: "My projects", icon: ClipboardList },
-  { id: "downloads", label: "Downloads", icon: Receipt },
+type StudentChatNavigation = {
+  activeChatId: number | null;
+  chatBusy: boolean;
+  newChatRequest: number;
+  openChat: (id: number) => void;
+  startNewChat: () => void;
+  setActiveChatId: (id: number | null) => void;
+  setChatBusy: (busy: boolean) => void;
+};
+
+const StudentChatNavigationContext = createContext<StudentChatNavigation | null>(null);
+
+function useStudentChatNavigation() {
+  const context = useContext(StudentChatNavigationContext);
+  if (!context) throw new Error("Student chat navigation must be used inside its provider.");
+  return context;
+}
+
+const TABS: { id: TabId; label: string; tooltip: string; icon: React.ElementType }[] = [
+  { id: "workspace", label: "Study workspace", tooltip: "Ask NurseAid and continue your conversations", icon: MessageCircle },
+  { id: "explore", label: "Explore", tooltip: "Browse learning tools and student services", icon: Compass },
+  { id: "projects", label: "My projects", tooltip: "Track your care-study orders and projects", icon: ClipboardList },
+  { id: "downloads", label: "Downloads", tooltip: "Open delivered studies and files", icon: Receipt },
 ];
 
 function PortalSidebar({
@@ -309,12 +352,48 @@ function PortalSidebar({
   onSignUp: () => void;
 }) {
   const { student, signOut } = useAuth();
+  const { setOpen } = useSidebar();
+  const [isTablet, setIsTablet] = useState(() =>
+    typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1024,
+  );
+  const wasTablet = useRef(isTablet);
+  const chatNavigation = useStudentChatNavigation();
+  const chatsQuery = useQuery({
+    queryKey: ["studentAssistantChats", student?.id],
+    queryFn: studentApi.listStudentChats,
+    enabled: Boolean(student),
+  });
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px) and (max-width: 1023px)");
+    const updateTabletLayout = () => {
+      const matches = mediaQuery.matches;
+      setIsTablet(mediaQuery.matches);
+      if (matches && !wasTablet.current) setOpen(false);
+      wasTablet.current = matches;
+    };
+    updateTabletLayout();
+    mediaQuery.addEventListener("change", updateTabletLayout);
+    return () => mediaQuery.removeEventListener("change", updateTabletLayout);
+  }, [setOpen]);
+
+  const deleteChat = async (id: number, title: string) => {
+    if (!window.confirm(`Delete “${title}” and its saved messages? This cannot be undone.`)) return;
+    try {
+      await studentApi.deleteStudentChat(id);
+      if (chatNavigation.activeChatId === id) chatNavigation.startNewChat();
+      await queryClient.invalidateQueries({ queryKey: ["studentAssistantChats"] });
+    } catch (deleteError) {
+      toast.error(deleteError instanceof Error ? deleteError.message : "Could not delete that conversation.");
+    }
+  };
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <Link href="/" className="px-2 py-1">
-          <BrandMark />
+    <Sidebar collapsible={isTablet ? "offcanvas" : "icon"}>
+      <SidebarHeader className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-1">
+        <Link href="/" className="px-2 py-1 group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
+          <BrandMark compactOnCollapse />
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -329,6 +408,7 @@ function PortalSidebar({
                   <SidebarMenuItem key={tab.id}>
                     <SidebarMenuButton
                       isActive={isActive}
+                      tooltip={tab.tooltip}
                       onClick={() => onSelect(tab.id)}
                     >
                       <Icon className="size-4 shrink-0" />
@@ -340,6 +420,74 @@ function PortalSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {student && (
+          <SidebarGroup>
+            <div className="flex items-center justify-between pr-2">
+              <SidebarGroupLabel className="flex-1">Your chats</SidebarGroupLabel>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 shrink-0 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden"
+                aria-label="Start a new chat"
+                title="Start a new chat"
+                disabled={chatNavigation.chatBusy}
+                onClick={chatNavigation.startNewChat}
+              >
+                <Plus className="size-4" />
+              </Button>
+            </div>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {chatsQuery.isLoading && (
+                  <p className="px-2 py-2 text-xs text-sidebar-foreground/60">Loading chats…</p>
+                )}
+                {chatsQuery.isError && (
+                  <p className="px-2 py-2 text-xs text-destructive">Could not load chat history.</p>
+                )}
+                {!chatsQuery.isLoading && !chatsQuery.isError && !chatsQuery.data?.chats.length && (
+                  <p className="px-2 py-2 text-xs leading-relaxed text-sidebar-foreground/60">
+                    Your conversations will appear here.
+                  </p>
+                )}
+                {chatsQuery.data?.chats.map((chat) => (
+                  <SidebarMenuItem key={chat.id} className="group/chat relative">
+                    <SidebarMenuButton
+                      isActive={chatNavigation.activeChatId === chat.id}
+                      disabled={chatNavigation.chatBusy}
+                      onClick={() => chatNavigation.openChat(chat.id)}
+                      tooltip={chat.title}
+                      className="pr-8"
+                    >
+                      <MessageSquareText className="size-4 shrink-0" />
+                      <span className="truncate">{chat.title}</span>
+                    </SidebarMenuButton>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="absolute right-1 top-1.5 z-10 grid size-6 place-items-center rounded text-sidebar-foreground/60 opacity-0 transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:opacity-100 group-hover/chat:opacity-100 group-focus-within/chat:opacity-100 data-[state=open]:opacity-100 group-data-[collapsible=icon]:hidden"
+                          aria-label={`Options for ${chat.title}`}
+                          disabled={chatNavigation.chatBusy}
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" side="right">
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={() => void deleteChat(chat.id, chat.title)}
+                        >
+                          <Trash2 className="size-4" /> Delete chat
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -367,17 +515,17 @@ function PortalSidebar({
           </div>
         )}
         {student && (
-          <div className="px-3 py-2">
+          <div className="px-3 py-2 group-data-[collapsible=icon]:p-0">
             <Popover>
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent"
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
                 >
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                     {student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                   </span>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
                     <p className="truncate text-sm font-medium">{student.name}</p>
                     <p className="truncate text-[10px] text-muted-foreground">
                       {student.college}
@@ -1323,12 +1471,9 @@ function VivaPreparationPanel({ orderId }: { orderId: number }) {
 // Student workspace
 // ---------------------------------------------------------------------------
 
-type AssistantTurn = {
-  role: "user" | "assistant";
-  content: string;
+type AssistantTurn = studentApi.StudentChatMessage & {
   attachmentName?: string;
   attachmentFile?: File;
-  references?: studentApi.AssistantReference[];
 };
 
 const SUGGESTED_QUESTIONS = [
@@ -1346,104 +1491,9 @@ function randomizeQuestions(questions: string[]): string[] {
   return shuffled;
 }
 
-function renderAssistantInline(text: string): ReactNode[] {
-  const parts = text.split(/(\[[^\]]+\]\(https?:\/\/[^)]+\)|\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|https?:\/\/[^\s)]+)/g);
-  return parts.filter(Boolean).map((part, index) => {
-    const markdownLink = part.match(/^\[([^\]]+)\]\((https?:\/\/[^)]+)\)$/);
-    if (markdownLink) {
-      return <a key={index} href={markdownLink[2]} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">{markdownLink[1]}</a>;
-    }
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={index}>{part.slice(2, -2)}</strong>;
-    }
-    if (part.startsWith("`") && part.endsWith("`")) {
-      return <code key={index} className="rounded bg-muted px-1 py-0.5 text-[0.9em]">{part.slice(1, -1)}</code>;
-    }
-    if (part.startsWith("*") && part.endsWith("*")) {
-      return <em key={index}>{part.slice(1, -1)}</em>;
-    }
-    if (/^https?:\/\//i.test(part)) {
-      return <a key={index} href={part} target="_blank" rel="noreferrer" className="break-all text-primary underline underline-offset-2">{part}</a>;
-    }
-    return <span key={index}>{part}</span>;
-  });
-}
-
-function AssistantMarkdown({ text }: { text: string }) {
-  const lines = text.split(/\r?\n/);
-  const blocks: ReactNode[] = [];
-  let paragraph: string[] = [];
-  let list: { ordered: boolean; items: string[] } | null = null;
-
-  const flushParagraph = () => {
-    if (!paragraph.length) return;
-    blocks.push(
-      <p key={`p-${blocks.length}`} className="my-3 leading-7 text-foreground/90 first:mt-0 last:mb-0">
-        {paragraph.map((line, index) => (
-          <span key={index}>{index > 0 && " "}{renderAssistantInline(line)}</span>
-        ))}
-      </p>,
-    );
-    paragraph = [];
-  };
-  const flushList = () => {
-    if (!list) return;
-    const List = list.ordered ? "ol" : "ul";
-    blocks.push(
-      <List
-        key={`list-${blocks.length}`}
-        className={cn(
-          "my-3 space-y-1.5 pl-6 text-foreground/90 marker:text-primary",
-          list.ordered ? "list-decimal" : "list-disc",
-        )}
-      >
-        {list.items.map((item, index) => (
-          <li key={index} className="pl-1 leading-7">{renderAssistantInline(item)}</li>
-        ))}
-      </List>,
-    );
-    list = null;
-  };
-
-  lines.forEach((rawLine) => {
-    const line = rawLine.trim();
-    if (!line) {
-      flushParagraph();
-      flushList();
-      return;
-    }
-    const heading = line.match(/^(#{1,3})\s+(.+)$/);
-    if (heading) {
-      flushParagraph();
-      flushList();
-      const level = heading[1].length;
-      const className = level === 1
-        ? "mb-2 mt-5 text-xl font-semibold tracking-tight first:mt-0"
-        : level === 2
-          ? "mb-2 mt-5 text-lg font-semibold tracking-tight first:mt-0"
-          : "mb-1.5 mt-4 text-base font-semibold first:mt-0";
-      blocks.push(<h3 key={`h-${blocks.length}`} className={className}>{renderAssistantInline(heading[2])}</h3>);
-      return;
-    }
-    const item = line.match(/^([-*]|\d+[.)])\s+(.+)$/);
-    if (item) {
-      flushParagraph();
-      const ordered = /^\d/.test(item[1]);
-      if (list && list.ordered !== ordered) flushList();
-      if (!list) list = { ordered, items: [] };
-      list.items.push(item[2]);
-      return;
-    }
-    flushList();
-    paragraph.push(line);
-  });
-
-  flushParagraph();
-  flushList();
-  return <div className="text-[15px] leading-7">{blocks}</div>;
-}
-
 function StudentAssistantChat() {
+  const queryClient = useQueryClient();
+  const chatNavigation = useStudentChatNavigation();
   const [messages, setMessages] = useState<AssistantTurn[]>([]);
   const [prompt, setPrompt] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -1451,9 +1501,55 @@ function StudentAssistantChat() {
   const [error, setError] = useState<string | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [sourcesOpen, setSourcesOpen] = useState<number | null>(null);
+  const [conversationId, setConversationId] = useState<number | null>(null);
+  const [webSearchMode, setWebSearchMode] = useState(false);
+  const [imageMode, setImageMode] = useState(false);
+  const [printAnswer, setPrintAnswer] = useState<{
+    title: string;
+    answer: string;
+    references: studentApi.AssistantReference[];
+  } | null>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState(() =>
     randomizeQuestions(SUGGESTED_QUESTIONS),
   );
+  const assistantToolsQuery = useQuery({
+    queryKey: ["studentAssistantTools"],
+    queryFn: studentApi.getStudentAssistantTools,
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (!printAnswer) return;
+    const finishPrint = () => {
+      document.body.classList.remove("print-chat-answer");
+      setPrintAnswer(null);
+    };
+    document.body.classList.add("print-chat-answer");
+    window.addEventListener("afterprint", finishPrint);
+    const timer = window.setTimeout(() => window.print(), 80);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("afterprint", finishPrint);
+      document.body.classList.remove("print-chat-answer");
+    };
+  }, [printAnswer]);
+
+  useEffect(() => {
+    if (chatNavigation.activeChatId === null || chatNavigation.activeChatId === conversationId || busy) return;
+    void openSavedChat(chatNavigation.activeChatId);
+  }, [chatNavigation.activeChatId, conversationId, busy]);
+
+  useEffect(() => {
+    if (chatNavigation.newChatRequest === 0) return;
+    setConversationId(null);
+    setMessages([]);
+    setError(null);
+    setSourcesOpen(null);
+    setPrompt("");
+    setAttachment(null);
+    setEditingIndex(null);
+    setSuggestedQuestions(randomizeQuestions(SUGGESTED_QUESTIONS));
+  }, [chatNavigation.newChatRequest]);
 
   const encodeAttachment = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) throw new Error("Files must be no larger than 10 MB.");
@@ -1480,10 +1576,12 @@ function StudentAssistantChat() {
     history: AssistantTurn[],
     file?: File,
     replaceFromIndex?: number,
+    tool: "web" | "image" | null = webSearchMode ? "web" : null,
   ) => {
     if (busy) return;
     setError(null);
     setBusy(true);
+    chatNavigation.setChatBusy(true);
     const userTurn: AssistantTurn = {
       role: "user",
       content: message,
@@ -1496,20 +1594,51 @@ function StudentAssistantChat() {
       setMessages((current) => [...current.slice(0, replaceFromIndex), userTurn]);
     }
     try {
-      const encodedAttachment = file ? await encodeAttachment(file) : undefined;
-      const result = await studentApi.askStudentAssistant({
-        message,
-        history: history.slice(-6).map(({ role, content }) => ({ role, content })),
-        attachment: encodedAttachment,
-      });
-      setMessages((current) => [
-        ...current,
-        { role: "assistant", content: result.answer, references: result.references },
-      ]);
+      const savedMessages: studentApi.StudentChatMessage[] = [
+        ...history.map(({ role, content, attachmentName, references, imageDataUrl }) => ({
+          role,
+          content,
+          ...(attachmentName ? { attachmentName } : {}),
+          ...(references ? { references } : {}),
+          ...(imageDataUrl ? { imageDataUrl } : {}),
+        })),
+        { role: "user", content: message, ...(file ? { attachmentName: file.name } : {}) },
+      ];
+      if (tool === "image") {
+        const result = await studentApi.generateStudentAssistantImage({
+          prompt: message,
+          messages: savedMessages,
+          conversationId: conversationId ?? undefined,
+        });
+        setConversationId(result.conversationId);
+        chatNavigation.setActiveChatId(result.conversationId);
+        setMessages((current) => [
+          ...current,
+          { role: "assistant", content: result.answer, imageDataUrl: result.imageDataUrl },
+        ]);
+      } else {
+        const encodedAttachment = file ? await encodeAttachment(file) : undefined;
+        const result = await studentApi.askStudentAssistant({
+          message,
+          history: history.slice(-6).map(({ role, content }) => ({ role, content })),
+          messages: savedMessages,
+          conversationId: conversationId ?? undefined,
+          attachment: encodedAttachment,
+          webSearch: tool === "web",
+        });
+        setConversationId(result.conversationId);
+        chatNavigation.setActiveChatId(result.conversationId);
+        setMessages((current) => [
+          ...current,
+          { role: "assistant", content: result.answer, references: result.references },
+        ]);
+      }
+      await queryClient.invalidateQueries({ queryKey: ["studentAssistantChats"] });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "NurseAid could not answer right now.");
     } finally {
       setBusy(false);
+      chatNavigation.setChatBusy(false);
     }
   };
 
@@ -1520,7 +1649,13 @@ function StudentAssistantChat() {
     const editedIndex = editingIndex;
     const history = editedIndex === null ? messages : messages.slice(0, editedIndex);
     const file = attachment ?? (editedIndex === null ? undefined : messages[editedIndex]?.attachmentFile);
-    void ask(message, history, file, editedIndex ?? undefined);
+    void ask(
+      message,
+      history,
+      file,
+      editedIndex ?? undefined,
+      imageMode ? "image" : webSearchMode ? "web" : null,
+    );
     setPrompt("");
     setAttachment(null);
     setEditingIndex(null);
@@ -1554,30 +1689,121 @@ function StudentAssistantChat() {
     void ask(userTurn.content, messages.slice(0, userIndex), userTurn.attachmentFile, userIndex);
   };
 
+  const openSavedChat = async (id: number) => {
+    if (busy) return;
+    setBusy(true);
+    chatNavigation.setChatBusy(true);
+    try {
+      const { chat } = await studentApi.getStudentChat(id);
+      setConversationId(chat.id);
+      setMessages(chat.messages);
+      setPrompt("");
+      setAttachment(null);
+      setEditingIndex(null);
+      setSourcesOpen(null);
+      setError(null);
+    } catch (loadError) {
+      chatNavigation.setActiveChatId(conversationId);
+      setError(loadError instanceof Error ? loadError.message : "Could not load that conversation.");
+    } finally {
+      setBusy(false);
+      chatNavigation.setChatBusy(false);
+    }
+  };
+
+  const startNewChat = () => {
+    if (busy) return;
+    chatNavigation.startNewChat();
+  };
+
+  const downloadWord = async (answer: string, references: studentApi.AssistantReference[] = []) => {
+    try {
+      const title = messages.find((turn) => turn.role === "user")?.content.slice(0, 100) || "NurseAid answer";
+      const blob = await studentApi.exportStudentChatDocx({ title, answer, references });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "nurseaid-answer.docx";
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("Word document downloaded");
+    } catch (exportError) {
+      toast.error(exportError instanceof Error ? exportError.message : "Could not export this answer.");
+    }
+  };
+
+  const printAnswerAsPdf = async (answer: string, references: studentApi.AssistantReference[] = []) => {
+    try {
+      await import("@/components/assistant-markdown");
+      setPrintAnswer({
+        title: messages.find((turn) => turn.role === "user")?.content.slice(0, 100) || "NurseAid answer",
+        answer,
+        references,
+      });
+    } catch (exportError) {
+      toast.error(exportError instanceof Error ? exportError.message : "Could not prepare this answer for printing.");
+    }
+  };
+
+  const toolButtons = () => {
+    const tools = assistantToolsQuery.data;
+    return (
+      <div className="flex flex-wrap items-center gap-2 px-1 pb-2">
+        <Button
+          type="button"
+          size="sm"
+          variant={webSearchMode ? "secondary" : "outline"}
+          disabled={busy || !tools?.webSearch}
+          title={tools?.webSearch ? "Search the web and cite results" : "Set BRAVE_SEARCH_API_KEY on the API server to enable web search"}
+          onClick={() => {
+            setWebSearchMode((enabled) => !enabled);
+            setImageMode(false);
+          }}
+        >
+          <Globe2 className="mr-2 size-4" /> Search web
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={imageMode ? "secondary" : "outline"}
+          disabled={busy || !tools?.imageGeneration || Boolean(attachment)}
+          title={tools?.imageGeneration ? "Generate an educational illustration" : "Set Cloudflare Workers AI credentials to enable image generation"}
+          onClick={() => {
+            if (attachment) {
+              toast.error("Remove the attachment before switching to image generation.");
+              return;
+            }
+            setImageMode((enabled) => !enabled);
+            setWebSearchMode(false);
+          }}
+        >
+          <ImagePlus className="mr-2 size-4" /> Create illustration
+        </Button>
+        {assistantToolsQuery.isError && (
+          <span role="status" className="text-xs text-destructive">Could not check tool availability.</span>
+        )}
+        {tools && !tools.webSearch && (
+          <span className="text-xs text-muted-foreground">Web search needs BRAVE_SEARCH_API_KEY.</span>
+        )}
+        {tools && !tools.imageGeneration && (
+          <span className="text-xs text-muted-foreground">Illustrations need Cloudflare Workers AI credentials.</span>
+        )}
+        {imageMode && (
+          <span className="text-xs text-muted-foreground">Educational illustration only; review for accuracy.</span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {messages.length > 0 && (
-        <div className="flex justify-end pb-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={busy}
-            onClick={() => {
-              if (busy) return;
-              setMessages([]);
-              setError(null);
-              setSourcesOpen(null);
-              setPrompt("");
-              setAttachment(null);
-              setEditingIndex(null);
-              setSuggestedQuestions(randomizeQuestions(SUGGESTED_QUESTIONS));
-            }}
-          >
-            New chat
+      <div className="flex items-center justify-between pb-2">
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={startNewChat}>
+            <Plus className="mr-1 size-4" /> New chat
           </Button>
         </div>
-      )}
+      </div>
       <div aria-live="polite" className="min-h-0 flex-1 space-y-6 overflow-y-auto py-6">
         {messages.length === 0 ? (
             <div className="flex h-full min-h-[20rem] w-full items-center justify-center">
@@ -1594,6 +1820,7 @@ function StudentAssistantChat() {
                       disabled={busy}
                       className="min-h-24 resize-y border-0 shadow-none focus-visible:ring-0"
                     />
+                    {toolButtons()}
                     <div className="flex items-center justify-between gap-2 px-1 pb-1">
                       <div className="flex items-center gap-2">
                         <label className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer gap-2")}>
@@ -1603,7 +1830,7 @@ function StudentAssistantChat() {
                             type="file"
                             accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
                             className="sr-only"
-                            disabled={busy}
+                            disabled={busy || imageMode}
                             onChange={(event) => {
                               setAttachment(event.target.files?.[0] ?? null);
                               event.target.value = "";
@@ -1623,7 +1850,7 @@ function StudentAssistantChat() {
                       </div>
                       <Button type="submit" size="sm" className="gap-2" disabled={busy || (!prompt.trim() && !attachment)}>
                         {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-                        Send
+                        {imageMode ? "Generate" : "Send"}
                       </Button>
                     </div>
                   </div>
@@ -1656,12 +1883,34 @@ function StudentAssistantChat() {
                       <p className="whitespace-pre-wrap leading-7">{turn.content}</p>
                       {turn.attachmentName && (
                         <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <FileText className="size-3.5" /> {turn.attachmentName}
+                          <FileText className="size-3.5" />
+                          {turn.attachmentName}
+                          {!turn.attachmentFile && <span>(not saved; reattach to use again)</span>}
                         </p>
                       )}
                     </div>
                   ) : (
-                    <AssistantMarkdown text={turn.content} />
+                    <>
+                      <FormattedAssistantMarkdown text={turn.content} />
+                      {turn.imageDataUrl && (
+                        <div className="mt-4 max-w-2xl overflow-hidden rounded-xl border bg-card shadow-sm">
+                          <img
+                            src={turn.imageDataUrl}
+                            alt="AI-generated educational illustration"
+                            className="max-h-[36rem] w-full object-contain"
+                          />
+                          <div className="border-t px-3 py-2 text-right">
+                            <a
+                              href={turn.imageDataUrl}
+                              download="nurseaid-educational-illustration.jpg"
+                              className="text-sm font-medium text-primary underline underline-offset-2"
+                            >
+                              Download image
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                   <div className={cn("mt-1 flex items-center gap-1", turn.role === "user" && "justify-end")}>
                     {turn.role === "user" ? (
@@ -1703,6 +1952,13 @@ function StudentAssistantChat() {
                                 </DropdownMenuItem>
                               </>
                             )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => void downloadWord(turn.content, turn.references)}>
+                              <FileText className="size-4" /> Download Word document
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => void printAnswerAsPdf(turn.content, turn.references)}>
+                              <Printer className="size-4" /> Print or save as PDF
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </>
@@ -1771,6 +2027,7 @@ function StudentAssistantChat() {
             disabled={busy}
             className="min-h-16 resize-y border-0 shadow-none focus-visible:ring-0"
           />
+          {toolButtons()}
           <div className="flex items-center justify-between gap-2 px-1 pb-1">
             <div className="flex min-w-0 items-center gap-2">
               <label className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer gap-2")}>
@@ -1780,7 +2037,7 @@ function StudentAssistantChat() {
                   type="file"
                   accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
                   className="sr-only"
-                  disabled={busy}
+                  disabled={busy || imageMode}
                   onChange={(event) => {
                     setAttachment(event.target.files?.[0] ?? null);
                     event.target.value = "";
@@ -1791,15 +2048,34 @@ function StudentAssistantChat() {
             </div>
             <Button type="submit" size="sm" className="gap-2" disabled={busy || (!prompt.trim() && !attachment)}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-              {editingIndex !== null ? "Regenerate" : "Send"}
+              {imageMode ? "Generate" : editingIndex !== null ? "Regenerate" : "Send"}
             </Button>
           </div>
         </div>
       </form>}
 
       <p className="mt-2 text-center text-xs leading-relaxed text-muted-foreground">
-        Educational support only. Avoid uploading identifiable patient information. Chat is not saved.
+        Educational support only. Avoid identifiable patient information. Prompts and answers are saved until deleted and sent to the configured AI provider; web searches also go to Brave. Uploaded file contents are processed for the request but not saved.
       </p>
+      {printAnswer && (
+        <div id="chat-answer-print-root">
+          <h1>{printAnswer.title}</h1>
+          <FormattedAssistantMarkdown text={printAnswer.answer} />
+          {printAnswer.references.length > 0 && (
+            <section>
+              <h2>References</h2>
+              <ol>
+                {printAnswer.references.map((reference, index) => (
+                  <li key={`${reference.inText}-${index}`}>
+                    {reference.label}
+                    {reference.url && <> — {reference.url}</>}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1909,6 +2185,9 @@ function StudentPortalRouter() {
 
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [orderDialog, setOrderDialog] = useState<null | "order" | "correction">(null);
+  const [activeChatId, setActiveChatId] = useState<number | null>(null);
+  const [chatBusy, setChatBusy] = useState(false);
+  const [newChatRequest, setNewChatRequest] = useState(0);
   // The staff invite that arrived with a /student/register link.
   const [inviteToken] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
@@ -1941,6 +2220,32 @@ function StudentPortalRouter() {
   };
   const closeAuth = () => setAuthMode(null);
   const closeOrder = () => setOrderDialog(null);
+  const openChat = (id: number) => {
+    if (chatBusy) return;
+    setActiveChatId(id);
+    navigate("/");
+  };
+  const startNewChat = () => {
+    if (chatBusy) return;
+    setActiveChatId(null);
+    setNewChatRequest((request) => request + 1);
+    navigate("/");
+  };
+  const chatNavigation: StudentChatNavigation = {
+    activeChatId,
+    chatBusy,
+    newChatRequest,
+    openChat,
+    startNewChat,
+    setActiveChatId,
+    setChatBusy,
+  };
+
+  useEffect(() => {
+    setActiveChatId(null);
+    setChatBusy(false);
+    setNewChatRequest((request) => request + 1);
+  }, [student?.id]);
 
   // Route parsing
   const matchPreview = location.match(/^\/student\/orders\/(\d+)\/preview$/);
@@ -2034,47 +2339,48 @@ function StudentPortalRouter() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full min-w-0 bg-background">
-        <PortalSidebar
-          activeTab={activeTab}
-          onSelect={handleTabSelect}
-          onPlaceOrder={openOrder}
-          onSignIn={openSignIn}
-          onSignUp={openSignUp}
-        />
-        <SidebarInset className="min-w-0">
-          <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur">
-            <SidebarTrigger />
-            <span className="md:hidden"><BrandMark compact /></span>
-          </header>
-          <main className="min-h-0 flex-1 overflow-y-auto">
-            <div className={cn(
-              "py-4 sm:py-6",
-              activeTab === "workspace"
-                ? "w-full px-4 sm:px-6"
-                : "mx-auto max-w-5xl px-4 sm:px-6",
-            )}>
-              <AuthGate allowGuest={activeTab === "workspace" || activeTab === "explore"} onSignIn={openSignIn}>
-                {content}
-              </AuthGate>
-            </div>
-          </main>
-          {activeTab !== "workspace" && <footer className="hidden md:block">
-            <div className="mx-auto max-w-4xl px-4 pb-8 sm:px-6">
-              <Separator className="mb-6" />
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                CareStudy Institute supports nursing education — preparing the study, and preparing you to
-                defend it. Review AI-generated content and keep patient information de-identified.
-              </p>
-            </div>
-          </footer>}
-        </SidebarInset>
-      </div>
-      <MobileBottomNav onPlaceOrder={openOrder} />
-      <div className="h-14 md:hidden" />
-      {authDialog}
-      {orderDialogEl}
+    <SidebarProvider defaultOpen={typeof window === "undefined" || window.innerWidth >= 1024}>
+      <StudentChatNavigationContext.Provider value={chatNavigation}>
+        <div className="flex min-h-screen w-full min-w-0 bg-background">
+          <PortalSidebar
+            activeTab={activeTab}
+            onSelect={handleTabSelect}
+            onPlaceOrder={openOrder}
+            onSignIn={openSignIn}
+            onSignUp={openSignUp}
+          />
+          <SidebarInset className="min-w-0">
+            <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur">
+              <SidebarTrigger />
+            </header>
+            <main className="min-h-0 flex-1 overflow-y-auto">
+              <div className={cn(
+                "py-4 sm:py-6",
+                activeTab === "workspace"
+                  ? "w-full px-4 sm:px-6"
+                  : "mx-auto max-w-5xl px-4 sm:px-6",
+              )}>
+                <AuthGate allowGuest={activeTab === "workspace" || activeTab === "explore"} onSignIn={openSignIn}>
+                  {content}
+                </AuthGate>
+              </div>
+            </main>
+            {activeTab !== "workspace" && <footer className="hidden md:block">
+              <div className="mx-auto max-w-4xl px-4 pb-8 sm:px-6">
+                <Separator className="mb-6" />
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  CareStudy Institute supports nursing education — preparing the study, and preparing you to
+                  defend it. Review AI-generated content and keep patient information de-identified.
+                </p>
+              </div>
+            </footer>}
+          </SidebarInset>
+        </div>
+        <MobileBottomNav onPlaceOrder={openOrder} />
+        <div className="h-14 md:hidden" />
+        {authDialog}
+        {orderDialogEl}
+      </StudentChatNavigationContext.Provider>
     </SidebarProvider>
   );
 }

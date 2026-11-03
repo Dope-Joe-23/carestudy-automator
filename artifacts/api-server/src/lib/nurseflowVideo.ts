@@ -522,6 +522,29 @@ async function fetchCloudflareImage(prompt: string): Promise<{ bytes: Buffer; mi
   throw new Error(message);
 }
 
+export function isStudentAssistantImageConfigured(): boolean {
+  return Boolean(cfToken() && cfAccountId());
+}
+
+export async function generateStudentAssistantImage(
+  prompt: string,
+): Promise<{ bytes: Buffer; mimeType: string }> {
+  if (!isStudentAssistantImageConfigured()) {
+    throw new Error(
+      "Image generation is not configured. Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to enable it.",
+    );
+  }
+  const safePrompt =
+    "Create a clear, non-photorealistic educational illustration for nursing and health-science learners. " +
+    "Do not depict an identifiable real person or imply that the image can diagnose or treat a patient. " +
+    `Illustration request: ${prompt.trim()}`;
+  const image = await fetchCloudflareImage(safePrompt);
+  if (image.bytes.byteLength > 4 * 1024 * 1024) {
+    throw new Error("The generated image was too large to attach to this chat. Please try a simpler prompt.");
+  }
+  return image;
+}
+
 /**
  * Build the record before generating, so the create call stays quick and the
  * client polls a job exactly as it does for the asynchronous Veo provider.
