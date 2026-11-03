@@ -65,6 +65,7 @@ import {
   Trash2,
   Send,
   MessageSquareText,
+  UserPlus,
   Upload,
   X,
 } from "lucide-react";
@@ -504,13 +505,26 @@ function PortalSidebar({
       <SidebarSeparator />
       <SidebarFooter>
         {!student && (
-          <div className="space-y-2 px-3 py-2">
-            <p className="text-xs text-muted-foreground">Browsing as a guest</p>
-            <Button size="sm" className="w-full" onClick={onSignIn}>
-              Sign in
-            </Button>
-            <Button size="sm" variant="outline" className="w-full" onClick={onSignUp}>
-              Create an account
+          <div className="px-3 py-2 group-data-[collapsible=icon]:px-0">
+            <div className="space-y-2 group-data-[collapsible=icon]:hidden">
+              <p className="text-xs text-muted-foreground">Browsing as a guest</p>
+              <Button size="sm" className="w-full" onClick={onSignIn}>
+                Sign in
+              </Button>
+              <Button size="sm" variant="outline" className="w-full" onClick={onSignUp}>
+                Create an account
+              </Button>
+            </div>
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              className="hidden group-data-[collapsible=icon]:inline-flex"
+              aria-label="Create an account"
+              title="Create an account"
+              onClick={onSignUp}
+            >
+              <UserPlus className="size-4" />
             </Button>
           </div>
         )}
@@ -1905,9 +1919,11 @@ function StudentAssistantChat() {
           ) : (
             messages.map((turn, index) => (
               <div key={`${turn.role}-${index}`} className={cn("flex", turn.role === "user" ? "justify-end" : "justify-start")}>
-                <div className={cn("w-full", turn.role === "user" ? "max-w-4xl" : "max-w-5xl")}>
+                <div className={cn(
+                  turn.role === "user" ? "w-fit max-w-full sm:max-w-2xl" : "w-full max-w-5xl",
+                )}>
                   {turn.role === "user" ? (
-                    <div className="rounded-2xl bg-primary/10 px-4 py-3 text-foreground sm:px-5">
+                    <div className="w-fit max-w-full rounded-2xl rounded-br-md bg-primary/10 px-4 py-3 text-foreground sm:px-5">
                       <p className="whitespace-pre-wrap leading-7">{turn.content}</p>
                       {turn.attachmentName && (
                         <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -2358,6 +2374,13 @@ function StudentPortalRouter() {
           <SidebarInset className="min-w-0">
             <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur">
               <SidebarTrigger />
+              {!student && activeTab === "workspace" && (
+                <Button type="button" size="sm" className="ml-auto gap-2" onClick={openSignUp}>
+                  <UserPlus className="size-4" />
+                  <span className="hidden sm:inline">Sign up</span>
+                  <span className="sm:hidden">Join</span>
+                </Button>
+              )}
             </header>
             <main className="min-h-0 flex-1 overflow-y-auto">
               <div className={cn(
