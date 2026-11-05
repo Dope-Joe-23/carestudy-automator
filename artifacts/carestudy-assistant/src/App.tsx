@@ -12,7 +12,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AnimatePresence, motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { Toaster as SonnerToaster, toast } from 'sonner';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -8856,6 +8856,7 @@ function App() {
             <Router />
           </WouterRouter>
           <Toaster />
+          <SonnerToaster />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

@@ -1,6 +1,7 @@
 """Tests for source-grounded student chat without model or network calls."""
 
 import base64
+from io import BytesIO
 import os
 import sys
 import unittest
@@ -9,6 +10,7 @@ from unittest import mock
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import student_assistant as assistant  # noqa: E402
+from docx import Document  # noqa: E402
 from care_study_review_rubric import (  # noqa: E402
     CARE_STUDY_CADRE_PROFILES,
     CARE_STUDY_REVIEW_RUBRIC,
@@ -59,9 +61,174 @@ class StudentAssistantTests(unittest.TestCase):
 
         self.assertEqual(result["references"][0]["label"], "wound-notes.txt")
 
+    def test_docx_attachment_text_is_included_in_review_prompt(self):
+        document = Document()
+        document.add_heading("Case Study Chapter 1", level=1)
+        document.add_paragraph("CASE_STUDY_DOCX_MARKER: client reports persistent fatigue.")
+        document.add_paragraph("The care plan documents a rest intervention.")
+        buffer = BytesIO()
+        document.save(buffer)
+        attachment = {
+            "filename": "CASE STUDY.docx",
+            "content": base64.b64encode(buffer.getvalue()).decode("ascii"),
+        }
+
+        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+            assistant.answer_student_question(
+                "Review this case study for consistency.",
+                [],
+                SimpleIndex(),
+                attachment,
+            )
+
+        prompt = model.call_args.args[1]
+        self.assertIn("STUDENT-UPLOADED FILES (1 total", prompt)
+        self.assertIn("STUDENT-UPLOADED FILE 1 OF 1 — CASE STUDY.docx", prompt)
+        self.assertIn("CASE_STUDY_DOCX_MARKER: client reports persistent fatigue.", prompt)
+        self.assertIn("The care plan documents a rest intervention.", prompt)
+
+    def test_uploaded_document_is_separated_from_retrieved_library_sources(self):
+        index = SimpleIndex()
+        index.build([
+            {
+                "text": "The nursing process is a framework for assessment, diagnosis, planning, implementation, and evaluation.",
+                "heading": "Nursing process",
+                "source": "openrn_nursing_process.txt",
+                "citation": {
+                    "label": "Open RN Nursing Fundamentals",
+                    "inText": "(Open RN Nursing Fundamentals)",
+                    "url": "https://example.org/openrn",
+                },
+            },
+            {
+                "text": "Malaria is caused by parasites and may present with fever, chills, and headache.",
+                "heading": "Malaria",
+                "source": "who_malaria.txt",
+                "citation": {
+                    "label": "WHO Malaria Fact Sheet",
+                    "inText": "(WHO Malaria Fact Sheet)",
+                    "url": "https://example.org/who-malaria",
+                },
+            },
+        ])
+        attachment = {
+            "filename": "case-study.txt",
+            "content": base64.b64encode(
+                b"Chapter I: The client was admitted with malaria."
+            ).decode("ascii"),
+        }
+
+        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+            result = assistant.answer_student_question(
+                "Review this malaria case study and nursing process using relevant background sources.",
+                [],
+                index,
+                attachment,
+            )
+
+        system_prompt, review_prompt = model.call_args.args[:2]
+        self.assertIn("The STUDENT-UPLOADED FILES section is the complete set", system_prompt)
+        self.assertIn("STUDENT-UPLOADED FILES (1 total", review_prompt)
+        self.assertIn("STUDENT-UPLOADED FILE 1 OF 1 — case-study.txt", review_prompt)
+        self.assertIn("The client was admitted with malaria.", review_prompt)
+        self.assertIn(
+            "REFERENCE LIBRARY EXCERPTS (retrieved separately; these were not uploaded by the student)",
+            review_prompt,
+        )
+        library_section = review_prompt.split(
+            "REFERENCE LIBRARY EXCERPTS (retrieved separately; these were not uploaded by the student):\n",
+            1,
+        )[1].split("\n\nLATEST QUESTION:", 1)[0]
+        self.assertNotIn("case-study.txt", library_section)
+        self.assertIn("WHO Malaria Fact Sheet", review_prompt)
+        self.assertIn("Open RN Nursing Fundamentals", review_prompt)
+        self.assertEqual(
+            {reference["label"] for reference in result["references"]},
+            {"case-study.txt", "Open RN Nursing Fundamentals", "WHO Malaria Fact Sheet"},
+        )
+
+    def test_document_review_does_not_add_unrequested_library_sources(self):
+        index = SimpleIndex()
+        index.build([
+            {
+                "text": "The nursing process is a framework for assessment and care planning.",
+                "heading": "Nursing process",
+                "source": "openrn_nursing_process.txt",
+                "citation": {
+                    "label": "Open RN Nursing Fundamentals",
+                    "inText": "(Open RN Nursing Fundamentals)",
+                    "url": "https://example.org/openrn",
+                },
+            }
+        ])
+        attachment = {
+            "filename": "case-study.txt",
+            "content": base64.b64encode(b"Chapter I: the documented assessment.").decode("ascii"),
+        }
+
+        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+            assistant.answer_student_question(
+                "Review this case study for internal consistency.",
+                [],
+                index,
+                attachment,
+            )
+
+        prompt = model.call_args.args[1]
+        self.assertIn("STUDENT-UPLOADED FILES (1 total", prompt)
+        self.assertIn("No approved source passages were retrieved.", prompt)
+        self.assertNotIn("Open RN Nursing Fundamentals", prompt)
+
+    def test_document_summary_includes_full_text_not_only_first_excerpt(self):
+        document_text = "CASE_STUDY_SUMMARY_MARKER " + ("assessment details. " * 2_000)
+        attachment = {
+            "filename": "case-study.txt",
+            "content": base64.b64encode(document_text.encode("utf-8")).decode("ascii"),
+        }
+        with mock.patch.object(assistant, "_chat_model", return_value="Summary.") as model:
+            assistant.answer_student_question(
+                "Summarize the attached document.",
+                [],
+                SimpleIndex(),
+                attachment,
+            )
+
+        prompt = model.call_args.args[1]
+        self.assertIn("[The full extracted document is included for this summary or review.]", prompt)
+        self.assertIn("assessment details. ", prompt[35_000:])
+
+    def test_multiple_attachments_are_included_and_citable(self):
+        attachments = [
+            {
+                "filename": "assessment.txt",
+                "content": base64.b64encode(b"Assessment findings include fatigue.").decode("ascii"),
+            },
+            {
+                "filename": "care-plan.md",
+                "content": base64.b64encode(b"The care plan documents a rest intervention.").decode("ascii"),
+            },
+        ]
+        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+            result = assistant.answer_student_question(
+                "Check fatigue assessment and rest intervention for consistency.",
+                [],
+                SimpleIndex(),
+                attachments,
+            )
+
+        prompt = model.call_args.args[1]
+        self.assertIn("STUDENT-UPLOADED FILE 1 OF 2 — assessment.txt", prompt)
+        self.assertIn("STUDENT-UPLOADED FILE 2 OF 2 — care-plan.md", prompt)
+        self.assertIn("Assessment findings include fatigue.", prompt)
+        self.assertIn("The care plan documents a rest intervention.", prompt)
+        self.assertEqual(
+            {reference["label"] for reference in result["references"]},
+            {"assessment.txt", "care-plan.md"},
+        )
+
     def test_long_document_review_includes_full_text_and_revision_guidance(self):
         index = SimpleIndex()
-        document = ("Chapter 1: assessment findings.\n" * 1_600).encode("utf-8")
+        document = ("Chapter 1: assessment findings.\n" * 5_000).encode("utf-8")
         content = base64.b64encode(document).decode("ascii")
 
         with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
@@ -73,7 +240,7 @@ class StudentAssistantTests(unittest.TestCase):
             )
 
         prompt = model.call_args.args[1]
-        self.assertIn("The full extracted document is included for this review.", prompt)
+        self.assertIn("The full extracted document is included for this summary or review.", prompt)
         self.assertIn("Chapter 1: assessment findings.", prompt)
         self.assertIn("preserve all supported patient facts", model.call_args.args[0])
         self.assertIn("Chapter 1 — Assessment", model.call_args.args[0])
@@ -83,6 +250,39 @@ class StudentAssistantTests(unittest.TestCase):
         self.assertIn("Chapter 5 — Evaluation", model.call_args.args[0])
         self.assertIn("Chapter 6 — Summary, conclusion, and bibliography", model.call_args.args[0])
         self.assertIn('status for Chapters 1-6 as "findings"', model.call_args.args[0])
+
+    def test_document_over_100000_characters_is_included_in_review(self):
+        document = ("Long chapter content. " * 6_000).encode("utf-8")
+        content = base64.b64encode(document).decode("ascii")
+
+        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+            assistant.answer_student_question(
+                "Review this chapter for consistency.",
+                [],
+                SimpleIndex(),
+                {"filename": "long-chapter.txt", "content": content},
+            )
+
+        prompt = model.call_args.args[1]
+        self.assertIn("The full extracted document is included for this summary or review.", prompt)
+        self.assertIn("Long chapter content.", prompt)
+
+    def test_combined_attachment_text_limit_is_enforced(self):
+        attachments = [
+            {
+                "filename": f"chapter-{index}.txt",
+                "content": base64.b64encode(("Chapter content. " * 8_000).encode("utf-8")).decode("ascii"),
+            }
+            for index in (1, 2)
+        ]
+
+        with self.assertRaisesRegex(ValueError, "ATTACHMENT_TOO_LARGE"):
+            assistant.answer_student_question(
+                "Review these chapters for consistency.",
+                [],
+                SimpleIndex(),
+                attachments,
+            )
 
     def test_rubric_covers_template_chapters_and_evidence_chain(self):
         for chapter in range(1, 7):
@@ -141,7 +341,7 @@ class StudentAssistantTests(unittest.TestCase):
 
         self.assertNotIn("CARE-STUDY REVIEW STANDARD", model.call_args.args[0])
 
-    def test_long_document_summary_keeps_excerpt_and_discloses_truncation(self):
+    def test_long_document_summary_includes_full_text(self):
         index = SimpleIndex()
         document = ("Course reading about nursing care.\n" * 1_600).encode("utf-8")
         content = base64.b64encode(document).decode("ascii")
@@ -154,7 +354,11 @@ class StudentAssistantTests(unittest.TestCase):
                 {"filename": "course-reading.txt", "content": content},
             )
 
-        self.assertIn("Only the first 35,000 characters are included", model.call_args.args[1])
+        self.assertIn(
+            "The full extracted document is included for this summary or review.",
+            model.call_args.args[1],
+        )
+        self.assertIn(document.decode("utf-8")[-1_000:], model.call_args.args[1])
 
     def test_document_review_removes_citations_without_returned_sources(self):
         answer = "This is a concern [1]. The student should confirm the detail [2]."

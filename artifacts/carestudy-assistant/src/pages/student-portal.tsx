@@ -1486,8 +1486,8 @@ function VivaPreparationPanel({ orderId }: { orderId: number }) {
 // ---------------------------------------------------------------------------
 
 type AssistantTurn = studentApi.StudentChatMessage & {
-  attachmentName?: string;
   attachmentFile?: File;
+  attachmentFiles?: File[];
 };
 
 const SUGGESTED_QUESTIONS = [
@@ -1505,6 +1505,34 @@ function randomizeQuestions(questions: string[]): string[] {
   return shuffled;
 }
 
+function AttachmentPreview({ file, onRemove }: { file: File; onRemove: () => void }) {
+  const fileType = file.name.split(".").pop()?.toUpperCase() || "FILE";
+  const fileSize = file.size < 1024 * 1024
+    ? `${Math.max(1, Math.round(file.size / 1024))} KB`
+    : `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+
+  return (
+    <div className="flex min-w-0 items-center gap-2 rounded-xl border bg-background/80 px-2 py-2">
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+        <FileText className="size-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium" title={file.name}>{file.name}</span>
+        <span className="block text-xs text-muted-foreground">{fileType} · {fileSize}</span>
+      </span>
+      <button
+        type="button"
+        aria-label={`Remove ${file.name}`}
+        title="Remove attachment"
+        onClick={onRemove}
+        className="grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <X className="size-4" />
+      </button>
+    </div>
+  );
+}
+
 function StudentAssistantChat() {
   const queryClient = useQueryClient();
   const { student } = useAuth();
@@ -1512,9 +1540,9 @@ function StudentAssistantChat() {
   const studentIdRef = useRef(student?.id ?? null);
   const [messages, setMessages] = useState<AssistantTurn[]>([]);
   const [prompt, setPrompt] = useState("");
-  const [attachment, setAttachment] = useState<File | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [sourcesOpen, setSourcesOpen] = useState<number | null>(null);
   const [conversationId, setConversationId] = useState<number | null>(null);
@@ -1535,10 +1563,31 @@ function StudentAssistantChat() {
     staleTime: 60_000,
   });
   const welcomeName = student?.name.trim().split(/\s+/)[0] || student?.username.trim();
-  const lastAttachedFile = messages
+  const lastAttachedNames = messages
     .slice()
     .reverse()
-    .find((turn) => turn.role === "user" && turn.attachmentFile)?.attachmentFile;
+    .find((turn) => turn.role === "user" && (turn.attachmentNames?.length || turn.attachmentName));
+  const lastAttachmentNames = lastAttachedNames?.attachmentNames
+    ?? (lastAttachedNames?.attachmentName ? [lastAttachedNames.attachmentName] : []);
+  const lastAttachedFiles = messages
+    .slice()
+    .reverse()
+    .find((turn) => turn.role === "user" && turn.attachmentFiles?.length)?.attachmentFiles;
+
+  useEffect(() => {
+    if (assistantToolsQuery.isError) toast.error("Could not check tool availability.");
+  }, [assistantToolsQuery.isError]);
+
+  useEffect(() => {
+    if (messages.length === 0 && !busy) return;
+    const scrollFrame = window.requestAnimationFrame(() => {
+      const scrollContainer = chatScrollRef.current;
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: "smooth" });
+      }
+    });
+    return () => window.cancelAnimationFrame(scrollFrame);
+  }, [messages, busy]);
 
   useEffect(() => {
     const nextStudentId = student?.id ?? null;
@@ -1546,10 +1595,9 @@ function StudentAssistantChat() {
     studentIdRef.current = nextStudentId;
     setConversationId(null);
     setMessages([]);
-    setError(null);
     setSourcesOpen(null);
     setPrompt("");
-    setAttachment(null);
+    setAttachments([]);
     setEditingIndex(null);
     setPrintAnswer(null);
     chatNavigation.setActiveChatId(null);
@@ -1580,10 +1628,9 @@ function StudentAssistantChat() {
     if (chatNavigation.newChatRequest === 0) return;
     setConversationId(null);
     setMessages([]);
-    setError(null);
     setSourcesOpen(null);
     setPrompt("");
-    setAttachment(null);
+    setAttachments([]);
     setEditingIndex(null);
     setSuggestedQuestions(randomizeQuestions(SUGGESTED_QUESTIONS));
   }, [chatNavigation.newChatRequest]);
@@ -1611,20 +1658,21 @@ function StudentAssistantChat() {
   const ask = async (
     message: string,
     history: AssistantTurn[],
-    file?: File,
+    files: File[] = [],
     replaceFromIndex?: number,
     tool: "web" | "image" | null = webSearchMode ? "web" : null,
   ) => {
     if (busy) return;
     const requestStudentId = student?.id ?? null;
-    setError(null);
     setBusy(true);
     chatNavigation.setChatBusy(true);
     const userTurn: AssistantTurn = {
       role: "user",
       content: message,
-      attachmentName: file?.name,
-      attachmentFile: file,
+      attachmentName: files.length === 1 ? files[0].name : undefined,
+      attachmentNames: files.map((file) => file.name),
+      attachmentFile: files[0],
+      attachmentFiles: files,
     };
     if (replaceFromIndex === undefined) {
       setMessages((current) => [...current, userTurn]);
@@ -1633,14 +1681,20 @@ function StudentAssistantChat() {
     }
     try {
       const savedMessages: studentApi.StudentChatMessage[] = [
-        ...history.map(({ role, content, attachmentName, references, imageDataUrl }) => ({
+        ...history.map(({ role, content, attachmentName, attachmentNames, references, imageDataUrl }) => ({
           role,
           content,
           ...(attachmentName ? { attachmentName } : {}),
+          ...(attachmentNames?.length ? { attachmentNames } : {}),
           ...(references ? { references } : {}),
           ...(imageDataUrl ? { imageDataUrl } : {}),
         })),
-        { role: "user", content: message, ...(file ? { attachmentName: file.name } : {}) },
+        {
+          role: "user",
+          content: message,
+          ...(files.length === 1 ? { attachmentName: files[0].name } : {}),
+          ...(files.length ? { attachmentNames: files.map((file) => file.name) } : {}),
+        },
       ];
       if (tool === "image") {
         const result = await studentApi.generateStudentAssistantImage({
@@ -1658,14 +1712,14 @@ function StudentAssistantChat() {
           { role: "assistant", content: result.answer, imageDataUrl: result.imageDataUrl },
         ]);
       } else {
-        const encodedAttachment = file ? await encodeAttachment(file) : undefined;
+        const encodedAttachments = await Promise.all(files.map(encodeAttachment));
         const result = await studentApi.askStudentAssistant({
           message,
           history: history.slice(-6).map(({ role, content }) => ({ role, content })),
           messages: savedMessages,
           cadreProfileId,
           conversationId: conversationId ?? undefined,
-          attachment: encodedAttachment,
+          attachments: encodedAttachments.length ? encodedAttachments : undefined,
           webSearch: tool === "web",
         });
         if (studentIdRef.current !== requestStudentId) return;
@@ -1683,7 +1737,7 @@ function StudentAssistantChat() {
       }
     } catch (requestError) {
       if (studentIdRef.current === requestStudentId) {
-        setError(requestError instanceof Error ? requestError.message : "NurseAid could not answer right now.");
+        toast.error(requestError instanceof Error ? requestError.message : "NurseAid could not answer right now.");
       }
     } finally {
       setBusy(false);
@@ -1693,24 +1747,24 @@ function StudentAssistantChat() {
 
   const sendMessage = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const message = prompt.trim() || (attachment ? "Summarize this document and identify its key nursing concepts." : "");
+    const message = prompt.trim() || (attachments.length ? "Summarize these documents and identify their key nursing concepts." : "");
     if (!message || busy) return;
     const editedIndex = editingIndex;
     const history = editedIndex === null ? messages : messages.slice(0, editedIndex);
-    const file = attachment ?? (
+    const files = attachments.length ? attachments : (
       editedIndex === null
-        ? lastAttachedFile
-        : messages[editedIndex]?.attachmentFile
+      ? lastAttachedFiles
+      : messages[editedIndex]?.attachmentFiles
     );
     void ask(
       message,
       history,
-      file,
+    files,
       editedIndex ?? undefined,
       imageMode ? "image" : webSearchMode ? "web" : null,
     );
     setPrompt("");
-    setAttachment(null);
+    setAttachments([]);
     setEditingIndex(null);
   };
 
@@ -1727,10 +1781,9 @@ function StudentAssistantChat() {
     const turn = messages[index];
     if (turn.role !== "user") return;
     setPrompt(turn.content);
-    setAttachment(turn.attachmentFile ?? null);
+    setAttachments(turn.attachmentFiles ?? (turn.attachmentFile ? [turn.attachmentFile] : []));
     setEditingIndex(index);
     setSourcesOpen(null);
-    setError(null);
   };
 
   const retryAnswer = (assistantIndex: number) => {
@@ -1739,25 +1792,39 @@ function StudentAssistantChat() {
     if (userIndex < 0) return;
     const userTurn = messages[userIndex];
     setSourcesOpen(null);
-    void ask(userTurn.content, messages.slice(0, userIndex), userTurn.attachmentFile, userIndex);
+    void ask(
+      userTurn.content,
+      messages.slice(0, userIndex),
+      userTurn.attachmentFiles ?? (userTurn.attachmentFile ? [userTurn.attachmentFile] : []),
+      userIndex,
+    );
   };
 
   const openSavedChat = async (id: number) => {
     if (busy) return;
+    const previousConversationId = conversationId;
+    const previousMessages = messages;
     setBusy(true);
     chatNavigation.setChatBusy(true);
+    setMessages([]);
+    setConversationId(null);
+    setPrompt("");
+    setAttachments([]);
+    setEditingIndex(null);
+    setSourcesOpen(null);
     try {
       const { chat } = await studentApi.getStudentChat(id);
       setConversationId(chat.id);
       setMessages(chat.messages);
       setPrompt("");
-      setAttachment(null);
+      setAttachments([]);
       setEditingIndex(null);
       setSourcesOpen(null);
-      setError(null);
     } catch (loadError) {
-      chatNavigation.setActiveChatId(conversationId);
-      setError(loadError instanceof Error ? loadError.message : "Could not load that conversation.");
+      setConversationId(previousConversationId);
+      setMessages(previousMessages);
+      chatNavigation.setActiveChatId(previousConversationId);
+      toast.error(loadError instanceof Error ? loadError.message : "Could not load that conversation.");
     } finally {
       setBusy(false);
       chatNavigation.setChatBusy(false);
@@ -1801,7 +1868,7 @@ function StudentAssistantChat() {
   const toolButtons = () => {
     const tools = assistantToolsQuery.data;
     return (
-      <div className="flex flex-wrap items-center gap-2 px-1 pb-2">
+      <div className="flex flex-col gap-2">
         <Button
           type="button"
           size="sm"
@@ -1819,10 +1886,10 @@ function StudentAssistantChat() {
           type="button"
           size="sm"
           variant={imageMode ? "secondary" : "outline"}
-          disabled={busy || !tools?.imageGeneration || Boolean(attachment)}
+          disabled={busy || !tools?.imageGeneration || attachments.length > 0}
           title={tools?.imageGeneration ? "Generate an educational illustration" : "Set Cloudflare Workers AI credentials to enable image generation"}
           onClick={() => {
-            if (attachment) {
+            if (attachments.length) {
               toast.error("Remove the attachment before switching to image generation.");
               return;
             }
@@ -1832,9 +1899,6 @@ function StudentAssistantChat() {
         >
           <ImagePlus className="mr-2 size-4" /> Create illustration
         </Button>
-        {assistantToolsQuery.isError && (
-          <span role="status" className="text-xs text-destructive">Could not check tool availability.</span>
-        )}
         {tools && !tools.webSearch && (
           <span className="text-xs text-muted-foreground">Web search needs BRAVE_SEARCH_API_KEY.</span>
         )}
@@ -1848,8 +1912,96 @@ function StudentAssistantChat() {
     );
   };
 
+  const cadreSelector = () => (
+    <label className="flex items-center justify-between gap-3 text-sm">
+      <span>Care-study cadre</span>
+      <select
+        aria-label="Care-study cadre"
+        value={cadreProfileId}
+        disabled={busy || messages.length > 0}
+        onChange={(event) => setCadreProfileId(event.target.value)}
+        className="h-9 max-w-52 rounded-md border bg-background px-2 text-xs text-foreground"
+      >
+        {(assistantToolsQuery.data?.careStudyCadres ?? [{
+          id: "registered_general_nurse",
+          name: "Registered General Nurse",
+          abbreviation: "RGN",
+          status: "available" as const,
+        }]).map((profile) => (
+          <option key={profile.id} value={profile.id} disabled={profile.status !== "available"}>
+            {profile.name}{profile.status !== "available" ? " (in development)" : ""}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+
+  const composerOptions = () => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          size="icon"
+          variant={webSearchMode || imageMode ? "secondary" : "ghost"}
+          className="size-8 shrink-0"
+          aria-label="More message options"
+          title="More message options"
+          disabled={busy}
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent side="top" align="start" className="w-80 space-y-3 p-3">
+        {cadreSelector()}
+        <Separator />
+        {toolButtons()}
+      </PopoverContent>
+    </Popover>
+  );
+
+  const attachmentButton = () => (
+    <label
+      className={cn(
+        buttonVariants({ variant: attachments.length ? "secondary" : "ghost", size: "icon" }),
+        "relative size-8 shrink-0 cursor-pointer",
+      )}
+      aria-label="Attach file"
+      title={attachments.length ? `${attachments.length} file${attachments.length === 1 ? "" : "s"} attached` : "Attach up to 3 files"}
+    >
+      <Paperclip className="size-4" />
+      <input
+        type="file"
+        multiple
+        accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
+        className="sr-only"
+        disabled={busy || imageMode}
+        onChange={(event) => {
+          const selected = Array.from(event.target.files ?? []);
+          if (attachments.length + selected.length > 3) {
+            toast.error("Attach up to 3 files per message.");
+          }
+          const added = selected.slice(0, Math.max(0, 3 - attachments.length));
+          const uniqueAdded = added.filter((file) => !attachments.some(
+            (current) => current.name === file.name && current.size === file.size && current.lastModified === file.lastModified,
+          ));
+          const oversized = uniqueAdded.find((file) => file.size > 10 * 1024 * 1024);
+          const combinedSize = attachments.reduce((total, file) => total + file.size, 0)
+            + uniqueAdded.reduce((total, file) => total + file.size, 0);
+          if (oversized) {
+            toast.error(`${oversized.name} exceeds the 10 MB per-file limit.`);
+          } else if (combinedSize > 20 * 1024 * 1024) {
+            toast.error("The combined file size must not exceed 20 MB.");
+          } else if (uniqueAdded.length) {
+            setAttachments((current) => [...current, ...uniqueAdded]);
+          }
+          event.target.value = "";
+        }}
+      />
+    </label>
+  );
+
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 min-w-0 max-w-full flex-col">
       <div className="flex items-center justify-between pb-2">
         <div className="flex items-center gap-2">
           <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={startNewChat}>
@@ -1857,7 +2009,11 @@ function StudentAssistantChat() {
           </Button>
         </div>
       </div>
-      <div aria-live="polite" className="min-h-0 flex-1 space-y-6 overflow-y-auto py-6">
+      <div
+        ref={chatScrollRef}
+        aria-live="polite"
+        className="min-h-0 min-w-0 max-w-full flex-1 space-y-6 overflow-x-hidden overflow-y-auto py-6"
+      >
         {messages.length === 0 ? (
             <div className="flex h-full min-h-[20rem] w-full items-center justify-center">
               <div className="w-full space-y-6">
@@ -1869,74 +2025,36 @@ function StudentAssistantChat() {
                     Attach a full care study or chapter, then ask in your own words for a critique, consistency check, correction, or rewrite.
                   </p>
                 </div>
-                <form onSubmit={sendMessage} className="w-full">
-                  <div className="rounded-2xl border bg-card p-2 shadow-sm focus-within:ring-1 focus-within:ring-ring">
+                <form onSubmit={sendMessage} className="mx-auto w-full max-w-3xl">
+                  <div className="rounded-2xl border border-primary/15 bg-muted/60 p-1.5 shadow-sm focus-within:ring-1 focus-within:ring-primary/30">
+                    {attachments.length > 0 && (
+                      <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {attachments.map((file, index) => (
+                          <AttachmentPreview
+                            key={`${file.name}-${file.lastModified}`}
+                            file={file}
+                            onRemove={() => setAttachments((current) => current.filter((_, fileIndex) => fileIndex !== index))}
+                          />
+                        ))}
+                      </div>
+                    )}
                     <Textarea
                       value={prompt}
                       onChange={(event) => setPrompt(event.target.value)}
                       placeholder="Ask in your own words: check consistency, critique a chapter, or suggest a rewrite…"
                       aria-label="Message NurseAid"
-                      rows={3}
+                      rows={2}
                       maxLength={4_000}
                       disabled={busy}
-                      className="min-h-24 resize-y border-0 shadow-none focus-visible:ring-0"
+                      className="min-h-14 max-h-40 resize-none border-0 shadow-none focus-visible:ring-0"
                     />
-                    {toolButtons()}
                     <div className="flex items-center justify-between gap-2 px-1 pb-1">
-                      <div className="flex items-center gap-2">
-                        <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>Care-study cadre</span>
-                          <select
-                            aria-label="Care-study cadre"
-                            value={cadreProfileId}
-                            disabled={busy || messages.length > 0}
-                            onChange={(event) => setCadreProfileId(event.target.value)}
-                            className="h-9 max-w-52 rounded-md border bg-background px-2 text-xs text-foreground"
-                          >
-                            {(assistantToolsQuery.data?.careStudyCadres ?? [{
-                              id: "registered_general_nurse",
-                              name: "Registered General Nurse",
-                              abbreviation: "RGN",
-                              status: "available" as const,
-                            }]).map((profile) => (
-                              <option
-                                key={profile.id}
-                                value={profile.id}
-                                disabled={profile.status !== "available"}
-                              >
-                                {profile.name}{profile.status !== "available" ? " (in development)" : ""}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer gap-2")}>
-                          <Paperclip className="size-4" />
-                          Attach file
-                          <input
-                            type="file"
-                            accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
-                            className="sr-only"
-                            disabled={busy || imageMode}
-                            onChange={(event) => {
-                              setAttachment(event.target.files?.[0] ?? null);
-                              event.target.value = "";
-                              setError(null);
-                            }}
-                          />
-                        </label>
-                        {attachment && (
-                          <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
-                            <FileText className="size-3.5 shrink-0" />
-                            <span className="max-w-40 truncate">{attachment.name}</span>
-                            <button type="button" aria-label="Remove attachment" onClick={() => setAttachment(null)}>
-                              <X className="size-3.5" />
-                            </button>
-                          </span>
-                        )}
+                      <div className="flex min-w-0 items-center gap-1">
+                        {attachmentButton()}
+                        {composerOptions()}
                       </div>
-                      <Button type="submit" size="sm" className="gap-2" disabled={busy || (!prompt.trim() && !attachment)}>
+                      <Button type="submit" size="icon" className="size-8 shrink-0" aria-label={imageMode ? "Generate" : "Send"} title={imageMode ? "Generate" : "Send"} disabled={busy || (!prompt.trim() && !attachments.length)}>
                         {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-                        {imageMode ? "Generate" : "Send"}
                       </Button>
                     </div>
                   </div>
@@ -1962,19 +2080,27 @@ function StudentAssistantChat() {
             </div>
           ) : (
             messages.map((turn, index) => (
-              <div key={`${turn.role}-${index}`} className={cn("flex", turn.role === "user" ? "justify-end" : "justify-start")}>
+              <div key={`${turn.role}-${index}`} className={cn("flex min-w-0 max-w-full", turn.role === "user" ? "justify-end" : "justify-center")}>
                 <div className={cn(
-                  turn.role === "user" ? "w-fit max-w-full sm:max-w-2xl" : "w-full max-w-5xl",
+                  turn.role === "user" ? "w-fit min-w-0 max-w-full sm:max-w-2xl" : "w-full min-w-0 max-w-4xl",
                 )}>
                   {turn.role === "user" ? (
                     <div className="w-fit max-w-full rounded-2xl rounded-br-md bg-primary/10 px-4 py-3 text-foreground sm:px-5">
                       <p className="whitespace-pre-wrap leading-7">{turn.content}</p>
-                      {turn.attachmentName && (
-                        <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <FileText className="size-3.5" />
-                          {turn.attachmentName}
-                          {!turn.attachmentFile && <span>(not saved; reattach to use again)</span>}
-                        </p>
+                      {(turn.attachmentNames?.length || turn.attachmentName) && (
+                        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          {(turn.attachmentNames ?? (turn.attachmentName ? [turn.attachmentName] : [])).map((filename) => (
+                            <div key={filename} className="flex min-w-0 items-center gap-2 rounded-xl border border-primary/10 bg-background/70 px-2.5 py-2">
+                              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                                <FileText className="size-4" />
+                              </span>
+                              <span className="min-w-0 flex-1 truncate text-xs font-medium" title={filename}>{filename}</span>
+                              {!turn.attachmentFiles?.length && (
+                                <span className="shrink-0 text-[11px] text-muted-foreground">Reattach to reuse</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   ) : (
@@ -2084,85 +2210,51 @@ function StudentAssistantChat() {
         )}
       </div>
 
-      {error && <p role="alert" className="mb-2 text-sm text-destructive">{error}</p>}
-
-      {messages.length > 0 && <form onSubmit={sendMessage} className="border-t bg-background pt-3">
-        {!attachment && lastAttachedFile && (
+      {messages.length > 0 && <form onSubmit={sendMessage} className="mx-auto w-full max-w-3xl border-t bg-background pt-3">
+        {!attachments.length && lastAttachmentNames.length > 0 && (
           <p className="mb-2 text-xs text-muted-foreground">
-            Follow-ups in this chat will include {lastAttachedFile.name}. Attach another file to switch documents.
+            {lastAttachedFiles?.length
+              ? `Follow-ups in this chat will include ${lastAttachedFiles.map((file) => file.name).join(", ")}. Attach files to switch documents.`
+              : `Reattach ${lastAttachmentNames.join(", ")} to include those files in your follow-up.`}
           </p>
         )}
         {editingIndex !== null && (
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>Editing your question — submitting will regenerate the answer.</span>
-            <Button type="button" variant="ghost" size="sm" onClick={() => { setEditingIndex(null); setPrompt(""); setAttachment(null); }}>
+            <Button type="button" variant="ghost" size="sm" onClick={() => { setEditingIndex(null); setPrompt(""); setAttachments([]); }}>
               Cancel
             </Button>
           </div>
         )}
-        {attachment && (
-          <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-            <FileText className="size-3.5" />
-            <span className="max-w-60 truncate">{attachment.name}</span>
-            <button type="button" aria-label="Remove attachment" onClick={() => setAttachment(null)}>
-              <X className="size-3.5" />
-            </button>
-          </div>
-        )}
-        <div className="rounded-2xl border bg-card p-2 shadow-sm focus-within:ring-1 focus-within:ring-ring">
+        <div className="rounded-2xl border border-primary/15 bg-muted/60 p-1.5 shadow-sm focus-within:ring-1 focus-within:ring-primary/30">
+          {attachments.length > 0 && (
+            <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {attachments.map((file, index) => (
+                <AttachmentPreview
+                  key={`${file.name}-${file.lastModified}`}
+                  file={file}
+                  onRemove={() => setAttachments((current) => current.filter((_, fileIndex) => fileIndex !== index))}
+                />
+              ))}
+            </div>
+          )}
           <Textarea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
             placeholder="Ask in your own words about the uploaded study…"
             aria-label="Message NurseAid"
-            rows={2}
+            rows={1}
             maxLength={4_000}
             disabled={busy}
-            className="min-h-16 resize-y border-0 shadow-none focus-visible:ring-0"
+            className="min-h-12 max-h-40 resize-none border-0 shadow-none focus-visible:ring-0"
           />
-          {toolButtons()}
           <div className="flex items-center justify-between gap-2 px-1 pb-1">
-            <div className="flex min-w-0 items-center gap-2">
-              <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Care-study cadre</span>
-                <select
-                  aria-label="Care-study cadre"
-                  value={cadreProfileId}
-                  disabled={busy || messages.length > 0}
-                  onChange={(event) => setCadreProfileId(event.target.value)}
-                  className="h-9 max-w-52 rounded-md border bg-background px-2 text-xs text-foreground"
-                >
-                  {(assistantToolsQuery.data?.careStudyCadres ?? [{
-                    id: "registered_general_nurse",
-                    name: "Registered General Nurse",
-                    abbreviation: "RGN",
-                    status: "available" as const,
-                  }]).map((profile) => (
-                    <option key={profile.id} value={profile.id} disabled={profile.status !== "available"}>
-                      {profile.name}{profile.status !== "available" ? " (in development)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer gap-2")}>
-                <Paperclip className="size-4" />
-                <span className="sr-only sm:not-sr-only">Attach file</span>
-                <input
-                  type="file"
-                  accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
-                  className="sr-only"
-                  disabled={busy || imageMode}
-                  onChange={(event) => {
-                    setAttachment(event.target.files?.[0] ?? null);
-                    event.target.value = "";
-                    setError(null);
-                  }}
-                />
-              </label>
+            <div className="flex min-w-0 items-center gap-1">
+              {attachmentButton()}
+              {composerOptions()}
             </div>
-            <Button type="submit" size="sm" className="gap-2" disabled={busy || (!prompt.trim() && !attachment)}>
+            <Button type="submit" size="icon" className="size-8 shrink-0" aria-label={imageMode ? "Generate" : editingIndex !== null ? "Regenerate" : "Send"} title={imageMode ? "Generate" : editingIndex !== null ? "Regenerate" : "Send"} disabled={busy || (!prompt.trim() && !attachments.length)}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-              {imageMode ? "Generate" : editingIndex !== null ? "Regenerate" : "Send"}
             </Button>
           </div>
         </div>
@@ -2200,8 +2292,8 @@ function StudentAssistantChat() {
 
 function StudentWorkspace() {
   return (
-    <div className="flex h-[calc(100svh-8rem)] min-h-[28rem] flex-col md:h-[calc(100svh-2rem)]">
-      <div className="min-h-0 flex-1">
+    <div className="flex h-[calc(100svh-8rem)] min-h-[28rem] min-w-0 max-w-full flex-col overflow-x-hidden md:h-[calc(100svh-2rem)]">
+      <div className="min-h-0 min-w-0 max-w-full flex-1">
         <StudentAssistantChat />
       </div>
     </div>
@@ -2452,7 +2544,7 @@ function StudentPortalRouter() {
                 </Button>
               )}
             </header>
-            <main className="min-h-0 flex-1 overflow-y-auto">
+            <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
               <div className={cn(
                 "py-4 sm:py-6",
                 activeTab === "workspace"

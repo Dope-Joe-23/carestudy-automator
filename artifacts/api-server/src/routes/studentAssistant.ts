@@ -13,7 +13,11 @@ const MAX_CHAT_MESSAGES = 120;
 const MAX_CHAT_MESSAGE_LENGTH = 20_000;
 const MAX_CHAT_IMAGE_DATA_URL_LENGTH = 5_600_000;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+const MAX_TOTAL_ATTACHMENT_BYTES = 20 * 1024 * 1024;
+const MAX_ATTACHMENT_COUNT = 3;
 const ALLOWED_EXTENSIONS = new Set([".pdf", ".docx", ".txt", ".md"]);
+const DOCUMENT_REVIEW_INTENT =
+  /\b(?:review\w*|critiqu\w*|analy[sz]\w*|check\w*|correct\w*|fix\w*|rewrit\w*|revis\w*|edit\w*|improv\w*|polish\w*|feedback|consisten\w*|contradict\w*|gaps?|missing|align\w*|compar\w*|assess\w*|evaluat\w*|audit\w*|wrong|errors?)\b/i;
 const MAX_WEB_SOURCES = 5;
 const CARE_STUDY_CADRE_PROFILES: StudentCareStudyCadreProfile[] = [
   { id: "registered_general_nurse", name: "Registered General Nurse", abbreviation: "RGN", status: "available" },
@@ -80,6 +84,17 @@ function validateChatMessages(value: unknown): StudentChatMessage[] | null {
       if (typeof message.attachmentName !== "string" || message.attachmentName.length > 255) return null;
       normalized.attachmentName = message.attachmentName;
       totalCharacters += message.attachmentName.length;
+      if (totalCharacters > 100_000) return null;
+    }
+    if (message.attachmentNames !== undefined) {
+      const attachmentNames = message.attachmentNames;
+      if (
+        !Array.isArray(attachmentNames) ||
+        attachmentNames.length > MAX_ATTACHMENT_COUNT ||
+        !attachmentNames.every((name): name is string => typeof name === "string" && name.length > 0 && name.length <= 255)
+      ) return null;
+      normalized.attachmentNames = attachmentNames;
+      totalCharacters += normalized.attachmentNames.reduce((total, name) => total + name.length, 0);
       if (totalCharacters > 100_000) return null;
     }
     if (references.length) normalized.references = references;
@@ -202,6 +217,28 @@ function decodeAttachment(
   return { filename, content: raw.content };
 }
 
+function decodeAttachments(
+  value: unknown,
+  legacyValue: unknown,
+): { filename: string; content: string }[] | undefined | null {
+  if (value !== undefined && legacyValue !== undefined) return null;
+  const rawAttachments = value === undefined ? legacyValue : value;
+  if (rawAttachments === undefined || rawAttachments === null) return undefined;
+  const items = Array.isArray(rawAttachments) ? rawAttachments : [rawAttachments];
+  if (items.length > MAX_ATTACHMENT_COUNT) return null;
+
+  const attachments: { filename: string; content: string }[] = [];
+  let totalBytes = 0;
+  for (const item of items) {
+    const attachment = decodeAttachment(item);
+    if (!attachment) return null;
+    totalBytes += Buffer.from(attachment.content, "base64").length;
+    if (totalBytes > MAX_TOTAL_ATTACHMENT_BYTES) return null;
+    attachments.push(attachment);
+  }
+  return attachments;
+}
+
 function validateHistory(value: unknown): ChatMessage[] | null {
   if (value === undefined) return [];
   if (!Array.isArray(value) || value.length > MAX_HISTORY_ITEMS) return null;
@@ -279,10 +316,21 @@ router.post(
       res.status(401).json({ error: "Sign in to open and continue saved conversations." });
       return;
     }
-    const attachment = decodeAttachment(req.body?.attachment);
-    if (attachment === null) {
+    const attachments = decodeAttachments(req.body?.attachments, req.body?.attachment);
+    if (attachments === null) {
       res.status(422).json({
-        error: "Attach a PDF, DOCX, TXT, or Markdown file no larger than 10 MB.",
+        error: "Attach up to 3 PDF, DOCX, TXT, or Markdown files, no larger than 10 MB each or 20 MB combined.",
+      });
+      return;
+    }
+    const savedAttachmentNames = chatMessages
+      .slice(0, -1)
+      .some((chatMessage) => chatMessage.role === "user" && (
+        Boolean(chatMessage.attachmentName) || Boolean(chatMessage.attachmentNames?.length)
+      ));
+    if (!attachments?.length && savedAttachmentNames && DOCUMENT_REVIEW_INTENT.test(message)) {
+      res.status(422).json({
+        error: "The files from this saved conversation are not available to analyze. Reattach them to continue the review.",
       });
       return;
     }
@@ -301,7 +349,7 @@ router.post(
       const result = await draftWorker.chatWithStudent(
         message,
         history,
-        attachment,
+        attachments,
         webSources,
         cadreProfile.id,
       );
@@ -337,9 +385,12 @@ router.post(
     } catch (err) {
       req.log?.error?.({ err, studentId: student?.id }, "student assistant failed");
       const isSearchSetupError = err instanceof Error && err.message.includes("BRAVE_SEARCH_API_KEY");
-      const status = isSearchSetupError ? 503 : 502;
+      const attachmentTooLarge = err instanceof Error
+        ? err.message.match(/ATTACHMENT_TOO_LARGE:\s*(.*)/)?.[1]?.trim()
+        : undefined;
+      const status = attachmentTooLarge ? 413 : isSearchSetupError ? 503 : 502;
       res.status(status).json({
-        error: err instanceof Error ? err.message : "NurseAid could not answer right now.",
+        error: attachmentTooLarge ?? (err instanceof Error ? err.message : "NurseAid could not answer right now."),
       });
     }
   },

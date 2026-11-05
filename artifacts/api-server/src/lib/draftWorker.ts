@@ -281,7 +281,7 @@ class DraftWorker {
   async chatWithStudent(
     message: string,
     history: { role: "user" | "assistant"; content: string }[],
-    attachment?: { filename: string; content: string },
+    attachments?: { filename: string; content: string }[],
     webSources: StudentChatWebSource[] = [],
     cadreProfileId = "registered_general_nurse",
   ): Promise<StudentChatResult> {
@@ -301,7 +301,7 @@ class DraftWorker {
       });
       try {
         child.stdin.write(
-          JSON.stringify({ id, op: "student_chat", message, history, attachment, webSources, cadreProfileId }) + "\n",
+          JSON.stringify({ id, op: "student_chat", message, history, attachments, webSources, cadreProfileId }) + "\n",
         );
       } catch (writeErr) {
         this.pending.delete(id);

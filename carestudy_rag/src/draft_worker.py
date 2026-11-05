@@ -897,7 +897,7 @@ def main() -> None:
             if op == "student_chat":
                 message = req.get("message", "")
                 history = req.get("history", [])
-                attachment = req.get("attachment")
+                attachments = req.get("attachments", [])
                 web_sources = req.get("webSources", [])
                 cadre_profile_id = req.get("cadreProfileId", "registered_general_nurse")
                 if not isinstance(message, str) or not message.strip():
@@ -914,8 +914,8 @@ def main() -> None:
                 ):
                     emit({"id": req.get("id"), "error": "student_chat history is invalid"})
                     continue
-                if attachment is not None and not isinstance(attachment, dict):
-                    emit({"id": req.get("id"), "error": "student_chat attachment is invalid"})
+                if not isinstance(attachments, list) or not all(isinstance(item, dict) for item in attachments):
+                    emit({"id": req.get("id"), "error": "student_chat attachments are invalid"})
                     continue
                 if not isinstance(web_sources, list) or not all(
                     isinstance(source, dict)
@@ -928,7 +928,7 @@ def main() -> None:
                     message.strip(),
                     history,
                     reference_index,
-                    attachment,
+                    attachments,
                     web_sources,
                     cadre_profile_id,
                 )

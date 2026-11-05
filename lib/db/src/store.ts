@@ -171,6 +171,7 @@ export type StudentChatMessage = {
   role: "user" | "assistant";
   content: string;
   attachmentName?: string;
+  attachmentNames?: string[];
   references?: StudentChatReference[];
   imageDataUrl?: string;
 };

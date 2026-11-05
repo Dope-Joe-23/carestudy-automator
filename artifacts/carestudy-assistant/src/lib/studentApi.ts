@@ -135,6 +135,7 @@ export type AssistantHistoryMessage = {
 
 export type StudentChatMessage = AssistantHistoryMessage & {
   attachmentName?: string;
+  attachmentNames?: string[];
   references?: AssistantReference[];
   imageDataUrl?: string;
 };
@@ -220,6 +221,7 @@ export async function askStudentAssistant(input: {
   cadreProfileId?: string;
   conversationId?: number;
   attachment?: { filename: string; content: string };
+  attachments?: { filename: string; content: string }[];
   webSearch?: boolean;
 }): Promise<{ answer: string; references: AssistantReference[]; conversationId?: number }> {
   const controller = new AbortController();

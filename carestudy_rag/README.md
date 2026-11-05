@@ -31,6 +31,14 @@ certify medication or treatment appropriateness from the model's general
 knowledge. These criteria are a project baseline, not a substitute for an
 institution's current marking rubric.
 
+Uploaded files are labeled separately from excerpts retrieved from the bundled
+reference library or web search. For an uploaded-file task, bundled references
+are retrieved only when the student asks for sources, citations, guidelines, or
+standards; otherwise the review stays focused on the uploaded file and the
+project rubric. Summaries and reviews include the full extracted text up to 250,000 characters
+per message across all attached files. Reference-library sources are background,
+not additional student uploads, and must be identified separately in answers.
+
 The chat workspace currently enables the Registered General Nurse (RGN) profile.
 Registered Midwife (RM), Public Health Nurse (PHN), and Mental Health Nurse
 (MHN) are listed as in development and cannot be selected for review. A
