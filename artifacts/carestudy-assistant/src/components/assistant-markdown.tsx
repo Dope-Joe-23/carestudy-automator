@@ -17,10 +17,10 @@ export default function AssistantMarkdown({ text }: { text: string }) {
           h1: ({ children }) => <h2 className="mb-3 mt-6 text-2xl font-semibold tracking-tight first:mt-0">{children}</h2>,
           h2: ({ children }) => <h3 className="mb-2 mt-6 text-xl font-semibold tracking-tight first:mt-0">{children}</h3>,
           h3: ({ children }) => <h4 className="mb-2 mt-5 text-lg font-semibold tracking-tight first:mt-0">{children}</h4>,
-          p: ({ children }) => <p className="my-3 leading-7 first:mt-0 last:mb-0">{children}</p>,
+          p: ({ children }) => <p className="my-3 text-justify leading-7 first:mt-0 last:mb-0">{children}</p>,
           ul: ({ children }) => <ul className="my-3 list-disc space-y-1.5 pl-6 marker:text-primary">{children}</ul>,
           ol: ({ children }) => <ol className="my-3 list-decimal space-y-1.5 pl-6 marker:text-primary">{children}</ol>,
-          li: ({ children }) => <li className="pl-1 leading-7">{children}</li>,
+          li: ({ children }) => <li className="pl-1 text-justify leading-7">{children}</li>,
           blockquote: ({ children }) => (
             <blockquote className="my-4 border-l-4 border-primary/40 bg-muted/40 py-2 pl-4 pr-3 text-muted-foreground [&>p]:my-1">
               {children}

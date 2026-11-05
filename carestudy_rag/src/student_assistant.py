@@ -59,6 +59,27 @@ This is educational support, not a substitute for clinical judgment."""
 
 MIN_RELEVANCE_SCORE = 0.22
 MAX_ATTACHMENT_TEXT_CHARS = 250_000
+CARE_STUDY_CUES = (
+    r"\bcare stud(?:y|ies)\b",
+    r"\bcase stud(?:y|ies)\b",
+    r"\bpatient particulars?\b",
+    r"\bnursing diagnos(?:is|es)\b",
+    r"\bnursing care plan\b",
+    r"\bplan(?:ning)? of care\b",
+    r"\bimplementation of care\b",
+    r"\bevaluation of care\b",
+    r"\bchief complaint\b",
+    r"\bpresent(?:ing)? illness history\b",
+    r"\bsubjective and objective data\b",
+)
+REFERENCE_DOCUMENT_CUES = (
+    r"\blearning objectives?\b",
+    r"\btextbook\b",
+    r"\bfact sheet\b",
+    r"\bpractice guidelines?\b",
+    r"\bstandard(?:s)? of practice\b",
+    r"\breferences and further reading\b",
+)
 DOCUMENT_REVIEW_INTENT = re.compile(
     r"\b(?:review\w*|critiqu\w*|analy[sz]\w*|check\w*|correct\w*|fix\w*|"
     r"rewrit\w*|revis\w*|edit\w*|improv\w*|polish\w*|feedback|"
@@ -168,6 +189,16 @@ def _read_attachment(attachment: dict) -> str:
     return text
 
 
+def _classify_attachment_text(text: str) -> str:
+    normalized = text.lower()
+    care_study_matches = sum(bool(re.search(cue, normalized)) for cue in CARE_STUDY_CUES)
+    if care_study_matches >= 3 or re.search(r"\b(?:care|case) stud(?:y|ies)\b", normalized):
+        return "care_study"
+    if any(re.search(cue, normalized) for cue in REFERENCE_DOCUMENT_CUES):
+        return "reference"
+    return "other"
+
+
 def _is_document_review_request(message: str) -> bool:
     return bool(DOCUMENT_REVIEW_INTENT.search(message))
 
@@ -210,6 +241,10 @@ def answer_student_question(
     documents = [
         (item["filename"], _read_attachment(item))
         for item in attachments
+    ]
+    document_types = [
+        (filename, _classify_attachment_text(document_text))
+        for filename, document_text in documents
     ]
     if sum(len(text) for _, text in documents) > MAX_ATTACHMENT_TEXT_CHARS:
         raise ValueError(
@@ -301,6 +336,21 @@ def answer_student_question(
         prompt_parts.append(
             f"STUDENT-UPLOADED FILES ({len(documents)} total; these are the only files the student attached):"
         )
+        if any(document_type != "care_study" for _, document_type in document_types):
+            detected_types = "\n".join(
+                f"- {filename}: "
+                f"{'likely supporting reference material' if document_type == 'reference' else 'not clearly identifiable as a care/case study'}"
+                for filename, document_type in document_types
+                if document_type != "care_study"
+            )
+            prompt_parts.append(
+                "ATTACHMENT TYPE CHECK (heuristic, may be wrong):\n"
+                f"{detected_types}\n"
+                "Do not reject the file. If the student asks for a care-study review, "
+                "briefly note that the upload may be reference material or may not "
+                "contain a care study, then continue with what is actually present. "
+                "Ask for the care study only if its review is needed."
+            )
         full_review = _is_document_review_request(message)
         full_document_request = full_review or bool(
             re.search(r"\b(?:summari[sz]\w*|summar(?:y|ies)|overview|describe|outline)\b", message, re.IGNORECASE)
@@ -358,6 +408,20 @@ def answer_student_question(
         label="student assistant",
     )
     answer = _remove_unverified_citations(answer, len(references))
+    non_care_studies = [
+        (filename, document_type)
+        for filename, document_type in document_types
+        if document_type != "care_study"
+    ]
+    if non_care_studies and _is_document_review_request(message):
+        names = ", ".join(filename for filename, _ in non_care_studies)
+        answer = (
+            f"**Attachment check:** {names} "
+            "may be supporting reference material or may not be a care/case study. "
+            "I’ll base this response on its actual contents; attach the care study "
+            "as well if you want me to review that document.\n\n"
+            + answer
+        )
     if not library_chunks and not document_chunks and not has_documents and not web_source_blocks:
         answer = (
             "I couldn't find a sufficiently relevant passage in NurseAid's "

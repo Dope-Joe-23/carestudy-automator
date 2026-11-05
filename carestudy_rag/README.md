@@ -38,6 +38,10 @@ standards; otherwise the review stays focused on the uploaded file and the
 project rubric. Summaries and reviews include the full extracted text up to 250,000 characters
 per message across all attached files. Reference-library sources are background,
 not additional student uploads, and must be identified separately in answers.
+For review requests, a lightweight content heuristic checks whether each upload
+looks like a care study, supporting reference material, or an unrecognized
+document. It does not block uploads and can be wrong; uncertain/non-care-study
+files receive a notice so the student can attach the intended care study.
 
 The chat workspace currently enables the Registered General Nurse (RGN) profile.
 Registered Midwife (RM), Public Health Nurse (PHN), and Mental Health Nurse

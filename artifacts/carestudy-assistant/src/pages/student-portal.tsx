@@ -312,7 +312,7 @@ function useAuth(): AuthContextValue {
 // Sidebar navigation
 // ---------------------------------------------------------------------------
 
-type TabId = "workspace" | "explore" | "projects" | "downloads";
+type TabId = "workspace" | "new-chat" | "explore" | "projects" | "downloads";
 
 type StudentChatNavigation = {
   activeChatId: number | null;
@@ -334,6 +334,7 @@ function useStudentChatNavigation() {
 
 const TABS: { id: TabId; label: string; tooltip: string; icon: React.ElementType }[] = [
   { id: "workspace", label: "Study workspace", tooltip: "Ask NurseAid and continue your conversations", icon: MessageCircle },
+  { id: "new-chat", label: "New chat", tooltip: "Start a new NurseAid conversation", icon: Plus },
   { id: "explore", label: "Explore", tooltip: "Browse learning tools and student services", icon: Compass },
   { id: "projects", label: "My projects", tooltip: "Track your care-study orders and projects", icon: ClipboardList },
   { id: "downloads", label: "Downloads", tooltip: "Open delivered studies and files", icon: Receipt },
@@ -423,21 +424,7 @@ function PortalSidebar({
         </SidebarGroup>
         {student && (
           <SidebarGroup>
-            <div className="flex items-center justify-between pr-2">
-              <SidebarGroupLabel className="flex-1">Your chats</SidebarGroupLabel>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-7 shrink-0 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden"
-                aria-label="Start a new chat"
-                title="Start a new chat"
-                disabled={chatNavigation.chatBusy}
-                onClick={chatNavigation.startNewChat}
-              >
-                <Plus className="size-4" />
-              </Button>
-            </div>
+            <SidebarGroupLabel>Your chats</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {chatsQuery.isLoading && (
@@ -1496,6 +1483,21 @@ const SUGGESTED_QUESTIONS = [
   "Rewrite the uploaded chapter for clarity and consistency, preserving the facts and marking anything I need to confirm.",
 ];
 
+const ATTACHMENT_PROMPTS = [
+  {
+    label: "Review consistency",
+    prompt: "Review this care study for completeness and consistency.",
+  },
+  {
+    label: "Prioritize corrections",
+    prompt: "Critique this document and prioritize the corrections needed.",
+  },
+  {
+    label: "Suggest a rewrite",
+    prompt: "Suggest a rewrite without adding or changing patient facts.",
+  },
+];
+
 function randomizeQuestions(questions: string[]): string[] {
   const shuffled = [...questions];
   for (let index = shuffled.length - 1; index > 0; index -= 1) {
@@ -2000,15 +2002,28 @@ function StudentAssistantChat() {
     </label>
   );
 
+  const attachmentPromptMenu = () => attachments.length > 0 && (
+    <div className="mb-2 flex flex-wrap items-center gap-1.5 px-1" aria-label="Optional suggested prompts">
+      <span className="text-[11px] text-muted-foreground">Quick prompts (optional):</span>
+      {ATTACHMENT_PROMPTS.map(({ label, prompt: suggestedPrompt }) => (
+        <Button
+          key={label}
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-7 px-2 text-xs"
+          title={suggestedPrompt}
+          disabled={busy}
+          onClick={() => setPrompt(suggestedPrompt)}
+        >
+          {label}
+        </Button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="flex h-full min-h-0 min-w-0 max-w-full flex-col">
-      <div className="flex items-center justify-between pb-2">
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={startNewChat}>
-            <Plus className="mr-1 size-4" /> New chat
-          </Button>
-        </div>
-      </div>
       <div
         ref={chatScrollRef}
         aria-live="polite"
@@ -2038,6 +2053,7 @@ function StudentAssistantChat() {
                         ))}
                       </div>
                     )}
+                    {attachmentPromptMenu()}
                     <Textarea
                       value={prompt}
                       onChange={(event) => setPrompt(event.target.value)}
@@ -2082,7 +2098,7 @@ function StudentAssistantChat() {
             messages.map((turn, index) => (
               <div key={`${turn.role}-${index}`} className={cn("flex min-w-0 max-w-full", turn.role === "user" ? "justify-end" : "justify-center")}>
                 <div className={cn(
-                  turn.role === "user" ? "w-fit min-w-0 max-w-full sm:max-w-2xl" : "w-full min-w-0 max-w-4xl",
+                turn.role === "user" ? "w-fit min-w-0 max-w-full sm:max-w-2xl" : "w-full min-w-0 max-w-3xl",
                 )}>
                   {turn.role === "user" ? (
                     <div className="w-fit max-w-full rounded-2xl rounded-br-md bg-primary/10 px-4 py-3 text-foreground sm:px-5">
@@ -2238,6 +2254,7 @@ function StudentAssistantChat() {
               ))}
             </div>
           )}
+          {attachmentPromptMenu()}
           <Textarea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
@@ -2448,7 +2465,8 @@ function StudentPortalRouter() {
       : "projects";
 
   const handleTabSelect = (tab: TabId) => {
-    if (tab === "workspace") navigate("/");
+    if (tab === "new-chat") chatNavigation.startNewChat();
+    else if (tab === "workspace") navigate("/");
     else if (tab === "explore") navigate("/student/explore");
     else if (tab === "projects") navigate("/student/orders");
     else if (tab === "downloads") navigate("/student/downloads");

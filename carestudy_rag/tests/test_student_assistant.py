@@ -226,6 +226,39 @@ class StudentAssistantTests(unittest.TestCase):
             {"assessment.txt", "care-plan.md"},
         )
 
+    def test_attachment_check_flags_reference_material_without_blocking_review(self):
+        content = base64.b64encode(
+            b"Learning objectives: describe the nursing process. Textbook chapter about assessment."
+        ).decode("ascii")
+
+        with mock.patch.object(assistant, "_chat_model", return_value="I reviewed the uploaded text.") as model:
+            result = assistant.answer_student_question(
+                "Review my care study for consistency.",
+                [],
+                SimpleIndex(),
+                {"filename": "fundamentals.txt", "content": content},
+            )
+
+        self.assertIn("ATTACHMENT TYPE CHECK (heuristic, may be wrong)", model.call_args.args[1])
+        self.assertIn("I’ll base this response on its actual contents", result["answer"])
+        self.assertIn("fundamentals.txt", result["answer"])
+
+    def test_care_study_marker_is_not_flagged_as_non_care_study(self):
+        content = base64.b64encode(
+            b"Care Study: patient particulars, assessment, nursing diagnosis, and nursing care plan."
+        ).decode("ascii")
+
+        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+            result = assistant.answer_student_question(
+                "Review my care study for consistency.",
+                [],
+                SimpleIndex(),
+                {"filename": "case-study.txt", "content": content},
+            )
+
+        self.assertNotIn("ATTACHMENT TYPE CHECK", model.call_args.args[1])
+        self.assertNotIn("Attachment check:", result["answer"])
+
     def test_long_document_review_includes_full_text_and_revision_guidance(self):
         index = SimpleIndex()
         document = ("Chapter 1: assessment findings.\n" * 5_000).encode("utf-8")
