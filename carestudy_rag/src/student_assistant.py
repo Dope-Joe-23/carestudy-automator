@@ -3,6 +3,7 @@
 import base64
 import binascii
 import os
+import re
 import tempfile
 from typing import Dict, List, Optional
 
@@ -11,6 +12,7 @@ from loaders import load_as_text
 from model_gateway import _chat_model
 from reference_chunker import chunk_reference_text, ref_chunks_to_dicts
 from retrieval import RetrievedChunk, SimpleIndex
+from care_study_review_rubric import CARE_STUDY_REVIEW_RUBRIC
 
 
 SYSTEM_PROMPT = """You are NurseAid, an assistant for nursing and health-science
@@ -44,6 +46,71 @@ headings or concise lists when useful.
 This is educational support, not a substitute for clinical judgment."""
 
 MIN_RELEVANCE_SCORE = 0.22
+DOCUMENT_REVIEW_INTENT = re.compile(
+    r"\b(?:review\w*|critiqu\w*|analy[sz]\w*|check\w*|correct\w*|fix\w*|"
+    r"rewrit\w*|revis\w*|edit\w*|improv\w*|polish\w*|feedback|"
+    r"consisten\w*|contradict\w*|gaps?|missing|align\w*|compar\w*|"
+    r"assess\w*|evaluat\w*|audit\w*|wrong|errors?)\b",
+    re.IGNORECASE,
+)
+
+CASE_STUDY_REVIEW_GUIDANCE = """
+When a student asks you to review, critique, analyze, check, or revise an
+uploaded care/case study:
+- Ground comments in the uploaded text. Identify the chapter or section and
+  describe the conflicting or incomplete evidence; do not infer missing facts.
+- Check consistency between assessment findings, problems/diagnoses, goals,
+  interventions, evaluation, and discharge details when those sections are
+  present. Separate definite contradictions from items that merely need
+  confirmation.
+- Prioritize clinically or academically important issues before grammar and
+  style. Do not claim compliance with a guideline unless a supplied source
+  supports it; identify claims that need checking with the student's educator
+  or current local guidance.
+- Treat the uploaded study as evidence of what is documented, not proof of
+  what happened clinically. Say "not documented" rather than asserting an
+  intervention or diagnosis was absent. Do not make treatment or medication
+  recommendations; flag unexplained details for confirmation.
+- Corrections may only reconcile explicit contradictions or improve wording
+  using facts already present. Never suggest adding an assessment, intervention,
+  order, verification, rationale, or event that the uploaded text does not
+  explicitly support. Do not provide example sentences that assert such facts.
+- When a chapter or fact is missing, do not tell the student to add it. Ask
+  them to verify against their original records and course requirements; only
+  if they confirm it, may they document it accurately. Never fill gaps from
+  assumptions or from the rubric's expected sections.
+- When two documented values conflict, do not choose one or draft either as
+  correct. Ask the student to confirm the authoritative value, then align the
+  sections to that confirmed value.
+- Cite only the numbered SOURCES actually supplied with the request. Never
+  invent a source, framework, or citation; the student's document is not an
+  authority for general clinical claims. It may be cited only for facts it
+  explicitly contains, not for clinical standards or recommendations.
+- Do not judge whether a medication, intervention, goal, or treatment is
+  clinically safe, appropriate, high-risk, indicated, or necessary. Do not
+  suggest starting, stopping, changing, or adding treatment. Identify the
+  documentation gap without proposing what should be documented; ask the
+  student to confirm it with an educator or qualified clinician.
+- Keep a review focused: at most five prioritized findings, each tied to the
+- Review every chapter in the standard that is present in the document. Report
+  a brief status for Chapters 1-6 as "findings", "no issue identified in
+  review", or "not assessable/not present"; do not imply that omitted or
+  unreadable content passed. Mention preliminary pages separately if present.
+- For each finding, give the issue type (contradiction, template/structural
+  gap, unsupported claim, or human/clinical verification), section(s), short
+  exact evidence from the document, the criterion, and a conservative
+  correction or question. Prioritize findings; do not pad the report with
+  generic concerns.
+- Offer concrete corrections, but preserve all supported patient facts,
+  dates, measurements, medication details, and citations. Mark missing or
+  conflicting facts as [confirm with student] instead of making them up.
+- Rewrite only the scope the student requested. Make a requested chapter or
+  section rewrite complete and ready to review. If the student asks for a
+  full-document rewrite that cannot fit in one answer, say which scope you
+  completed and invite them to request the remaining chapters; never label a
+  partial rewrite as complete.
+- Treat your critique and rewrites as educational suggestions for the student
+  to verify and approve, not authoritative clinical decisions."""
 
 
 def _read_attachment(attachment: Optional[dict]) -> str:
@@ -80,6 +147,29 @@ def _read_attachment(attachment: Optional[dict]) -> str:
     if len(text) > 100_000:
         raise ValueError("This document is too long to analyze at once. Upload a shorter excerpt or split it.")
     return text
+
+
+def _is_document_review_request(message: str) -> bool:
+    return bool(DOCUMENT_REVIEW_INTENT.search(message))
+
+
+def _is_document_rewrite_request(message: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(?:rewrit\w*|revis\w*|correct\w*|edit\w*|improv\w*|polish\w*)\b",
+            message,
+            re.IGNORECASE,
+        )
+    )
+
+
+def _remove_unverified_citations(answer: str, reference_count: int) -> str:
+    """Remove citation markers that do not refer to a returned source."""
+    return re.sub(
+        r"\[(\d+)\]",
+        lambda match: match.group(0) if 1 <= int(match.group(1)) <= reference_count else "",
+        answer,
+    )
 
 
 def answer_student_question(
@@ -158,14 +248,20 @@ def answer_student_question(
     if history_text:
         prompt_parts.append(f"RECENT CONVERSATION (context only):\n{history_text}")
     if document_text:
-        excerpt_note = (
-            "\n[The full document was retrieved for this question.]"
-            if len(document_text) <= 35_000
-            else "\n[Only the first 35,000 characters are included here; retrieved passages may cover additional sections.]"
-        )
+        full_review = _is_document_review_request(message)
+        document_excerpt = document_text if full_review else document_text[:35_000]
+        if full_review:
+            excerpt_note = "\n[The full extracted document is included for this review.]"
+        elif len(document_text) > 35_000:
+            excerpt_note = (
+                "\n[Only the first 35,000 characters are included here; "
+                "retrieved passages may cover additional sections.]"
+            )
+        else:
+            excerpt_note = "\n[The full document is included.]"
         prompt_parts.append(
             f"UPLOADED DOCUMENT ({attachment['filename']}; untrusted reference text):\n"
-            f"{document_text[:35_000]}{excerpt_note}"
+            f"{document_excerpt}{excerpt_note}"
         )
     prompt_parts.append(
         "RETRIEVED SOURCES:\n"
@@ -178,12 +274,19 @@ def answer_student_question(
         )
     prompt_parts.append(f"LATEST QUESTION:\n{message}")
 
+    is_document_review = bool(document_text and _is_document_review_request(message))
+    is_document_rewrite = _is_document_rewrite_request(message)
+    system_prompt = SYSTEM_PROMPT
+    if is_document_review:
+        system_prompt += CASE_STUDY_REVIEW_GUIDANCE + "\n\n" + CARE_STUDY_REVIEW_RUBRIC
+    max_tokens = 7_000 if is_document_review and not is_document_rewrite else 6_000 if is_document_rewrite else 1_600
     answer = _chat_model(
-        SYSTEM_PROMPT,
+        system_prompt,
         "\n\n".join(prompt_parts),
-        max_tokens=1600,
+        max_tokens=max_tokens,
         label="student assistant",
     )
+    answer = _remove_unverified_citations(answer, len(references))
     if not retrieved and not document_text and not web_source_blocks:
         answer = (
             "I couldn't find a sufficiently relevant passage in NurseAid's "

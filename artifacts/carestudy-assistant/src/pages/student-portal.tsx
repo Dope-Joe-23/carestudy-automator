@@ -1491,9 +1491,9 @@ type AssistantTurn = studentApi.StudentChatMessage & {
 };
 
 const SUGGESTED_QUESTIONS = [
-  "Explain a nursing concept in simple terms",
-  "Help me review an assignment draft",
-  "Summarize my uploaded course material",
+  "Review my uploaded care study for inconsistencies across chapters. Cite each section and explain the issue.",
+  "Critique this chapter and give prioritized corrections without adding patient facts.",
+  "Rewrite the uploaded chapter for clarity and consistency, preserving the facts and marking anything I need to confirm.",
 ];
 
 function randomizeQuestions(questions: string[]): string[] {
@@ -1534,6 +1534,10 @@ function StudentAssistantChat() {
     staleTime: 60_000,
   });
   const welcomeName = student?.name.trim().split(/\s+/)[0] || student?.username.trim();
+  const lastAttachedFile = messages
+    .slice()
+    .reverse()
+    .find((turn) => turn.role === "user" && turn.attachmentFile)?.attachmentFile;
 
   useEffect(() => {
     const nextStudentId = student?.id ?? null;
@@ -1691,7 +1695,11 @@ function StudentAssistantChat() {
     if (!message || busy) return;
     const editedIndex = editingIndex;
     const history = editedIndex === null ? messages : messages.slice(0, editedIndex);
-    const file = attachment ?? (editedIndex === null ? undefined : messages[editedIndex]?.attachmentFile);
+    const file = attachment ?? (
+      editedIndex === null
+        ? lastAttachedFile
+        : messages[editedIndex]?.attachmentFile
+    );
     void ask(
       message,
       history,
@@ -1856,7 +1864,7 @@ function StudentAssistantChat() {
                     {welcomeName ? `Where do we begin, ${welcomeName}?` : "Where do we begin?"}
                   </h1>
                   <p className="text-sm text-muted-foreground sm:text-base">
-                    What is on your mind? Need help with a nursing concept, assignment, or course material? Ask NurseAid.
+                    Attach a full care study or chapter, then ask in your own words for a critique, consistency check, correction, or rewrite.
                   </p>
                 </div>
                 <form onSubmit={sendMessage} className="w-full">
@@ -1864,7 +1872,7 @@ function StudentAssistantChat() {
                     <Textarea
                       value={prompt}
                       onChange={(event) => setPrompt(event.target.value)}
-                      placeholder="Ask a nursing or health-science question…"
+                      placeholder="Ask in your own words: check consistency, critique a chapter, or suggest a rewrite…"
                       aria-label="Message NurseAid"
                       rows={3}
                       maxLength={4_000}
@@ -2052,6 +2060,11 @@ function StudentAssistantChat() {
       {error && <p role="alert" className="mb-2 text-sm text-destructive">{error}</p>}
 
       {messages.length > 0 && <form onSubmit={sendMessage} className="border-t bg-background pt-3">
+        {!attachment && lastAttachedFile && (
+          <p className="mb-2 text-xs text-muted-foreground">
+            Follow-ups in this chat will include {lastAttachedFile.name}. Attach another file to switch documents.
+          </p>
+        )}
         {editingIndex !== null && (
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>Editing your question — submitting will regenerate the answer.</span>
@@ -2073,7 +2086,7 @@ function StudentAssistantChat() {
           <Textarea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
-            placeholder="Ask a nursing or health-science question…"
+            placeholder="Ask in your own words about the uploaded study…"
             aria-label="Message NurseAid"
             rows={2}
             maxLength={4_000}

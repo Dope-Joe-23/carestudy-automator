@@ -19,6 +19,18 @@ textbooks/formulary  ─┘
 (facts)
 ```
 
+### Student chat care-study reviews
+
+When a student attaches a document and asks for a review, critique, consistency
+check, or rewrite, NurseAid applies the chapter-by-chapter criteria in
+`src/care_study_review_rubric.py`. The checklist follows the six-chapter
+workspace template and checks structure, evidence traceability, and internal
+consistency. It distinguishes document/template findings from clinical claims
+that require authoritative references or qualified human review. It does not
+certify medication or treatment appropriateness from the model's general
+knowledge. These criteria are a project baseline, not a substitute for an
+institution's current marking rubric.
+
 Two separate retrieval indexes:
 - **Template index**: built from `data/templates/` — past care studies, used to
   retrieve example passages showing the expected structure/tone for a given heading.

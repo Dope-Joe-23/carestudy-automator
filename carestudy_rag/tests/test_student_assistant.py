@@ -9,6 +9,7 @@ from unittest import mock
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import student_assistant as assistant  # noqa: E402
+from care_study_review_rubric import CARE_STUDY_REVIEW_RUBRIC  # noqa: E402
 from retrieval import SimpleIndex  # noqa: E402
 
 
@@ -52,6 +53,82 @@ class StudentAssistantTests(unittest.TestCase):
             )
 
         self.assertEqual(result["references"][0]["label"], "wound-notes.txt")
+
+    def test_long_document_review_includes_full_text_and_revision_guidance(self):
+        index = SimpleIndex()
+        document = ("Chapter 1: assessment findings.\n" * 1_600).encode("utf-8")
+        content = base64.b64encode(document).decode("ascii")
+
+        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+            assistant.answer_student_question(
+                "Review this care study for consistency across chapters.",
+                [],
+                index,
+                {"filename": "care-study.txt", "content": content},
+            )
+
+        prompt = model.call_args.args[1]
+        self.assertIn("The full extracted document is included for this review.", prompt)
+        self.assertIn("Chapter 1: assessment findings.", prompt)
+        self.assertIn("preserve all supported patient facts", model.call_args.args[0])
+        self.assertIn("Chapter 1 — Assessment", model.call_args.args[0])
+        self.assertIn("Chapter 2 — Analysis of Data", model.call_args.args[0])
+        self.assertIn("Chapter 3 — Planning", model.call_args.args[0])
+        self.assertIn("Chapter 4 — Implementation", model.call_args.args[0])
+        self.assertIn("Chapter 5 — Evaluation", model.call_args.args[0])
+        self.assertIn("Chapter 6 — Summary, conclusion, and bibliography", model.call_args.args[0])
+        self.assertIn('status for Chapters 1-6 as "findings"', model.call_args.args[0])
+
+    def test_rubric_covers_template_chapters_and_evidence_chain(self):
+        for chapter in range(1, 7):
+            self.assertIn(f"Chapter {chapter} —", CARE_STUDY_REVIEW_RUBRIC)
+        for section in ("1.1", "1.11", "2.1", "2.5", "3.1", "3.2", "4.1", "4.3", "5.1", "5.3", "6.1", "6.3"):
+            self.assertIn(section, CARE_STUDY_REVIEW_RUBRIC)
+        self.assertIn("assessment evidence -> problems and", CARE_STUDY_REVIEW_RUBRIC)
+        self.assertIn("strengths -> nursing diagnoses", CARE_STUDY_REVIEW_RUBRIC)
+
+    def test_review_rubric_is_not_added_to_non_review_document_questions(self):
+        with mock.patch.object(assistant, "_chat_model", return_value="Here is a summary.") as model:
+            assistant.answer_student_question(
+                "Summarize this document.",
+                [],
+                SimpleIndex(),
+                {
+                    "filename": "care-study.txt",
+                    "content": base64.b64encode(b"Chapter 1: assessment.").decode("ascii"),
+                },
+            )
+
+        self.assertNotIn("CARE-STUDY REVIEW STANDARD", model.call_args.args[0])
+
+    def test_long_document_summary_keeps_excerpt_and_discloses_truncation(self):
+        index = SimpleIndex()
+        document = ("Course reading about nursing care.\n" * 1_600).encode("utf-8")
+        content = base64.b64encode(document).decode("ascii")
+
+        with mock.patch.object(assistant, "_chat_model", return_value="Summary.") as model:
+            assistant.answer_student_question(
+                "Summarize this document.",
+                [],
+                index,
+                {"filename": "course-reading.txt", "content": content},
+            )
+
+        self.assertIn("Only the first 35,000 characters are included", model.call_args.args[1])
+
+    def test_document_review_removes_citations_without_returned_sources(self):
+        answer = "This is a concern [1]. The student should confirm the detail [2]."
+        self.assertEqual(
+            assistant._remove_unverified_citations(answer, 0),
+            "This is a concern . The student should confirm the detail .",
+        )
+
+    def test_document_review_keeps_only_citations_that_match_returned_sources(self):
+        answer = "This point is supported [1], but not this one [2]."
+        self.assertEqual(
+            assistant._remove_unverified_citations(answer, 1),
+            "This point is supported [1], but not this one .",
+        )
 
     def test_irrelevant_reference_is_not_cited_and_library_gap_is_disclosed(self):
         index = SimpleIndex()
