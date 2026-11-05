@@ -9,7 +9,12 @@ from unittest import mock
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import student_assistant as assistant  # noqa: E402
-from care_study_review_rubric import CARE_STUDY_REVIEW_RUBRIC  # noqa: E402
+from care_study_review_rubric import (  # noqa: E402
+    CARE_STUDY_CADRE_PROFILES,
+    CARE_STUDY_REVIEW_RUBRIC,
+    RM_CARE_STUDY_REVIEW_RUBRIC_DRAFT,
+    public_care_study_cadre_profiles,
+)
 from retrieval import SimpleIndex  # noqa: E402
 
 
@@ -86,6 +91,41 @@ class StudentAssistantTests(unittest.TestCase):
             self.assertIn(section, CARE_STUDY_REVIEW_RUBRIC)
         self.assertIn("assessment evidence -> problems and", CARE_STUDY_REVIEW_RUBRIC)
         self.assertIn("strengths -> nursing diagnoses", CARE_STUDY_REVIEW_RUBRIC)
+
+    def test_only_the_educator_reviewed_cadre_profile_is_available(self):
+        public_profiles = public_care_study_cadre_profiles()
+        self.assertEqual(
+            [profile["id"] for profile in public_profiles],
+            list(CARE_STUDY_CADRE_PROFILES),
+        )
+        self.assertEqual(
+            [profile["id"] for profile in public_profiles if profile["status"] == "available"],
+            ["registered_general_nurse"],
+        )
+        self.assertEqual(
+            assistant._review_rubric_for_cadre("registered_general_nurse"),
+            CARE_STUDY_REVIEW_RUBRIC,
+        )
+        for profile_id in ("registered_midwife", "public_health_nurse", "mental_health_nurse", "unknown"):
+            with self.subTest(profile_id=profile_id), self.assertRaises(ValueError):
+                assistant._review_rubric_for_cadre(profile_id)
+
+    def test_rm_draft_rubric_is_phase_specific_but_not_usable_yet(self):
+        rm_profile = CARE_STUDY_CADRE_PROFILES["registered_midwife"]
+        self.assertEqual(rm_profile["status"], "in_development")
+        self.assertEqual(rm_profile["review_rubric"], RM_CARE_STUDY_REVIEW_RUBRIC_DRAFT)
+        for phase in (
+            "Client and pregnancy assessment",
+            "Antenatal care",
+            "Labour and delivery",
+            "Puerperium and postnatal care",
+            "Summary, conclusion, references, appendices",
+            "Cross-phase consistency",
+        ):
+            self.assertIn(phase, RM_CARE_STUDY_REVIEW_RUBRIC_DRAFT)
+        self.assertIn("NOT APPROVED", RM_CARE_STUDY_REVIEW_RUBRIC_DRAFT)
+        with self.assertRaises(ValueError):
+            assistant._review_rubric_for_cadre("registered_midwife")
 
     def test_review_rubric_is_not_added_to_non_review_document_questions(self):
         with mock.patch.object(assistant, "_chat_model", return_value="Here is a summary.") as model:

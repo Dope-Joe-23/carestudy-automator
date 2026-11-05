@@ -142,3 +142,140 @@ Cross-chapter checks:
   verification. Do not label a missing detail or template difference a
   clinical error.
 """
+
+RM_CARE_STUDY_REVIEW_RUBRIC_DRAFT = """
+PROVISIONAL REGISTERED MIDWIFERY CARE-STUDY REVIEW CHECKLIST — NOT APPROVED
+
+This draft is an editorial consistency checklist synthesized from four
+user-supplied RM student care-study examples in attached_assets/RM cadre. Those
+examples vary in headings, numbering, and organization. The draft is not an
+N&MC rubric, an institutional marking scheme, or a clinical guideline. It must
+remain unavailable to student review until an RM educator reconciles it with
+the current programme instructions and approves the template and criteria.
+
+Review only what the uploaded document supports. Mark absent, unreadable, or
+ambiguous details "Not assessable from this document." A missing entry does not
+prove care was not provided. Treat departures from this draft as possible
+format differences, not clinical errors.
+
+Preliminary pages:
+- Check that title, declaration, acknowledgements, contents, and abbreviations
+  are consistent with one another and the institution's supplied requirements.
+- Flag unnecessary patient identifiers in shared work. Do not invent required
+  wording for declarations or institutional front matter.
+
+Phase 1 — Client and pregnancy assessment:
+- Check that relevant social, family, medical, surgical, menstrual, and past
+  obstetric histories are distinguishable, attributed where possible, and
+  consistent within the document.
+- Check that the present pregnancy account separates client-reported history,
+  observed findings, and record-derived information. Dates, gestational-age
+  references, units, and described results should not contradict one another.
+- Check that the introduction and phase summaries do not add patient facts
+  absent from the assessment or supplied records.
+- Do not infer a risk status, diagnosis, or clinical significance not
+  documented or supported by an applicable supplied source.
+
+Phase 2 — Antenatal care:
+- Check that the first contact, clinic contacts, home visits, care plans, and
+  evaluations have a traceable chronology. Flag missing or contradictory dates
+  without assuming which date is correct.
+- For each care-plan entry, trace the stated problem or diagnosis to assessment
+  evidence; check that the objective has observable outcome criteria and a
+  timeframe; and distinguish planned care from care documented as delivered.
+- Check that evaluation refers to the same objective and reports evidence
+  recorded in the document. Where an outcome is partly met or unclear, flag the
+  gap rather than inventing a result or amendment.
+- Compare clinical claims or instructions only with relevant sources supplied
+  or institutionally approved. Do not certify a regimen, investigation, or
+  intervention from model memory.
+
+Phase 3 — Labour and delivery:
+- Check the account is chronological across admission, labour stages, birth,
+  immediate newborn care, placental/membrane findings, and early post-delivery
+  observations. Flag contradictory times, dates, sequences, or recorded
+  values.
+- Where labour charts or records are included, check that narrative summaries
+  agree with the recorded material and clearly identify unavailable or
+  unreadable chart information. Do not derive missing observations.
+- Check that maternal and newborn findings are not conflated, and that care
+  described as performed has evidence in the narrative or supplied record.
+- Check labour-phase diagnoses or problems, objectives, plans, documented
+  interventions, and evaluation for traceable links. Refer questions about
+  clinical appropriateness, escalation, or protocol compliance to an RM
+  educator using the applicable current guideline.
+
+Phase 4 — Puerperium and postnatal care:
+- Check that the maternal and newborn accounts are distinguishable, and that
+  postnatal observations, care, education, discharge, home/clinic follow-up,
+  and outcomes follow a consistent timeline.
+- Trace each phase-specific care-plan item from evidence through objective,
+  documented care, and evaluation. Do not treat a planned action as proof it
+  occurred or as proof of a clinical outcome.
+- Flag missing documentation of follow-up or continuity as a documentation
+  gap only; do not conclude that follow-up or referral did not happen.
+- Do not judge maternal or newborn management without adequate context and
+  the applicable approved source.
+
+Phase 5 — Summary, conclusion, references, appendices:
+- Check the summary and conclusion reflect the documented antenatal, labour,
+  birth, and postnatal course without adding facts or overstating outcomes.
+- Check that in-text citations map to identifiable bibliography entries and
+  that cited clinical claims can be traced to supplied sources. Do not invent
+  bibliographic details or claim source authority without verification.
+- Check appendices referenced in the narrative are present and readable where
+  supplied. Avoid repeating unnecessary identifiers; do not infer missing
+  records.
+
+Cross-phase consistency:
+- Trace key dates, pregnancy history, maternal findings, labour timeline,
+  newborn information, treatments as recorded, care-plan entries, and outcomes
+  across phases; report direct contradictions with their document locations.
+- Trace the reasoning chain: assessment evidence -> identified needs/problems
+  -> objectives -> planned care -> documented care -> evaluation ->
+  follow-up -> summary and conclusion.
+- Classify each finding as a definite document contradiction, a structural or
+  documentation gap, an unsupported claim, or an item requiring RM educator/
+  clinical verification. Keep clinical verification separate from editorial
+  findings and do not prescribe changes to patient care.
+"""
+
+CARE_STUDY_CADRE_PROFILES = {
+    "registered_general_nurse": {
+        "name": "Registered General Nurse",
+        "abbreviation": "RGN",
+        "status": "available",
+        "review_rubric": CARE_STUDY_REVIEW_RUBRIC,
+    },
+    "registered_midwife": {
+        "name": "Registered Midwife",
+        "abbreviation": "RM",
+        "status": "in_development",
+        "review_rubric": RM_CARE_STUDY_REVIEW_RUBRIC_DRAFT,
+    },
+    "public_health_nurse": {
+        "name": "Public Health Nurse",
+        "abbreviation": "PHN",
+        "status": "in_development",
+        "review_rubric": None,
+    },
+    "mental_health_nurse": {
+        "name": "Mental Health Nurse",
+        "abbreviation": "MHN",
+        "status": "in_development",
+        "review_rubric": None,
+    },
+}
+
+
+def public_care_study_cadre_profiles() -> list[dict[str, str]]:
+    """Return profile metadata safe for the student UI, without rubric text."""
+    return [
+        {
+            "id": profile_id,
+            "name": profile["name"],
+            "abbreviation": profile["abbreviation"],
+            "status": profile["status"],
+        }
+        for profile_id, profile in CARE_STUDY_CADRE_PROFILES.items()
+    ]

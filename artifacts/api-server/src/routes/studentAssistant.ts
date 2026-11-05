@@ -2,7 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { getStudyStore, type StudentChatMessage, type StudentChatReference } from "@workspace/db";
 import { generateStudentAssistantImage, isStudentAssistantImageConfigured } from "../lib/nurseflowVideo";
 import { optionalStudent, requireStudent, type AuthedRequest } from "../lib/studentAuth";
-import { draftWorker, type DraftReference } from "../lib/draftWorker";
+import { draftWorker, type DraftReference, type StudentCareStudyCadreProfile } from "../lib/draftWorker";
 
 const router: IRouter = Router();
 const MAX_MESSAGE_LENGTH = 4_000;
@@ -15,6 +15,12 @@ const MAX_CHAT_IMAGE_DATA_URL_LENGTH = 5_600_000;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = new Set([".pdf", ".docx", ".txt", ".md"]);
 const MAX_WEB_SOURCES = 5;
+const CARE_STUDY_CADRE_PROFILES: StudentCareStudyCadreProfile[] = [
+  { id: "registered_general_nurse", name: "Registered General Nurse", abbreviation: "RGN", status: "available" },
+  { id: "registered_midwife", name: "Registered Midwife", abbreviation: "RM", status: "in_development" },
+  { id: "public_health_nurse", name: "Public Health Nurse", abbreviation: "PHN", status: "in_development" },
+  { id: "mental_health_nurse", name: "Mental Health Nurse", abbreviation: "MHN", status: "in_development" },
+];
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 type WebSource = { title: string; url: string; snippet: string; date: string };
@@ -250,6 +256,24 @@ router.post(
       res.status(422).json({ error: "The conversation id is invalid." });
       return;
     }
+    const cadreProfileId = req.body?.cadreProfileId === undefined
+      ? "registered_general_nurse"
+      : req.body.cadreProfileId;
+    if (typeof cadreProfileId !== "string") {
+      res.status(422).json({ error: "Select a valid care-study cadre." });
+      return;
+    }
+    const cadreProfile = CARE_STUDY_CADRE_PROFILES.find((profile) => profile.id === cadreProfileId);
+    if (!cadreProfile) {
+      res.status(422).json({ error: "Select a valid care-study cadre." });
+      return;
+    }
+    if (cadreProfile.status !== "available") {
+      res.status(422).json({
+        error: `${cadreProfile.name} review is not available yet. Choose a cadre with an approved review profile.`,
+      });
+      return;
+    }
     const student = (req as AuthedRequest).student;
     if (!student && conversationId !== null) {
       res.status(401).json({ error: "Sign in to open and continue saved conversations." });
@@ -274,7 +298,13 @@ router.post(
       }
       const webSearch = req.body?.webSearch === true;
       const webSources = webSearch ? await searchBrave(message) : [];
-      const result = await draftWorker.chatWithStudent(message, history, attachment, webSources);
+      const result = await draftWorker.chatWithStudent(
+        message,
+        history,
+        attachment,
+        webSources,
+        cadreProfile.id,
+      );
       if (!result.answer.trim()) {
         throw new Error("The assistant returned an empty answer.");
       }
@@ -319,6 +349,7 @@ router.get("/student/assistant/tools", (_req, res) => {
   res.json({
     webSearch: Boolean(process.env.BRAVE_SEARCH_API_KEY?.trim()),
     imageGeneration: isStudentAssistantImageConfigured(),
+    careStudyCadres: CARE_STUDY_CADRE_PROFILES,
   });
 });
 

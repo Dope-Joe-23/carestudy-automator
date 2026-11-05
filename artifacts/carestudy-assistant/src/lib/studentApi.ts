@@ -151,6 +151,14 @@ export type StudentChat = StudentChatSummary & { messages: StudentChatMessage[] 
 export type StudentAssistantTools = {
   webSearch: boolean;
   imageGeneration: boolean;
+  careStudyCadres: CareStudyCadreProfile[];
+};
+
+export type CareStudyCadreProfile = {
+  id: string;
+  name: string;
+  abbreviation: string;
+  status: "available" | "in_development";
 };
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
@@ -209,6 +217,7 @@ export async function askStudentAssistant(input: {
   message: string;
   history: AssistantHistoryMessage[];
   messages: StudentChatMessage[];
+  cadreProfileId?: string;
   conversationId?: number;
   attachment?: { filename: string; content: string };
   webSearch?: boolean;

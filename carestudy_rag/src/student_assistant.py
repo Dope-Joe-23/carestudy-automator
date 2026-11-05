@@ -12,7 +12,7 @@ from loaders import load_as_text
 from model_gateway import _chat_model
 from reference_chunker import chunk_reference_text, ref_chunks_to_dicts
 from retrieval import RetrievedChunk, SimpleIndex
-from care_study_review_rubric import CARE_STUDY_REVIEW_RUBRIC
+from care_study_review_rubric import CARE_STUDY_CADRE_PROFILES
 
 
 SYSTEM_PROMPT = """You are NurseAid, an assistant for nursing and health-science
@@ -172,12 +172,20 @@ def _remove_unverified_citations(answer: str, reference_count: int) -> str:
     )
 
 
+def _review_rubric_for_cadre(cadre_profile_id: str) -> str:
+    profile = CARE_STUDY_CADRE_PROFILES.get(cadre_profile_id)
+    if not profile or profile["status"] != "available" or not profile["review_rubric"]:
+        raise ValueError("The selected care-study cadre profile is not available yet.")
+    return str(profile["review_rubric"])
+
+
 def answer_student_question(
     message: str,
     history: List[Dict[str, str]],
     reference_index: SimpleIndex,
     attachment: Optional[dict] = None,
     web_sources: Optional[List[Dict[str, str]]] = None,
+    cadre_profile_id: str = "registered_general_nurse",
 ) -> dict:
     document_text = _read_attachment(attachment)
     retrieved: List[RetrievedChunk] = [
@@ -278,7 +286,7 @@ def answer_student_question(
     is_document_rewrite = _is_document_rewrite_request(message)
     system_prompt = SYSTEM_PROMPT
     if is_document_review:
-        system_prompt += CASE_STUDY_REVIEW_GUIDANCE + "\n\n" + CARE_STUDY_REVIEW_RUBRIC
+        system_prompt += CASE_STUDY_REVIEW_GUIDANCE + "\n\n" + _review_rubric_for_cadre(cadre_profile_id)
     max_tokens = 7_000 if is_document_review and not is_document_rewrite else 6_000 if is_document_rewrite else 1_600
     answer = _chat_model(
         system_prompt,

@@ -899,8 +899,12 @@ def main() -> None:
                 history = req.get("history", [])
                 attachment = req.get("attachment")
                 web_sources = req.get("webSources", [])
+                cadre_profile_id = req.get("cadreProfileId", "registered_general_nurse")
                 if not isinstance(message, str) or not message.strip():
                     emit({"id": req.get("id"), "error": "student_chat requires a message"})
+                    continue
+                if not isinstance(cadre_profile_id, str):
+                    emit({"id": req.get("id"), "error": "student_chat cadreProfileId is invalid"})
                     continue
                 if not isinstance(history, list) or not all(
                     isinstance(item, dict)
@@ -926,6 +930,7 @@ def main() -> None:
                     reference_index,
                     attachment,
                     web_sources,
+                    cadre_profile_id,
                 )
                 emit({"id": req.get("id"), **result})
                 continue

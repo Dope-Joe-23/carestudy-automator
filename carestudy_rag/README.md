@@ -31,6 +31,24 @@ certify medication or treatment appropriateness from the model's general
 knowledge. These criteria are a project baseline, not a substitute for an
 institution's current marking rubric.
 
+The chat workspace currently enables the Registered General Nurse (RGN) profile.
+Registered Midwife (RM), Public Health Nurse (PHN), and Mental Health Nurse
+(MHN) are listed as in development and cannot be selected for review. A
+provisional RM template and review checklist have been drafted from four
+user-supplied RM student examples in `attached_assets/RM cadre/`. The examples
+differ in organization, so the draft is a synthesis for educator review, not an
+official N&MC or school standard. N&MC's [scope of practice](https://nmc.gov.gh/sop/scope-of-practice),
+[examination and licensing information](https://nmc.gov.gh/web/examination-licensing),
+and [care-study digitization notice](https://nmc.gov.gh/web/component/k2/story/digitization-of-patient-family-care-study)
+provide context, but do not publish the RM marking rubric used by this draft.
+
+The RM draft is present in the profile registry and review-rubric module for
+review and refinement, but its `in_development` status keeps it unavailable to
+students and prevents it from falling back to RGN criteria. RM activation
+requires educator reconciliation and approval against the current programme
+instructions. PHN and MHN still require their own source review, templates, and
+rubrics. The Studio's active template remains RGN.
+
 Two separate retrieval indexes:
 - **Template index**: built from `data/templates/` — past care studies, used to
   retrieve example passages showing the expected structure/tone for a given heading.

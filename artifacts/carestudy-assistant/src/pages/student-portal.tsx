@@ -1518,6 +1518,7 @@ function StudentAssistantChat() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [sourcesOpen, setSourcesOpen] = useState<number | null>(null);
   const [conversationId, setConversationId] = useState<number | null>(null);
+  const [cadreProfileId, setCadreProfileId] = useState("registered_general_nurse");
   const [webSearchMode, setWebSearchMode] = useState(false);
   const [imageMode, setImageMode] = useState(false);
   const [printAnswer, setPrintAnswer] = useState<{
@@ -1662,6 +1663,7 @@ function StudentAssistantChat() {
           message,
           history: history.slice(-6).map(({ role, content }) => ({ role, content })),
           messages: savedMessages,
+          cadreProfileId,
           conversationId: conversationId ?? undefined,
           attachment: encodedAttachment,
           webSearch: tool === "web",
@@ -1882,6 +1884,31 @@ function StudentAssistantChat() {
                     {toolButtons()}
                     <div className="flex items-center justify-between gap-2 px-1 pb-1">
                       <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>Care-study cadre</span>
+                          <select
+                            aria-label="Care-study cadre"
+                            value={cadreProfileId}
+                            disabled={busy || messages.length > 0}
+                            onChange={(event) => setCadreProfileId(event.target.value)}
+                            className="h-9 max-w-52 rounded-md border bg-background px-2 text-xs text-foreground"
+                          >
+                            {(assistantToolsQuery.data?.careStudyCadres ?? [{
+                              id: "registered_general_nurse",
+                              name: "Registered General Nurse",
+                              abbreviation: "RGN",
+                              status: "available" as const,
+                            }]).map((profile) => (
+                              <option
+                                key={profile.id}
+                                value={profile.id}
+                                disabled={profile.status !== "available"}
+                              >
+                                {profile.name}{profile.status !== "available" ? " (in development)" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                         <label className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer gap-2")}>
                           <Paperclip className="size-4" />
                           Attach file
@@ -2096,6 +2123,27 @@ function StudentAssistantChat() {
           {toolButtons()}
           <div className="flex items-center justify-between gap-2 px-1 pb-1">
             <div className="flex min-w-0 items-center gap-2">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Care-study cadre</span>
+                <select
+                  aria-label="Care-study cadre"
+                  value={cadreProfileId}
+                  disabled={busy || messages.length > 0}
+                  onChange={(event) => setCadreProfileId(event.target.value)}
+                  className="h-9 max-w-52 rounded-md border bg-background px-2 text-xs text-foreground"
+                >
+                  {(assistantToolsQuery.data?.careStudyCadres ?? [{
+                    id: "registered_general_nurse",
+                    name: "Registered General Nurse",
+                    abbreviation: "RGN",
+                    status: "available" as const,
+                  }]).map((profile) => (
+                    <option key={profile.id} value={profile.id} disabled={profile.status !== "available"}>
+                      {profile.name}{profile.status !== "available" ? " (in development)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer gap-2")}>
                 <Paperclip className="size-4" />
                 <span className="sr-only sm:not-sr-only">Attach file</span>

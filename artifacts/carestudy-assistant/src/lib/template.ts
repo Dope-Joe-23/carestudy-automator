@@ -1287,3 +1287,225 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
     ],
   },
 ];
+
+const rmNarrativeSection = (id: string, heading: string, blurb: string): SectionTemplate => ({
+  id,
+  heading,
+  blurb,
+  fields: [{
+    id: `${id.replace(/\W/g, "")}Notes`,
+    label: "Documented information",
+    hint: "Use the school's approved instructions. Do not add information that is not documented.",
+    type: "textarea",
+    span: 2,
+  }],
+});
+
+const rmCarePlanRows: TemplateRowDef = {
+  id: "carePlan",
+  title: "Maternity care plan",
+  addLabel: "Add care-plan entry",
+  emptyHint: "Add an entry for each documented problem or need.",
+  columns: [
+    { id: "phase", label: "Phase / date", placeholder: "e.g. Antenatal; date" },
+    { id: "evidence", label: "Assessment evidence", placeholder: "Documented finding or report" },
+    { id: "problem", label: "Problem / diagnosis", placeholder: "Use the approved programme terminology" },
+    { id: "objective", label: "Measurable objective and timeframe", placeholder: "Outcome and when it is expected" },
+    { id: "plannedCare", label: "Planned care / order", placeholder: "What was planned" },
+    { id: "careGiven", label: "Care documented as given", placeholder: "What the record says occurred" },
+    { id: "rationale", label: "Rationale / source", placeholder: "Relevant source, if required" },
+    { id: "evaluation", label: "Evaluation / outcome", placeholder: "Evidence, status, date/time" },
+  ],
+};
+
+const rmAntenatalVisitRows: TemplateRowDef = {
+  id: "antenatalVisits",
+  title: "Antenatal clinic contacts",
+  addLabel: "Add clinic contact",
+  emptyHint: "Record contacts documented in the source records.",
+  columns: [
+    { id: "date", label: "Date / gestational age", placeholder: "As recorded" },
+    { id: "maternal", label: "Maternal assessment", placeholder: "Findings as documented" },
+    { id: "fetal", label: "Fetal assessment", placeholder: "Findings as documented" },
+    { id: "tests", label: "Investigations", placeholder: "Test and documented result" },
+    { id: "care", label: "Care / education documented", placeholder: "As recorded" },
+    { id: "plan", label: "Outcome / follow-up", placeholder: "As recorded" },
+  ],
+};
+
+const rmLabourObservationRows: TemplateRowDef = {
+  id: "labourObservations",
+  title: "Labour timeline and observations",
+  addLabel: "Add documented observation",
+  emptyHint: "Transcribe observations and events from the available record; do not infer missing values.",
+  columns: [
+    { id: "dateTime", label: "Date / time", placeholder: "As recorded" },
+    { id: "stage", label: "Labour stage / event", placeholder: "As recorded" },
+    { id: "maternal", label: "Maternal observations", placeholder: "Value, unit, time as recorded" },
+    { id: "fetal", label: "Fetal observations", placeholder: "Value, method, time as recorded" },
+    { id: "progress", label: "Progress / record reference", placeholder: "Documented finding or chart reference" },
+    { id: "action", label: "Action and outcome", placeholder: "Documented care and response" },
+  ],
+};
+
+const rmPostnatalVisitRows: TemplateRowDef = {
+  id: "postnatalVisits",
+  title: "Postnatal follow-up contacts",
+  addLabel: "Add follow-up contact",
+  emptyHint: "Record maternal and newborn follow-up separately where the source allows.",
+  columns: [
+    { id: "dateTime", label: "Date / time / setting", placeholder: "As recorded" },
+    { id: "mother", label: "Maternal findings", placeholder: "As documented" },
+    { id: "newborn", label: "Newborn findings", placeholder: "As documented" },
+    { id: "care", label: "Care / education documented", placeholder: "As recorded" },
+    { id: "outcome", label: "Outcome / follow-up", placeholder: "As recorded" },
+  ],
+};
+
+/**
+ * Provisional RM structure synthesized from four user-supplied student examples.
+ * It is intentionally not an approved or selectable programme standard.
+ */
+export const RM_CARE_STUDY_TEMPLATE_DRAFT: ChapterTemplate[] = [
+  {
+    name: "Preliminary Pages",
+    shortLabel: "Prelim",
+    isFrontMatter: true,
+    blurb: "Suggested opening and closing material; confirm exact requirements with the training programme.",
+    sections: [
+      rmNarrativeSection("P.1", "Title and declaration", "Use the institution's required title-page and declaration wording."),
+      rmNarrativeSection("P.2", "Preface and acknowledgement", "Optional preliminary material, subject to the institution's format."),
+      rmNarrativeSection("P.3", "Contents and abbreviations", "List sections and abbreviations used in the study."),
+    ],
+  },
+  {
+    name: "Client and Pregnancy Assessment",
+    shortLabel: "Assessment",
+    blurb: "Assessment context spanning relevant history and the current pregnancy.",
+    sections: [
+      rmNarrativeSection("1.0", "Introduction", "Purpose, approach, and a concise, de-identified overview of the study."),
+      rmNarrativeSection("1.1", "Client profile and social history", "Relevant client and social context; avoid unnecessary identifiers."),
+      rmNarrativeSection("1.2", "Daily living, home, and psychosocial context", "Document relevant habits, home environment, and psychosocial information."),
+      rmNarrativeSection("1.3", "Family, medical, and surgical history", "Separate reported history from verified records where possible."),
+      rmNarrativeSection("1.4", "Menstrual and past obstetric history", "Use the details and terminology required by the approved programme."),
+      rmNarrativeSection("1.5", "Present obstetric history", "Current pregnancy history and recorded findings; include dates, units, and source."),
+    ],
+  },
+  {
+    name: "Antenatal Care",
+    shortLabel: "Antenatal",
+    blurb: "Contacts, visits, documented care, planning, and evaluation during pregnancy.",
+    sections: [
+      rmNarrativeSection("2.0", "Introduction and first contact", "Describe the documented first contact and agreed study approach."),
+      rmNarrativeSection("2.1", "First antenatal home visit", "Summarize the visit using documented findings and client-reported information."),
+      {
+        ...rmNarrativeSection("2.2", "Antenatal clinic contacts", "Track contacts without inferring missing findings."),
+        rows: rmAntenatalVisitRows,
+      },
+      rmNarrativeSection("2.3", "Subsequent home visits", "Document visits, findings, education, and follow-up as recorded."),
+      {
+        ...rmNarrativeSection("2.4", "Antenatal care plan and evaluation", "Link evidence, plans, care documented as given, and outcomes."),
+        rows: rmCarePlanRows,
+      },
+    ],
+  },
+  {
+    name: "Labour and Delivery",
+    shortLabel: "Labour",
+    blurb: "A chronological account of labour, birth, immediate newborn care, and early maternal observations.",
+    sections: [
+      rmNarrativeSection("3.0", "Introduction and admission", "Document admission context, history, and initial findings."),
+      {
+        ...rmNarrativeSection("3.1", "Labour observations and progress", "Use the source record for chronology and any accompanying labour chart."),
+        rows: rmLabourObservationRows,
+      },
+      rmNarrativeSection("3.2", "First stage of labour", "Describe recorded assessment, care, progress, and escalation or review."),
+      rmNarrativeSection("3.3", "Second stage and birth", "Describe the documented events and care without filling gaps from assumptions."),
+      rmNarrativeSection("3.4", "Immediate newborn care", "Record newborn findings and care as documented."),
+      rmNarrativeSection("3.5", "Third and fourth stages", "Document the recorded management and maternal observations."),
+      rmNarrativeSection("3.6", "Placenta, membranes, and labour summary", "Record findings, timing, and summary from the available notes."),
+      {
+        ...rmNarrativeSection("3.7", "Labour care plan and evaluation", "Link labour-phase evidence, plans, delivered care, and recorded outcomes."),
+        rows: rmCarePlanRows,
+      },
+    ],
+  },
+  {
+    name: "Puerperium and Postnatal Care",
+    shortLabel: "Postnatal",
+    blurb: "Maternal and newborn care, discharge, follow-up, and phase-specific evaluation.",
+    sections: [
+      rmNarrativeSection("4.0", "Introduction and day of delivery", "Provide a concise handover into the postnatal period."),
+      rmNarrativeSection("4.1", "Maternal care and discharge", "Separate observations, care, education, and discharge details as documented."),
+      rmNarrativeSection("4.2", "Newborn care and examination", "Record newborn assessment, care, and follow-up as documented."),
+      {
+        ...rmNarrativeSection("4.3", "Postnatal home and clinic follow-up", "Keep maternal and newborn findings distinct where possible."),
+        rows: rmPostnatalVisitRows,
+      },
+      {
+        ...rmNarrativeSection("4.4", "Puerperium care plan and evaluation", "Link identified needs with documented care and outcomes."),
+        rows: rmCarePlanRows,
+      },
+    ],
+  },
+  {
+    name: "Summary and References",
+    shortLabel: "Summary",
+    blurb: "Synthesis, sources, and supporting records required by the approved programme.",
+    sections: [
+      rmNarrativeSection("5.1", "Summary and conclusion", "Summarize the documented maternity journey without adding new facts."),
+      rmNarrativeSection("5.2", "Bibliography", "List sources actually cited, using the required citation style."),
+      rmNarrativeSection("5.3", "Appendices", "Attach only authorized, appropriately de-identified supporting records."),
+    ],
+  },
+];
+
+export type CareStudyCadreId =
+  | "registered_general_nurse"
+  | "registered_midwife"
+  | "public_health_nurse"
+  | "mental_health_nurse";
+
+export type CareStudyCadreProfile = {
+  id: CareStudyCadreId;
+  name: string;
+  abbreviation: string;
+  status: "available" | "in_development";
+  chapters: ChapterTemplate[] | null;
+};
+
+export const ACTIVE_CARE_STUDY_CADRE_PROFILE: CareStudyCadreProfile & {
+  chapters: ChapterTemplate[];
+} = {
+  id: "registered_general_nurse",
+  name: "Registered General Nurse",
+  abbreviation: "RGN",
+  status: "available",
+  chapters: CHAPTER_TEMPLATE,
+};
+
+/** Cadre-specific template registry. New templates require educator review. */
+export const CARE_STUDY_CADRE_PROFILES: CareStudyCadreProfile[] = [
+  ACTIVE_CARE_STUDY_CADRE_PROFILE,
+  {
+    id: "registered_midwife",
+    name: "Registered Midwife",
+    abbreviation: "RM",
+    status: "in_development",
+    chapters: RM_CARE_STUDY_TEMPLATE_DRAFT,
+  },
+  {
+    id: "public_health_nurse",
+    name: "Public Health Nurse",
+    abbreviation: "PHN",
+    status: "in_development",
+    chapters: null,
+  },
+  {
+    id: "mental_health_nurse",
+    name: "Mental Health Nurse",
+    abbreviation: "MHN",
+    status: "in_development",
+    chapters: null,
+  },
+];

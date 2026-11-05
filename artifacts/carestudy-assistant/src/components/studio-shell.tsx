@@ -6,7 +6,7 @@
  * the content pane. Rendering it once (in the router, above the pages) is what
  * keeps the sidebar from remounting on every studio navigation.
  */
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import {
@@ -19,7 +19,19 @@ import {
   BookOpen,
   LogOut,
   ShieldCheck,
+  Baby,
+  ChevronDown,
+  Heart,
+  UserRound,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -35,17 +47,10 @@ import {
   SidebarProvider,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { StudentInviteDialog } from "@/components/student-invite-dialog";
 import { adminLogout } from "@/lib/adminAuth";
 import { getInitials, getDisplayName, getRoleLabel, useAdmin } from "@/lib/adminContext";
+import { CARE_STUDY_CADRE_PROFILES } from "@/lib/template";
 
 const STUDIO_LINKS: {
   href: string;
@@ -53,7 +58,6 @@ const STUDIO_LINKS: {
   icon: React.ElementType;
   adminOnly?: boolean;
 }[] = [
-  { href: "/studio", label: "Drafting studio", icon: HeartPulse },
   { href: "/studio/bin", label: "Order bin", icon: Inbox },
   { href: "/studio/nurseflow", label: "Question bank", icon: ListChecks, adminOnly: true },
   { href: "/studio/nurselearn", label: "NurseLearn", icon: BookOpen, adminOnly: true },
@@ -73,12 +77,36 @@ export function StudioSidebarToolsPortal({ children }: { children: ReactNode }) 
 }
 
 export function StudioShell({ children }: { children: ReactNode }) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const admin = useAdmin();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [toolsHost, setToolsHost] = useState<HTMLDivElement | null>(null);
+  const [cadreMenuOpen, setCadreMenuOpen] = useState(false);
+  const cadreMenuCloseTimer = useRef<number | null>(null);
 
   const links = STUDIO_LINKS.filter((link) => !link.adminOnly || admin?.role === "admin");
+  const isDraftingStudioActive = location === "/studio" || location === "/studio/rm-preview";
+  const cancelCadreMenuClose = () => {
+    if (cadreMenuCloseTimer.current !== null) {
+      window.clearTimeout(cadreMenuCloseTimer.current);
+      cadreMenuCloseTimer.current = null;
+    }
+  };
+  const scheduleCadreMenuClose = () => {
+    cancelCadreMenuClose();
+    cadreMenuCloseTimer.current = window.setTimeout(() => setCadreMenuOpen(false), 180);
+  };
+  const openCadreMenu = () => {
+    cancelCadreMenuClose();
+    setCadreMenuOpen(true);
+  };
+  const goToCadre = (cadreId: string) => {
+    setCadreMenuOpen(false);
+    if (cadreId === "registered_general_nurse") setLocation("/studio");
+    if (cadreId === "registered_midwife") setLocation("/studio/rm-preview");
+  };
+
+  useEffect(() => () => cancelCadreMenuClose(), []);
 
   return (
     <StudioSidebarToolsContext.Provider value={toolsHost}>
@@ -105,6 +133,66 @@ export function StudioShell({ children }: { children: ReactNode }) {
               <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Studio</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
+                  <SidebarMenuItem
+                    onMouseEnter={openCadreMenu}
+                    onMouseLeave={scheduleCadreMenuClose}
+                  >
+                    <DropdownMenu open={cadreMenuOpen} onOpenChange={setCadreMenuOpen}>
+                      <DropdownMenuTrigger asChild>
+                        <SidebarMenuButton
+                          isActive={isDraftingStudioActive}
+                          tooltip="Drafting studio — choose a cadre"
+                          aria-label="Drafting studio — choose a cadre"
+                        >
+                          <HeartPulse className="size-4 shrink-0 text-sidebar-primary" />
+                          <span className="flex-1 truncate text-left">Drafting studio</span>
+                          <ChevronDown className="size-3.5 shrink-0 opacity-60" />
+                        </SidebarMenuButton>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        side="right"
+                        align="start"
+                        className="w-64"
+                        onMouseEnter={cancelCadreMenuClose}
+                        onMouseLeave={scheduleCadreMenuClose}
+                      >
+                        <DropdownMenuLabel>Choose a care-study cadre</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {CARE_STUDY_CADRE_PROFILES.map((profile) => {
+                          const isAvailableInStudio =
+                            profile.id === "registered_general_nurse" ||
+                            profile.id === "registered_midwife";
+                          const isSelected =
+                            (profile.id === "registered_general_nurse" && location === "/studio") ||
+                            (profile.id === "registered_midwife" && location === "/studio/rm-preview");
+                          const CadreIcon = profile.id === "registered_general_nurse"
+                            ? Heart
+                            : profile.id === "registered_midwife"
+                              ? Baby
+                              : UserRound;
+                          return (
+                            <DropdownMenuItem
+                              key={profile.id}
+                              disabled={!isAvailableInStudio}
+                              onSelect={() => goToCadre(profile.id)}
+                              className="gap-2.5 py-2"
+                            >
+                              <CadreIcon className="size-4 text-primary" />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate">{profile.name}</span>
+                                <span className="block text-[11px] text-muted-foreground">
+                                  {isAvailableInStudio
+                                    ? profile.id === "registered_midwife" ? "Preview · provisional" : "Studio"
+                                    : "In development"}
+                                </span>
+                              </span>
+                              {isSelected && <span className="text-xs text-primary">Current</span>}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </SidebarMenuItem>
                   {links.map((link) => {
                     const Icon = link.icon;
                     const isActive =
@@ -131,7 +219,9 @@ export function StudioShell({ children }: { children: ReactNode }) {
             </SidebarGroup>
 
             {/* The drafting studio's own panels dock here. */}
-            <div ref={setToolsHost} className="group-data-[collapsible=icon]:hidden" />
+            {isDraftingStudioActive && (
+              <div ref={setToolsHost} className="group-data-[collapsible=icon]:hidden" />
+            )}
           </SidebarContent>
 
           <SidebarFooter>

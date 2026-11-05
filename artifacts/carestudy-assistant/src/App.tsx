@@ -94,13 +94,14 @@ import { AdminDashboard } from '@/pages/admin-dashboard';
 import { StaffRegisterPage } from '@/pages/staff-register';
 import { NurseLearnPage } from '@/pages/nurselearn';
 import { NurseLearnAdminPage } from '@/pages/nurselearn-admin';
+import { RmStudioPreview } from '@/pages/rm-studio-preview';
 
 import { WelcomePage } from '@/pages/welcome';
 import { NurseFlowPage } from '@/pages/nurseflow';
 import { NurseFlowQuestionBankPage } from '@/pages/nurseflow-question-bank';
 import { adminLogout } from '@/lib/adminAuth';
 import {
-  CHAPTER_TEMPLATE,
+  ACTIVE_CARE_STUDY_CADRE_PROFILE,
   type TemplateField,
   type TemplateRowColumn,
   type TemplateRowDef,
@@ -343,7 +344,7 @@ function exportChaptersForDocument(chapters: Chapter[]): Chapter[] {
 }
 
 function makeChapters(): Chapter[] {
-  return CHAPTER_TEMPLATE.map((chapter, chapterIndex) => ({
+  return ACTIVE_CARE_STUDY_CADRE_PROFILE.chapters.map((chapter, chapterIndex) => ({
     name: chapter.name,
     shortLabel: chapter.shortLabel,
     blurb: chapter.blurb,
@@ -3205,7 +3206,7 @@ function Home() {
           throw new Error('Invalid file — expected a care study chapter export.');
         }
         // Find the matching chapter in the current template
-        const templateIndex = CHAPTER_TEMPLATE.findIndex(
+        const templateIndex = ACTIVE_CARE_STUDY_CADRE_PROFILE.chapters.findIndex(
           (template) => template.name === parsed.chapter.name,
         );
         const chapterIndex = typeof parsed.chapterIndex === 'number'
@@ -3481,7 +3482,7 @@ function Home() {
       setChapters((previous) => {
         const next = previous.map((chapter) => ({ ...chapter }));
         for (const aiChapter of result.chapters) {
-          const chapterIndex = CHAPTER_TEMPLATE.findIndex(
+          const chapterIndex = ACTIVE_CARE_STUDY_CADRE_PROFILE.chapters.findIndex(
             (template) => template.name === aiChapter.name,
           );
           if (chapterIndex < 0) continue;
@@ -5171,7 +5172,7 @@ function Home() {
 
   /**
    * Replace the workspace with a stored snapshot, re-keyed to the current
-   * template (fields/rows always come from CHAPTER_TEMPLATE, so saved data
+   * template (fields/rows always come from the active cadre profile, so saved data
    * survives template tweaks).
    */
   const loadStudyIntoWorkspace = (
@@ -5192,7 +5193,7 @@ function Home() {
         'Summarise': 'Additional Pages',
       };
       const targetName = chapterAliases[chapter.name] ?? chapter.name;
-      const chapterIndex = CHAPTER_TEMPLATE.findIndex(
+      const chapterIndex = ACTIVE_CARE_STUDY_CADRE_PROFILE.chapters.findIndex(
         (template) => template.name === targetName,
       );
       if (chapterIndex < 0) continue;
@@ -6159,6 +6160,9 @@ function Home() {
                 {currentChapter.name} — {currentSection.heading}
               </span>
             </p>
+            <span className="shrink-0 rounded-full border px-2 py-1 text-[10px] font-medium text-muted-foreground">
+              {ACTIVE_CARE_STUDY_CADRE_PROFILE.abbreviation} profile
+            </span>
             <div className="flex shrink-0 items-center gap-2">
               {isFrontMatterChapter(activeChapter) && (
                 <Button
@@ -8787,6 +8791,8 @@ function StudioArea() {
             <NurseFlowQuestionBankPage />
           ) : location === "/studio/nurselearn" ? (
             <NurseLearnAdminPage />
+          ) : location === "/studio/rm-preview" ? (
+            <RmStudioPreview />
           ) : (
             <Home />
           )}
