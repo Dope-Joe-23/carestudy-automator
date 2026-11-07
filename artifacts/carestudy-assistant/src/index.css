@@ -365,11 +365,6 @@ kbd {
   font-variant-numeric: tabular-nums;
 }
 
-.brand-tile {
-  background: linear-gradient(135deg, hsl(166 58% 62%), hsl(174 64% 31%));
-  box-shadow: 0 4px 10px hsl(166 60% 40% / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.25);
-}
-
 .hero-title {
   font-family: var(--app-font-serif);
   letter-spacing: -0.045em;

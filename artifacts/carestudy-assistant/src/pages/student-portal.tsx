@@ -70,6 +70,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/brand-logo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -214,9 +215,7 @@ function BrandMark({
 }) {
   return (
     <span className="flex items-center gap-2.5">
-      <span className="brand-tile grid size-9 shrink-0 place-items-center rounded-xl text-sidebar-primary-foreground">
-        <HeartPulse className="size-5" />
-      </span>
+      <BrandLogo className="size-14 group-data-[collapsible=icon]:size-10" />
       {!compact && (
         <span className={compactOnCollapse ? "group-data-[collapsible=icon]:hidden" : undefined}>
           <span className="block font-serif text-base leading-none tracking-tight text-foreground">

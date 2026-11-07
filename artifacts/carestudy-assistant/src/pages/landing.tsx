@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { buttonVariants } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand-logo";
 import { cn } from "@/lib/utils";
 
 const products = [
@@ -60,11 +61,9 @@ const principles = [
 
 function Brand() {
   return (
-    <Link href="/nurseaid" className="group inline-flex items-center gap-2.5" aria-label="NurseAid home">
-      <span className="grid size-10 place-items-center rounded-2xl bg-[#b8f1df] text-[#10382f] transition-transform duration-300 group-hover:rotate-[-8deg]">
-        <HeartPulse className="size-5" />
-      </span>
-      <span className="font-sans text-[19px] font-bold tracking-[-0.06em] text-[#142d29]">
+    <Link href="/nurseaid" className="group inline-flex items-center gap-3" aria-label="NurseAid home">
+      <BrandLogo className="size-20 transition-transform duration-300 group-hover:rotate-[-8deg]" />
+      <span className="font-sans text-[22px] font-bold tracking-[-0.06em] text-[#142d29]">
         Nurse<span className="text-[#16846c]">Aid</span>
       </span>
     </Link>
@@ -210,7 +209,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen overflow-hidden bg-[#f8faf6] text-[#1a302a]">
       <header className="sticky top-0 z-40 border-b border-[#dbe7df]/80 bg-[#f8faf6]/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-4 sm:px-7">
+        <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-4 sm:px-7">
           <Brand />
           <nav className="hidden items-center gap-8 text-sm font-medium text-[#61746c] md:flex">
             <a className="transition-colors hover:text-[#173f34]" href="#products">Our products</a>

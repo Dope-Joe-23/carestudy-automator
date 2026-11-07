@@ -17,7 +17,6 @@ import {
   ClipboardList,
   DollarSign,
   GraduationCap,
-  HeartPulse,
   Loader2,
   ShieldCheck,
   Stethoscope,
@@ -25,6 +24,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -109,9 +109,7 @@ function BrandMark() {
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      <span className="brand-tile grid size-10 shrink-0 place-items-center rounded-xl text-sidebar-primary-foreground">
-        <HeartPulse className="size-5" />
-      </span>
+      <BrandLogo className="size-14" />
       <span>
         <span className="block font-serif text-lg leading-none tracking-tight text-foreground">
           care<span className="text-primary">study</span>

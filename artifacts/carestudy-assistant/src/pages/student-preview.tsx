@@ -17,12 +17,12 @@ import {
   CheckCircle2,
   Download,
   FileText,
-  HeartPulse,
   KeyRound,
   Loader2,
   Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/brand-logo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,9 +43,7 @@ const LANDSCAPE_SECTION_IDS = new Set(["2.2", "3.2"]);
 function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <span className="flex items-center gap-2.5">
-      <span className="brand-tile grid size-9 shrink-0 place-items-center rounded-xl text-sidebar-primary-foreground">
-        <HeartPulse className="size-5" />
-      </span>
+      <BrandLogo className="size-14" />
       {!compact && (
         <span>
           <span className="block font-serif text-base leading-none tracking-tight text-foreground">

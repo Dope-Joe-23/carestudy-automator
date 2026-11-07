@@ -51,6 +51,7 @@ import { StudentInviteDialog } from "@/components/student-invite-dialog";
 import { adminLogout } from "@/lib/adminAuth";
 import { getInitials, getDisplayName, getRoleLabel, useAdmin } from "@/lib/adminContext";
 import { CARE_STUDY_CADRE_PROFILES } from "@/lib/template";
+import { BrandLogo } from "@/components/brand-logo";
 
 const STUDIO_LINKS: {
   href: string;
@@ -114,9 +115,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
         <Sidebar collapsible="icon" className="no-print">
           <SidebarHeader>
             <Link href="/studio" className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-sidebar-accent">
-              <span className="brand-tile grid size-9 shrink-0 place-items-center rounded-xl text-sidebar-primary-foreground">
-                <HeartPulse className="size-5" />
-              </span>
+              <BrandLogo className="size-14 group-data-[collapsible=icon]:size-10" />
               <span className="group-data-[collapsible=icon]:hidden">
                 <span className="block font-serif text-base leading-none tracking-tight text-sidebar-foreground">
                   care<span className="text-sidebar-primary">study</span>

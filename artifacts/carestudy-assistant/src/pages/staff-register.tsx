@@ -7,8 +7,9 @@
  */
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useLocation } from "wouter";
-import { HeartPulse, Loader2, ShieldCheck, UserPlus } from "lucide-react";
+import { Loader2, ShieldCheck, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -26,9 +27,7 @@ import * as adminDashboardApi from "@/lib/adminDashboardApi";
 function BrandMark() {
   return (
     <span className="flex items-center gap-2.5">
-      <span className="brand-tile grid size-9 shrink-0 place-items-center rounded-xl text-sidebar-primary-foreground">
-        <HeartPulse className="size-5" />
-      </span>
+      <BrandLogo className="size-14" />
       <span>
         <span className="block font-serif text-base leading-none tracking-tight text-foreground">
           care<span className="text-primary">study</span>
