@@ -477,6 +477,16 @@ def answer_student_question(
     system_prompt = SYSTEM_PROMPT
     if is_document_review:
         system_prompt += CASE_STUDY_REVIEW_GUIDANCE + "\n\n" + _review_rubric_for_cadre(cadre_profile_id)
+    if has_documents and is_document_rewrite:
+        system_prompt += (
+            "\n\nPROPOSED REWRITE OUTPUT:\n"
+            "Return a proposed replacement for only the chapter, section, or text "
+            "the student requested. Do not reproduce unchanged chapters or dump "
+            "the entire uploaded document. Clearly label the replacement as a "
+            "proposal. Preserve supported facts and mark unverified or conflicting "
+            "details as [confirm with student]. State that the uploaded file has "
+            "not been changed and no saved study has been changed."
+        )
     if not library_chunks and not document_chunks and not has_documents and not web_source_blocks:
         system_prompt += (
             "\n\nNO-RELEVANT-SOURCE RESPONSE:\n"

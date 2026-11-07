@@ -560,6 +560,24 @@ class StudentAssistantTests(unittest.TestCase):
         self.assertIn("LATEST QUESTION:\nWhat is a care study? Please give sources.", model.call_args.args[1])
         self.assertIn("has not been verified against the library", result["answer"])
 
+    def test_attachment_rewrite_is_limited_to_requested_scope_and_is_proposed(self):
+        content = base64.b64encode(
+            b"CHAPTER ONE\nPatient profile.\nCHAPTER TWO\nAssessment findings."
+        ).decode("ascii")
+        with mock.patch.object(
+            assistant, "_chat_model", return_value="## Proposed rewrite\nPatient profile, revised."
+        ) as model:
+            assistant.answer_student_question(
+                "Rewrite Chapter One for clarity.",
+                [],
+                SimpleIndex(),
+                {"filename": "care-study.txt", "content": content},
+            )
+
+        self.assertIn("only the chapter, section, or text the student requested", model.call_args.args[0])
+        self.assertIn("Do not reproduce unchanged chapters or dump the entire uploaded document", model.call_args.args[0])
+        self.assertIn("has not been changed", model.call_args.args[0])
+
     def test_no_source_clinical_prompt_retains_safety_boundaries(self):
         with mock.patch.object(
             assistant, "_chat_model", return_value="Please consult your clinical educator."

@@ -1497,6 +1497,14 @@ const ATTACHMENT_PROMPTS = [
   },
 ];
 
+function isRewriteRequest(message: string): boolean {
+  return /\b(?:rewrit\w*|revis\w*|correct\w*|edit\w*|improv\w*|polish\w*)\b/i.test(message);
+}
+
+function isRewriteClarification(answer: string): boolean {
+  return /\b(?:could you (?:please )?(?:let me know|clarify)|which part(?:s)? .* (?:would you like|should I)|what part(?:s)? .* (?:would you like|should I)|please specify (?:which|the))\b/i.test(answer);
+}
+
 function randomizeQuestions(questions: string[]): string[] {
   const shuffled = [...questions];
   for (let index = shuffled.length - 1; index > 0; index -= 1) {
@@ -1554,6 +1562,10 @@ function StudentAssistantChat() {
     title: string;
     answer: string;
     references: studentApi.AssistantReference[];
+  } | null>(null);
+  const [rewritePreview, setRewritePreview] = useState<{
+    title: string;
+    content: string;
   } | null>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState(() =>
     randomizeQuestions(SUGGESTED_QUESTIONS),
@@ -2003,7 +2015,6 @@ function StudentAssistantChat() {
 
   const attachmentPromptMenu = () => attachments.length > 0 && (
     <div className="mb-2 flex flex-wrap items-center gap-1.5 px-1" aria-label="Optional suggested prompts">
-      <span className="text-[11px] text-muted-foreground">Quick prompts (optional):</span>
       {ATTACHMENT_PROMPTS.map(({ label, prompt: suggestedPrompt }) => (
         <Button
           key={label}
@@ -2094,7 +2105,18 @@ function StudentAssistantChat() {
               </div>
             </div>
           ) : (
-            messages.map((turn, index) => (
+            messages.map((turn, index) => {
+              const previousTurn = index > 0 ? messages[index - 1] : undefined;
+              const isProposedRewrite = turn.role === "assistant"
+                && previousTurn?.role === "user"
+                && Boolean(previousTurn.attachmentNames?.length || previousTurn.attachmentName)
+                && isRewriteRequest(previousTurn.content)
+                && !isRewriteClarification(turn.content);
+              const rewriteTitle = previousTurn?.role === "user"
+                ? previousTurn.attachmentNames?.[0] ?? previousTurn.attachmentName ?? "Care study"
+                : "Care study";
+
+              return (
               <div key={`${turn.role}-${index}`} className={cn("flex min-w-0 max-w-full", turn.role === "user" ? "justify-end" : "justify-center")}>
                 <div className={cn(
                 turn.role === "user" ? "w-fit min-w-0 max-w-full sm:max-w-2xl" : "w-full min-w-0 max-w-3xl",
@@ -2120,7 +2142,26 @@ function StudentAssistantChat() {
                     </div>
                   ) : (
                     <>
-                      <FormattedAssistantMarkdown text={turn.content} />
+                      {isProposedRewrite ? (
+                        <div className="flex flex-col items-start gap-3 rounded-xl border bg-card p-4 shadow-sm">
+                          <div>
+                            <p className="font-medium">Your proposed changes are ready to review.</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              The uploaded document has not been changed.
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setRewritePreview({ title: rewriteTitle, content: turn.content })}
+                          >
+                            <Eye className="size-4" /> Preview proposed changes
+                          </Button>
+                        </div>
+                      ) : (
+                        <FormattedAssistantMarkdown text={turn.content} />
+                      )}
                       {turn.imageDataUrl && (
                         <div className="mt-4 max-w-2xl overflow-hidden rounded-xl border bg-card shadow-sm">
                           <img
@@ -2216,20 +2257,20 @@ function StudentAssistantChat() {
                   )}
                 </div>
               </div>
-            ))
+              );
+            })
         )}
         {busy && (
             <div
               role="status"
               aria-live="polite"
-              className="flex w-fit items-center gap-3 rounded-2xl border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm"
+              className="flex w-fit items-center gap-1 rounded-2xl border bg-card px-4 py-3 shadow-sm"
             >
               <span className="flex items-center gap-1" aria-hidden="true">
                 <span className="assistant-typing-dot" />
                 <span className="assistant-typing-dot [animation-delay:150ms]" />
                 <span className="assistant-typing-dot [animation-delay:300ms]" />
               </span>
-              <span>NurseAid is putting together your response…</span>
             </div>
         )}
       </div>
@@ -2309,6 +2350,35 @@ function StudentAssistantChat() {
               </ol>
             </section>
           )}
+        </div>
+      )}
+      {rewritePreview && (
+        <div className="fixed inset-0 z-[100] min-h-screen overflow-y-auto bg-background">
+          <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
+            <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setRewritePreview(null)}>
+                  <ArrowLeft className="size-4" /> Back to chat
+                </Button>
+                <Separator orientation="vertical" className="h-5" />
+                <span className="truncate text-sm font-medium">Proposed rewrite preview</span>
+              </div>
+              <span className="shrink-0 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary">
+                Draft only
+              </span>
+            </div>
+          </header>
+          <main className="mx-auto max-w-[780px] px-4 py-8 md:px-10">
+            <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+              <p className="font-medium">Review before using</p>
+              <p className="mt-1 text-muted-foreground">
+                This is a proposed revision of {rewritePreview.title}. It has not changed your uploaded file or delivered study. Verify every detail against your records and course requirements.
+              </p>
+            </div>
+            <article className="rounded-xl border bg-card px-5 py-6 shadow-sm sm:px-8 sm:py-8">
+              <FormattedAssistantMarkdown text={rewritePreview.content} />
+            </article>
+          </main>
         </div>
       )}
     </div>
