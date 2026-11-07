@@ -438,7 +438,139 @@ class StudentAssistantTests(unittest.TestCase):
         self.assertIn("No approved source passages were retrieved.", model.call_args.args[1])
         self.assertNotIn("openrn_comfort.txt", model.call_args.args[1])
         self.assertIn("not been verified against the library", result["answer"])
+        self.assertTrue(result["answer"].startswith("Pharmacokinetics describes"))
         self.assertIn("Pharmacokinetics describes drug movement.", result["answer"])
+
+    def test_carestudy_workflow_question_returns_product_steps_without_retrieval(self):
+        index = SimpleIndex()
+        with (
+            mock.patch.object(index, "query", side_effect=AssertionError("retrieval should be skipped")),
+            mock.patch.object(assistant, "_chat_model") as model,
+        ):
+            result = assistant.answer_student_question(
+                "How do I start a nursing care (case) study?",
+                [],
+                index,
+            )
+
+        model.assert_not_called()
+        self.assertEqual(result["references"], [])
+        self.assertTrue(result["answer"].startswith("Absolutely—we can take it one step at a time."))
+        self.assertIn("assignment brief or marking guide", result["answer"])
+        self.assertIn("patient-identifying details removed", result["answer"])
+        self.assertIn("My care study projects", result["answer"])
+        self.assertIn("Place an order", result["answer"])
+        self.assertNotIn("reference library", result["answer"])
+        self.assertNotIn("general educational information", result["answer"])
+
+    def test_feeling_daunted_about_starting_care_study_gets_supportive_first_step(self):
+        index = SimpleIndex()
+        with (
+            mock.patch.object(index, "query", side_effect=AssertionError("retrieval should be skipped")),
+            mock.patch.object(assistant, "_chat_model") as model,
+        ):
+            result = assistant.answer_student_question(
+                "I feel daunted about starting my care study.",
+                [],
+                index,
+            )
+
+        model.assert_not_called()
+        self.assertTrue(result["answer"].startswith("Absolutely—we can take it one step at a time."))
+        self.assertIn("Which one are you working on?", result["answer"])
+
+    def test_explicit_car_study_question_is_not_routed_to_carestudy_workflow(self):
+        with mock.patch.object(
+            assistant, "_chat_model", return_value="A car study could compare vehicle types."
+        ) as model:
+            result = assistant.answer_student_question(
+                "How do I start a car study?",
+                [],
+                SimpleIndex(),
+            )
+
+        self.assertIn("LATEST QUESTION:\nHow do I start a car study?", model.call_args.args[1])
+        self.assertNotIn("Place an order", result["answer"])
+
+    def test_no_source_prompt_requests_concise_relevant_assignment_help(self):
+        with mock.patch.object(
+            assistant, "_chat_model", return_value="Share the assignment brief and I can help outline it."
+        ) as model:
+            result = assistant.answer_student_question(
+                "Help me plan the opening of my care study.",
+                [],
+                SimpleIndex(),
+            )
+
+        system_prompt = model.call_args.args[0]
+        self.assertIn("Do not generate a generic study checklist", system_prompt)
+        self.assertIn("ask one focused clarifying question", system_prompt)
+        self.assertTrue(result["answer"].startswith("Share the assignment brief"))
+        self.assertIn("has not been verified against the library", result["answer"])
+        self.assertNotIn("consult your assigned textbook or an educator", result["answer"])
+        self.assertIn("Share the assignment brief", result["answer"])
+
+    def test_all_no_source_answers_start_with_useful_information(self):
+        answer = "Pharmacokinetics describes how the body absorbs, distributes, metabolizes, and excretes a medicine."
+        with mock.patch.object(assistant, "_chat_model", return_value=answer) as model:
+            result = assistant.answer_student_question(
+                "What does pharmacokinetics mean?",
+                [],
+                SimpleIndex(),
+            )
+
+        self.assertIn("Give the user useful, directly relevant information first.", model.call_args.args[0])
+        self.assertIn("Do not start by saying that the library found no evidence", model.call_args.args[0])
+        self.assertTrue(result["answer"].startswith(answer))
+        self.assertIn("Note: This answer has not been verified against the library.", result["answer"])
+
+    def test_care_study_is_not_contrasted_with_unrelated_topics(self):
+        index = SimpleIndex()
+        with (
+            mock.patch.object(index, "query", side_effect=AssertionError("retrieval should be skipped")),
+            mock.patch.object(assistant, "_chat_model") as model,
+        ):
+            result = assistant.answer_student_question(
+                "What is a carestudy?",
+                [],
+                index,
+            )
+
+        model.assert_not_called()
+        self.assertTrue(result["answer"].startswith(
+            "In nursing education, a care study (also written “carestudy”)"
+        ))
+        self.assertIn("check your course handbook", result["answer"])
+        self.assertIn("has not been verified against the library", result["answer"])
+        self.assertNotIn("reference library did not retrieve", result["answer"].lower())
+        self.assertNotIn("car or vehicle", result["answer"].lower())
+        self.assertEqual(result["references"], [])
+
+    def test_care_study_definition_with_source_request_uses_retrieval(self):
+        with mock.patch.object(
+            assistant, "_chat_model", return_value="A care study documents a patient's health situation [1]."
+        ) as model:
+            result = assistant.answer_student_question(
+                "What is a care study? Please give sources.",
+                [],
+                SimpleIndex(),
+            )
+
+        self.assertIn("REFERENCE LIBRARY EXCERPTS", model.call_args.args[1])
+        self.assertIn("LATEST QUESTION:\nWhat is a care study? Please give sources.", model.call_args.args[1])
+        self.assertIn("has not been verified against the library", result["answer"])
+
+    def test_no_source_clinical_prompt_retains_safety_boundaries(self):
+        with mock.patch.object(
+            assistant, "_chat_model", return_value="Please consult your clinical educator."
+        ) as model:
+            assistant.answer_student_question(
+                "What treatment should I give for these symptoms?",
+                [],
+                SimpleIndex(),
+            )
+
+        self.assertIn("must not diagnose, prescribe", model.call_args.args[0])
 
     def test_web_search_results_are_numbered_and_returned_as_references(self):
         with mock.patch.object(assistant, "_chat_model", return_value="The source describes ADME [1].") as model:

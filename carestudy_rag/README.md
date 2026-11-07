@@ -21,6 +21,20 @@ textbooks/formulary  ─┘
 
 ### Student chat care-study reviews
 
+Common CareStudy workflow questions are answered from verified app steps before
+reference retrieval (for example, starting an order from **My care study projects**
+with **Place an order**). Common care-study definition questions receive a direct,
+concise explanation before a short source-verification note. For care-study
+starting questions, it offers one manageable first step and asks for the
+assignment brief with patient identifiers removed. When no relevant source is
+found for other questions, the assistant is instructed to stay concise, avoid
+generic checklists, and ask a focused clarification rather than inventing an
+unrelated interpretation. This answer-first behavior applies to all no-source
+responses: useful information comes first, with a brief source-verification
+note at the end.
+Care-study definitions use the nursing assignment meaning without contrasting it
+with unrelated meanings unless the student asks.
+
 When a student attaches a document and asks for a review, critique, consistency
 check, or rewrite, NurseAid applies the chapter-by-chapter criteria in
 `src/care_study_review_rubric.py`. The checklist follows the six-chapter

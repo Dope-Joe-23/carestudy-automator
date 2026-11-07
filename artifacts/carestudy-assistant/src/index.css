@@ -5,6 +5,26 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@keyframes assistant-typing {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+.assistant-typing-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background-color: hsl(var(--primary));
+  animation: assistant-typing 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-typing-dot {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
 @keyframes nursespin-visual-drift {
   0%, 100% { transform: scale(1.04) translate3d(0, 0, 0); }
   50% { transform: scale(1.1) translate3d(-0.6%, 0.4%, 0); }
