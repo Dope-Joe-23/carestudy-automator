@@ -234,7 +234,7 @@ export async function askStudentAssistant(input: {
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
-      throw new Error("NurseAid took too long to respond. Please try again.");
+      throw new Error("Nursyde took too long to respond. Please try again.");
     }
     throw error;
   } finally {

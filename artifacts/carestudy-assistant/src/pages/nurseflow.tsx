@@ -146,7 +146,7 @@ export function NurseFlowPage() {
   const touchStart = useRef<{ x: number; y: number; inCardBody: boolean } | null>(null);
 
   useEffect(() => {
-    document.title = "NurseSpin | NurseAid";
+    document.title = "NurseSpin | Nursyde";
   }, []);
 
   useEffect(() => {
@@ -160,7 +160,7 @@ export function NurseFlowPage() {
           topic: item.topic,
           level: item.level,
           title: item.title,
-          scene: "A reviewed NurseAid learning visual is being prepared for this card.",
+          scene: "A reviewed Nursyde learning visual is being prepared for this card.",
           question: item.question,
           options: item.options,
           answer: item.correctOptionIndex,
@@ -332,7 +332,7 @@ export function NurseFlowPage() {
     >
       <div className="mx-auto flex h-full w-full max-w-[480px] flex-col border-x border-white/[0.06]">
         <header className="z-20 flex h-[62px] shrink-0 items-center justify-between gap-3 px-4 pt-[env(safe-area-inset-top)]">
-          <Link href="/nurseaid" className="flex items-center gap-2.5 rounded-xl transition-opacity hover:opacity-80">
+          <Link href="/nursyde" className="flex items-center gap-2.5 rounded-xl transition-opacity hover:opacity-80">
             <motion.span
               initial={{ scale: 0.8, rotate: -12 }}
               animate={{ scale: 1, rotate: 0 }}
@@ -343,7 +343,7 @@ export function NurseFlowPage() {
             </motion.span>
             <div className="leading-tight">
               <p className="text-sm font-bold tracking-tight">NurseSpin</p>
-              <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-white/45">by NurseAid</p>
+              <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-white/45">by Nursyde</p>
             </div>
           </Link>
           <button

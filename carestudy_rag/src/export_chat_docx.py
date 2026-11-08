@@ -172,7 +172,7 @@ def main() -> None:
         raise ValueError("References must be a list.")
     sys.stdout.buffer.write(
         export_chat_docx(
-            str(payload.get("title", "NurseAid response")),
+            str(payload.get("title", "Nursyde response")),
             payload["answer"],
             references,
         )

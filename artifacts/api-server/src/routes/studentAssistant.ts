@@ -390,7 +390,7 @@ router.post(
         : undefined;
       const status = attachmentTooLarge ? 413 : isSearchSetupError ? 503 : 502;
       res.status(status).json({
-        error: attachmentTooLarge ?? (err instanceof Error ? err.message : "NurseAid could not answer right now."),
+        error: attachmentTooLarge ?? (err instanceof Error ? err.message : "Nursyde could not answer right now."),
       });
     }
   },

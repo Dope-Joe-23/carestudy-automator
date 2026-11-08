@@ -291,7 +291,7 @@ class DraftWorker {
       const timer = setTimeout(() => {
         this.pending.delete(id);
         this.restartWorker(child);
-        reject(new Error("NurseAid chat timed out. Please try again."));
+        reject(new Error("Nursyde chat timed out. Please try again."));
       }, REQUEST_TIMEOUT_MS);
       this.pending.set(id, {
         child,

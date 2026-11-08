@@ -85,7 +85,7 @@ router.post(
         .replace(/[^\w -]/g, "")
         .trim()
         .replace(/\s+/g, "-")
-        .slice(0, 60) || "nurseaid-answer";
+        .slice(0, 60) || "nursyde-answer";
       res.setHeader(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

@@ -6,7 +6,7 @@
  * workspace, while the remaining sections require a signed-in student.
  *
  * Tabs:
- * - Workspace (home) — NurseAid chat
+ * - Workspace (home) — Nursyde chat
  * - Explore — available and planned student tools
  * - Projects — list of care study orders
  * - New Order — place a new order
@@ -332,8 +332,8 @@ function useStudentChatNavigation() {
 }
 
 const TABS: { id: TabId; label: string; tooltip: string; icon: React.ElementType }[] = [
-  { id: "workspace", label: "Study workspace", tooltip: "Ask NurseAid and continue your conversations", icon: MessageCircle },
-  { id: "new-chat", label: "New chat", tooltip: "Start a new NurseAid conversation", icon: Plus },
+  { id: "workspace", label: "Study workspace", tooltip: "Ask Nursyde and continue your conversations", icon: MessageCircle },
+  { id: "new-chat", label: "New chat", tooltip: "Start a new Nursyde conversation", icon: Plus },
   { id: "explore", label: "Explore", tooltip: "Browse learning tools and student services", icon: Compass },
   { id: "projects", label: "My projects", tooltip: "Track your care-study orders and projects", icon: ClipboardList },
   { id: "downloads", label: "Downloads", tooltip: "Open delivered studies and files", icon: Receipt },
@@ -1750,7 +1750,7 @@ function StudentAssistantChat() {
       }
     } catch (requestError) {
       if (studentIdRef.current === requestStudentId) {
-        toast.error(requestError instanceof Error ? requestError.message : "NurseAid could not answer right now.");
+        toast.error(requestError instanceof Error ? requestError.message : "Nursyde could not answer right now.");
       }
     } finally {
       setBusy(false);
@@ -1851,12 +1851,12 @@ function StudentAssistantChat() {
 
   const downloadWord = async (answer: string, references: studentApi.AssistantReference[] = []) => {
     try {
-      const title = messages.find((turn) => turn.role === "user")?.content.slice(0, 100) || "NurseAid answer";
+      const title = messages.find((turn) => turn.role === "user")?.content.slice(0, 100) || "Nursyde answer";
       const blob = await studentApi.exportStudentChatDocx({ title, answer, references });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "nurseaid-answer.docx";
+      link.download = "nursyde-answer.docx";
       link.click();
       URL.revokeObjectURL(url);
       toast.success("Word document downloaded");
@@ -1869,7 +1869,7 @@ function StudentAssistantChat() {
     try {
       await import("@/components/assistant-markdown");
       setPrintAnswer({
-        title: messages.find((turn) => turn.role === "user")?.content.slice(0, 100) || "NurseAid answer",
+        title: messages.find((turn) => turn.role === "user")?.content.slice(0, 100) || "Nursyde answer",
         answer,
         references,
       });
@@ -2068,7 +2068,7 @@ function StudentAssistantChat() {
                       value={prompt}
                       onChange={(event) => setPrompt(event.target.value)}
                       placeholder="Ask in your own words: check consistency, critique a chapter, or suggest a rewrite…"
-                      aria-label="Message NurseAid"
+                      aria-label="Message Nursyde"
                       rows={2}
                       maxLength={4_000}
                       disabled={busy}
@@ -2172,7 +2172,7 @@ function StudentAssistantChat() {
                           <div className="border-t px-3 py-2 text-right">
                             <a
                               href={turn.imageDataUrl}
-                              download="nurseaid-educational-illustration.jpg"
+                              download="nursyde-educational-illustration.jpg"
                               className="text-sm font-medium text-primary underline underline-offset-2"
                             >
                               Download image
@@ -2308,7 +2308,7 @@ function StudentAssistantChat() {
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
             placeholder="Ask in your own words about the uploaded study…"
-            aria-label="Message NurseAid"
+            aria-label="Message Nursyde"
             rows={1}
             maxLength={4_000}
             disabled={busy}
@@ -2418,7 +2418,7 @@ function StudentExplore({ onPlaceOrder }: { onPlaceOrder: () => void }) {
       <div>
         <h1 className="font-serif text-3xl tracking-tight">Explore</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Discover learning tools and services across your NurseAid workspace.
+          Discover learning tools and services across your Nursyde workspace.
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

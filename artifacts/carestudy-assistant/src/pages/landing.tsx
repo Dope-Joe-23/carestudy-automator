@@ -61,10 +61,10 @@ const principles = [
 
 function Brand() {
   return (
-    <Link href="/nurseaid" className="group inline-flex items-center gap-3" aria-label="NurseAid home">
+    <Link href="/nursyde" className="group inline-flex items-center gap-3" aria-label="Nursyde home">
       <BrandLogo className="size-20 transition-transform duration-300 group-hover:rotate-[-8deg]" />
       <span className="font-sans text-[22px] font-bold tracking-[-0.06em] text-[#142d29]">
-        Nurse<span className="text-[#16846c]">Aid</span>
+        Nurs<span className="text-[#16846c]">yde</span>
       </span>
     </Link>
   );
@@ -203,7 +203,7 @@ function ProductCard({
 
 export function LandingPage() {
   useEffect(() => {
-    document.title = "NurseAid | Professional Nursing Support";
+    document.title = "Nursyde | Professional Nursing Support";
   }, []);
 
   return (
@@ -214,7 +214,7 @@ export function LandingPage() {
           <nav className="hidden items-center gap-8 text-sm font-medium text-[#61746c] md:flex">
             <a className="transition-colors hover:text-[#173f34]" href="#products">Our products</a>
             <a className="transition-colors hover:text-[#173f34]" href="#approach">Our approach</a>
-            <a className="transition-colors hover:text-[#173f34]" href="#about">About NurseAid</a>
+            <a className="transition-colors hover:text-[#173f34]" href="#about">About Nursyde</a>
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/login" className="hidden px-2 py-2 text-sm font-medium text-[#536a62] transition-colors hover:text-[#173f34] sm:inline-flex">
@@ -249,14 +249,14 @@ export function LandingPage() {
             >
               <div className="inline-flex items-center gap-2 rounded-full border border-[#d5e7dd] bg-white/75 px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#3c6b5b] shadow-sm sm:text-xs">
                 <span className="size-2 rounded-full bg-[#50a78a]" />
-                Nursing support, made human
+                Your intelligent companion through nursing
               </div>
               <h1 className="mt-6 max-w-3xl font-serif text-[3.2rem] font-medium leading-[0.98] tracking-[-0.07em] text-[#17382f] sm:text-6xl lg:text-[5.15rem]">
                 Be the nurse
                 <span className="mt-1 block text-[#438d72]">you’re working to become.</span>
               </h1>
               <p className="mt-6 max-w-xl text-base leading-relaxed text-[#5d7068] sm:mt-7 sm:text-lg">
-                NurseAid offers professional learning support for student nurses—and helpful,
+                Nursyde offers professional learning support for student nurses—and helpful,
                 practical refreshers for clinicians. Thoughtful tools for the work and the people
                 behind it.
               </p>
@@ -283,7 +283,7 @@ export function LandingPage() {
           </div>
           <div className="mx-auto max-w-7xl px-4 pb-7 sm:px-7">
             <a href="#products" className="group inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#829087] transition-colors hover:text-[#376b59]">
-              Get to know NurseAid <span className="h-px w-8 bg-current transition-all group-hover:w-12" />
+              Get to know Nursyde <span className="h-px w-8 bg-current transition-all group-hover:w-12" />
             </a>
           </div>
         </section>
@@ -311,7 +311,7 @@ export function LandingPage() {
         <section id="approach" className="scroll-mt-24 py-16 sm:py-24">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-7 lg:grid-cols-[.85fr_1.15fr] lg:items-end lg:gap-16">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#438d72]">The NurseAid approach</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#438d72]">The Nursyde approach</p>
               <h2 className="mt-3 font-serif text-4xl leading-tight tracking-[-0.055em] text-[#17382f] sm:text-5xl">
                 Practical support. A little more confidence.
               </h2>
@@ -355,7 +355,7 @@ export function LandingPage() {
                   More useful support is on the way.
                 </h2>
                 <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">
-                  CareStudy and NurseSpin are the beginning. NurseAid is here to keep building
+                  CareStudy and NurseSpin are the beginning. Nursyde is here to keep building
                   thoughtful learning and professional support for nurses at every stage.
                 </p>
               </div>
@@ -381,7 +381,7 @@ export function LandingPage() {
             <Link href="/student/register" className="transition-colors hover:text-[#17382f]">Get started</Link>
             <Link href="/login" className="transition-colors hover:text-[#17382f]">Sign in</Link>
           </div>
-          <p className="text-[11px] text-[#89968f]">© {new Date().getFullYear()} NurseAid</p>
+          <p className="text-[11px] text-[#89968f]">© {new Date().getFullYear()} Nursyde</p>
         </div>
       </footer>
     </div>
