@@ -27,6 +27,7 @@ import {
   type ReactNode,
   type ChangeEvent,
   type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -1177,7 +1178,7 @@ function StatusStepper({ status }: { status: OrderStatus }) {
                 )}
               >
                 {label}
-              </span>
+                </span>
             </div>
           </div>
         );
@@ -1781,6 +1782,12 @@ function StudentAssistantChat() {
     setEditingIndex(null);
   };
 
+  const handleComposerKeyDown = (event: ReactKeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  };
+
   const copyText = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -2067,6 +2074,7 @@ function StudentAssistantChat() {
                     <Textarea
                       value={prompt}
                       onChange={(event) => setPrompt(event.target.value)}
+                      onKeyDown={handleComposerKeyDown}
                       placeholder="Ask in your own words: check consistency, critique a chapter, or suggest a rewrite…"
                       aria-label="Message Nursyde"
                       rows={2}
@@ -2261,16 +2269,20 @@ function StudentAssistantChat() {
             })
         )}
         {busy && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="flex w-fit items-center gap-1 rounded-2xl border bg-card px-4 py-3 shadow-sm"
-            >
-              <span className="flex items-center gap-1" aria-hidden="true">
-                <span className="assistant-typing-dot" />
-                <span className="assistant-typing-dot [animation-delay:150ms]" />
-                <span className="assistant-typing-dot [animation-delay:300ms]" />
-              </span>
+            <div className="flex min-w-0 max-w-full justify-center">
+              <div className="w-full min-w-0 max-w-3xl">
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="flex w-fit items-center gap-1 rounded-2xl border bg-card px-4 py-3 shadow-sm"
+                >
+                  <span className="flex items-center gap-1" aria-hidden="true">
+                    <span className="assistant-typing-dot" />
+                    <span className="assistant-typing-dot [animation-delay:150ms]" />
+                    <span className="assistant-typing-dot [animation-delay:300ms]" />
+                  </span>
+                </div>
+              </div>
             </div>
         )}
       </div>
@@ -2307,6 +2319,7 @@ function StudentAssistantChat() {
           <Textarea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
+            onKeyDown={handleComposerKeyDown}
             placeholder="Ask in your own words about the uploaded study…"
             aria-label="Message Nursyde"
             rows={1}
