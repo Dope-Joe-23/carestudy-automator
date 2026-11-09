@@ -22,7 +22,11 @@ export function AdminGate({ children }: { children: ReactNode }) {
       .then(({ admin }) => {
         if (!cancelled) setAdmin(admin);
       })
-      .catch(() => {
+      .catch((error) => {
+        if (error instanceof Error && error.message.includes("awaiting review")) {
+          window.location.replace("/staff/application");
+          return;
+        }
         if (!cancelled) setAdmin(null); // no token or expired session
       });
     const onUnauthorized = () => setAdmin(null);

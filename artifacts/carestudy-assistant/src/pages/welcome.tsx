@@ -112,10 +112,7 @@ function BrandMark() {
       <BrandLogo className="size-14" />
       <span>
         <span className="block font-serif text-lg leading-none tracking-tight text-foreground">
-          care<span className="text-primary">study</span>
-        </span>
-        <span className="mt-1.5 block font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
-          nursing academic support
+          Nurs<span className="text-primary">uit</span>
         </span>
       </span>
     </motion.span>
@@ -236,6 +233,7 @@ export function WelcomePage() {
   const [, navigate] = useLocation();
   const [admin, setAdmin] = useState<Admin | null>(null);
   const [loading, setLoading] = useState(true);
+  const [applicantPending, setApplicantPending] = useState(false);
   const [studentInviteOpen, setStudentInviteOpen] = useState(false);
 
   const hasAdminToken = Boolean(getAdminToken());
@@ -248,7 +246,10 @@ export function WelcomePage() {
     }
     fetchAdminMe()
       .then(({ admin }) => setAdmin(admin))
-      .catch(() => setAdmin(null))
+      .catch((error) => {
+        if (error instanceof Error && error.message.includes("awaiting review")) setApplicantPending(true);
+        setAdmin(null);
+      })
       .finally(() => setLoading(false));
   }, [hasAdminToken]);
 
@@ -274,6 +275,8 @@ export function WelcomePage() {
       </div>
     );
   }
+
+  if (applicantPending) return <Redirect to="/staff/application" />;
 
   // Students and guests belong in the workspace home, not here
   if (!admin) return <Redirect to="/" />;

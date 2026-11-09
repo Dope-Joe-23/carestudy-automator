@@ -105,9 +105,10 @@ CREATE TABLE IF NOT EXISTS "staff_invites" (
 );
 CREATE TABLE IF NOT EXISTS "staff_applications" (
   "id" serial PRIMARY KEY, "name" text NOT NULL, "email" text NOT NULL, "phone" text,
-  "experience" text, "motivation" text NOT NULL, "status" text NOT NULL DEFAULT 'pending',
+  "experience" text, "motivation" text NOT NULL DEFAULT '', "status" text NOT NULL DEFAULT 'pending', "applicant_account_id" integer,
   "reviewed_by" integer, "invite_token" text, "created_at" timestamptz NOT NULL DEFAULT now(), "reviewed_at" timestamptz
 );
+ALTER TABLE "staff_applications" ADD COLUMN IF NOT EXISTS "applicant_account_id" integer;
 CREATE TABLE IF NOT EXISTS "students" (
   "id" serial PRIMARY KEY,
   "name" text NOT NULL,

@@ -8,7 +8,6 @@
  * - Overview (default) — stats summary
  * - Orders — full order list with status management
  * - Staff — team management with role controls
- * - Invites — invite link generation and tracking
  * - Settings — placeholder for future admin settings
  */
 import { useCallback, useState } from "react";
@@ -27,7 +26,6 @@ import {
   CreditCard,
   DollarSign,
   ExternalLink,
-  Globe,
   GraduationCap,
   HardDrive,
   HeartPulse,
@@ -150,16 +148,14 @@ function DashboardOrderRow({ order }: { order: DashboardOrder }) {
 // Sidebar navigation
 // ---------------------------------------------------------------------------
 
-type TabId = "overview" | "orders" | "students" | "staff" | "applications" | "invites" | "student-invites" | "settings";
+type TabId = "overview" | "orders" | "students" | "staff" | "applications" | "settings";
 
-const TABS: { id: TabId; label: string; icon: React.ElementType; adminOnly?: boolean }[] = [
+const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
   { id: "orders", label: "Orders", icon: ClipboardList },
   { id: "students", label: "Students", icon: GraduationCap },
   { id: "staff", label: "Staff", icon: Users },
-  { id: "applications", label: "Applications", icon: Mail, adminOnly: true },
-  { id: "invites", label: "Staff invites", icon: UserPlus, adminOnly: true },
-  { id: "student-invites", label: "Student invites", icon: GraduationCap },
+  { id: "applications", label: "Applications", icon: Mail },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -213,7 +209,6 @@ function InviteDialog({
     onSuccess: (result) => {
       const fullUrl = `${window.location.origin}${result.invite.registrationUrl}`;
       setCreatedUrl(fullUrl);
-      queryClient.invalidateQueries({ queryKey: ["admin-invites"] });
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
       toast.success(`Invite link created (${result.invite.role} role).`);
     },
@@ -317,105 +312,7 @@ function InviteDialog({
   );
 }
 
-// StudentInviteDialog is imported from @/components/student-invite-dialog
-// (used both here in the admin dashboard and in the studio sidebar).
-
-// ---------------------------------------------------------------------------
-// Tab: Student Invites
-// ---------------------------------------------------------------------------
-
-function StudentInvitesTab({ onInvite }: { onInvite: () => void }) {
-  const { data: inviteData, isLoading } = useQuery({
-    queryKey: ["admin-student-invites"],
-    queryFn: adminApi.listStudentInvites,
-  });
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-serif text-lg font-semibold">Student invites</h2>
-          <p className="text-sm text-muted-foreground">
-            Registration links for students. Students who register via these links are tied to your account.
-          </p>
-        </div>
-        <Button size="sm" className="gap-1.5" onClick={onInvite}>
-          <Plus className="size-3.5" /> New invite
-        </Button>
-      </div>
-
-      <Card>
-        <CardContent className="py-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : inviteData?.invites && inviteData.invites.length > 0 ? (
-            <div className="divide-y">
-              {inviteData.invites.map((invite) => (
-                <div
-                  key={invite.id}
-                  className="flex items-center justify-between gap-4 px-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">
-                        {invite.label || `Invite #${invite.id}`}
-                      </span>
-                      {invite.usedAt ? (
-                        <Badge variant="default" className="gap-1 bg-emerald-600">
-                          <CheckCircle2 className="size-3" /> Used
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="gap-1">
-                          <Globe className="size-3" /> Pending
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Created by {invite.createdBy} · {formatDate(invite.createdAt)}
-                      {invite.staffName ? ` · Staff: ${invite.staffName}` : ""}
-                    </p>
-                  </div>
-                  {!invite.usedAt && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1 text-xs"
-                      onClick={() => {
-                        const url = `${window.location.origin}${invite.registrationUrl}`;
-                        navigator.clipboard.writeText(url).then(
-                          () => toast.success("Link copied."),
-                          () => toast.error("Could not copy."),
-                        );
-                      }}
-                    >
-                      <Copy className="size-3.5" /> Copy
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center py-12 text-center">
-              <span className="mb-3 grid size-10 place-items-center rounded-full bg-muted">
-                <GraduationCap className="size-5 text-muted-foreground" />
-              </span>
-              <p className="text-sm font-medium">No student invites yet</p>
-              <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-                Create a registration link to invite your first student. Students who register
-                via this link will be tied to your account.
-              </p>
-              <Button size="sm" className="mt-3 gap-1.5" onClick={onInvite}>
-                <Plus className="size-3.5" /> Create invite
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+// StudentInviteDialog is also available from the studio sidebar.
 
 // ---------------------------------------------------------------------------
 // Tab: Overview
@@ -685,13 +582,17 @@ function StaffApplicationsTab() {
       if (result.registrationUrl) {
         const link = `${window.location.origin}${result.registrationUrl}`;
         try { await navigator.clipboard.writeText(link); toast.success("Application approved. Staff registration link copied."); }
-        catch { toast.success("Application approved. Find the registration link under Staff invites."); }
-      } else toast.success("Application declined.");
+        catch {
+          window.prompt("Copy the staff registration link:", link);
+          toast.error("Application approved, but the registration link could not be copied automatically.");
+        }
+      } else if (result.application.status === "approved") toast.success("Application approved. Staff access is now active.");
+      else toast.success("Application declined.");
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Review failed."),
   });
   return <div className="space-y-4">
-    <div><h2 className="font-serif text-lg font-semibold">Staff applications</h2><p className="text-sm text-muted-foreground">Review requests from prospective staff. Approval creates a one time registration link and does not create an account.</p></div>
+    <div><h2 className="font-serif text-lg font-semibold">Staff applications</h2><p className="text-sm text-muted-foreground">Review applicant accounts. Approval activates staff access; applicants cannot enter the studio while waiting.</p></div>
     <Card><CardContent className="divide-y py-0">
       {isLoading ? <div className="flex justify-center py-10"><Loader2 className="size-5 animate-spin"/></div> : !data?.applications.length ? <p className="py-10 text-center text-sm text-muted-foreground">No applications yet.</p> : data.applications.map((application) => <article key={application.id} className="space-y-3 py-4">
         <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-medium">{application.name}</h3><p className="text-xs text-muted-foreground">{application.email}{application.phone ? ` · ${application.phone}` : ""} · {formatDate(application.createdAt)}</p></div><Badge variant={application.status === "pending" ? "secondary" : application.status === "approved" ? "default" : "outline"}>{application.status}</Badge></div>
@@ -707,7 +608,7 @@ function StaffApplicationsTab() {
 // Tab: Students
 // ---------------------------------------------------------------------------
 
-function StudentsTab() {
+function StudentsTab({ onInvite }: { onInvite: () => void }) {
   const [search, setSearch] = useState("");
 
   const { data: studentsData, isLoading } = useQuery({
@@ -728,11 +629,16 @@ function StudentsTab() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-serif text-lg font-semibold">Students</h2>
-        <p className="text-sm text-muted-foreground">
-          All registered students and their order activity.
-        </p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="font-serif text-lg font-semibold">Students</h2>
+          <p className="text-sm text-muted-foreground">
+            All registered students and their order activity.
+          </p>
+        </div>
+        <Button size="sm" className="shrink-0 gap-1.5" onClick={onInvite}>
+          <UserPlus className="size-3.5" /> Invite student
+        </Button>
       </div>
 
       {/* Summary cards */}
@@ -853,105 +759,6 @@ function StudentsTab() {
                   ? "Try a different search term."
                   : "Students will appear here once they create accounts."}
               </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tab: Invites
-// ---------------------------------------------------------------------------
-
-function InvitesTab({ onInvite }: { onInvite: () => void }) {
-  const { data: inviteData, isLoading } = useQuery({
-    queryKey: ["admin-invites"],
-    queryFn: adminApi.listInvites,
-  });
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-serif text-lg font-semibold">Invite links</h2>
-          <p className="text-sm text-muted-foreground">
-            One-time registration links for new staff members.
-          </p>
-        </div>
-        <Button size="sm" className="gap-1.5" onClick={onInvite}>
-          <Plus className="size-3.5" /> New invite
-        </Button>
-      </div>
-
-      <Card>
-        <CardContent className="py-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : inviteData?.invites && inviteData.invites.length > 0 ? (
-            <div className="divide-y">
-              {inviteData.invites.map((invite) => (
-                <div
-                  key={invite.id}
-                  className="flex items-center justify-between gap-4 px-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">
-                        {invite.label || `Invite #${invite.id}`}
-                      </span>
-                      <Badge variant={invite.role === "admin" ? "default" : "secondary"} className="text-[10px]">
-                        {invite.role === "admin" ? "Admin" : "Staff"}
-                      </Badge>
-                      {invite.usedAt ? (
-                        <Badge variant="default" className="gap-1 bg-emerald-600">
-                          <CheckCircle2 className="size-3" /> Used
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="gap-1">
-                          <Globe className="size-3" /> Pending
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Created by {invite.createdBy} · {formatDate(invite.createdAt)}
-                      {invite.usedBy ? ` · Used by ${invite.usedBy}` : ""}
-                    </p>
-                  </div>
-                  {!invite.usedAt && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1 text-xs"
-                      onClick={() => {
-                        const url = `${window.location.origin}${invite.registrationUrl}`;
-                        navigator.clipboard.writeText(url).then(
-                          () => toast.success("Link copied."),
-                          () => toast.error("Could not copy."),
-                        );
-                      }}
-                    >
-                      <Copy className="size-3.5" /> Copy
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center py-12 text-center">
-              <span className="mb-3 grid size-10 place-items-center rounded-full bg-muted">
-                <UserPlus className="size-5 text-muted-foreground" />
-              </span>
-              <p className="text-sm font-medium">No invite links yet</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Create one to invite your first staff member.
-              </p>
-              <Button size="sm" className="mt-3 gap-1.5" onClick={onInvite}>
-                <Plus className="size-3.5" /> Create invite
-              </Button>
             </div>
           )}
         </CardContent>
@@ -1115,7 +922,9 @@ export function AdminDashboard() {
     // Check if the studio sidebar requested a specific tab
     try {
       const openTab = window.sessionStorage.getItem('carestudy_open_tab');
-      if (openTab && ['overview', 'orders', 'students', 'staff', 'applications', 'invites', 'student-invites', 'settings'].includes(openTab)) {
+      if (openTab === "student-invites") return "students";
+      if (openTab === "invites") return "staff";
+      if (openTab && ['overview', 'orders', 'students', 'staff', 'applications', 'settings'].includes(openTab)) {
         window.sessionStorage.removeItem('carestudy_open_tab');
         return openTab as TabId;
       }
@@ -1170,11 +979,7 @@ export function AdminDashboard() {
                   ? stats?.students.total
                   : tab.id === "staff"
                     ? stats?.staff.total
-                    : tab.id === "invites"
-                      ? stats?.staff.pendingInvites
-                        : tab.id === "applications"
-                          ? undefined
-                      : undefined;
+                    : undefined;
             return (
               <button
                 key={tab.id}
@@ -1216,11 +1021,9 @@ export function AdminDashboard() {
         {/* Tab content */}
         {activeTab === "overview" && <OverviewTab stats={stats} />}
         {activeTab === "orders" && <OrdersTab />}
-        {activeTab === "students" && <StudentsTab />}
+        {activeTab === "students" && <StudentsTab onInvite={() => setStudentInviteOpen(true)} />}
         {activeTab === "staff" && <StaffTab onInvite={() => setInviteOpen(true)} />}
         {activeTab === "applications" && <StaffApplicationsTab />}
-        {activeTab === "invites" && <InvitesTab onInvite={() => setInviteOpen(true)} />}
-        {activeTab === "student-invites" && <StudentInvitesTab onInvite={() => setStudentInviteOpen(true)} />}
         {activeTab === "settings" && <SettingsTab />}
       </div>
 

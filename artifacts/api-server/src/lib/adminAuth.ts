@@ -29,6 +29,9 @@ export async function ensureBootstrapAdmin(): Promise<AdminRow | null> {
   const username = (process.env.ADMIN_USERNAME || "admin").trim();
   const existing = await db.getAdminByUsername(username);
   if (existing) {
+    // A public staff applicant must never be elevated just because their
+    // chosen username later matches the configured bootstrap username.
+    if (existing.role === "applicant") return null;
     // Upgrade existing bootstrap accounts that were created before the role
     // column existed (they defaulted to "staff"). The env-configured admin
     // should always be an admin.
@@ -67,6 +70,10 @@ export async function requireAdmin(
     const admin = await getStudyStore().getAdminByToken(token);
     if (!admin) {
       res.status(401).json({ error: "Your studio session has expired — please sign in again." });
+      return;
+    }
+    if (admin.role === "applicant") {
+      res.status(403).json({ error: "Your staff application is awaiting review." });
       return;
     }
     (req as AuthedAdminRequest).admin = admin;

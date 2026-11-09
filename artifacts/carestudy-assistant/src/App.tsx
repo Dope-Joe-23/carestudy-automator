@@ -93,6 +93,7 @@ import { AdminDashboardGate } from '@/components/admin-dashboard-gate';
 import { AdminDashboard } from '@/pages/admin-dashboard';
 import { StaffRegisterPage } from '@/pages/staff-register';
 import { StaffApplyPage } from '@/pages/staff-apply';
+import { StaffApplicationStatusPage } from '@/pages/staff-application-status';
 import { NurseLearnPage } from '@/pages/nurselearn';
 import { NurseLearnAdminPage } from '@/pages/nurselearn-admin';
 import { RmStudioPreview } from '@/pages/rm-studio-preview';
@@ -8871,6 +8872,7 @@ function Router() {
             <Route path="/nurseflow" component={() => <LegacyRedirect to="/nursespin" />} />
             <Route path="/staff/register" component={StaffRegisterPage} />
             <Route path="/staff/apply" component={StaffApplyPage} />
+            <Route path="/staff/application" component={StaffApplicationStatusPage} />
             <Route component={NotFound} />
           </Switch>
         </ErrorBoundary>

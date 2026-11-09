@@ -92,7 +92,7 @@ export const adminsTable = sqliteTable("admins", {
   passwordHash: text("password_hash").notNull(),
   /** Display name (optional, e.g. "Ama — Academic Team"). */
   name: text("name"),
-  /** "admin" (full access) or "staff" (studio + order bin only). */
+  /** "admin" (full access), "staff", or restricted "applicant". */
   role: text("role").notNull().$defaultFn(() => "staff"),
   /** Email for notifications and invite tracking. */
   email: text("email"),
@@ -133,8 +133,8 @@ export const staffInvitesTable = sqliteTable("staff_invites", {
 export const staffApplicationsTable = sqliteTable("staff_applications", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(), email: text("email").notNull(), phone: text("phone"),
-  experience: text("experience"), motivation: text("motivation").notNull(),
-  status: text("status").notNull().default("pending"), reviewedBy: integer("reviewed_by"),
+  experience: text("experience"), motivation: text("motivation").notNull().default(""),
+  status: text("status").notNull().default("pending"), applicantAccountId: integer("applicant_account_id"), reviewedBy: integer("reviewed_by"),
   inviteToken: text("invite_token"), createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
 });

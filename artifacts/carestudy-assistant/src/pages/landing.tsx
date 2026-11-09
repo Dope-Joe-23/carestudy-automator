@@ -22,7 +22,7 @@ const products = [
     description:
       "Thoughtful support for the patient and family care study—from getting your work organised to feeling ready for your viva.",
     href: "/chat",
-    action: "Open study workspace",
+    action: "Open study chatspace",
     icon: BookOpen,
     color: "mint",
     points: ["Care-study guidance", "Research and references", "Viva preparation"],
@@ -80,14 +80,14 @@ function Brand() {
   );
 }
 
-function WorkspacePreview() {
+function ChatspacePreview() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
       className="relative mx-auto w-full max-w-[610px]"
-      aria-label="Preview of the Nursuit study workspace"
+      aria-label="Preview of the Nursuit study chatspace"
     >
       <div className="absolute -inset-6 rounded-[3rem] bg-[#9de6d0]/35 blur-3xl" />
       <div className="relative overflow-hidden rounded-[2rem] border border-white bg-white shadow-[0_36px_100px_-36px_rgba(14,58,48,0.42)]">
@@ -95,11 +95,11 @@ function WorkspacePreview() {
           <span className="size-2.5 rounded-full bg-[#f1b8a5]" />
           <span className="size-2.5 rounded-full bg-[#f1d58e]" />
           <span className="size-2.5 rounded-full bg-[#a9d9bd]" />
-          <span className="ml-3 text-xs font-medium text-[#61746c]">Nursuit study workspace</span>
+          <span className="ml-3 text-xs font-medium text-[#61746c]">Nursuit study chatspace</span>
         </div>
         <div className="grid min-h-[430px] sm:grid-cols-[170px_1fr]">
           <aside className="hidden border-r border-[#e8eee9] bg-[#f6faf7] p-4 sm:block">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#25483c]"><span className="grid size-7 place-items-center rounded-lg bg-[#dff2e8] text-[#23745b]"><BookOpen className="size-4" /></span> My workspace</div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#25483c]"><span className="grid size-7 place-items-center rounded-lg bg-[#dff2e8] text-[#23745b]"><BookOpen className="size-4" /></span> My chatspace</div>
             <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.14em] text-[#829087]">Recent chats</div>
             <div className="mt-3 rounded-lg bg-white px-2.5 py-2 text-[11px] font-medium text-[#376b59] shadow-sm">Study planning</div>
             <div className="mt-1 rounded-lg px-2.5 py-2 text-[11px] text-[#718078]">Care-study outline</div>
@@ -116,7 +116,7 @@ function WorkspacePreview() {
               <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#173d33] text-[#c4f2df]"><HeartPulse className="size-4" /></span>
               <div className="max-w-[92%] rounded-2xl rounded-tl-md border border-[#e6eee8] bg-white px-4 py-3 text-xs leading-relaxed text-[#536a62] shadow-sm sm:text-sm">
                 Start with one topic, then connect it to your course notes. I can help you break it into manageable steps and check your understanding as you go.
-                <div className="mt-3 flex items-center gap-1.5 border-t border-[#edf1ed] pt-2 text-[10px] text-[#829087]"><Check className="size-3 text-[#31846a]" /> Your conversation stays in your workspace</div>
+                <div className="mt-3 flex items-center gap-1.5 border-t border-[#edf1ed] pt-2 text-[10px] text-[#829087]"><Check className="size-3 text-[#31846a]" /> Keep your conversations together in one chatspace</div>
               </div>
             </div>
             <div className="mt-auto pt-6">
@@ -207,7 +207,7 @@ function ProductCard({
 
 export function LandingPage() {
   useEffect(() => {
-    document.title = "Nursuit | Nursing Study Workspace";
+    document.title = "Nursuit | Nursing Study Chatspace";
   }, []);
 
   return (
@@ -229,7 +229,7 @@ export function LandingPage() {
               href="/chat"
               className="inline-flex items-center gap-2 rounded-full bg-[#183e33] px-4 py-2.5 text-xs font-semibold text-white transition-all hover:bg-[#235d4b] sm:px-5 sm:text-sm"
             >
-              Open workspace <ArrowUpRight className="size-4" />
+              Open chatspace <ArrowUpRight className="size-4" />
             </Link>
           </div>
         </div>
@@ -261,7 +261,7 @@ export function LandingPage() {
                 <span className="mt-1 block text-[#438d72]">study nursing.</span>
               </h1>
               <p className="mt-6 max-w-xl text-base leading-relaxed text-[#5d7068] sm:mt-7 sm:text-lg">
-                Ask nursing questions in a focused study workspace, organise care-study work, and
+                Ask nursing questions in a focused study chatspace, organise care-study work, and
                 practise with NurseSpin. Nursuit brings useful support together for student nurses
                 and the clinicians who guide them.
               </p>
@@ -270,7 +270,7 @@ export function LandingPage() {
                   href="/chat"
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#183e33] px-6 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-[#235d4b]"
                 >
-                  Open your workspace <ArrowRight className="size-4" />
+                  Open your chatspace <ArrowRight className="size-4" />
                 </Link>
                 <a
                   href="#products"
@@ -284,7 +284,7 @@ export function LandingPage() {
                 <span className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-[#31846a]" /> Designed to keep learning moving</span>
               </div>
             </motion.div>
-            <WorkspacePreview />
+            <ChatspacePreview />
           </div>
           <div className="mx-auto max-w-7xl px-4 pb-7 sm:px-7">
             <a href="#products" className="group inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#829087] transition-colors hover:text-[#376b59]">
@@ -301,7 +301,7 @@ export function LandingPage() {
                 Choose the support you need today.
               </h2>
               <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#66776f] sm:text-base">
-                Open your study workspace, practise with NurseSpin, or explore reviewed learning
+                Open your study chatspace, practise with NurseSpin, or explore reviewed learning
                 resources in NurseLearn.
               </p>
             </div>
@@ -360,7 +360,7 @@ export function LandingPage() {
                   Nursing study has many moving parts. Start with one clear next step.
                 </h2>
                 <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">
-                  Use the workspace to think through a question or keep your care-study work moving.
+                  Use your chatspace to think through a question or keep your care-study work moving.
                   When you need a change of pace, explore NurseSpin or NurseLearn.
                 </p>
               </div>
@@ -369,7 +369,7 @@ export function LandingPage() {
                   href="/chat"
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#c4f2df] px-6 text-sm font-semibold text-[#163d32] transition-all hover:-translate-y-0.5 hover:bg-white"
                 >
-                  Open your workspace <ArrowUpRight className="size-4" />
+                  Open your chatspace <ArrowUpRight className="size-4" />
                 </Link>
                 <Link href="/staff/apply" className="text-sm font-medium text-white/80 underline decoration-white/30 underline-offset-4 hover:text-white">Interested in supporting nursing learners? Apply to join our team.</Link>
               </div>
@@ -385,8 +385,8 @@ export function LandingPage() {
             <p className="mt-2 text-xs text-[#78877f]">Professional learning support for nursing.</p>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-[#62746b]">
-            <a href="#products" className="transition-colors hover:text-[#17382f]">Workspace, NurseSpin &amp; NurseLearn</a>
-            <Link href="/chat" className="transition-colors hover:text-[#17382f]">Open workspace</Link>
+            <a href="#products" className="transition-colors hover:text-[#17382f]">Chatspace, NurseSpin &amp; NurseLearn</a>
+            <Link href="/chat" className="transition-colors hover:text-[#17382f]">Open chatspace</Link>
             <Link href="/chat?auth=sign-in" className="transition-colors hover:text-[#17382f]">Sign in</Link>
             <Link href="/staff/apply" className="transition-colors hover:text-[#17382f]">Apply to join our team</Link>
           </div>

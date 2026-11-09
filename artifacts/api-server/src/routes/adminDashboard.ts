@@ -92,9 +92,10 @@ router.get(
     const uniqueStudentIds = new Set(orders.map((o) => o.studentId));
 
     // Staff stats
-    const staffCount = admins.length;
-    const adminCount = admins.filter((a) => a.role === "admin").length;
-    const staffOnlyCount = admins.filter((a) => a.role !== "admin").length;
+    const activeStaff = admins.filter((a) => a.role === "admin" || a.role === "staff");
+    const staffCount = activeStaff.length;
+    const adminCount = activeStaff.filter((a) => a.role === "admin").length;
+    const staffOnlyCount = activeStaff.filter((a) => a.role === "staff").length;
     const pendingInvites = invites.filter((i) => !i.usedAt).length;
     const usedInvites = invites.filter((i) => i.usedAt).length;
 
@@ -155,7 +156,7 @@ router.get(
   asyncRoute(async (_req, res) => {
     const db = studyStore();
     const admins = await db.listAdmins();
-    const safeAdmins = admins.map((a) => ({
+    const safeAdmins = admins.filter((a) => a.role === "admin" || a.role === "staff").map((a) => ({
       id: a.id,
       username: a.username,
       name: a.name,
@@ -168,15 +169,49 @@ router.get(
   }),
 );
 
-// Public staff applications are stored for admin review; they never create accounts.
+// Public staff applications create restricted applicant accounts. They receive
+// a session for the application status page, but have no studio privileges.
 router.post("/staff-applications", asyncRoute(async (req, res) => {
   const name = str(req.body?.name), email = str(req.body?.email).toLowerCase();
+  const username = str(req.body?.username).toLowerCase();
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
   const phone = str(req.body?.phone), experience = str(req.body?.experience), motivation = str(req.body?.motivation);
-  if (name.length < 2 || name.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || motivation.length > 4000 || phone.length > 50 || experience.length > 2000) {
-    res.status(400).json({ error: "Please provide a valid name and email." }); return;
+  if (name.length < 2 || name.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || !/^[a-z0-9._-]{3,50}$/.test(username) || password.length < 8 || password.length > 128 || motivation.length > 4000 || phone.length > 50 || experience.length > 2000) {
+    res.status(400).json({ error: "Enter a valid name, email, username, and password (at least 8 characters)." }); return;
   }
-  const application = await studyStore().createStaffApplication({ name, email, phone: phone || null, experience: experience || null, motivation });
-  res.status(201).json({ submitted: true, id: application.id });
+  const db = studyStore();
+  const bootstrapUsername = (process.env.ADMIN_USERNAME || "admin").trim().toLowerCase();
+  if (username === bootstrapUsername) { res.status(409).json({ error: "That username is reserved." }); return; }
+  if (await db.getAdminByUsername(username)) { res.status(409).json({ error: "That username is already in use." }); return; }
+  const application = await db.createStaffApplication({ name, email, phone: phone || null, experience: experience || null, motivation });
+  try {
+    const applicant = await db.addAdmin({ username, passwordHash: hashPassword(password), name, email, role: "applicant" });
+    await db.updateStaffApplication(application.id, { applicantAccountId: applicant.id });
+    const token = createAuthToken();
+    await db.createAdminSession(applicant.id, token);
+    res.status(201).json({ token, application: { id: application.id, status: application.status } });
+  } catch (error) {
+    req.log?.error?.({ error, applicationId: application.id }, "staff applicant account creation failed");
+    res.status(500).json({ error: "We received your application but couldn't finish setting up your account. Please try again or contact Nursuit." });
+  }
+}));
+
+router.get("/staff-applications/me", asyncRoute(async (req, res) => {
+  const header = req.headers.authorization ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+  if (!token) { res.status(401).json({ error: "Sign in to view your application." }); return; }
+  const db = studyStore(), applicant = await db.getAdminByToken(token);
+  if (!applicant) { res.status(401).json({ error: "Your application session has expired. Please sign in again." }); return; }
+  const application = (await db.listStaffApplications()).find((item) => item.applicantAccountId === applicant.id);
+  if (!application) { res.status(404).json({ error: "No staff application is linked to this account." }); return; }
+  res.json({ application: { id: application.id, status: application.status, createdAt: application.createdAt.toISOString(), reviewedAt: application.reviewedAt?.toISOString() ?? null }, applicant: { username: applicant.username, name: applicant.name, email: applicant.email, role: applicant.role } });
+}));
+
+router.post("/staff-applications/logout", asyncRoute(async (req, res) => {
+  const header = req.headers.authorization ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+  if (token) await studyStore().removeAdminSession(token);
+  res.status(204).end();
 }));
 
 router.get("/admin/staff-applications", requireAdmin, requireAdminRole, asyncRoute(async (_req, res) => {
@@ -193,9 +228,18 @@ router.post("/admin/staff-applications/:id/review", requireAdmin, requireAdminRo
   const admin = (req as AuthedAdminRequest).admin;
   let inviteToken: string | null = null, registrationUrl: string | null = null;
   if (decision === "approve") {
-    inviteToken = randomBytes(24).toString("hex");
-    await db.createStaffInvite({ token: inviteToken, createdBy: admin.id, label: `Application: ${existing.name}`, role: "staff" });
-    registrationUrl = `/staff/register?invite=${inviteToken}`;
+    if (existing.applicantAccountId) {
+      const applicant = await db.getAdmin(existing.applicantAccountId);
+      if (!applicant) { res.status(409).json({ error: "The applicant account could not be found." }); return; }
+      const activated = await db.updateAdmin(applicant.id, { role: "staff" });
+      if (!activated) { res.status(409).json({ error: "The applicant account could not be activated." }); return; }
+    } else {
+      // Applications created before applicant accounts were introduced still
+      // use the established invite registration path.
+      inviteToken = randomBytes(24).toString("hex");
+      await db.createStaffInvite({ token: inviteToken, createdBy: admin.id, label: `Application: ${existing.name}`, role: "staff" });
+      registrationUrl = `/staff/register?invite=${inviteToken}`;
+    }
   }
   const application = await db.updateStaffApplication(id, { status: decision === "approve" ? "approved" : "declined", reviewedBy: admin.id, reviewedAt: new Date(), inviteToken });
   res.json({ application: application && { id: application.id, status: application.status }, registrationUrl });

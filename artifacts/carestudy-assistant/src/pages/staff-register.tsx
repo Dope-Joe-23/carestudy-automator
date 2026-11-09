@@ -99,7 +99,7 @@ export function StaffRegisterPage() {
       // Auto-login: store the token and redirect to the studio
       setAdminToken(result.token);
       toast.success(`Welcome, ${result.admin.name || result.admin.username}! Your account is ready.`);
-      window.location.href = "/welcome";
+      window.location.href = result.admin.role === "admin" ? "/studio/dashboard" : "/studio/bin";
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Registration failed.");
     } finally {

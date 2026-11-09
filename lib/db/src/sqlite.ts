@@ -68,6 +68,7 @@ function openSqlite(): DatabaseSync {
     'ALTER TABLE "admins" ADD COLUMN "role" text NOT NULL DEFAULT \'staff\'',
     'ALTER TABLE "admins" ADD COLUMN "email" text',
     'ALTER TABLE "admins" ADD COLUMN "invited_by" integer',
+    'ALTER TABLE "staff_applications" ADD COLUMN "applicant_account_id" integer',
     'ALTER TABLE "students" ADD COLUMN "username" text',
   ]) {
     try {

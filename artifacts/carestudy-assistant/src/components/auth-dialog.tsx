@@ -5,9 +5,11 @@
  * student workspace, and the workspace, its sidebar, and the studio gates
  * open it in place. Admins and staff still land on /welcome after signing in;
  * students hand their session back to the caller so the page can update
- * without a reload.
+ * without a reload. Active studio accounts go straight to their role's home;
+ * applicants go to their restricted application status page.
  */
 import { useEffect, useState, type FormEvent } from "react";
+import { Link } from "wouter";
 import { Loader2, Lock, ShieldCheck, User, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -141,8 +143,13 @@ function SignInForm({
     try {
       const { token, admin } = await adminLogin(value, password);
       setAdminToken(token);
+      if (admin.role === "applicant") {
+        toast.success("Your application is still under review.");
+        window.location.href = "/staff/application";
+        return;
+      }
       toast.success(`Welcome back, ${admin.name || admin.username}!`);
-      window.location.href = "/welcome";
+      window.location.href = admin.role === "admin" ? "/studio/dashboard" : "/studio/bin";
       return;
     } catch {
       // fall through to student sign-in
@@ -221,7 +228,9 @@ function SignInForm({
             Create a student account
           </button>
         </p>
-        <p>Staff? Ask your admin for an invite link.</p>
+        <p>Applying to join? <Link href="/staff/apply" className="font-medium text-primary hover:underline">Create an applicant account</Link></p>
+        <p>Already applied? <Link href="/staff/application" className="font-medium text-primary hover:underline">Check your application</Link></p>
+        <p>Invited staff? Use your invitation link to register.</p>
       </div>
     </form>
   );

@@ -79,7 +79,7 @@ export const adminsTable = pgTable("admins", {
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   name: text("name"),
-  /** "admin" (full access) or "staff" (studio + order bin only). */
+  /** "admin" (full access), "staff", or restricted "applicant". */
   role: text("role").notNull().default("staff"),
   email: text("email"),
   invitedBy: integer("invited_by"),
@@ -112,8 +112,8 @@ export const staffInvitesTable = pgTable("staff_invites", {
 
 export const staffApplicationsTable = pgTable("staff_applications", {
   id: serial("id").primaryKey(), name: text("name").notNull(), email: text("email").notNull(), phone: text("phone"),
-  experience: text("experience"), motivation: text("motivation").notNull(),
-  status: text("status").notNull().default("pending"), reviewedBy: integer("reviewed_by"),
+  experience: text("experience"), motivation: text("motivation").notNull().default(""),
+  status: text("status").notNull().default("pending"), applicantAccountId: integer("applicant_account_id"), reviewedBy: integer("reviewed_by"),
   inviteToken: text("invite_token"), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
 });

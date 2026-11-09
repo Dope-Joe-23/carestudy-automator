@@ -81,8 +81,8 @@ export async function fetchAdminMe(): Promise<{ admin: Admin }> {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) {
-    setAdminToken(null);
     const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    if (response.status === 401) setAdminToken(null);
     throw new Error(body?.error ?? `Session check failed (${response.status})`);
   }
   return (await response.json()) as { admin: Admin };

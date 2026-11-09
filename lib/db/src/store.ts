@@ -83,7 +83,7 @@ export type AdminRow = {
   passwordHash: string;
   /** Display name (optional). */
   name: string | null;
-  /** "admin" (full access) or "staff" (studio + order bin only). */
+  /** "admin", "staff", or "applicant" (restricted until application approval). */
   role: string;
   /** Email for notifications and invite tracking. */
   email: string | null;
@@ -131,10 +131,10 @@ export type NewStaffInvite = {
 
 export type StaffApplicationRow = {
   id: number; name: string; email: string; phone: string | null; experience: string | null;
-  motivation: string; status: string; reviewedBy: number | null; inviteToken: string | null;
+  motivation: string; status: string; applicantAccountId: number | null; reviewedBy: number | null; inviteToken: string | null;
   createdAt: Date; reviewedAt: Date | null;
 };
-export type NewStaffApplication = { name: string; email: string; phone?: string | null; experience?: string | null; motivation: string };
+export type NewStaffApplication = { name: string; email: string; phone?: string | null; experience?: string | null; motivation?: string; applicantAccountId?: number | null };
 
 // ---------------------------------------------------------------------------
 // Student portal rows
@@ -402,7 +402,7 @@ export interface StudyStore {
   useStaffInvite(id: number, usedByAdminId: number): Promise<StaffInviteRow | null>;
   createStaffApplication(application: NewStaffApplication): Promise<StaffApplicationRow>;
   listStaffApplications(): Promise<StaffApplicationRow[]>;
-  updateStaffApplication(id: number, fields: { status: string; reviewedBy: number; reviewedAt: Date; inviteToken?: string | null }): Promise<StaffApplicationRow | null>;
+  updateStaffApplication(id: number, fields: { status?: string; reviewedBy?: number; reviewedAt?: Date | null; inviteToken?: string | null; applicantAccountId?: number | null }): Promise<StaffApplicationRow | null>;
 
   // --- Student portal: accounts, sessions, orders -------------------------
 
