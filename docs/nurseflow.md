@@ -1,6 +1,6 @@
 # NurseSpin
 
-NurseSpin is Nursyde's short-form MCQ practice stream. It is mounted at
+NurseSpin is Nursuit's short-form MCQ practice stream. It is mounted at
 `/` and `/nursespin` (`/nurseflow` remains a compatibility alias) and can be
 deployed independently because it only needs the
 frontend plus the `/api/nurseflow` video-job boundary.

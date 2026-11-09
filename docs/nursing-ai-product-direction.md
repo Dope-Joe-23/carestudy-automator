@@ -86,7 +86,7 @@ the current feature pages. Chat should act as the front door to specialized
 workflows; existing tools and pages should remain reachable and preserve their
 useful behavior.
 
-The student workspace now includes Nursyde chat backed by the existing model
+The student workspace now includes Nursuit chat backed by the existing model
 gateway and curated reference index. Guests can ask educational questions,
 attach PDF, DOCX, TXT, and Markdown files, use configured web search and image
 generation tools, and export answers to Word or browser PDF. Guest conversations

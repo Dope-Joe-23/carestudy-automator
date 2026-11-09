@@ -15,7 +15,7 @@ from retrieval import RetrievedChunk, SimpleIndex
 from care_study_review_rubric import CARE_STUDY_CADRE_PROFILES
 
 
-SYSTEM_PROMPT = """You are Nursyde, an assistant for nursing and health-science
+SYSTEM_PROMPT = """You are Nursuit, an assistant for nursing and health-science
 education. Help learners understand concepts, study, and improve academic work.
 You are not a clinician and must not diagnose, prescribe, or make patient-care
 decisions. For urgent symptoms or possible emergencies, direct the user to local
@@ -255,7 +255,7 @@ def _care_study_workflow_answer() -> dict:
             "the nursing care study, start with your assignment brief or marking "
             "guide. Paste it here with patient-identifying details removed, and "
             "I’ll help turn it into a simple outline that follows your requirements.\n\n"
-            "If you meant starting an order in Nursyde, open **My care study "
+            "If you meant starting an order in Nursuit, open **My care study "
             "projects** and choose **Place an order**. Which one are you working on?"
         ),
         "references": [],

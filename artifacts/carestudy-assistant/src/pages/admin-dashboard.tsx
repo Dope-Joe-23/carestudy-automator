@@ -1055,7 +1055,7 @@ function SettingsTab() {
       <div>
         <h2 className="font-serif text-lg font-semibold">Settings</h2>
         <p className="text-sm text-muted-foreground">
-          Configure your Nursyde workspace.
+          Configure your Nursuit workspace.
         </p>
       </div>
 

@@ -8632,7 +8632,7 @@ function Home() {
               <div className="border-b bg-primary px-4 py-3 text-primary-foreground">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold">Nursyde editor</p>
+                    <p className="text-sm font-semibold">Nursuit editor</p>
                     <p className="mt-0.5 text-xs text-primary-foreground/80">
                       Reviews the complete work currently on screen.
                     </p>
@@ -8722,7 +8722,7 @@ function Home() {
       <Dialog open={onboardingOpen} onOpenChange={(open) => { setOnboardingOpen(open); if (!open) markOnboardingSeen(); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Welcome to Nursyde</DialogTitle>
+            <DialogTitle>Welcome to Nursuit</DialogTitle>
             <DialogDescription>
               Your patient/family care study, section by section.
             </DialogDescription>
@@ -8832,6 +8832,7 @@ function Router() {
       >
         <ErrorBoundary resetKey={location}>
           <Switch>
+            <Route path="/nursuit" component={LandingPage} />
             <Route path="/nursyde" component={LandingPage} />
             <Route path="/nursecite" component={LandingPage} />
             <Route path="/nursora" component={LandingPage} />

@@ -36,7 +36,7 @@ Care-study definitions use the nursing assignment meaning without contrasting it
 with unrelated meanings unless the student asks.
 
 When a student attaches a document and asks for a review, critique, consistency
-check, or rewrite, Nursyde applies the chapter-by-chapter criteria in
+check, or rewrite, Nursuit applies the chapter-by-chapter criteria in
 `src/care_study_review_rubric.py`. The checklist follows the six-chapter
 workspace template and checks structure, evidence traceability, and internal
 consistency. It distinguishes document/template findings from clinical claims
