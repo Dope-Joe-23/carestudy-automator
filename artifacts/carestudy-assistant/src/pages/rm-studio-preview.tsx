@@ -3,17 +3,17 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
-  ChevronRight,
   Eye,
   FileText,
+  Library,
   Plus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StudioSidebarToolsPortal } from "@/components/studio-shell";
 import {
   SidebarGroup,
@@ -21,9 +21,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { RM_CARE_STUDY_TEMPLATE_DRAFT } from "@/lib/template";
+import { Separator } from "@/components/ui/separator";
+import { RM_CARE_STUDY_TEMPLATE } from "@/lib/template";
 import type { TemplateField, TemplateRowDef } from "@/lib/template";
 
 type PreviewRow = Record<string, string>;
@@ -134,11 +135,12 @@ function RowEditor({
 
 export function RmStudioPreview() {
   const [chapterIndex, setChapterIndex] = useState(0);
+  const [chapterPickerOpen, setChapterPickerOpen] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [fieldValues, setFieldValues] = useState<Record<string, Record<string, string>>>({});
   const [rowValues, setRowValues] = useState<Record<string, PreviewRow[]>>({});
 
-  const chapter = RM_CARE_STUDY_TEMPLATE_DRAFT[chapterIndex];
+  const chapter = RM_CARE_STUDY_TEMPLATE[chapterIndex];
   const section = activeSectionId
     ? chapter.sections.find((item) => item.id === activeSectionId) ?? null
     : null;
@@ -149,46 +151,45 @@ export function RmStudioPreview() {
     <main className="min-h-full bg-background">
       <StudioSidebarToolsPortal>
         <SidebarGroup>
-          <SidebarGroupLabel>Chapters</SidebarGroupLabel>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Chapters</SidebarGroupLabel>
           <SidebarMenu>
-            <Collapsible asChild defaultOpen className="group/collapsible">
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip="RM chapters · provisional">
-                    <FileText className="size-4 shrink-0 text-sidebar-primary" />
-                    <span className="min-w-0 flex-1 truncate text-left">RM · provisional</span>
-                    <ChevronRight className="ml-auto size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {RM_CARE_STUDY_TEMPLATE_DRAFT.map((item, itemIndex) => (
-                      <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton
-                          isActive={chapterIndex === itemIndex}
-                          tooltip={item.name}
-                          className="h-auto py-2"
-                          onClick={() => {
-                            setChapterIndex(itemIndex);
-                            setActiveSectionId(null);
-                          }}
-                        >
-                          <span className="min-w-0 flex-1 truncate text-left">{item.name}</span>
-                          <span className="font-mono text-[10px] text-sidebar-foreground/60">
-                            {item.sections.length}
-                          </span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Choose a chapter" onClick={() => setChapterPickerOpen(true)}>
+                <Library className="size-4 shrink-0 text-sidebar-primary" />
+                <span className="min-w-0 flex-1 truncate text-left">Chapters</span>
+                <span className="max-w-24 truncate text-[10px] text-sidebar-foreground/60">{chapter.shortLabel}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </StudioSidebarToolsPortal>
-      <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <Dialog open={chapterPickerOpen} onOpenChange={setChapterPickerOpen}>
+        <DialogContent className="max-h-[80vh] max-w-md overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Choose a chapter</DialogTitle>
+            <DialogDescription>Jump to a chapter in the RM care-study preview.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {RM_CARE_STUDY_TEMPLATE.map((item, itemIndex) => (
+              <button key={item.name} type="button" onClick={() => { setChapterIndex(itemIndex); setActiveSectionId(null); setChapterPickerOpen(false); }} className="w-full rounded-lg border p-3 text-left hover:bg-muted/60">
+                <span className="flex items-center gap-3">
+                  <FileText className="size-4 text-primary" />
+                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{item.name}</span><span className="mt-1 block text-xs text-muted-foreground">{item.sections.length} sections · provisional template</span></span>
+                  {chapterIndex === itemIndex && <span className="text-xs text-primary">Current</span>}
+                </span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+      <header className="sticky top-0 z-20 flex h-11 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur-md md:px-5">
+        <SidebarTrigger />
+        <Separator orientation="vertical" className="h-4" />
+        <div className="min-w-0 truncate font-mono text-[10px] uppercase tracking-wider text-muted-foreground">RM Studio / <span className="text-foreground">{chapter.shortLabel}</span></div>
+        <div className="ml-auto flex items-center gap-2"><Badge variant="outline" className="hidden gap-1 sm:flex"><Eye className="size-3" /> Preview mode</Badge><Badge variant="secondary">Not approved</Badge></div>
+      </header>
+      <div className="flex-1 space-y-4 p-4 md:p-5 lg:p-6">
+        <div className="hidden">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">RM · preview</Badge>
@@ -214,15 +215,12 @@ export function RmStudioPreview() {
         </div>
 
         <section className="min-w-0 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4">
             <div>
               <p className="text-xs font-medium text-muted-foreground">RM draft · {chapter.shortLabel}</p>
-              <h2 className="mt-1 font-serif text-2xl font-semibold">{chapter.name}</h2>
+              <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight">{chapter.name}</h2>
               <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{chapter.blurb}</p>
             </div>
-            <Badge variant="outline" className="gap-1">
-              <Eye className="size-3.5" /> Preview mode
-            </Badge>
           </div>
 
           {section ? (

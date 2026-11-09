@@ -96,7 +96,6 @@ import { StaffApplyPage } from '@/pages/staff-apply';
 import { StaffApplicationStatusPage } from '@/pages/staff-application-status';
 import { NurseLearnPage } from '@/pages/nurselearn';
 import { NurseLearnAdminPage } from '@/pages/nurselearn-admin';
-import { RmStudioPreview } from '@/pages/rm-studio-preview';
 
 import { WelcomePage } from '@/pages/welcome';
 import { NurseFlowPage } from '@/pages/nurseflow';
@@ -104,6 +103,9 @@ import { NurseFlowQuestionBankPage } from '@/pages/nurseflow-question-bank';
 import { adminLogout } from '@/lib/adminAuth';
 import {
   ACTIVE_CARE_STUDY_CADRE_PROFILE,
+  RM_CARE_STUDY_CADRE_PROFILE,
+  type CareStudyCadreProfile,
+  type ChapterTemplate,
   type TemplateField,
   type TemplateRowColumn,
   type TemplateRowDef,
@@ -345,8 +347,10 @@ function exportChaptersForDocument(chapters: Chapter[]): Chapter[] {
   return [...out, ...closingChapters];
 }
 
-function makeChapters(): Chapter[] {
-  return ACTIVE_CARE_STUDY_CADRE_PROFILE.chapters.map((chapter, chapterIndex) => ({
+type DraftingCadreProfile = CareStudyCadreProfile & { chapters: ChapterTemplate[] };
+
+function makeChapters(profile: DraftingCadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE): Chapter[] {
+  return profile.chapters.map((chapter, chapterIndex) => ({
     name: chapter.name,
     shortLabel: chapter.shortLabel,
     blurb: chapter.blurb,
@@ -845,11 +849,13 @@ function genericProse(parts: Array<{ label: string; value: string }>): FieldPros
 }
 
 /** Compose a section's filled fields into prose paragraphs for print/export. */
-function fieldsToProse(section: Section): FieldProse[] {
+function fieldsToProse(section: Section, useRgnParticularsFormatting = true): FieldProse[] {
   const parts = section.fields
     .map((field) => ({ label: field.label, value: (section.data[field.id] ?? '').trim() }))
     .filter((part) => part.value);
-  return section.id === '1.1' ? particularsProse(parts) : genericProse(parts);
+  return useRgnParticularsFormatting && section.id === '1.1'
+    ? particularsProse(parts)
+    : genericProse(parts);
 }
 
 // ---------------------------------------------------------------------------
@@ -2819,14 +2825,14 @@ const ONBOARDING_STEPS = [
   },
 ];
 
-function Home() {
+function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile?: DraftingCadreProfile }) {
   const { resolvedTheme, setTheme } = useTheme();
   const admin = useAdmin();
   const isAdmin = admin?.role === "admin";
   const sidebarAdminInitials = getInitials(admin);
   const sidebarAdminName = getDisplayName(admin);
   const sidebarAdminRole = getRoleLabel(admin);
-  const [chapters, setChapters] = useState(makeChapters);
+  const [chapters, setChapters] = useState(() => makeChapters(cadreProfile));
   const [activeChapter, setActiveChapter] = useState(1);
   const [activeSection, setActiveSection] = useState(0);
   const [isDrafting, setIsDrafting] = useState(false);
@@ -3208,7 +3214,7 @@ function Home() {
           throw new Error('Invalid file — expected a care study chapter export.');
         }
         // Find the matching chapter in the current template
-        const templateIndex = ACTIVE_CARE_STUDY_CADRE_PROFILE.chapters.findIndex(
+        const templateIndex = cadreProfile.chapters.findIndex(
           (template) => template.name === parsed.chapter.name,
         );
         const chapterIndex = typeof parsed.chapterIndex === 'number'
@@ -3484,7 +3490,7 @@ function Home() {
       setChapters((previous) => {
         const next = previous.map((chapter) => ({ ...chapter }));
         for (const aiChapter of result.chapters) {
-          const chapterIndex = ACTIVE_CARE_STUDY_CADRE_PROFILE.chapters.findIndex(
+          const chapterIndex = cadreProfile.chapters.findIndex(
             (template) => template.name === aiChapter.name,
           );
           if (chapterIndex < 0) continue;
@@ -3694,10 +3700,10 @@ function Home() {
   // Every chapter gets a tab — including the merged front-matter chapter
   // ("Additional Pages"), which renders as 'Pages' in the strip.
   const navigableChapterIndices = chapters.map((_, index) => index);
-  const isChapter2 = currentChapter.name === 'Analysis of Data';
-  const isChapter3 = currentChapter.name === 'Planning';
-  const isChapter4 = currentChapter.name === 'Implementation';
-  const isChapter5 = currentChapter.name === 'Evaluation';
+  const isChapter2 = cadreProfile.id === 'registered_general_nurse' && currentChapter.name === 'Analysis of Data';
+  const isChapter3 = cadreProfile.id === 'registered_general_nurse' && currentChapter.name === 'Planning';
+  const isChapter4 = cadreProfile.id === 'registered_general_nurse' && currentChapter.name === 'Implementation';
+  const isChapter5 = cadreProfile.id === 'registered_general_nurse' && currentChapter.name === 'Evaluation';
 
   // The front-matter chapter (preface/acknowledgement/introduction) is
   // unnumbered in the document; the real chapters keep their I–VI numbering.
@@ -4609,7 +4615,7 @@ function Home() {
     workspaceGeneration.current += 1;
     setSectionTab('draft');
     setCollectOpen(false);
-    setChapters(makeChapters());
+    setChapters(makeChapters(cadreProfile));
     setActiveChapter(1);
     setActiveSection(0);
     setVerifyBySection({});
@@ -5184,7 +5190,7 @@ function Home() {
   ) => {
     setStagedSection(null);
     workspaceGeneration.current += 1;
-    const next = makeChapters();
+    const next = makeChapters(cadreProfile);
     for (const chapter of stored.chapters) {
       // Chapter aliasing: "Additional Pages" absorbed the old "Preliminary
       // Pages" chapter and the numbered summary chapter, so old saves map
@@ -5195,7 +5201,7 @@ function Home() {
         'Summarise': 'Additional Pages',
       };
       const targetName = chapterAliases[chapter.name] ?? chapter.name;
-      const chapterIndex = ACTIVE_CARE_STUDY_CADRE_PROFILE.chapters.findIndex(
+      const chapterIndex = cadreProfile.chapters.findIndex(
         (template) => template.name === targetName,
       );
       if (chapterIndex < 0) continue;
@@ -5675,7 +5681,7 @@ function Home() {
     if (aiBusy) return;
     workspaceGeneration.current += 1;
     suppressDirty.current = true;
-    setChapters(makeChapters());
+      setChapters(makeChapters(cadreProfile));
     setVerifyBySection({});
     setVerifyAll(null);
     setExportMeta({
@@ -5878,62 +5884,37 @@ function Home() {
               Chapters
             </SidebarGroupLabel>
             <SidebarMenu>
-              <Collapsible asChild defaultOpen={false} className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip="Chapters">
+              <SidebarMenuItem>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton tooltip="Choose a chapter" aria-label="Choose a chapter">
                       <Library className="size-4 shrink-0 text-sidebar-primary" />
                       <span className="flex-1 truncate text-left">Chapters</span>
-                      <ChevronRight className="ml-auto size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      <span className="ml-auto max-w-24 truncate text-[10px] text-sidebar-foreground/60">{currentChapter.shortLabel}</span>
                     </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {navigableChapterIndices.map((index) => {
-                        const chapter = chapters[index];
-                        const Icon = CHAPTER_ICONS[index] ?? FileText;
-                        const completion = chapterCompletion(index);
-                        const missingRequired = chapterMissingRequired(index);
-                        return (
-                          <SidebarMenuItem key={chapter.name}>
-                            <SidebarMenuButton
-                              isActive={index === activeChapter}
-                              onClick={() => selectChapter(index)}
-                              tooltip={chapter.name}
-                              className="h-auto flex-col items-stretch gap-1.5 py-2"
-                            >
-                              <span className="flex w-full items-center gap-2.5">
-                                <Icon className="size-4 shrink-0 text-sidebar-primary" />
-                                <span className="flex-1 truncate text-[13px] font-medium">
-                                  {chapter.name}
-                                </span>
-                                <span className="tabular font-mono text-[10px] text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
-                                  {completion}%
-                                </span>
-                                {missingRequired > 0 && (
-                                  <span
-                                    className="flex shrink-0 items-center gap-1 rounded-full bg-amber-400/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-amber-400 group-data-[collapsible=icon]:hidden"
-                                    title={`${missingRequired} required field${missingRequired === 1 ? '' : 's'} missing`}
-                                  >
-                                    <CircleAlert className="size-3" />
-                                    {missingRequired}
-                                  </span>
-                                )}
-                              </span>
-                              <span className="flex h-1 w-full overflow-hidden rounded-full bg-sidebar-border/70 group-data-[collapsible=icon]:hidden">
-                                <span
-                                  className="block h-full rounded-full bg-sidebar-primary transition-all"
-                                  style={{ width: `${completion}%` }}
-                                />
-                              </span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        );
-                      })}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="right" align="start" className="max-h-[70vh] w-80 overflow-y-auto">
+                    <DropdownMenuLabel>Choose a chapter</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {navigableChapterIndices.map((index) => {
+                      const chapter = chapters[index];
+                      const Icon = CHAPTER_ICONS[index] ?? FileText;
+                      const completion = chapterCompletion(index);
+                      const missingRequired = chapterMissingRequired(index);
+                      return (
+                        <DropdownMenuItem key={chapter.name} onSelect={() => selectChapter(index)} className="items-start gap-2.5 py-2.5">
+                          <Icon className="mt-0.5 size-4 shrink-0 text-primary" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-medium">{chapter.name}</span>
+                            <span className="mt-0.5 block text-[11px] text-muted-foreground">{completion}% complete{missingRequired ? ` · ${missingRequired} required fields left` : ''}</span>
+                          </span>
+                          {index === activeChapter && <span className="text-[10px] font-medium text-primary">Current</span>}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
 
@@ -6163,10 +6144,10 @@ function Home() {
               </span>
             </p>
             <span className="shrink-0 rounded-full border px-2 py-1 text-[10px] font-medium text-muted-foreground">
-              {ACTIVE_CARE_STUDY_CADRE_PROFILE.abbreviation} profile
+              {cadreProfile.abbreviation} profile
             </span>
             <div className="flex shrink-0 items-center gap-2">
-              {isFrontMatterChapter(activeChapter) && (
+              {cadreProfile.id === 'registered_general_nurse' && isFrontMatterChapter(activeChapter) && (
                 <Button
                   variant="outline"
                   size="icon"
@@ -6953,7 +6934,7 @@ function Home() {
                 </div>
               </div>
 
-              {currentSection.rows && currentSection.id === '4.3' ? (
+              {currentSection.rows && currentSection.id === '4.3' && cadreProfile.id === 'registered_general_nurse' ? (
                 <HomeVisitCardEditor
                   rowDef={currentSection.rows}
                   rows={getSectionRows()}
@@ -6962,7 +6943,7 @@ function Home() {
                   }
                   onChange={setRowData}
                 />
-              ) : currentSection.rows && currentSection.id === '5.1' ? (
+              ) : currentSection.rows && currentSection.id === '5.1' && cadreProfile.id === 'registered_general_nurse' ? (
                 <OutcomeEvaluationCardEditor
                   rowDef={currentSection.rows}
                   rows={getSectionRows()}
@@ -8510,7 +8491,7 @@ function Home() {
                           />
                         ) : filledFields.length > 0 ? (
                           <div className="mt-2 space-y-2">
-                            {fieldsToProse(section).map((para, index) => (
+                            {fieldsToProse(section, cadreProfile.id === 'registered_general_nurse').map((para, index) => (
                               <p key={index} className="whitespace-pre-wrap">
                                 {para.label && <strong>{para.label}: </strong>}
                                 {para.text}
@@ -8816,9 +8797,9 @@ function StudioArea() {
           ) : location === "/studio/nurselearn" ? (
             <NurseLearnAdminPage />
           ) : location === "/studio/rm-preview" ? (
-            <RmStudioPreview />
+            <Home key="registered_midwife" cadreProfile={RM_CARE_STUDY_CADRE_PROFILE} />
           ) : (
-            <Home />
+            <Home key="registered_general_nurse" cadreProfile={ACTIVE_CARE_STUDY_CADRE_PROFILE} />
           )}
         </ErrorBoundary>
       </StudioShell>

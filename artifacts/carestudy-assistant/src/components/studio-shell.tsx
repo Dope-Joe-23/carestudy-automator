@@ -6,7 +6,7 @@
  * the content pane. Rendering it once (in the router, above the pages) is what
  * keeps the sidebar from remounting on every studio navigation.
  */
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import {
@@ -83,31 +83,14 @@ export function StudioShell({ children }: { children: ReactNode }) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [toolsHost, setToolsHost] = useState<HTMLDivElement | null>(null);
   const [cadreMenuOpen, setCadreMenuOpen] = useState(false);
-  const cadreMenuCloseTimer = useRef<number | null>(null);
 
   const links = STUDIO_LINKS.filter((link) => !link.adminOnly || admin?.role === "admin");
   const isDraftingStudioActive = location === "/studio" || location === "/studio/rm-preview";
-  const cancelCadreMenuClose = () => {
-    if (cadreMenuCloseTimer.current !== null) {
-      window.clearTimeout(cadreMenuCloseTimer.current);
-      cadreMenuCloseTimer.current = null;
-    }
-  };
-  const scheduleCadreMenuClose = () => {
-    cancelCadreMenuClose();
-    cadreMenuCloseTimer.current = window.setTimeout(() => setCadreMenuOpen(false), 180);
-  };
-  const openCadreMenu = () => {
-    cancelCadreMenuClose();
-    setCadreMenuOpen(true);
-  };
   const goToCadre = (cadreId: string) => {
     setCadreMenuOpen(false);
     if (cadreId === "registered_general_nurse") setLocation("/studio");
     if (cadreId === "registered_midwife") setLocation("/studio/rm-preview");
   };
-
-  useEffect(() => () => cancelCadreMenuClose(), []);
 
   return (
     <StudioSidebarToolsContext.Provider value={toolsHost}>
@@ -132,10 +115,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
               <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Studio</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  <SidebarMenuItem
-                    onMouseEnter={openCadreMenu}
-                    onMouseLeave={scheduleCadreMenuClose}
-                  >
+                  <SidebarMenuItem>
                     <DropdownMenu open={cadreMenuOpen} onOpenChange={setCadreMenuOpen}>
                       <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
@@ -152,8 +132,6 @@ export function StudioShell({ children }: { children: ReactNode }) {
                         side="right"
                         align="start"
                         className="w-64"
-                        onMouseEnter={cancelCadreMenuClose}
-                        onMouseLeave={scheduleCadreMenuClose}
                       >
                         <DropdownMenuLabel>Choose a care-study cadre</DropdownMenuLabel>
                         <DropdownMenuSeparator />
@@ -181,7 +159,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
                                 <span className="block truncate">{profile.name}</span>
                                 <span className="block text-[11px] text-muted-foreground">
                                   {isAvailableInStudio
-                                    ? profile.id === "registered_midwife" ? "Preview · provisional" : "Studio"
+                                    ? "Drafting studio"
                                     : "In development"}
                                 </span>
                               </span>

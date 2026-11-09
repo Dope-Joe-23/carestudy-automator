@@ -1288,17 +1288,218 @@ export const CHAPTER_TEMPLATE: ChapterTemplate[] = [
   },
 ];
 
+type RmFieldSpec = {
+  label: string;
+  hint?: string;
+  type?: TemplateFieldType;
+  options?: string[];
+};
+
+const rmFields = (sectionKey: string, specs: RmFieldSpec[]): TemplateField[] =>
+  specs.map((spec) => ({
+    id: `${sectionKey}_${spec.label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "")}`,
+    label: spec.label,
+    hint: spec.hint,
+    type: spec.type ?? "textarea",
+    options: spec.options,
+    span: spec.type === "text" || spec.type === "date" || spec.type === "select" ? 1 : 2,
+  }));
+
+const RM_SECTION_FIELDS: Record<string, TemplateField[]> = {
+  "P.1": rmFields("title", [
+    { label: "Care study title", hint: "Use the title required by the training institution." },
+    { label: "Student name and index number", type: "text" },
+    { label: "Training institution", type: "text" },
+    { label: "Declaration / certification wording", hint: "Enter or adapt the institution-approved declaration." },
+  ]),
+  "P.2": rmFields("acknowledgement", [
+    { label: "Preface and purpose of the study" },
+    { label: "Acknowledgement of client and family" },
+    { label: "Acknowledgement of supervisor and facility" },
+    { label: "Other acknowledgements" },
+  ]),
+  "P.3": rmFields("contents", [
+    { label: "Introduction / overview", hint: "Summarize the maternity care journey and study structure." },
+    { label: "Literature review topics or notes" },
+    { label: "Reason for selecting the client" },
+    { label: "Abbreviations used" },
+  ]),
+  "1.0": rmFields("rm_intro", [
+    { label: "Client pseudonym / initials", type: "text" },
+    { label: "Age and gestational age at first contact", type: "text" },
+    { label: "Gravida, parity, and living children", type: "text", hint: "Transcribe the documented obstetric notation." },
+    { label: "First contact date, setting, and reason" },
+    { label: "Care period and outcome overview" },
+    { label: "Consent and confidentiality notes" },
+  ]),
+  "1.1": rmFields("client_profile", [
+    { label: "Pseudonym / initials", type: "text" },
+    { label: "Age / date of birth", type: "text" },
+    { label: "Residence and contact context" },
+    { label: "Education and occupation" },
+    { label: "Marital / family context" },
+    { label: "Religion / cultural context", hint: "Record only information relevant to care and shared by the client." },
+    { label: "Informant and reliability of information" },
+  ]),
+  "1.2": rmFields("daily_living", [
+    { label: "Diet, appetite, and fluids" },
+    { label: "Sleep, rest, and activity" },
+    { label: "Personal hygiene and elimination" },
+    { label: "Habits and hobbies" },
+    { label: "Psychosocial and emotional context" },
+    { label: "Home environment, water, sanitation, and support" },
+  ]),
+  "1.3": rmFields("family_history", [
+    { label: "Relevant family medical history" },
+    { label: "Relevant family surgical history" },
+    { label: "Hereditary or pregnancy-related conditions reported" },
+    { label: "Source and date verified" },
+  ]),
+  "1.4": rmFields("menstrual_obstetric_history", [
+    { label: "Menarche and usual cycle", type: "text" },
+    { label: "Cycle length, duration, and flow" },
+    { label: "Last menstrual period and estimated due date", type: "text" },
+    { label: "Previous pregnancies and outcomes", hint: "Use the table below for each prior pregnancy." },
+    { label: "Past pregnancy, birth, or puerperium complications" },
+  ]),
+  "1.5": rmFields("present_obstetric_history", [
+    { label: "Current pregnancy summary and gestational age" },
+    { label: "Antenatal booking and attendance" },
+    { label: "Investigations and results", hint: "Record test, date, result, and source as available." },
+    { label: "Medications, supplements, and immunizations as recorded" },
+    { label: "Reported symptoms, concerns, and fetal movement" },
+    { label: "Recorded maternal and fetal assessment" },
+  ]),
+  "2.0": rmFields("antenatal_intro", [
+    { label: "Antenatal care period" },
+    { label: "Client's needs and care priorities" },
+    { label: "Sources used for this chapter" },
+  ]),
+  "2.1": rmFields("first_contact", [
+    { label: "Visit date, gestational age, and people present" },
+    { label: "Home and family context relevant to care" },
+    { label: "Maternal findings and concerns" },
+    { label: "Fetal findings as documented" },
+    { label: "Education / care provided and response" },
+    { label: "Needs identified and follow-up plan" },
+  ]),
+  "2.2": rmFields("antenatal_clinic_contacts", [
+    { label: "Visit dates and gestational ages" },
+    { label: "Maternal observations and reported concerns" },
+    { label: "Fetal assessment and findings" },
+    { label: "Investigations and results" },
+    { label: "Care, education, and response documented" },
+    { label: "Outcome and next follow-up" },
+  ]),
+  "2.3": rmFields("subsequent_antenatal_visits", [
+    { label: "Visit summary and date range" },
+    { label: "Changes in maternal or fetal status" },
+    { label: "Care, education, or referral documented" },
+    { label: "Client response and next plan" },
+  ]),
+  "2.4": rmFields("antenatal_care_plan", [
+    { label: "Chapter summary and source notes" },
+    { label: "Identified antenatal needs", hint: "Use the repeatable table below to document planned care and outcomes." },
+  ]),
+  "3.0": rmFields("labour_admission", [
+    { label: "Admission date, time, facility, and gestational age" },
+    { label: "Reported onset and course of labour" },
+    { label: "Obstetric history and relevant antenatal findings" },
+    { label: "Initial maternal assessment as documented" },
+    { label: "Initial fetal assessment, presentation, and findings" },
+    { label: "Membranes, liquor, and examination findings as recorded" },
+    { label: "Plan, communication, and record source" },
+  ]),
+  "3.1": rmFields("labour_progress", [
+    { label: "Labour progress overview" },
+    { label: "Monitoring record / partograph source" },
+    { label: "Events requiring review, action, or escalation" },
+  ]),
+  "3.2": rmFields("first_stage", [
+    { label: "First-stage timeline and documented progress" },
+    { label: "Maternal observations and comfort measures" },
+    { label: "Fetal observations and monitoring source" },
+    { label: "Support, communication, and client response" },
+    { label: "Actions and outcomes recorded" },
+  ]),
+  "3.3": rmFields("second_stage_birth", [
+    { label: "Second-stage onset and duration as documented" },
+    { label: "Maternal and fetal status before birth" },
+    { label: "Birth date, time, mode, and documented attendant" },
+    { label: "Perineum and interventions as recorded" },
+    { label: "Client support and immediate outcome" },
+  ]),
+  "3.4": rmFields("newborn_at_birth", [
+    { label: "Birth date and time", type: "text" },
+    { label: "Sex and birth weight", type: "text" },
+    { label: "Apgar scores and assessment source", hint: "Enter the scores exactly as documented, with assessment times." },
+    { label: "Breathing, condition, and resuscitation as recorded" },
+    { label: "Thermal care, identification, and skin-to-skin as documented" },
+    { label: "Feeding, prophylaxis, and newborn observations as recorded" },
+  ]),
+  "3.5": rmFields("third_fourth_stage", [
+    { label: "Third-stage management as documented" },
+    { label: "Placenta delivery time and recorded findings" },
+    { label: "Uterine tone, bleeding, and maternal observations" },
+    { label: "First six-hour observations and care" },
+    { label: "Actions, response, and source record" },
+  ]),
+  "3.6": rmFields("placenta_membranes", [
+    { label: "Placenta and membranes completeness / condition" },
+    { label: "Maternal and fetal surfaces" },
+    { label: "Cord insertion, vessels, and cord findings" },
+    { label: "Placenta weight or measurements, if recorded", type: "text" },
+    { label: "Blood loss estimate and source, if documented" },
+  ]),
+  "3.7": rmFields("labour_care_plan", [
+    { label: "Labour chapter summary" },
+    { label: "Needs identified and source notes", hint: "Use the repeatable table below for planned care and documented outcomes." },
+  ]),
+  "4.0": rmFields("postnatal_intro", [
+    { label: "Postnatal period overview" },
+    { label: "Maternal and newborn care period" },
+    { label: "Handover and planned follow-up" },
+  ]),
+  "4.1": rmFields("maternal_postnatal", [
+    { label: "Maternal observations and uterine findings" },
+    { label: "Lochia, perineum, bladder, and bowel findings" },
+    { label: "Breastfeeding, comfort, and emotional wellbeing" },
+    { label: "Care, medicines, and education as documented" },
+    { label: "Discharge date, condition, advice, and follow-up" },
+  ]),
+  "4.2": rmFields("newborn_postnatal", [
+    { label: "Newborn examination and observations" },
+    { label: "Feeding, urine, and meconium as documented" },
+    { label: "Cord care, immunizations, and other care recorded" },
+    { label: "Discharge condition, advice, and follow-up" },
+  ]),
+  "4.3": rmFields("postnatal_followup", [
+    { label: "Follow-up overview and handover" },
+    { label: "Maternal and newborn concerns requiring follow-up" },
+  ]),
+  "4.4": rmFields("puerperium_care_plan", [
+    { label: "Puerperium chapter summary" },
+    { label: "Needs identified and source notes", hint: "Use the repeatable table below for planned care and documented outcomes." },
+  ]),
+  "5.1": rmFields("summary_conclusion", [
+    { label: "Summary of the care journey" },
+    { label: "Outcomes for client and newborn as documented" },
+    { label: "Conclusion and learning points" },
+  ]),
+  "5.2": rmFields("bibliography", [
+    { label: "Sources cited and reference details", hint: "List only sources actually used; follow the institution's required style." },
+  ]),
+  "5.3": rmFields("appendices", [
+    { label: "Appendices included and record dates" },
+    { label: "De-identification / authorization notes" },
+  ]),
+};
+
 const rmNarrativeSection = (id: string, heading: string, blurb: string): SectionTemplate => ({
   id,
   heading,
   blurb,
-  fields: [{
-    id: `${id.replace(/\W/g, "")}Notes`,
-    label: "Documented information",
-    hint: "Use the school's approved instructions. Do not add information that is not documented.",
-    type: "textarea",
-    span: 2,
-  }],
+  fields: RM_SECTION_FIELDS[id] ?? rmFields(id.replace(/\W/g, ""), [{ label: "Documented information" }]),
 });
 
 const rmCarePlanRows: TemplateRowDef = {
@@ -1362,11 +1563,50 @@ const rmPostnatalVisitRows: TemplateRowDef = {
   ],
 };
 
-/**
- * Provisional RM structure synthesized from four user-supplied student examples.
- * It is intentionally not an approved or selectable programme standard.
- */
-export const RM_CARE_STUDY_TEMPLATE_DRAFT: ChapterTemplate[] = [
+const rmFamilyHistoryRows: TemplateRowDef = {
+  id: "familyHistory",
+  title: "Relevant family history",
+  addLabel: "Add family-history entry",
+  emptyHint: "Record the relative, reported condition, and source when known.",
+  columns: [
+    { id: "relative", label: "Relative", placeholder: "As reported" },
+    { id: "condition", label: "Condition / history", placeholder: "As reported or documented" },
+    { id: "details", label: "Relevant details", placeholder: "Onset, outcome, or pregnancy relevance if known" },
+    { id: "source", label: "Source / date", placeholder: "Client report or record" },
+  ],
+};
+
+const rmPastPregnancyRows: TemplateRowDef = {
+  id: "pastPregnancies",
+  title: "Previous pregnancies and outcomes",
+  addLabel: "Add pregnancy history",
+  emptyHint: "Enter one row for each previous pregnancy; leave unknown details blank.",
+  columns: [
+    { id: "year", label: "Year / gestation", placeholder: "As recorded" },
+    { id: "outcome", label: "Outcome / mode of birth", placeholder: "As recorded" },
+    { id: "infant", label: "Infant outcome", placeholder: "As recorded" },
+    { id: "complications", label: "Complications / puerperium", placeholder: "As reported or documented" },
+    { id: "source", label: "Source", placeholder: "Client report or record" },
+  ],
+};
+
+const rmHomeVisitRows: TemplateRowDef = {
+  id: "antenatalHomeVisits",
+  title: "Antenatal home visits",
+  addLabel: "Add home visit",
+  emptyHint: "Record each visit separately and identify the source of findings.",
+  columns: [
+    { id: "date", label: "Date / gestational age", placeholder: "As recorded" },
+    { id: "attendees", label: "People present", placeholder: "As recorded" },
+    { id: "maternal", label: "Maternal findings / concerns", placeholder: "As documented or reported" },
+    { id: "home", label: "Home / family context", placeholder: "Relevant observations only" },
+    { id: "care", label: "Care / education and response", placeholder: "As recorded" },
+    { id: "plan", label: "Plan / follow-up", placeholder: "As recorded" },
+  ],
+};
+
+/** RM structure synthesized from the extracted user-supplied care-study examples. */
+export const RM_CARE_STUDY_TEMPLATE: ChapterTemplate[] = [
   {
     name: "Preliminary Pages",
     shortLabel: "Prelim",
@@ -1386,8 +1626,14 @@ export const RM_CARE_STUDY_TEMPLATE_DRAFT: ChapterTemplate[] = [
       rmNarrativeSection("1.0", "Introduction", "Purpose, approach, and a concise, de-identified overview of the study."),
       rmNarrativeSection("1.1", "Client profile and social history", "Relevant client and social context; avoid unnecessary identifiers."),
       rmNarrativeSection("1.2", "Daily living, home, and psychosocial context", "Document relevant habits, home environment, and psychosocial information."),
-      rmNarrativeSection("1.3", "Family, medical, and surgical history", "Separate reported history from verified records where possible."),
-      rmNarrativeSection("1.4", "Menstrual and past obstetric history", "Use the details and terminology required by the approved programme."),
+      {
+        ...rmNarrativeSection("1.3", "Family, medical, and surgical history", "Separate reported history from verified records where possible."),
+        rows: rmFamilyHistoryRows,
+      },
+      {
+        ...rmNarrativeSection("1.4", "Menstrual and past obstetric history", "Use the details and terminology required by the approved programme."),
+        rows: rmPastPregnancyRows,
+      },
       rmNarrativeSection("1.5", "Present obstetric history", "Current pregnancy history and recorded findings; include dates, units, and source."),
     ],
   },
@@ -1402,7 +1648,10 @@ export const RM_CARE_STUDY_TEMPLATE_DRAFT: ChapterTemplate[] = [
         ...rmNarrativeSection("2.2", "Antenatal clinic contacts", "Track contacts without inferring missing findings."),
         rows: rmAntenatalVisitRows,
       },
-      rmNarrativeSection("2.3", "Subsequent home visits", "Document visits, findings, education, and follow-up as recorded."),
+      {
+        ...rmNarrativeSection("2.3", "Subsequent home visits", "Document visits, findings, education, and follow-up as recorded."),
+        rows: rmHomeVisitRows,
+      },
       {
         ...rmNarrativeSection("2.4", "Antenatal care plan and evaluation", "Link evidence, plans, care documented as given, and outcomes."),
         rows: rmCarePlanRows,
@@ -1484,16 +1733,20 @@ export const ACTIVE_CARE_STUDY_CADRE_PROFILE: CareStudyCadreProfile & {
   chapters: CHAPTER_TEMPLATE,
 };
 
-/** Cadre-specific template registry. New templates require educator review. */
+export const RM_CARE_STUDY_CADRE_PROFILE: CareStudyCadreProfile & {
+  chapters: ChapterTemplate[];
+} = {
+  id: "registered_midwife",
+  name: "Registered Midwife",
+  abbreviation: "RM",
+  status: "available",
+  chapters: RM_CARE_STUDY_TEMPLATE,
+};
+
+/** Cadre-specific template registry. */
 export const CARE_STUDY_CADRE_PROFILES: CareStudyCadreProfile[] = [
   ACTIVE_CARE_STUDY_CADRE_PROFILE,
-  {
-    id: "registered_midwife",
-    name: "Registered Midwife",
-    abbreviation: "RM",
-    status: "in_development",
-    chapters: RM_CARE_STUDY_TEMPLATE_DRAFT,
-  },
+  RM_CARE_STUDY_CADRE_PROFILE,
   {
     id: "public_health_nurse",
     name: "Public Health Nurse",
