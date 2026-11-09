@@ -85,6 +85,12 @@ export type StaffInvite = {
   registrationUrl: string;
 };
 
+export type StaffApplication = { id: number; name: string; email: string; phone: string | null; experience: string | null; motivation: string; status: string; createdAt: string; reviewedAt: string | null };
+export function listStaffApplications(): Promise<{ applications: StaffApplication[] }> { return requestJson("/admin/staff-applications"); }
+export function reviewStaffApplication(id: number, decision: "approve" | "decline"): Promise<{ application: { id: number; status: string }; registrationUrl: string | null }> {
+  return requestJson(`/admin/staff-applications/${id}/review`, { method: "POST", body: JSON.stringify({ decision }) });
+}
+
 export type StudentRecord = {
   id: number;
   name: string;

@@ -110,6 +110,14 @@ export const staffInvitesTable = pgTable("staff_invites", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const staffApplicationsTable = pgTable("staff_applications", {
+  id: serial("id").primaryKey(), name: text("name").notNull(), email: text("email").notNull(), phone: text("phone"),
+  experience: text("experience"), motivation: text("motivation").notNull(),
+  status: text("status").notNull().default("pending"), reviewedBy: integer("reviewed_by"),
+  inviteToken: text("invite_token"), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+});
+
 // ---------------------------------------------------------------------------
 // Student portal — accounts, sessions, and care-study orders (mirrors the
 // SQLite schema in ./index.ts).

@@ -79,6 +79,12 @@ CREATE TABLE IF NOT EXISTS "staff_invites" (
   "created_at" integer NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS "staff_applications" (
+  "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" text NOT NULL, "email" text NOT NULL,
+  "phone" text, "experience" text, "motivation" text NOT NULL, "status" text NOT NULL DEFAULT 'pending',
+  "reviewed_by" integer, "invite_token" text, "created_at" integer NOT NULL, "reviewed_at" integer
+);
+
 CREATE TABLE IF NOT EXISTS "students" (
   "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   "name" text NOT NULL,

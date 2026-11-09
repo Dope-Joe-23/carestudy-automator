@@ -168,6 +168,39 @@ router.get(
   }),
 );
 
+// Public staff applications are stored for admin review; they never create accounts.
+router.post("/staff-applications", asyncRoute(async (req, res) => {
+  const name = str(req.body?.name), email = str(req.body?.email).toLowerCase();
+  const phone = str(req.body?.phone), experience = str(req.body?.experience), motivation = str(req.body?.motivation);
+  if (name.length < 2 || name.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || motivation.length > 4000 || phone.length > 50 || experience.length > 2000) {
+    res.status(400).json({ error: "Please provide a valid name and email." }); return;
+  }
+  const application = await studyStore().createStaffApplication({ name, email, phone: phone || null, experience: experience || null, motivation });
+  res.status(201).json({ submitted: true, id: application.id });
+}));
+
+router.get("/admin/staff-applications", requireAdmin, requireAdminRole, asyncRoute(async (_req, res) => {
+  const applications = await studyStore().listStaffApplications();
+  res.json({ applications: applications.map(({ inviteToken: _token, ...application }) => ({ ...application, createdAt: application.createdAt.toISOString(), reviewedAt: application.reviewedAt?.toISOString() ?? null })) });
+}));
+
+router.post("/admin/staff-applications/:id/review", requireAdmin, requireAdminRole, asyncRoute(async (req, res) => {
+  const id = Number(req.params.id), decision = str(req.body?.decision);
+  if (!Number.isInteger(id) || id < 1 || !["approve", "decline"].includes(decision)) { res.status(400).json({ error: "Invalid application decision." }); return; }
+  const db = studyStore(), existing = (await db.listStaffApplications()).find((item) => item.id === id);
+  if (!existing) { res.status(404).json({ error: "Application not found." }); return; }
+  if (existing.status !== "pending") { res.status(409).json({ error: "This application has already been reviewed." }); return; }
+  const admin = (req as AuthedAdminRequest).admin;
+  let inviteToken: string | null = null, registrationUrl: string | null = null;
+  if (decision === "approve") {
+    inviteToken = randomBytes(24).toString("hex");
+    await db.createStaffInvite({ token: inviteToken, createdBy: admin.id, label: `Application: ${existing.name}`, role: "staff" });
+    registrationUrl = `/staff/register?invite=${inviteToken}`;
+  }
+  const application = await db.updateStaffApplication(id, { status: decision === "approve" ? "approved" : "declined", reviewedBy: admin.id, reviewedAt: new Date(), inviteToken });
+  res.json({ application: application && { id: application.id, status: application.status }, registrationUrl });
+}));
+
 // PATCH /api/admin/staff/:id — update a staff member's role or details.
 router.patch(
   "/admin/staff/:id",

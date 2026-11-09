@@ -26,6 +26,8 @@ import type {
   StudyRow,
   StaffInviteRow,
   NewStaffInvite,
+  StaffApplicationRow,
+  NewStaffApplication,
   StudentChatRow,
   StudyStore,
   VivaStatus,
@@ -254,6 +256,10 @@ function toStaffInviteRow(row: typeof schema.staffInvitesTable.$inferSelect): St
     usedBy: row.usedBy ?? null,
     createdAt: row.createdAt,
   };
+}
+
+function toStaffApplicationRow(row: typeof schema.staffApplicationsTable.$inferSelect): StaffApplicationRow {
+  return { ...row, phone: row.phone ?? null, experience: row.experience ?? null, reviewedBy: row.reviewedBy ?? null, inviteToken: row.inviteToken ?? null, reviewedAt: row.reviewedAt ?? null };
 }
 
 function toStudentRow(row: typeof schema.studentsTable.$inferSelect): StudentRow {
@@ -549,6 +555,19 @@ export function createSqliteStore(): StudyStore {
         .where(eq(schema.staffInvitesTable.id, id))
         .returning();
       return row ? toStaffInviteRow(row) : null;
+    },
+
+    async createStaffApplication(application) {
+      const [row] = await db.insert(schema.staffApplicationsTable).values(application).returning();
+      return toStaffApplicationRow(row);
+    },
+    async listStaffApplications() {
+      const rows = await db.select().from(schema.staffApplicationsTable).orderBy(desc(schema.staffApplicationsTable.id));
+      return rows.map(toStaffApplicationRow);
+    },
+    async updateStaffApplication(id, fields) {
+      const [row] = await db.update(schema.staffApplicationsTable).set(fields).where(eq(schema.staffApplicationsTable.id, id)).returning();
+      return row ? toStaffApplicationRow(row) : null;
     },
 
     // --- Student portal ----------------------------------------------------

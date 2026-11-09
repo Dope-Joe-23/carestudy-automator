@@ -150,13 +150,14 @@ function DashboardOrderRow({ order }: { order: DashboardOrder }) {
 // Sidebar navigation
 // ---------------------------------------------------------------------------
 
-type TabId = "overview" | "orders" | "students" | "staff" | "invites" | "student-invites" | "settings";
+type TabId = "overview" | "orders" | "students" | "staff" | "applications" | "invites" | "student-invites" | "settings";
 
 const TABS: { id: TabId; label: string; icon: React.ElementType; adminOnly?: boolean }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
   { id: "orders", label: "Orders", icon: ClipboardList },
   { id: "students", label: "Students", icon: GraduationCap },
   { id: "staff", label: "Staff", icon: Users },
+  { id: "applications", label: "Applications", icon: Mail, adminOnly: true },
   { id: "invites", label: "Staff invites", icon: UserPlus, adminOnly: true },
   { id: "student-invites", label: "Student invites", icon: GraduationCap },
   { id: "settings", label: "Settings", icon: Settings },
@@ -674,6 +675,34 @@ function StaffTab({ onInvite }: { onInvite: () => void }) {
   );
 }
 
+function StaffApplicationsTab() {
+  const client = useQueryClient();
+  const { data, isLoading } = useQuery({ queryKey: ["staff-applications"], queryFn: adminApi.listStaffApplications });
+  const review = useMutation({
+    mutationFn: ({ id, decision }: { id: number; decision: "approve" | "decline" }) => adminApi.reviewStaffApplication(id, decision),
+    onSuccess: async (result) => {
+      client.invalidateQueries({ queryKey: ["staff-applications"] });
+      if (result.registrationUrl) {
+        const link = `${window.location.origin}${result.registrationUrl}`;
+        try { await navigator.clipboard.writeText(link); toast.success("Application approved. Staff registration link copied."); }
+        catch { toast.success("Application approved. Find the registration link under Staff invites."); }
+      } else toast.success("Application declined.");
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Review failed."),
+  });
+  return <div className="space-y-4">
+    <div><h2 className="font-serif text-lg font-semibold">Staff applications</h2><p className="text-sm text-muted-foreground">Review requests from prospective staff. Approval creates a one time registration link and does not create an account.</p></div>
+    <Card><CardContent className="divide-y py-0">
+      {isLoading ? <div className="flex justify-center py-10"><Loader2 className="size-5 animate-spin"/></div> : !data?.applications.length ? <p className="py-10 text-center text-sm text-muted-foreground">No applications yet.</p> : data.applications.map((application) => <article key={application.id} className="space-y-3 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-medium">{application.name}</h3><p className="text-xs text-muted-foreground">{application.email}{application.phone ? ` · ${application.phone}` : ""} · {formatDate(application.createdAt)}</p></div><Badge variant={application.status === "pending" ? "secondary" : application.status === "approved" ? "default" : "outline"}>{application.status}</Badge></div>
+        {application.experience && <p className="text-sm"><span className="font-medium">Experience: </span>{application.experience}</p>}
+        {application.motivation && <p className="whitespace-pre-wrap text-sm text-muted-foreground">{application.motivation}</p>}
+        {application.status === "pending" && <div className="flex gap-2"><Button size="sm" disabled={review.isPending} onClick={() => review.mutate({ id: application.id, decision: "approve" })}><CheckCircle2 className="mr-1.5 size-4"/>Approve</Button><Button size="sm" variant="outline" disabled={review.isPending} onClick={() => review.mutate({ id: application.id, decision: "decline" })}>Decline</Button></div>}
+      </article>)}
+    </CardContent></Card>
+  </div>;
+}
+
 // ---------------------------------------------------------------------------
 // Tab: Students
 // ---------------------------------------------------------------------------
@@ -1086,7 +1115,7 @@ export function AdminDashboard() {
     // Check if the studio sidebar requested a specific tab
     try {
       const openTab = window.sessionStorage.getItem('carestudy_open_tab');
-      if (openTab && ['overview', 'orders', 'students', 'staff', 'invites', 'student-invites', 'settings'].includes(openTab)) {
+      if (openTab && ['overview', 'orders', 'students', 'staff', 'applications', 'invites', 'student-invites', 'settings'].includes(openTab)) {
         window.sessionStorage.removeItem('carestudy_open_tab');
         return openTab as TabId;
       }
@@ -1143,6 +1172,8 @@ export function AdminDashboard() {
                     ? stats?.staff.total
                     : tab.id === "invites"
                       ? stats?.staff.pendingInvites
+                        : tab.id === "applications"
+                          ? undefined
                       : undefined;
             return (
               <button
@@ -1187,6 +1218,7 @@ export function AdminDashboard() {
         {activeTab === "orders" && <OrdersTab />}
         {activeTab === "students" && <StudentsTab />}
         {activeTab === "staff" && <StaffTab onInvite={() => setInviteOpen(true)} />}
+        {activeTab === "applications" && <StaffApplicationsTab />}
         {activeTab === "invites" && <InvitesTab onInvite={() => setInviteOpen(true)} />}
         {activeTab === "student-invites" && <StudentInvitesTab onInvite={() => setStudentInviteOpen(true)} />}
         {activeTab === "settings" && <SettingsTab />}

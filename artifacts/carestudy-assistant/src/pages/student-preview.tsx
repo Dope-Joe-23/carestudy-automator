@@ -1,7 +1,7 @@
 /**
  * Student preview page — read-only rendering of a delivered care study.
  *
- * Mounted at /student/orders/:id/preview. The student can browse the full
+ * Mounted at /chat/orders/:id/preview. The student can browse the full
  * study document (title page, chapters, sections, tables) but cannot edit
  * anything. Exporting the Word document is gated by the delivery PIN: the
  * staff sets it when delivering and shares it once the student has paid them
@@ -641,7 +641,7 @@ export function StudentPreviewPage({ orderId }: { orderId: number }) {
               </p>
             </div>
             <Button asChild variant="outline">
-              <Link href={`/student/orders/${orderId}`}>
+              <Link href={`/chat/orders/${orderId}`}>
                 <ArrowLeft className="size-4" /> Back to project
               </Link>
             </Button>
@@ -673,7 +673,7 @@ export function StudentPreviewPage({ orderId }: { orderId: number }) {
               </Button>
             )}
             <Button asChild variant="ghost" size="sm">
-              <Link href={`/student/orders/${orderId}`}>
+              <Link href={`/chat/orders/${orderId}`}>
                 <ArrowLeft className="size-4" /> Back to project
               </Link>
             </Button>
@@ -690,7 +690,7 @@ export function StudentPreviewPage({ orderId }: { orderId: number }) {
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4">
           <div className="flex items-center gap-3">
             <Link
-              href={`/student/orders/${orderId}`}
+              href={`/chat/orders/${orderId}`}
               className={cn(
                 buttonVariants({ variant: "ghost", size: "sm" }),
                 "gap-1.5 text-muted-foreground",

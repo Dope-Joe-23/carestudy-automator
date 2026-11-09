@@ -1,7 +1,7 @@
 /**
  * Download history — the student's record of delivered care studies.
  *
- * Mounted at /student/downloads. The platform no longer charges students: each
+ * Mounted at /chat/downloads. The platform no longer charges students: each
  * delivery is locked behind a PIN the staff sets and releases once they have
  * been paid (off-platform). This page shows every delivered study, whether its
  * PIN has been released, and lets the student export the ones that are open.
@@ -117,7 +117,7 @@ function DownloadRow({
 
         <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost" asChild>
-            <Link href={`/student/orders/${order.id}/preview`}>
+            <Link href={`/chat/orders/${order.id}/preview`}>
               <Eye className="size-4" /> Preview
             </Link>
           </Button>
@@ -273,7 +273,7 @@ export function DownloadHistoryPage() {
               academic team gives you to export it.
             </p>
             <Button className="mt-5" asChild>
-              <Link href="/student/orders">
+              <Link href="/chat/orders">
                 My projects <ArrowRight className="size-4" />
               </Link>
             </Button>

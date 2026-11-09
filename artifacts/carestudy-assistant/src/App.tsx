@@ -92,6 +92,7 @@ import { StudioShell, StudioSidebarToolsPortal } from '@/components/studio-shell
 import { AdminDashboardGate } from '@/components/admin-dashboard-gate';
 import { AdminDashboard } from '@/pages/admin-dashboard';
 import { StaffRegisterPage } from '@/pages/staff-register';
+import { StaffApplyPage } from '@/pages/staff-apply';
 import { NurseLearnPage } from '@/pages/nurselearn';
 import { NurseLearnAdminPage } from '@/pages/nurselearn-admin';
 import { RmStudioPreview } from '@/pages/rm-studio-preview';
@@ -8760,16 +8761,38 @@ function Home() {
 /** Everything the student portal owns: its home, its sections, and its legacy
  *  sign-in / registration entry points. */
 function isStudentArea(path: string): boolean {
-  return (
-    path === "/" ||
-    path === "/login" ||
-    path === "/student" ||
-    path.startsWith("/student/")
-  );
+  return path === "/chat" || path.startsWith("/chat/");
+}
+
+function isLegacyStudentPath(path: string): boolean {
+  return path === "/login" || path === "/student" || path.startsWith("/student/");
+}
+
+function LegacyStudentRedirect() {
+  const [location, navigate] = useLocation();
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    let target = location.replace(/^\/student(?=\/|$)/, "/chat");
+    if (location === "/student/workspace") target = "/chat";
+    if (location === "/login") { target = "/chat"; query.set("auth", "sign-in"); }
+    if (location === "/student/register") { target = "/chat"; query.set("auth", "sign-up"); }
+    const search = query.toString();
+    navigate(`${target}${search ? `?${search}` : ""}`, { replace: true });
+  }, [location, navigate]);
+  return null;
 }
 
 function isStudioArea(path: string): boolean {
   return path === "/studio" || path.startsWith("/studio/");
+}
+
+function LegacyRedirect({ to }: { to: string }) {
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    const search = window.location.search;
+    navigate(`${to}${search}`, { replace: true });
+  }, [navigate, to]);
+  return null;
 }
 
 /** The studio renders inside one gate and one shell so its sidebar persists. */
@@ -8805,6 +8828,8 @@ function StudioArea() {
 function Router() {
   const [location] = useLocation();
 
+  if (isLegacyStudentPath(location)) return <LegacyStudentRedirect />;
+
   // The portal and the studio render their own persistent layouts (sidebar +
   // content). Keeping them outside the keyed page transition stops the sidebar
   // remounting every time the user moves between their sections.
@@ -8832,18 +8857,20 @@ function Router() {
       >
         <ErrorBoundary resetKey={location}>
           <Switch>
-            <Route path="/nursuit" component={LandingPage} />
-            <Route path="/nursyde" component={LandingPage} />
-            <Route path="/nursecite" component={LandingPage} />
-            <Route path="/nursora" component={LandingPage} />
-            {/* Keep the previous URL working for existing links and bookmarks. */}
-            <Route path="/nurseaid" component={LandingPage} />
-            <Route path="/nurselearn" component={NurseLearnPage} />
+            <Route path="/" component={LandingPage} />
+            <Route path="/nursyde" component={() => <LegacyRedirect to="/" />} />
+            <Route path="/nursecite" component={() => <LegacyRedirect to="/" />} />
+            <Route path="/nursora" component={() => <LegacyRedirect to="/" />} />
+            <Route path="/nurseaid" component={() => <LegacyRedirect to="/" />} />
+            <Route path="/nursuit" component={() => <LegacyRedirect to="/" />} />
+            <Route path="/learn" component={NurseLearnPage} />
+            <Route path="/nurselearn" component={() => <LegacyRedirect to="/learn" />} />
             <Route path="/nursespin" component={NurseFlowPage} />
-            <Route path="/carestudy" component={LandingPage} />
+            <Route path="/carestudy" component={() => <LegacyRedirect to="/chat" />} />
             <Route path="/welcome" component={WelcomePage} />
-            <Route path="/nurseflow" component={NurseFlowPage} />
+            <Route path="/nurseflow" component={() => <LegacyRedirect to="/nursespin" />} />
             <Route path="/staff/register" component={StaffRegisterPage} />
+            <Route path="/staff/apply" component={StaffApplyPage} />
             <Route component={NotFound} />
           </Switch>
         </ErrorBoundary>

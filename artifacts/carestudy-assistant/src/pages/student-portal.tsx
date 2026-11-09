@@ -1,8 +1,8 @@
 /**
  * Student portal — sidebar layout with tab navigation.
  *
- * The workspace is the application home at `/` and the hub for every student
- * service; the other sections live under /student/*. Guests may browse the
+ * The workspace lives at `/chat` and is the hub for every student service.
+ * Guests may browse the
  * workspace, while the remaining sections require a signed-in student.
  *
  * Tabs:
@@ -294,7 +294,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
     await studentApi.logoutStudent().catch(() => {});
     setToken(null);
     setStudent(null);
-    window.location.href = "/";
+    window.location.href = "/chat";
   }, []);
 
   const value = useMemo(
@@ -563,18 +563,17 @@ function PortalSidebar({
 
 function MobileBottomNav({ onPlaceOrder }: { onPlaceOrder: () => void }) {
   const [location] = useLocation();
-  const isWorkspace =
-    location === "/" || location === "/student" || location === "/student/" || location === "/student/workspace";
-  const isExplore = location === "/student/explore";
-  const isNew = location === "/student/orders/new";
-  const isDownloads = location === "/student/downloads";
-  const isProjects = !isWorkspace && !isExplore && !isNew && !isDownloads && location.startsWith("/student");
+  const isWorkspace = location === "/chat" || location === "/chat/";
+  const isExplore = location === "/chat/explore";
+  const isNew = location === "/chat/orders/new";
+  const isDownloads = location === "/chat/downloads";
+  const isProjects = !isWorkspace && !isExplore && !isNew && !isDownloads && location.startsWith("/chat/orders");
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
       <div className="mx-auto flex h-14 max-w-lg items-stretch">
         <Link
-          href="/"
+          href="/chat"
           className={cn(
             "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
             isWorkspace ? "text-primary" : "text-muted-foreground",
@@ -584,7 +583,7 @@ function MobileBottomNav({ onPlaceOrder }: { onPlaceOrder: () => void }) {
           <span>Workspace</span>
         </Link>
         <Link
-          href="/student/explore"
+          href="/chat/explore"
           className={cn(
             "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
             isExplore ? "text-primary" : "text-muted-foreground",
@@ -594,7 +593,7 @@ function MobileBottomNav({ onPlaceOrder }: { onPlaceOrder: () => void }) {
           <span>Explore</span>
         </Link>
         <Link
-          href="/student/orders"
+          href="/chat/orders"
           className={cn(
             "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
             isProjects ? "text-primary" : "text-muted-foreground",
@@ -612,7 +611,7 @@ function MobileBottomNav({ onPlaceOrder }: { onPlaceOrder: () => void }) {
           <span>New order</span>
         </button>
         <Link
-          href="/student/downloads"
+          href="/chat/downloads"
           className={cn(
             "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
             isDownloads ? "text-primary" : "text-muted-foreground",
@@ -756,7 +755,7 @@ function OrdersList({
             <Card
               key={order.id}
               className="cursor-pointer transition-colors hover:border-primary/40"
-              onClick={() => navigate(`/student/orders/${order.id}`)}
+              onClick={() => navigate(`/chat/orders/${order.id}`)}
             >
               <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
                 <div className="min-w-0">
@@ -778,7 +777,7 @@ function OrdersList({
                         variant="outline"
                         onClick={(event) => {
                           event.stopPropagation();
-                          navigate(`/student/orders/${order.id}/preview`);
+                          navigate(`/chat/orders/${order.id}/preview`);
                         }}
                       >
                         <Eye className="size-4" /> Preview
@@ -787,7 +786,7 @@ function OrdersList({
                         size="sm"
                         onClick={(event) => {
                           event.stopPropagation();
-                          navigate(`/student/orders/${order.id}/preview`);
+                          navigate(`/chat/orders/${order.id}/preview`);
                         }}
                       >
                         {order.pin.set ? (
@@ -916,7 +915,7 @@ function NewOrderPage({
       await queryClient.invalidateQueries({ queryKey: ["student-orders"] });
       toast.success("Your order has been submitted — our team will begin shortly.");
       onClose?.();
-      navigate(`/student/orders/${result.order.id}`, { replace: true });
+      navigate(`/chat/orders/${result.order.id}`, { replace: true });
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Your order could not be submitted.");
@@ -930,7 +929,7 @@ function NewOrderPage({
           Close
         </button>
       ) : (
-        <Link href="/student/orders" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-4 -ml-2 text-muted-foreground')}>
+        <Link href="/chat/orders" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-4 -ml-2 text-muted-foreground')}>
           <ArrowLeft className="size-4" /> My projects
         </Link>
       )}
@@ -1223,7 +1222,7 @@ function OrderDetailPage({ orderId }: { orderId: number }) {
 
   return (
     <div>
-      <Link href="/student/orders" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-4 -ml-2 text-muted-foreground')}>
+      <Link href="/chat/orders" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-4 -ml-2 text-muted-foreground')}>
         <ArrowLeft className="size-4" /> My projects
       </Link>
 
@@ -1288,7 +1287,7 @@ function OrderDetailPage({ orderId }: { orderId: number }) {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button asChild>
-                <Link href={`/student/orders/${order.id}/preview`}>
+                <Link href={`/chat/orders/${order.id}/preview`}>
                   <Eye className="size-4" /> Preview study
                 </Link>
               </Button>
@@ -2418,9 +2417,9 @@ function StudentExplore({ onPlaceOrder }: { onPlaceOrder: () => void }) {
     href?: string;
     onClick?: () => void;
   }[] = [
-    { title: "NurseLearn", description: "Explore reviewed condition guides and educational videos for learners, families, and the public.", href: "/nurselearn", action: "Explore NurseLearn", icon: HeartPulse, ready: true },
+    { title: "NurseLearn", description: "Explore reviewed condition guides and educational videos for learners, families, and the public.", href: "/learn", action: "Explore NurseLearn", icon: HeartPulse, ready: true },
     { title: "Care-study service", description: "Place an order, follow its progress, and open a delivered study.", onClick: onPlaceOrder, action: "Start an order", icon: HeartPulse, ready: true },
-    { title: "Study with NurseFlow", description: "Practice with the existing nursing question bank and revision tools.", href: "/nurseflow", action: "Open NurseFlow", icon: QuizIcon, ready: true },
+    { title: "Practice with NurseSpin", description: "Practice with the nursing question bank and revision tools.", href: "/nursespin", action: "Open NurseSpin", icon: QuizIcon, ready: true },
     { title: "Assignment assistant", description: "Plan and refine an assignment with your course brief.", action: "Coming soon", icon: BookOpen, ready: false },
     { title: "Presentation assistant", description: "Build a clear presentation outline from your topic.", action: "Coming soon", icon: Presentation, ready: false },
     { title: "Research projects", description: "Organize a research question and project materials.", action: "Coming soon", icon: FlaskConical, ready: false },
@@ -2480,26 +2479,23 @@ function StudentPortalRouter() {
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
   const [chatBusy, setChatBusy] = useState(false);
   const [newChatRequest, setNewChatRequest] = useState(0);
-  // The staff invite that arrived with a /student/register link.
+  // The staff invite that arrived with a legacy student registration link.
   const [inviteToken] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return new URLSearchParams(window.location.search).get("staff");
   });
 
-  // Sign-in, registration, and the order form are dialogs. Their old URLs stay
-  // working: open the matching dialog, then settle on the real destination.
+  // Auth and order forms are dialogs; query routes open the requested dialog.
   // A layout effect so the dialog is already open on the first paint.
   useLayoutEffect(() => {
-    if (location === "/login") {
-      setAuthMode("sign-in");
-      navigate("/", { replace: true });
-    } else if (location === "/student/register") {
-      setAuthMode("sign-up");
-      navigate("/", { replace: true });
-    } else if (location === "/student/orders/new") {
+    const requestedAuth = new URLSearchParams(window.location.search).get("auth");
+    if (location === "/chat" && (requestedAuth === "sign-in" || requestedAuth === "sign-up")) {
+      setAuthMode(requestedAuth);
+      navigate("/chat", { replace: true });
+    } else if (location === "/chat/orders/new") {
       if (student) setOrderDialog("order");
       else setAuthMode("sign-in");
-      navigate("/student/orders", { replace: true });
+      navigate("/chat/orders", { replace: true });
     }
   }, [location, navigate, student]);
 
@@ -2515,13 +2511,13 @@ function StudentPortalRouter() {
   const openChat = (id: number) => {
     if (chatBusy) return;
     setActiveChatId(id);
-    navigate("/");
+    navigate("/chat");
   };
   const startNewChat = () => {
     if (chatBusy) return;
     setActiveChatId(null);
     setNewChatRequest((request) => request + 1);
-    navigate("/");
+    navigate("/chat");
   };
   const chatNavigation: StudentChatNavigation = {
     activeChatId,
@@ -2540,12 +2536,11 @@ function StudentPortalRouter() {
   }, [student?.id]);
 
   // Route parsing
-  const matchPreview = location.match(/^\/student\/orders\/(\d+)\/preview$/);
-  const matchOrder = location.match(/^\/student\/orders\/(\d+)$/);
-  const matchWorkspace =
-    location === "/" || location === "/student" || location === "/student/" || location === "/student/workspace";
-  const matchExplore = location === "/student/explore";
-  const matchDownloads = location === "/student/downloads";
+  const matchPreview = location.match(/^\/chat\/orders\/(\d+)\/preview$/);
+  const matchOrder = location.match(/^\/chat\/orders\/(\d+)$/);
+  const matchWorkspace = location === "/chat" || location === "/chat/";
+  const matchExplore = location === "/chat/explore";
+  const matchDownloads = location === "/chat/downloads";
 
   const activeTab: TabId = matchWorkspace
     ? "workspace"
@@ -2557,10 +2552,10 @@ function StudentPortalRouter() {
 
   const handleTabSelect = (tab: TabId) => {
     if (tab === "new-chat") chatNavigation.startNewChat();
-    else if (tab === "workspace") navigate("/");
-    else if (tab === "explore") navigate("/student/explore");
-    else if (tab === "projects") navigate("/student/orders");
-    else if (tab === "downloads") navigate("/student/downloads");
+    else if (tab === "workspace") navigate("/chat");
+    else if (tab === "explore") navigate("/chat/explore");
+    else if (tab === "projects") navigate("/chat/orders");
+    else if (tab === "downloads") navigate("/chat/downloads");
   };
 
   const authDialog = (

@@ -130,6 +130,15 @@ export const staffInvitesTable = sqliteTable("staff_invites", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+export const staffApplicationsTable = sqliteTable("staff_applications", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(), email: text("email").notNull(), phone: text("phone"),
+  experience: text("experience"), motivation: text("motivation").notNull(),
+  status: text("status").notNull().default("pending"), reviewedBy: integer("reviewed_by"),
+  inviteToken: text("invite_token"), createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
+});
+
 // ---------------------------------------------------------------------------
 // Student portal — accounts, sessions, and care-study orders
 // ---------------------------------------------------------------------------
