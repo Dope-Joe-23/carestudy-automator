@@ -1552,6 +1552,7 @@ function StudentAssistantChat() {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const pendingResponseScrollIndexRef = useRef<number | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [sourcesOpen, setSourcesOpen] = useState<number | null>(null);
   const [conversationId, setConversationId] = useState<number | null>(null);
@@ -1592,12 +1593,21 @@ function StudentAssistantChat() {
   }, [assistantToolsQuery.isError]);
 
   useEffect(() => {
-    if (messages.length === 0 && !busy) return;
+    const targetIndex = pendingResponseScrollIndexRef.current;
+    if (targetIndex === null) return;
     const scrollFrame = window.requestAnimationFrame(() => {
       const scrollContainer = chatScrollRef.current;
-      if (scrollContainer) {
-        scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: "smooth" });
-      }
+      const response = scrollContainer?.querySelector<HTMLElement>(
+        `[data-chat-message-index="${targetIndex}"]`,
+      );
+      if (!scrollContainer || !response) return;
+      const containerTop = scrollContainer.getBoundingClientRect().top;
+      const responseTop = response.getBoundingClientRect().top;
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollTop + responseTop - containerTop - 12,
+        behavior: "smooth",
+      });
+      pendingResponseScrollIndexRef.current = null;
     });
     return () => window.cancelAnimationFrame(scrollFrame);
   }, [messages, busy]);
@@ -1606,6 +1616,7 @@ function StudentAssistantChat() {
     const nextStudentId = student?.id ?? null;
     if (studentIdRef.current === nextStudentId) return;
     studentIdRef.current = nextStudentId;
+    pendingResponseScrollIndexRef.current = null;
     setConversationId(null);
     setMessages([]);
     setSourcesOpen(null);
@@ -1639,6 +1650,7 @@ function StudentAssistantChat() {
 
   useEffect(() => {
     if (chatNavigation.newChatRequest === 0) return;
+    pendingResponseScrollIndexRef.current = null;
     setConversationId(null);
     setMessages([]);
     setSourcesOpen(null);
@@ -1720,6 +1732,7 @@ function StudentAssistantChat() {
           setConversationId(result.conversationId);
           chatNavigation.setActiveChatId(result.conversationId);
         }
+        pendingResponseScrollIndexRef.current = history.length + 1;
         setMessages((current) => [
           ...current,
           { role: "assistant", content: result.answer, imageDataUrl: result.imageDataUrl },
@@ -1740,6 +1753,7 @@ function StudentAssistantChat() {
           setConversationId(result.conversationId);
           chatNavigation.setActiveChatId(result.conversationId);
         }
+        pendingResponseScrollIndexRef.current = history.length + 1;
         setMessages((current) => [
           ...current,
           { role: "assistant", content: result.answer, references: result.references },
@@ -1825,6 +1839,7 @@ function StudentAssistantChat() {
     const previousMessages = messages;
     setBusy(true);
     chatNavigation.setChatBusy(true);
+    pendingResponseScrollIndexRef.current = null;
     setMessages([]);
     setConversationId(null);
     setPrompt("");
@@ -1834,12 +1849,15 @@ function StudentAssistantChat() {
     try {
       const { chat } = await studentApi.getStudentChat(id);
       setConversationId(chat.id);
+      const lastAssistantIndex = chat.messages.findLastIndex((message) => message.role === "assistant");
+      pendingResponseScrollIndexRef.current = lastAssistantIndex >= 0 ? lastAssistantIndex : null;
       setMessages(chat.messages);
       setPrompt("");
       setAttachments([]);
       setEditingIndex(null);
       setSourcesOpen(null);
     } catch (loadError) {
+      pendingResponseScrollIndexRef.current = null;
       setConversationId(previousConversationId);
       setMessages(previousMessages);
       chatNavigation.setActiveChatId(previousConversationId);
@@ -2124,7 +2142,11 @@ function StudentAssistantChat() {
                 : "Care study";
 
               return (
-              <div key={`${turn.role}-${index}`} className={cn("flex min-w-0 max-w-full", turn.role === "user" ? "justify-end" : "justify-center")}>
+              <div
+                key={`${turn.role}-${index}`}
+                data-chat-message-index={index}
+                className={cn("flex min-w-0 max-w-full", turn.role === "user" ? "justify-end" : "justify-center")}
+              >
                 <div className={cn(
                 turn.role === "user" ? "w-fit min-w-0 max-w-full sm:max-w-2xl" : "w-full min-w-0 max-w-3xl",
                 )}>

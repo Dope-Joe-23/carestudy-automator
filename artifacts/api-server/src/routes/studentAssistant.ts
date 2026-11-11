@@ -17,7 +17,7 @@ const MAX_TOTAL_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 const MAX_ATTACHMENT_COUNT = 3;
 const ALLOWED_EXTENSIONS = new Set([".pdf", ".docx", ".txt", ".md"]);
 const DOCUMENT_REVIEW_INTENT =
-  /\b(?:review\w*|critiqu\w*|analy[sz]\w*|check\w*|correct\w*|fix\w*|rewrit\w*|revis\w*|edit\w*|improv\w*|polish\w*|feedback|consisten\w*|contradict\w*|gaps?|missing|align\w*|compar\w*|assess\w*|evaluat\w*|audit\w*|wrong|errors?)\b/i;
+  /\b(?:review\w*|critiqu\w*|analy[sz]\w*|check\w*|correct\w*|fix\w*|rewrit\w*|revis\w*|edit\w*|improv\w*|polish\w*|feedback|consisten\w*|contradict\w*|gaps?|missing|align\w*|compar\w*|assess\w*|evaluat\w*|audit\w*|wrong|errors?|issues?|concerns?|highlight\w*)\b/i;
 const MAX_WEB_SOURCES = 5;
 const CARE_STUDY_CADRE_PROFILES: StudentCareStudyCadreProfile[] = [
   { id: "registered_general_nurse", name: "Registered General Nurse", abbreviation: "RGN", status: "available" },

@@ -87,6 +87,52 @@ class StudentAssistantTests(unittest.TestCase):
         self.assertIn("CASE_STUDY_DOCX_MARKER: client reports persistent fatigue.", prompt)
         self.assertIn("The care plan documents a rest intervention.", prompt)
 
+    def test_issue_highlight_request_activates_chapter_focused_review(self):
+        document_text = (
+            "CHAPTER ONE\n"
+            "ASSESSMENT OF PATIENT AND FAMILY\n"
+            "Introduction\n"
+            "The patient was admitted on August 23, 2023.\n"
+        )
+        attachment = {
+            "filename": "care-study.txt",
+            "content": base64.b64encode(document_text.encode("utf-8")).decode("ascii"),
+        }
+        question = "In bullets can you highlight the issues in the care study if any"
+
+        self.assertTrue(assistant._is_document_review_request(question))
+        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+            assistant.answer_student_question(
+                question,
+                [],
+                SimpleIndex(),
+                attachment,
+            )
+
+        system_prompt, prompt = model.call_args.args[:2]
+        self.assertIn("CARE-STUDY REVIEW STANDARD", system_prompt)
+        self.assertIn(
+            "DOCUMENT STRUCTURE DETECTION (heading-based; verify against the file text)",
+            prompt,
+        )
+        self.assertIn(
+            "- Chapter 1 — Assessment (document title: ASSESSMENT OF PATIENT AND FAMILY)",
+            prompt,
+        )
+        self.assertIn("Focus findings on the detected chapters", system_prompt)
+        self.assertIn("do not list other chapters as missing defects", system_prompt)
+        self.assertIn("one short sentence per bullet", system_prompt)
+        self.assertIn("up to ten important findings when supported", system_prompt)
+        self.assertIn("The full extracted document is included for this summary or review.", prompt)
+
+    def test_chapter_detection_ignores_chapter_mentions_in_body_text(self):
+        self.assertEqual(
+            assistant._detect_document_chapters(
+                "The next chapter discusses planning. Chapter 2 is not included here."
+            ),
+            [],
+        )
+
     def test_uploaded_document_is_separated_from_retrieved_library_sources(self):
         index = SimpleIndex()
         index.build([
@@ -282,7 +328,8 @@ class StudentAssistantTests(unittest.TestCase):
         self.assertIn("Chapter 4 — Implementation", model.call_args.args[0])
         self.assertIn("Chapter 5 — Evaluation", model.call_args.args[0])
         self.assertIn("Chapter 6 — Summary, conclusion, and bibliography", model.call_args.args[0])
-        self.assertIn('status for Chapters 1-6 as "findings"', model.call_args.args[0])
+        self.assertIn("First identify the chapter or chapters actually present", model.call_args.args[0])
+        self.assertIn("For a partial study, do not list other chapters as missing defects", model.call_args.args[0])
 
     def test_document_over_100000_characters_is_included_in_review(self):
         document = ("Long chapter content. " * 6_000).encode("utf-8")

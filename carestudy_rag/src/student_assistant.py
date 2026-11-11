@@ -94,9 +94,33 @@ DOCUMENT_REVIEW_INTENT = re.compile(
     r"\b(?:review\w*|critiqu\w*|analy[sz]\w*|check\w*|correct\w*|fix\w*|"
     r"rewrit\w*|revis\w*|edit\w*|improv\w*|polish\w*|feedback|"
     r"consisten\w*|contradict\w*|gaps?|missing|align\w*|compar\w*|"
-    r"assess\w*|evaluat\w*|audit\w*|wrong|errors?)\b",
+    r"assess\w*|evaluat\w*|audit\w*|wrong|errors?|issues?|concerns?|"
+    r"highlight\w*)\b",
     re.IGNORECASE,
 )
+CHAPTER_HEADING = re.compile(
+    r"^\s*(?:(?:case|care)\s+study\s+)?(?:chapter|chap\.?)\s+"
+    r"(?P<number>1|2|3|4|5|6|one|two|three|four|five|six|first|second|third|"
+    r"fourth|fifth|sixth|i|ii|iii|iv|v|vi)\b"
+    r"(?:\s*[:.\-–—]?\s*(?P<title>.*?))?\s*$",
+    re.IGNORECASE,
+)
+CHAPTER_LABELS = {
+    1: "Assessment",
+    2: "Analysis of Data",
+    3: "Planning",
+    4: "Implementation",
+    5: "Evaluation",
+    6: "Summary, conclusion, and bibliography",
+}
+CHAPTER_NUMBERS = {
+    "1": 1, "one": 1, "first": 1, "i": 1,
+    "2": 2, "two": 2, "second": 2, "ii": 2,
+    "3": 3, "three": 3, "third": 3, "iii": 3,
+    "4": 4, "four": 4, "fourth": 4, "iv": 4,
+    "5": 5, "five": 5, "fifth": 5, "v": 5,
+    "6": 6, "six": 6, "sixth": 6, "vi": 6,
+}
 REFERENCE_LOOKUP_INTENT = re.compile(
     r"\b(?:sources?|references?|citations?|cite|guidelines?|evidence[- ]based|"
     r"reference library|clinical standards|local standards|WHO|N&?MC)\b",
@@ -161,16 +185,28 @@ uploaded care/case study:
   suggest starting, stopping, changing, or adding treatment. Identify the
   documentation gap without proposing what should be documented; ask the
   student to confirm it with an educator or qualified clinician.
-- Keep a review focused: at most five prioritized findings, each tied to the
-- Review every chapter in the standard that is present in the document. Report
-  a brief status for Chapters 1-6 as "findings", "no issue identified in
-  review", or "not assessable/not present"; do not imply that omitted or
-  unreadable content passed. Mention preliminary pages separately if present.
-- For each finding, give the issue type (contradiction, template/structural
-  gap, unsupported claim, or human/clinical verification), section(s), short
-  exact evidence from the document, the criterion, and a conservative
-  correction or question. Prioritize findings; do not pad the report with
-  generic concerns.
+- Keep the response concise and easy to scan. Use one short sentence per bullet,
+  normally covering the issue, document evidence, and a brief confirmation
+  request when needed. Include up to ten important findings when supported;
+  include fewer when that is enough. Do not add generic introductions,
+  repeated caveats, or a separate recommendation section unless requested.
+- First identify the chapter or chapters actually present, using explicit
+   chapter headings in the uploaded text and the supplied DOCUMENT STRUCTURE
+   DETECTION when available. Name each detected chapter and its document title.
+   Do not treat a mere mention of a chapter in body text as proof that the
+   chapter is present.
+- Focus findings on the detected chapters and the scope requested by the
+   student. For a partial study, do not list other chapters as missing defects
+   or imply they were reviewed. Mention preliminary pages only when relevant.
+- When asked to highlight issues, respond in concise bullets with only
+   document-specific findings. If no issue is evident in the requested scope,
+   say so and identify what text was reviewed; do not pad the answer with
+   generic limitations or hypothetical gaps.
+- Label each finding by type when useful (contradiction, documentation gap,
+   unsupported claim, or verification), and name its chapter/section. Include
+   brief evidence from the document and a short confirmation request where
+   needed. Explain the criterion only when it helps the student understand the
+   issue; do not pad findings with generic concerns.
 - Offer concrete corrections, but preserve all supported patient facts,
   dates, measurements, medication details, and citations. Mark missing or
   conflicting facts as [confirm with student] instead of making them up.
@@ -228,6 +264,29 @@ def _classify_attachment_text(text: str) -> str:
     if any(re.search(cue, normalized) for cue in REFERENCE_DOCUMENT_CUES):
         return "reference"
     return "other"
+
+
+def _detect_document_chapters(text: str) -> List[Dict[str, str]]:
+    lines = [line.strip() for line in text.splitlines()]
+    detected = {}
+    for index, line in enumerate(lines):
+        match = CHAPTER_HEADING.match(line)
+        if not match:
+            continue
+        number = CHAPTER_NUMBERS[match.group("number").lower()]
+        title = (match.group("title") or "").strip(" :-–—")
+        if not title and index + 1 < len(lines) and lines[index + 1].isupper():
+            title = lines[index + 1][:160]
+        detected.setdefault(
+            number,
+            {
+                "number": str(number),
+                "label": CHAPTER_LABELS[number],
+                "title": title,
+                "heading": line,
+            },
+        )
+    return list(detected.values())
 
 
 def _is_document_review_request(message: str) -> bool:
@@ -433,6 +492,28 @@ def answer_student_question(
             re.search(r"\b(?:summari[sz]\w*|summar(?:y|ies)|overview|describe|outline)\b", message, re.IGNORECASE)
         )
         document_blocks = []
+        if full_review:
+            structure_blocks = []
+            for filename, document_text in documents:
+                chapters = _detect_document_chapters(document_text)
+                if chapters:
+                    chapter_lines = "\n".join(
+                        f"- Chapter {chapter['number']} — {chapter['label']}"
+                        + (f" (document title: {chapter['title']})" if chapter["title"] else "")
+                        + f" [heading: {chapter['heading']}]"
+                        for chapter in chapters
+                    )
+                else:
+                    chapter_lines = (
+                        "No explicit numbered chapter heading was detected; "
+                        "identify any visible section from its actual headings "
+                        "and state when the chapter cannot be determined."
+                    )
+                structure_blocks.append(f"- {filename}:\n{chapter_lines}")
+            prompt_parts.append(
+                "DOCUMENT STRUCTURE DETECTION (heading-based; verify against the file text):\n"
+                + "\n".join(structure_blocks)
+            )
         for file_number, (filename, document_text) in enumerate(documents, start=1):
             document_excerpt = document_text if full_document_request else document_text[:35_000]
             if full_document_request:
