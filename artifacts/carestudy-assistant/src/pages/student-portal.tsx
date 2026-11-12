@@ -52,7 +52,6 @@ import {
   Globe2,
   HeartPulse,
   ImagePlus,
-  Info,
   ListChecks,
   Lock,
   Loader2,
@@ -495,20 +494,6 @@ function PortalSidebar({
       </SidebarContent>
       <SidebarSeparator />
       <SidebarFooter>
-        <nav aria-label="Privacy and legal policies" className="flex flex-col gap-1 px-3 py-2 group-data-[collapsible=icon]:items-center">
-          <Link href="/ai-data-use" className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" title="AI and data use">
-            <Info className="size-4 shrink-0" />
-            <span className="group-data-[collapsible=icon]:hidden">AI &amp; data use</span>
-          </Link>
-          <Link href="/privacy" className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" title="Privacy Policy">
-            <ShieldCheck className="size-4 shrink-0" />
-            <span className="group-data-[collapsible=icon]:hidden">Privacy</span>
-          </Link>
-          <Link href="/terms" className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" title="Terms of Use">
-            <FileText className="size-4 shrink-0" />
-            <span className="group-data-[collapsible=icon]:hidden">Terms</span>
-          </Link>
-        </nav>
         {!student && (
           <div className="px-3 py-2 group-data-[collapsible=icon]:px-0">
             <div className="space-y-2 group-data-[collapsible=icon]:hidden">
@@ -2264,12 +2249,7 @@ function StudentAssistantChat() {
 
       <div className="shrink-0 border-t px-2 py-2 text-center text-[11px] leading-relaxed text-muted-foreground">
         Prompts, recent chat context, and extracted document text are sent to the configured AI gateway and may
-        be routed to model providers. Signed-in chats are saved until deleted.{" "}
-        <Link href="/ai-data-use" className="font-medium text-primary underline underline-offset-2">AI &amp; data use</Link>
-        {" · "}
-        <Link href="/privacy" className="font-medium text-primary underline underline-offset-2">Privacy</Link>
-        {" · "}
-        <Link href="/terms" className="font-medium text-primary underline underline-offset-2">Terms</Link>
+        be routed to model providers. Signed-in chats are saved until deleted.
       </div>
 
       {printAnswer && (

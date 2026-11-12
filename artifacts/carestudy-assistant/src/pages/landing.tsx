@@ -207,7 +207,7 @@ function ProductCard({
 
 export function LandingPage() {
   useEffect(() => {
-    document.title = "Nursuit | Nursing Study Chatspace";
+    document.title = "Nursuit";
   }, []);
 
   return (
@@ -382,13 +382,15 @@ export function LandingPage() {
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
             <Brand />
-            <p className="mt-2 text-xs text-[#78877f]">Professional learning support for nursing.</p>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-[#62746b]">
             <a href="#products" className="transition-colors hover:text-[#17382f]">Chatspace, NurseSpin &amp; NurseLearn</a>
             <Link href="/chat" className="transition-colors hover:text-[#17382f]">Open chatspace</Link>
             <Link href="/chat?auth=sign-in" className="transition-colors hover:text-[#17382f]">Sign in</Link>
             <Link href="/staff/apply" className="transition-colors hover:text-[#17382f]">Apply to join our team</Link>
+            <a href="/ai-data-use" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#17382f]">AI &amp; data use</a>
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#17382f]">Privacy</a>
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#17382f]">Terms</a>
           </div>
           <p className="text-[11px] text-[#89968f]">© {new Date().getFullYear()} Nursuit</p>
         </div>

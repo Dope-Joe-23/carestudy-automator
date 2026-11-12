@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, ExternalLink, FileText, Info, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ExternalLink, FileText, Info, ShieldCheck } from "lucide-react";
 
 type PolicyPageProps = {
   title: string;
@@ -13,10 +12,7 @@ function PolicyPage({ title, description, children }: PolicyPageProps) {
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 sm:py-12">
       <div className="mx-auto max-w-3xl">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/chat"><ArrowLeft className="size-4" /> Back to chat</Link>
-          </Button>
+        <div className="mb-8 flex flex-wrap items-center justify-end gap-3">
           <Link href="/" className="text-sm font-semibold text-primary hover:underline">
             CareStudy · Nursuit
           </Link>
