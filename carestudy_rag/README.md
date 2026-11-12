@@ -55,8 +55,9 @@ not additional student uploads, and must be identified separately in answers.
 DOCX tables are extracted row by row to retain row boundaries. Reviews must
 return structured findings with the uploaded filename and a verbatim excerpt;
 the application checks that each excerpt occurs in that file and formats
-accepted findings as bullets. If the response is malformed or an excerpt cannot
-be matched, the review is rejected instead of displaying unverified findings.
+accepted findings as concise, mobile-friendly bullets rather than tables or a
+full inventory of rubric sections. If the response is malformed or an excerpt
+cannot be matched, the review is rejected instead of displaying unverified findings.
 This check verifies quotation presence, not whether the model's interpretation
 is correct; students should still confirm review findings against their source
 document and course requirements.
