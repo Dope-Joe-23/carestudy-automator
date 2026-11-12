@@ -19,6 +19,8 @@ from care_study_review_rubric import (  # noqa: E402
 )
 from retrieval import SimpleIndex  # noqa: E402
 
+REVIEW_NO_FINDINGS = '{"findings":[]}'
+
 
 class StudentAssistantTests(unittest.TestCase):
     def test_answer_includes_cited_retrieved_reference(self):
@@ -66,6 +68,11 @@ class StudentAssistantTests(unittest.TestCase):
         document.add_heading("Case Study Chapter 1", level=1)
         document.add_paragraph("CASE_STUDY_DOCX_MARKER: client reports persistent fatigue.")
         document.add_paragraph("The care plan documents a rest intervention.")
+        table = document.add_table(rows=2, cols=2)
+        table.cell(0, 0).text = "Observation"
+        table.cell(0, 1).text = "Recorded value"
+        table.cell(1, 0).text = "Oxygen saturation rate"
+        table.cell(1, 1).text = "24Cpm"
         buffer = BytesIO()
         document.save(buffer)
         attachment = {
@@ -73,7 +80,7 @@ class StudentAssistantTests(unittest.TestCase):
             "content": base64.b64encode(buffer.getvalue()).decode("ascii"),
         }
 
-        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+        with mock.patch.object(assistant, "_chat_model", return_value=REVIEW_NO_FINDINGS) as model:
             assistant.answer_student_question(
                 "Review this case study for consistency.",
                 [],
@@ -86,6 +93,8 @@ class StudentAssistantTests(unittest.TestCase):
         self.assertIn("STUDENT-UPLOADED FILE 1 OF 1 — CASE STUDY.docx", prompt)
         self.assertIn("CASE_STUDY_DOCX_MARKER: client reports persistent fatigue.", prompt)
         self.assertIn("The care plan documents a rest intervention.", prompt)
+        self.assertIn("DOCX table 1, row 1: Observation | Recorded value", prompt)
+        self.assertIn("DOCX table 1, row 2: Oxygen saturation rate | 24Cpm", prompt)
 
     def test_issue_highlight_request_activates_chapter_focused_review(self):
         document_text = (
@@ -101,7 +110,7 @@ class StudentAssistantTests(unittest.TestCase):
         question = "In bullets can you highlight the issues in the care study if any"
 
         self.assertTrue(assistant._is_document_review_request(question))
-        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+        with mock.patch.object(assistant, "_chat_model", return_value=REVIEW_NO_FINDINGS) as model:
             assistant.answer_student_question(
                 question,
                 [],
@@ -122,8 +131,46 @@ class StudentAssistantTests(unittest.TestCase):
         self.assertIn("Focus findings on the detected chapters", system_prompt)
         self.assertIn("do not list other chapters as missing defects", system_prompt)
         self.assertIn("one short sentence per bullet", system_prompt)
+        self.assertIn("Do not present reviews in tables.", system_prompt)
+        self.assertIn("structured bullets instead.", system_prompt)
         self.assertIn("up to ten important findings when supported", system_prompt)
+        self.assertIn("return ONLY valid JSON", system_prompt)
+        self.assertIn("exact verbatim excerpt", system_prompt)
+        self.assertIn("APPLICABLE CRITERIA FOR UPLOADED SCOPE ONLY", system_prompt)
+        self.assertIn("Chapter 1 — Assessment", system_prompt)
+        self.assertNotIn("Chapter 2 — Analysis of Data", system_prompt)
+        self.assertIn("MANDATORY REVIEW SCOPE", prompt)
+        self.assertIn("Do not mention, assess, or list any chapter", prompt)
         self.assertIn("The full extracted document is included for this summary or review.", prompt)
+
+    def test_single_chapter_review_excludes_other_chapter_rubrics_and_findings(self):
+        document_text = (
+            "CHAPTER FIVE\n"
+            "EVALUATION\n"
+            "5.1 Statement of Evaluation\n"
+            "The objective was achieved on 27 August.\n"
+        )
+        attachment = {
+            "filename": "CHAPTER FIVE-Joe.txt",
+            "content": base64.b64encode(document_text.encode("utf-8")).decode("ascii"),
+        }
+
+        with mock.patch.object(assistant, "_chat_model", return_value=REVIEW_NO_FINDINGS) as model:
+            assistant.answer_student_question(
+                "Review this uploaded chapter and identify inconsistencies.",
+                [],
+                SimpleIndex(),
+                attachment,
+            )
+
+        system_prompt, request_prompt = model.call_args.args[:2]
+        self.assertIn("Chapter 5 — Evaluation", system_prompt)
+        self.assertNotIn("Chapter 1 — Assessment", system_prompt)
+        self.assertNotIn("Chapter 2 — Analysis of Data", system_prompt)
+        self.assertNotIn("Preliminary pages and introduction (P.1-P.3)", system_prompt)
+        self.assertIn("CHAPTER FIVE-Joe.txt: Chapter 5 — Evaluation", request_prompt)
+        self.assertIn("The template and rubric are not evidence.", request_prompt)
+        self.assertIn("Do not mention, assess, or list any chapter", request_prompt)
 
     def test_chapter_detection_ignores_chapter_mentions_in_body_text(self):
         self.assertEqual(
@@ -164,7 +211,7 @@ class StudentAssistantTests(unittest.TestCase):
             ).decode("ascii"),
         }
 
-        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+        with mock.patch.object(assistant, "_chat_model", return_value=REVIEW_NO_FINDINGS) as model:
             result = assistant.answer_student_question(
                 "Review this malaria case study and nursing process using relevant background sources.",
                 [],
@@ -184,7 +231,7 @@ class StudentAssistantTests(unittest.TestCase):
         library_section = review_prompt.split(
             "REFERENCE LIBRARY EXCERPTS (retrieved separately; these were not uploaded by the student):\n",
             1,
-        )[1].split("\n\nLATEST QUESTION:", 1)[0]
+        )[1].split("\n\nMANDATORY REVIEW SCOPE", 1)[0].split("\n\nLATEST QUESTION:", 1)[0]
         self.assertNotIn("case-study.txt", library_section)
         self.assertIn("WHO Malaria Fact Sheet", review_prompt)
         self.assertIn("Open RN Nursing Fundamentals", review_prompt)
@@ -212,7 +259,7 @@ class StudentAssistantTests(unittest.TestCase):
             "content": base64.b64encode(b"Chapter I: the documented assessment.").decode("ascii"),
         }
 
-        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+        with mock.patch.object(assistant, "_chat_model", return_value=REVIEW_NO_FINDINGS) as model:
             assistant.answer_student_question(
                 "Review this case study for internal consistency.",
                 [],
@@ -254,7 +301,7 @@ class StudentAssistantTests(unittest.TestCase):
                 "content": base64.b64encode(b"The care plan documents a rest intervention.").decode("ascii"),
             },
         ]
-        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+        with mock.patch.object(assistant, "_chat_model", return_value=REVIEW_NO_FINDINGS) as model:
             result = assistant.answer_student_question(
                 "Check fatigue assessment and rest intervention for consistency.",
                 [],
@@ -272,12 +319,12 @@ class StudentAssistantTests(unittest.TestCase):
             {"assessment.txt", "care-plan.md"},
         )
 
-    def test_attachment_check_flags_reference_material_without_blocking_review(self):
+    def test_review_analyzes_uploaded_text_without_attachment_type_warning(self):
         content = base64.b64encode(
             b"Learning objectives: describe the nursing process. Textbook chapter about assessment."
         ).decode("ascii")
 
-        with mock.patch.object(assistant, "_chat_model", return_value="I reviewed the uploaded text.") as model:
+        with mock.patch.object(assistant, "_chat_model", return_value=REVIEW_NO_FINDINGS) as model:
             result = assistant.answer_student_question(
                 "Review my care study for consistency.",
                 [],
@@ -285,16 +332,17 @@ class StudentAssistantTests(unittest.TestCase):
                 {"filename": "fundamentals.txt", "content": content},
             )
 
-        self.assertIn("ATTACHMENT TYPE CHECK (heuristic, may be wrong)", model.call_args.args[1])
-        self.assertIn("I’ll base this response on its actual contents", result["answer"])
-        self.assertIn("fundamentals.txt", result["answer"])
+        system_prompt, request_prompt = model.call_args.args[:2]
+        self.assertIn("Never output an attachment-type check", system_prompt)
+        self.assertNotIn("ATTACHMENT TYPE CHECK", request_prompt)
+        self.assertIn("No findings were returned in the required evidence-checked format.", result["answer"])
 
-    def test_care_study_marker_is_not_flagged_as_non_care_study(self):
+    def test_uploaded_care_study_is_reviewed_without_attachment_type_warning(self):
         content = base64.b64encode(
             b"Care Study: patient particulars, assessment, nursing diagnosis, and nursing care plan."
         ).decode("ascii")
 
-        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+        with mock.patch.object(assistant, "_chat_model", return_value=REVIEW_NO_FINDINGS) as model:
             result = assistant.answer_student_question(
                 "Review my care study for consistency.",
                 [],
@@ -303,14 +351,14 @@ class StudentAssistantTests(unittest.TestCase):
             )
 
         self.assertNotIn("ATTACHMENT TYPE CHECK", model.call_args.args[1])
-        self.assertNotIn("Attachment check:", result["answer"])
+        self.assertIn("No findings were returned in the required evidence-checked format.", result["answer"])
 
     def test_long_document_review_includes_full_text_and_revision_guidance(self):
         index = SimpleIndex()
         document = ("Chapter 1: assessment findings.\n" * 5_000).encode("utf-8")
         content = base64.b64encode(document).decode("ascii")
 
-        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+        with mock.patch.object(assistant, "_chat_model", return_value=REVIEW_NO_FINDINGS) as model:
             assistant.answer_student_question(
                 "Review this care study for consistency across chapters.",
                 [],
@@ -323,11 +371,11 @@ class StudentAssistantTests(unittest.TestCase):
         self.assertIn("Chapter 1: assessment findings.", prompt)
         self.assertIn("preserve all supported patient facts", model.call_args.args[0])
         self.assertIn("Chapter 1 — Assessment", model.call_args.args[0])
-        self.assertIn("Chapter 2 — Analysis of Data", model.call_args.args[0])
-        self.assertIn("Chapter 3 — Planning", model.call_args.args[0])
-        self.assertIn("Chapter 4 — Implementation", model.call_args.args[0])
-        self.assertIn("Chapter 5 — Evaluation", model.call_args.args[0])
-        self.assertIn("Chapter 6 — Summary, conclusion, and bibliography", model.call_args.args[0])
+        self.assertNotIn("Chapter 2 — Analysis of Data", model.call_args.args[0])
+        self.assertNotIn("Chapter 3 — Planning", model.call_args.args[0])
+        self.assertNotIn("Chapter 4 — Implementation", model.call_args.args[0])
+        self.assertNotIn("Chapter 5 — Evaluation", model.call_args.args[0])
+        self.assertNotIn("Chapter 6 — Summary, conclusion, and bibliography", model.call_args.args[0])
         self.assertIn("First identify the chapter or chapters actually present", model.call_args.args[0])
         self.assertIn("For a partial study, do not list other chapters as missing defects", model.call_args.args[0])
 
@@ -335,7 +383,7 @@ class StudentAssistantTests(unittest.TestCase):
         document = ("Long chapter content. " * 6_000).encode("utf-8")
         content = base64.b64encode(document).decode("ascii")
 
-        with mock.patch.object(assistant, "_chat_model", return_value="Review complete.") as model:
+        with mock.patch.object(assistant, "_chat_model", return_value=REVIEW_NO_FINDINGS) as model:
             assistant.answer_student_question(
                 "Review this chapter for consistency.",
                 [],
@@ -453,6 +501,52 @@ class StudentAssistantTests(unittest.TestCase):
             assistant._remove_unverified_citations(answer, 1),
             "This point is supported [1], but not this one .",
         )
+
+    def test_document_review_renders_only_findings_with_verifiable_quotes(self):
+        source = "Section 5.1 Evaluation: The objective was achieved on 27 August 2023."
+        response = (
+            '{"findings":[{"filename":"chapter-five.txt","section":"Section 5.1 Evaluation",'
+            '"type":"verification","issue":"The outcome date should be checked against the goal timeframe.",'
+            '"evidence":"The objective was achieved on 27 August 2023.",'
+            '"explanation":"The excerpt gives the outcome date but does not state the goal start date.",'
+            '"confirmation":"Confirm the goal timeframe in the original plan."}]}'
+        )
+
+        answer = assistant._render_verified_review(response, [("chapter-five.txt", source)])
+
+        self.assertIn("Verification — Section 5.1 Evaluation (chapter-five.txt)", answer)
+        self.assertIn("The objective was achieved on 27 August 2023.", answer)
+        self.assertIn("Confirm the goal timeframe", answer)
+        self.assertIn("interpretation is AI-generated", answer)
+        self.assertNotIn("|", answer)
+
+    def test_document_review_rejects_evidence_not_found_in_named_upload(self):
+        response = (
+            '{"findings":[{"filename":"chapter-five.txt","section":"Section 5.1",'
+            '"type":"contradiction","issue":"The dates conflict.",'
+            '"evidence":"The objective was achieved on 27 September 2023.",'
+            '"explanation":"This conflicts with the plan date.",'
+            '"confirmation":"Confirm the date."}]}'
+        )
+
+        with self.assertRaisesRegex(
+            assistant.ReviewOutputValidationError,
+            "could not be matched to an exact excerpt",
+        ):
+            assistant._render_verified_review(
+                response,
+                [("chapter-five.txt", "The objective was achieved on 27 August 2023.")],
+            )
+
+    def test_document_review_rejects_unstructured_model_response(self):
+        with self.assertRaisesRegex(
+            assistant.ReviewOutputValidationError,
+            "required evidence-checked format",
+        ):
+            assistant._render_verified_review(
+                "| Section | Issue |\n|---|---|\n",
+                [("chapter.txt", "A sufficiently long source statement.")],
+            )
 
     def test_irrelevant_reference_is_not_cited_and_library_gap_is_disclosed(self):
         index = SimpleIndex()
@@ -624,6 +718,24 @@ class StudentAssistantTests(unittest.TestCase):
         self.assertIn("only the chapter, section, or text the student requested", model.call_args.args[0])
         self.assertIn("Do not reproduce unchanged chapters or dump the entire uploaded document", model.call_args.args[0])
         self.assertIn("has not been changed", model.call_args.args[0])
+        self.assertNotIn("CARE-STUDY REVIEW STANDARD", model.call_args.args[0])
+        self.assertIn("MANDATORY REWRITE SCOPE", model.call_args.args[1])
+
+    def test_review_and_rewrite_request_keeps_rewrite_output_unstructured(self):
+        content = base64.b64encode(
+            b"CHAPTER ONE\nPatient profile with documented assessment findings."
+        ).decode("ascii")
+        rewrite = "## Proposed rewrite\nPatient profile with documented assessment findings."
+
+        with mock.patch.object(assistant, "_chat_model", return_value=rewrite):
+            result = assistant.answer_student_question(
+                "Review and rewrite this chapter for clarity.",
+                [],
+                SimpleIndex(),
+                {"filename": "chapter-one.txt", "content": content},
+            )
+
+        self.assertIn(rewrite, result["answer"])
 
     def test_no_source_clinical_prompt_retains_safety_boundaries(self):
         with mock.patch.object(

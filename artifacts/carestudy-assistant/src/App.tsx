@@ -94,6 +94,7 @@ import { AdminDashboard } from '@/pages/admin-dashboard';
 import { StaffRegisterPage } from '@/pages/staff-register';
 import { StaffApplyPage } from '@/pages/staff-apply';
 import { StaffApplicationStatusPage } from '@/pages/staff-application-status';
+import { AiDataUsePage, PrivacyPolicyPage, TermsPage } from '@/pages/policies';
 import { NurseLearnPage } from '@/pages/nurselearn';
 import { NurseLearnAdminPage } from '@/pages/nurselearn-admin';
 
@@ -8850,6 +8851,9 @@ function Router() {
             <Route path="/nursespin" component={NurseFlowPage} />
             <Route path="/carestudy" component={() => <LegacyRedirect to="/chat" />} />
             <Route path="/welcome" component={WelcomePage} />
+            <Route path="/privacy" component={PrivacyPolicyPage} />
+            <Route path="/terms" component={TermsPage} />
+            <Route path="/ai-data-use" component={AiDataUsePage} />
             <Route path="/nurseflow" component={() => <LegacyRedirect to="/nursespin" />} />
             <Route path="/staff/register" component={StaffRegisterPage} />
             <Route path="/staff/apply" component={StaffApplyPage} />

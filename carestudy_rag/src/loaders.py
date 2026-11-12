@@ -88,17 +88,22 @@ def load_as_text(path: str) -> str:
         from docx.text.paragraph import Paragraph
         doc = docx.Document(path)
         parts = []
+        table_number = 0
         for element in doc.element.body:
             if element.tag.endswith("}p"):
                 text = Paragraph(element, doc).text.strip()
                 if text:
                     parts.append(text)
             elif element.tag.endswith("}tbl"):
+                table_number += 1
                 table = Table(element, doc)
-                for row in table.rows:
+                for row_number, row in enumerate(table.rows, start=1):
                     cells = [cell.text.strip() for cell in row.cells]
                     if any(cells):
-                        parts.append(" | ".join(cells))
+                        parts.append(
+                            f"DOCX table {table_number}, row {row_number}: "
+                            + " | ".join(cells)
+                        )
         return "\n".join(parts)
 
     if ext == ".doc":

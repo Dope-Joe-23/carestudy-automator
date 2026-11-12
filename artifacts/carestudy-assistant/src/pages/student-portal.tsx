@@ -31,6 +31,7 @@ import {
 } from "react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -51,6 +52,7 @@ import {
   Globe2,
   HeartPulse,
   ImagePlus,
+  Info,
   ListChecks,
   Lock,
   Loader2,
@@ -66,6 +68,8 @@ import {
   Trash2,
   Send,
   MessageSquareText,
+  Moon,
+  Sun,
   UserPlus,
   Upload,
   X,
@@ -491,6 +495,20 @@ function PortalSidebar({
       </SidebarContent>
       <SidebarSeparator />
       <SidebarFooter>
+        <nav aria-label="Privacy and legal policies" className="flex flex-col gap-1 px-3 py-2 group-data-[collapsible=icon]:items-center">
+          <Link href="/ai-data-use" className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" title="AI and data use">
+            <Info className="size-4 shrink-0" />
+            <span className="group-data-[collapsible=icon]:hidden">AI &amp; data use</span>
+          </Link>
+          <Link href="/privacy" className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" title="Privacy Policy">
+            <ShieldCheck className="size-4 shrink-0" />
+            <span className="group-data-[collapsible=icon]:hidden">Privacy</span>
+          </Link>
+          <Link href="/terms" className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" title="Terms of Use">
+            <FileText className="size-4 shrink-0" />
+            <span className="group-data-[collapsible=icon]:hidden">Terms</span>
+          </Link>
+        </nav>
         {!student && (
           <div className="px-3 py-2 group-data-[collapsible=icon]:px-0">
             <div className="space-y-2 group-data-[collapsible=icon]:hidden">
@@ -554,74 +572,6 @@ function PortalSidebar({
         )}
       </SidebarFooter>
     </Sidebar>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Mobile bottom navigation bar
-// ---------------------------------------------------------------------------
-
-function MobileBottomNav({ onPlaceOrder }: { onPlaceOrder: () => void }) {
-  const [location] = useLocation();
-  const isWorkspace = location === "/chat" || location === "/chat/";
-  const isExplore = location === "/chat/explore";
-  const isNew = location === "/chat/orders/new";
-  const isDownloads = location === "/chat/downloads";
-  const isProjects = !isWorkspace && !isExplore && !isNew && !isDownloads && location.startsWith("/chat/orders");
-
-  return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
-      <div className="mx-auto flex h-14 max-w-lg items-stretch">
-        <Link
-          href="/chat"
-          className={cn(
-            "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-            isWorkspace ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          <MessageCircle className="size-5" />
-          <span>Workspace</span>
-        </Link>
-        <Link
-          href="/chat/explore"
-          className={cn(
-            "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-            isExplore ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          <Compass className="size-5" />
-          <span>Explore</span>
-        </Link>
-        <Link
-          href="/chat/orders"
-          className={cn(
-            "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-            isProjects ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          <ClipboardList className="size-5" />
-          <span>Projects</span>
-        </Link>
-        <button
-          type="button"
-          onClick={onPlaceOrder}
-          className="flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium text-muted-foreground transition-colors"
-        >
-          <Plus className="size-5" />
-          <span>New order</span>
-        </button>
-        <Link
-          href="/chat/downloads"
-          className={cn(
-            "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-            isDownloads ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          <Receipt className="size-5" />
-          <span>Downloads</span>
-        </Link>
-      </div>
-    </nav>
   );
 }
 
@@ -1476,12 +1426,6 @@ type AssistantTurn = studentApi.StudentChatMessage & {
   attachmentFiles?: File[];
 };
 
-const SUGGESTED_QUESTIONS = [
-  "Review my uploaded care study for inconsistencies across chapters. Cite each section and explain the issue.",
-  "Critique this chapter and give prioritized corrections without adding patient facts.",
-  "Rewrite the uploaded chapter for clarity and consistency, preserving the facts and marking anything I need to confirm.",
-];
-
 const ATTACHMENT_PROMPTS = [
   {
     label: "Review consistency",
@@ -1503,15 +1447,6 @@ function isRewriteRequest(message: string): boolean {
 
 function isRewriteClarification(answer: string): boolean {
   return /\b(?:could you (?:please )?(?:let me know|clarify)|which part(?:s)? .* (?:would you like|should I)|what part(?:s)? .* (?:would you like|should I)|please specify (?:which|the))\b/i.test(answer);
-}
-
-function randomizeQuestions(questions: string[]): string[] {
-  const shuffled = [...questions];
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
-  }
-  return shuffled;
 }
 
 function AttachmentPreview({ file, onRemove }: { file: File; onRemove: () => void }) {
@@ -1568,21 +1503,12 @@ function StudentAssistantChat() {
     title: string;
     content: string;
   } | null>(null);
-  const [suggestedQuestions, setSuggestedQuestions] = useState(() =>
-    randomizeQuestions(SUGGESTED_QUESTIONS),
-  );
   const assistantToolsQuery = useQuery({
     queryKey: ["studentAssistantTools"],
     queryFn: studentApi.getStudentAssistantTools,
     staleTime: 60_000,
   });
   const welcomeName = student?.name.trim().split(/\s+/)[0] || student?.username.trim();
-  const lastAttachedNames = messages
-    .slice()
-    .reverse()
-    .find((turn) => turn.role === "user" && (turn.attachmentNames?.length || turn.attachmentName));
-  const lastAttachmentNames = lastAttachedNames?.attachmentNames
-    ?? (lastAttachedNames?.attachmentName ? [lastAttachedNames.attachmentName] : []);
   const lastAttachedFiles = messages
     .slice()
     .reverse()
@@ -1657,7 +1583,6 @@ function StudentAssistantChat() {
     setPrompt("");
     setAttachments([]);
     setEditingIndex(null);
-    setSuggestedQuestions(randomizeQuestions(SUGGESTED_QUESTIONS));
   }, [chatNavigation.newChatRequest]);
 
   const encodeAttachment = async (file: File) => {
@@ -2061,7 +1986,7 @@ function StudentAssistantChat() {
       <div
         ref={chatScrollRef}
         aria-live="polite"
-        className="min-h-0 min-w-0 max-w-full flex-1 space-y-6 overflow-x-hidden overflow-y-auto py-6"
+        className="min-h-0 min-w-0 max-w-full flex-1 space-y-6 overflow-x-hidden overflow-y-auto py-6 pl-4 pr-8 sm:px-6 lg:px-8 [scrollbar-gutter:stable]"
       >
         {messages.length === 0 ? (
             <div className="flex h-full min-h-[20rem] w-full items-center justify-center">
@@ -2075,7 +2000,7 @@ function StudentAssistantChat() {
                   </p>
                 </div>
                 <form onSubmit={sendMessage} className="mx-auto w-full max-w-3xl">
-                  <div className="rounded-2xl border border-primary/15 bg-muted/60 p-1.5 shadow-sm focus-within:ring-1 focus-within:ring-primary/30">
+                  <div className="rounded-2xl border-2 border-primary/40 bg-card p-1.5 shadow-md focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/30">
                     {attachments.length > 0 && (
                       <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {attachments.map((file, index) => (
@@ -2092,7 +2017,7 @@ function StudentAssistantChat() {
                       value={prompt}
                       onChange={(event) => setPrompt(event.target.value)}
                       onKeyDown={handleComposerKeyDown}
-                      placeholder="Ask in your own words: check consistency, critique a chapter, or suggest a rewrite…"
+                      placeholder="Ask here…"
                       aria-label="Message Nursuit"
                       rows={2}
                       maxLength={4_000}
@@ -2110,23 +2035,6 @@ function StudentAssistantChat() {
                     </div>
                   </div>
                 </form>
-                <div className="mt-4">
-                  <p className="mb-2 text-sm font-medium text-muted-foreground">Try asking</p>
-                  <div className="flex flex-wrap gap-2">
-                    {suggestedQuestions.map((question) => (
-                      <Button
-                        key={question}
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-auto whitespace-normal text-left"
-                        onClick={() => setPrompt(question)}
-                      >
-                        {question}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
           ) : (
@@ -2148,7 +2056,8 @@ function StudentAssistantChat() {
                 className={cn("flex min-w-0 max-w-full", turn.role === "user" ? "justify-end" : "justify-center")}
               >
                 <div className={cn(
-                turn.role === "user" ? "w-fit min-w-0 max-w-full sm:max-w-2xl" : "w-full min-w-0 max-w-3xl",
+                  "break-words",
+                  turn.role === "user" ? "w-fit min-w-0 max-w-full sm:max-w-2xl" : "w-full min-w-0 max-w-3xl",
                 )}>
                   {turn.role === "user" ? (
                     <div className="w-fit max-w-full rounded-2xl rounded-br-md bg-primary/10 px-4 py-3 text-foreground sm:px-5">
@@ -2309,13 +2218,6 @@ function StudentAssistantChat() {
       </div>
 
       {messages.length > 0 && <form onSubmit={sendMessage} className="mx-auto w-full max-w-3xl border-t bg-background pt-3">
-        {!attachments.length && lastAttachmentNames.length > 0 && (
-          <p className="mb-2 text-xs text-muted-foreground">
-            {lastAttachedFiles?.length
-              ? `Follow-ups in this chat will include ${lastAttachedFiles.map((file) => file.name).join(", ")}. Attach files to switch documents.`
-              : `Reattach ${lastAttachmentNames.join(", ")} to include those files in your follow-up.`}
-          </p>
-        )}
         {editingIndex !== null && (
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>Editing your question — submitting will regenerate the answer.</span>
@@ -2324,7 +2226,7 @@ function StudentAssistantChat() {
             </Button>
           </div>
         )}
-        <div className="rounded-2xl border border-primary/15 bg-muted/60 p-1.5 shadow-sm focus-within:ring-1 focus-within:ring-primary/30">
+        <div className="rounded-2xl border-2 border-primary/40 bg-card p-1.5 shadow-md focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/30">
           {attachments.length > 0 && (
             <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {attachments.map((file, index) => (
@@ -2341,7 +2243,7 @@ function StudentAssistantChat() {
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
             onKeyDown={handleComposerKeyDown}
-            placeholder="Ask in your own words about the uploaded study…"
+            placeholder="Ask here…"
             aria-label="Message Nursuit"
             rows={1}
             maxLength={4_000}
@@ -2360,13 +2262,16 @@ function StudentAssistantChat() {
         </div>
       </form>}
 
-      <p className="mt-2 text-center text-xs leading-relaxed text-muted-foreground">
-        Educational support only. Avoid identifiable patient information.{" "}
-        {student
-          ? "Prompts and answers are saved until deleted and sent to the configured AI provider; web searches also go to Brave."
-          : "Guest chats are not saved. Prompts are sent to the configured AI provider; web searches also go to Brave. Sign in to keep a chat in your history."}{" "}
-        Uploaded file contents are processed for the request but not saved.
-      </p>
+      <div className="shrink-0 border-t px-2 py-2 text-center text-[11px] leading-relaxed text-muted-foreground">
+        Prompts, recent chat context, and extracted document text are sent to the configured AI gateway and may
+        be routed to model providers. Signed-in chats are saved until deleted.{" "}
+        <Link href="/ai-data-use" className="font-medium text-primary underline underline-offset-2">AI &amp; data use</Link>
+        {" · "}
+        <Link href="/privacy" className="font-medium text-primary underline underline-offset-2">Privacy</Link>
+        {" · "}
+        <Link href="/terms" className="font-medium text-primary underline underline-offset-2">Terms</Link>
+      </div>
+
       {printAnswer && (
         <div id="chat-answer-print-root">
           <h1>{printAnswer.title}</h1>
@@ -2421,7 +2326,7 @@ function StudentAssistantChat() {
 
 function StudentWorkspace() {
   return (
-    <div className="flex h-[calc(100svh-8rem)] min-h-[28rem] min-w-0 max-w-full flex-col overflow-x-hidden md:h-[calc(100svh-2rem)]">
+    <div className="flex h-full min-h-0 min-w-0 max-w-full flex-col overflow-hidden">
       <div className="min-h-0 min-w-0 max-w-full flex-1">
         <StudentAssistantChat />
       </div>
@@ -2494,6 +2399,7 @@ export function StudentPortal() {
 
 function StudentPortalRouter() {
   const [location, navigate] = useLocation();
+  const { resolvedTheme, setTheme } = useTheme();
   const { student, signIn } = useAuth();
 
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
@@ -2623,8 +2529,6 @@ function StudentPortalRouter() {
         <AuthGate onSignIn={openSignIn}>
           <StudentPreviewPage orderId={Number(matchPreview[1])} />
         </AuthGate>
-        <MobileBottomNav onPlaceOrder={openOrder} />
-        <div className="h-14 md:hidden" />
         {authDialog}
         {orderDialogEl}
       </div>
@@ -2651,7 +2555,10 @@ function StudentPortalRouter() {
   return (
     <SidebarProvider defaultOpen={typeof window === "undefined" || window.innerWidth >= 1024}>
       <StudentChatNavigationContext.Provider value={chatNavigation}>
-        <div className="flex min-h-screen w-full min-w-0 bg-background">
+        <div className={cn(
+          "flex w-full min-w-0 bg-background",
+          activeTab === "workspace" ? "h-svh overflow-hidden" : "min-h-screen",
+        )}>
           <PortalSidebar
             activeTab={activeTab}
             onSelect={handleTabSelect}
@@ -2660,22 +2567,51 @@ function StudentPortalRouter() {
             onSignUp={openSignUp}
           />
           <SidebarInset className="min-w-0">
-            <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur">
+            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur">
               <SidebarTrigger />
+              {activeTab === "workspace" && (
+                <>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden"
+                    aria-label="New chat"
+                    title="New chat"
+                    disabled={chatNavigation.chatBusy}
+                    onClick={() => chatNavigation.startNewChat()}
+                  >
+                    <Plus className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="ml-auto"
+                    aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                    title={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                    onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                  >
+                    {resolvedTheme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                  </Button>
+                </>
+              )}
               {!student && activeTab === "workspace" && (
-                <Button type="button" size="sm" className="ml-auto gap-2" onClick={openSignUp}>
+                <Button type="button" size="sm" className="gap-2" onClick={openSignUp}>
                   <UserPlus className="size-4" />
                   <span className="hidden sm:inline">Sign up</span>
                   <span className="sm:hidden">Join</span>
                 </Button>
               )}
             </header>
-            <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+            <main className={cn(
+              "min-h-0 min-w-0 flex-1",
+              activeTab === "workspace" ? "overflow-hidden" : "overflow-x-hidden overflow-y-auto",
+            )}>
               <div className={cn(
-                "py-4 sm:py-6",
                 activeTab === "workspace"
-                  ? "w-full px-4 sm:px-6"
-                  : "mx-auto max-w-5xl px-4 sm:px-6",
+                  ? "h-full min-h-0 w-full overflow-hidden px-3 py-2 sm:px-6 sm:py-4"
+                  : "mx-auto max-w-5xl px-4 py-4 sm:px-6 sm:py-6",
               )}>
                 <AuthGate allowGuest={activeTab === "workspace" || activeTab === "explore"} onSignIn={openSignIn}>
                   {content}
@@ -2693,8 +2629,6 @@ function StudentPortalRouter() {
             </footer>}
           </SidebarInset>
         </div>
-        <MobileBottomNav onPlaceOrder={openOrder} />
-        <div className="h-14 md:hidden" />
         {authDialog}
         {orderDialogEl}
       </StudentChatNavigationContext.Provider>

@@ -2,9 +2,11 @@
 
 import base64
 import binascii
+import json
 import os
 import re
 import tempfile
+import unicodedata
 from typing import Dict, List, Optional
 
 from generate import build_references, chunk_citation
@@ -57,6 +59,8 @@ When an UPLOADED DOCUMENT is included, use it as the primary object of any
 requested summary, critique, analysis, correction, or rewrite. Do not replace
 it with a retrieved textbook passage, and never claim that no document was
 attached. Refer to its actual filename and content.
+Never output an attachment-type check or speculate that a file is not a care
+study; analyze its actual contents and respond to the request.
 The STUDENT-UPLOADED FILES section is the complete set of files the student
 attached. REFERENCE LIBRARY EXCERPTS and WEB SEARCH RESULTS are separate
 background sources; they were not uploaded by the student and must never be
@@ -69,30 +73,8 @@ This is educational support, not a substitute for clinical judgment."""
 
 MIN_RELEVANCE_SCORE = 0.22
 MAX_ATTACHMENT_TEXT_CHARS = 250_000
-CARE_STUDY_CUES = (
-    r"\bcare stud(?:y|ies)\b",
-    r"\bcase stud(?:y|ies)\b",
-    r"\bpatient particulars?\b",
-    r"\bnursing diagnos(?:is|es)\b",
-    r"\bnursing care plan\b",
-    r"\bplan(?:ning)? of care\b",
-    r"\bimplementation of care\b",
-    r"\bevaluation of care\b",
-    r"\bchief complaint\b",
-    r"\bpresent(?:ing)? illness history\b",
-    r"\bsubjective and objective data\b",
-)
-REFERENCE_DOCUMENT_CUES = (
-    r"\blearning objectives?\b",
-    r"\btextbook\b",
-    r"\bfact sheet\b",
-    r"\bpractice guidelines?\b",
-    r"\bstandard(?:s)? of practice\b",
-    r"\breferences and further reading\b",
-)
 DOCUMENT_REVIEW_INTENT = re.compile(
-    r"\b(?:review\w*|critiqu\w*|analy[sz]\w*|check\w*|correct\w*|fix\w*|"
-    r"rewrit\w*|revis\w*|edit\w*|improv\w*|polish\w*|feedback|"
+    r"\b(?:review\w*|critiqu\w*|analy[sz]\w*|check\w*|feedback|"
     r"consisten\w*|contradict\w*|gaps?|missing|align\w*|compar\w*|"
     r"assess\w*|evaluat\w*|audit\w*|wrong|errors?|issues?|concerns?|"
     r"highlight\w*)\b",
@@ -190,6 +172,8 @@ uploaded care/case study:
   request when needed. Include up to ten important findings when supported;
   include fewer when that is enough. Do not add generic introductions,
   repeated caveats, or a separate recommendation section unless requested.
+- Do not present reviews in tables. Organize findings with concise headings and
+  structured bullets instead.
 - First identify the chapter or chapters actually present, using explicit
    chapter headings in the uploaded text and the supplied DOCUMENT STRUCTURE
    DETECTION when available. Name each detected chapter and its document title.
@@ -198,6 +182,19 @@ uploaded care/case study:
 - Focus findings on the detected chapters and the scope requested by the
    student. For a partial study, do not list other chapters as missing defects
    or imply they were reviewed. Mention preliminary pages only when relevant.
+- The detected uploaded text is the hard scope boundary, not the full care-study
+   template. Never mention or assess a chapter, preliminary page, table, or
+   section that is not present in the upload. Do not enumerate absent chapters,
+   describe what they should contain, or open with a disclaimer about what was
+   not attached. The rubric is a checklist, not evidence that a section exists
+   or is missing.
+- If the student explicitly requests a comparison with material outside the
+   upload, state once that this comparison cannot be verified from the supplied
+   text, without listing absent chapters, then complete every in-scope check.
+- Do not add a generic introduction, overall-impression paragraph, or
+   recommendations section unless asked. Start with a brief scope label naming
+   only the detected chapter(s), then concise, evidence-based bullets. If no
+   issue is evident, say so in one sentence for that scope.
 - When asked to highlight issues, respond in concise bullets with only
    document-specific findings. If no issue is evident in the requested scope,
    say so and identify what text was reviewed; do not pad the answer with
@@ -217,6 +214,121 @@ uploaded care/case study:
   partial rewrite as complete.
 - Treat your critique and rewrites as educational suggestions for the student
   to verify and approve, not authoritative clinical decisions."""
+
+REVIEW_OUTPUT_INSTRUCTIONS = """
+For a document review, return ONLY valid JSON with this shape:
+{"findings":[{"filename":"exact uploaded filename","section":"section heading or number",
+"type":"contradiction|documentation gap|unsupported claim|verification",
+"issue":"concise finding","evidence":"exact verbatim excerpt from that file",
+"explanation":"why the quoted text supports this finding",
+"confirmation":"what the student should verify, or an empty string"}]}
+Use an empty findings array if you cannot substantiate a finding from an exact
+excerpt. Do not include markdown fences, citations, recommendations, summaries,
+or prose outside the JSON. Include no more than ten findings. Evidence must be
+copied verbatim from the named uploaded file, with at least 20 characters;
+never normalize, correct, or infer a number, unit, date, label, or table value.
+Keep each finding tied to one excerpt and do not claim the excerpt verifies
+clinical correctness. Do not put findings in a table.
+"""
+
+_REVIEW_FINDING_TYPES = {
+    "contradiction",
+    "documentation gap",
+    "unsupported claim",
+    "verification",
+}
+
+
+class ReviewOutputValidationError(ValueError):
+    """The model review did not satisfy the verifiable output contract."""
+
+
+def _normalize_review_evidence(text: str) -> str:
+    normalized = unicodedata.normalize("NFKC", text).casefold()
+    return " ".join(normalized.split())
+
+
+def _render_verified_review(raw: str, documents: List[tuple[str, str]]) -> str:
+    """Validate exact uploaded-text excerpts and render findings as bullets."""
+    candidate = raw.strip()
+    if candidate.startswith("```"):
+        candidate = re.sub(r"^```(?:json)?\s*|\s*```$", "", candidate, flags=re.IGNORECASE).strip()
+    try:
+        payload = json.loads(candidate)
+    except json.JSONDecodeError as exc:
+        raise ReviewOutputValidationError(
+            "The review did not use the required evidence-checked format, so no findings were shown. Please retry."
+        ) from exc
+
+    if not isinstance(payload, dict) or set(payload) != {"findings"}:
+        raise ReviewOutputValidationError(
+            "The review did not use the required evidence-checked format, so no findings were shown. Please retry."
+        )
+    findings = payload["findings"]
+    if not isinstance(findings, list) or len(findings) > 10:
+        raise ReviewOutputValidationError(
+            "The review did not use the required evidence-checked format, so no findings were shown. Please retry."
+        )
+    source_by_filename = {
+        filename: _normalize_review_evidence(text)
+        for filename, text in documents
+    }
+    scope_lines = []
+    for filename, text in documents:
+        chapters = _detect_document_chapters(text)
+        if chapters:
+            scope = "; ".join(
+                f"Chapter {chapter['number']} — {chapter['label']}"
+                for chapter in chapters
+            )
+        else:
+            scope = "numbered chapter not detected"
+        scope_lines.append(f"- {filename}: {scope}")
+
+    rendered = []
+    for finding in findings:
+        required_fields = {
+            "filename", "section", "type", "issue", "evidence", "explanation", "confirmation",
+        }
+        if not isinstance(finding, dict) or set(finding) != required_fields:
+            raise ReviewOutputValidationError(
+                "A review finding did not use the required evidence-checked format, so no findings were shown. Please retry."
+            )
+        if any(not isinstance(finding[field], str) for field in required_fields):
+            raise ReviewOutputValidationError(
+                "A review finding did not use the required evidence-checked format, so no findings were shown. Please retry."
+            )
+        filename = finding["filename"]
+        evidence = finding["evidence"].strip()
+        if (
+            filename not in source_by_filename
+            or finding["type"].casefold() not in _REVIEW_FINDING_TYPES
+            or not finding["section"].strip()
+            or not finding["issue"].strip()
+            or not finding["explanation"].strip()
+            or len(_normalize_review_evidence(evidence)) < 20
+            or _normalize_review_evidence(evidence) not in source_by_filename[filename]
+        ):
+            raise ReviewOutputValidationError(
+                "A review finding could not be matched to an exact excerpt in the named upload, so no findings were shown. Please retry."
+            )
+        item = (
+            f"- **{finding['type'].capitalize()} — {finding['section'].strip()} "
+            f"({filename}):** {finding['issue'].strip()}\n"
+            f"  - **Evidence:** “{evidence}”\n"
+            f"  - **Why it may be an issue:** {finding['explanation'].strip()}"
+        )
+        confirmation = finding["confirmation"].strip()
+        if confirmation:
+            item += f"\n  - **Confirm:** {confirmation}"
+        rendered.append(item)
+
+    if not rendered:
+        rendered.append("- No findings were returned in the required evidence-checked format.")
+    rendered.append(
+        "\n*Quoted excerpts are matched against the upload; their interpretation is AI-generated and should be verified.*"
+    )
+    return "## Scope reviewed\n" + "\n".join(scope_lines) + "\n\n" + "\n\n".join(rendered)
 
 
 def _read_attachment(attachment: dict) -> str:
@@ -254,16 +366,6 @@ def _read_attachment(attachment: dict) -> str:
             f"{MAX_ATTACHMENT_TEXT_CHARS:,} characters. Split it into shorter chapters or excerpts."
         )
     return text
-
-
-def _classify_attachment_text(text: str) -> str:
-    normalized = text.lower()
-    care_study_matches = sum(bool(re.search(cue, normalized)) for cue in CARE_STUDY_CUES)
-    if care_study_matches >= 3 or re.search(r"\b(?:care|case) stud(?:y|ies)\b", normalized):
-        return "care_study"
-    if any(re.search(cue, normalized) for cue in REFERENCE_DOCUMENT_CUES):
-        return "reference"
-    return "other"
 
 
 def _detect_document_chapters(text: str) -> List[Dict[str, str]]:
@@ -349,11 +451,57 @@ def _remove_unverified_citations(answer: str, reference_count: int) -> str:
     )
 
 
-def _review_rubric_for_cadre(cadre_profile_id: str) -> str:
+def _review_rubric_for_cadre(
+    cadre_profile_id: str,
+    chapter_numbers: Optional[List[int]] = None,
+) -> str:
     profile = CARE_STUDY_CADRE_PROFILES.get(cadre_profile_id)
     if not profile or profile["status"] != "available" or not profile["review_rubric"]:
         raise ValueError("The selected care-study cadre profile is not available yet.")
-    return str(profile["review_rubric"])
+    rubric = str(profile["review_rubric"])
+    if chapter_numbers is None:
+        return rubric
+
+    lines = rubric.splitlines()
+    section_start = next(
+        (
+            index
+            for index, line in enumerate(lines)
+            if line.startswith("Preliminary pages and introduction (")
+        ),
+        len(lines),
+    )
+    section_pattern = re.compile(
+        r"^(?:Preliminary pages and introduction \(|Chapter (?P<number>[1-6]) —|Cross-phase consistency:)"
+    )
+    sections = []
+    for index, line in enumerate(lines):
+        match = section_pattern.match(line)
+        if not match:
+            continue
+        end = next(
+            (
+                later_index
+                for later_index in range(index + 1, len(lines))
+                if section_pattern.match(lines[later_index])
+            ),
+            len(lines),
+        )
+        number = match.group("number")
+        if number is not None and int(number) in chapter_numbers:
+            sections.append("\n".join(lines[index:end]).strip())
+        elif line.startswith("Cross-phase consistency:") and len(set(chapter_numbers)) > 1:
+            sections.append("\n".join(lines[index:end]).strip())
+
+    preamble = "\n".join(lines[:section_start]).strip()
+    criteria = "\n\n".join(sections)
+    if not criteria:
+        criteria = (
+            "No numbered chapter heading was detected. Review only the readable "
+            "text and visible headings in the uploaded file; do not infer a "
+            "chapter from its filename or assess template sections not shown."
+        )
+    return f"{preamble}\n\nAPPLICABLE CRITERIA FOR UPLOADED SCOPE ONLY:\n{criteria}"
 
 
 def answer_student_question(
@@ -369,15 +517,20 @@ def answer_student_question(
         (item["filename"], _read_attachment(item))
         for item in attachments
     ]
-    document_types = [
-        (filename, _classify_attachment_text(document_text))
-        for filename, document_text in documents
-    ]
     if sum(len(text) for _, text in documents) > MAX_ATTACHMENT_TEXT_CHARS:
         raise ValueError(
             "ATTACHMENT_TOO_LARGE: The uploaded files extract to more than "
             f"{MAX_ATTACHMENT_TEXT_CHARS:,} characters combined. Upload fewer files or shorter excerpts."
         )
+    has_documents = bool(documents)
+    is_document_review = bool(has_documents and _is_document_review_request(message))
+    is_document_rewrite = bool(has_documents and _is_document_rewrite_request(message))
+    use_structured_review = is_document_review and not is_document_rewrite
+    scoped_document_request = is_document_review or is_document_rewrite
+    document_chapters = [
+        (filename, _detect_document_chapters(document_text))
+        for filename, document_text in documents
+    ]
     if not documents and _is_care_study_workflow_question(message):
         return _care_study_workflow_answer()
     if (
@@ -472,30 +625,13 @@ def answer_student_question(
         prompt_parts.append(
             f"STUDENT-UPLOADED FILES ({len(documents)} total; these are the only files the student attached):"
         )
-        if any(document_type != "care_study" for _, document_type in document_types):
-            detected_types = "\n".join(
-                f"- {filename}: "
-                f"{'likely supporting reference material' if document_type == 'reference' else 'not clearly identifiable as a care/case study'}"
-                for filename, document_type in document_types
-                if document_type != "care_study"
-            )
-            prompt_parts.append(
-                "ATTACHMENT TYPE CHECK (heuristic, may be wrong):\n"
-                f"{detected_types}\n"
-                "Do not reject the file. If the student asks for a care-study review, "
-                "briefly note that the upload may be reference material or may not "
-                "contain a care study, then continue with what is actually present. "
-                "Ask for the care study only if its review is needed."
-            )
-        full_review = _is_document_review_request(message)
-        full_document_request = full_review or bool(
+        full_document_request = scoped_document_request or bool(
             re.search(r"\b(?:summari[sz]\w*|summar(?:y|ies)|overview|describe|outline)\b", message, re.IGNORECASE)
         )
         document_blocks = []
-        if full_review:
+        if scoped_document_request:
             structure_blocks = []
-            for filename, document_text in documents:
-                chapters = _detect_document_chapters(document_text)
+            for filename, chapters in document_chapters:
                 if chapters:
                     chapter_lines = "\n".join(
                         f"- Chapter {chapter['number']} — {chapter['label']}"
@@ -550,14 +686,54 @@ def answer_student_question(
             "untrusted snippets, cite only claims supported by them):\n"
             + "\n\n".join(web_source_blocks)
         )
+    if scoped_document_request:
+        scope_lines = []
+        detected_chapter_numbers = []
+        for filename, chapters in document_chapters:
+            if chapters:
+                scope_lines.append(
+                    f"- {filename}: "
+                    + "; ".join(
+                        f"Chapter {chapter['number']} — {chapter['label']}"
+                        + (f" ({chapter['title']})" if chapter["title"] else "")
+                        for chapter in chapters
+                    )
+                )
+                detected_chapter_numbers.extend(int(chapter["number"]) for chapter in chapters)
+            else:
+                scope_lines.append(
+                    f"- {filename}: numbered chapter not determined; use only its actual text and headings"
+                )
+        request_type = "review" if is_document_review else "rewrite"
+        prompt_parts.append(
+            f"MANDATORY {request_type.upper()} SCOPE — FOLLOW THIS OVER THE TEMPLATE:\n"
+            + "\n".join(scope_lines)
+            + "\nUse only the text in the listed uploaded file(s), and narrow further "
+            "if the student named a specific section. The template and rubric are "
+            "not evidence. Do not mention, assess, or list any chapter, preliminary "
+            "page, table, or section that is not present in these files. Do not "
+            "describe absent content or tell the student to provide the rest. "
+            "Cite only headings and evidence actually visible in the uploaded text."
+        )
     prompt_parts.append(f"LATEST QUESTION:\n{message}")
 
-    has_documents = bool(documents)
-    is_document_review = bool(has_documents and _is_document_review_request(message))
-    is_document_rewrite = _is_document_rewrite_request(message)
     system_prompt = SYSTEM_PROMPT
     if is_document_review:
-        system_prompt += CASE_STUDY_REVIEW_GUIDANCE + "\n\n" + _review_rubric_for_cadre(cadre_profile_id)
+        detected_chapter_numbers = [
+            int(chapter["number"])
+            for _, chapters in document_chapters
+            for chapter in chapters
+        ]
+        system_prompt += (
+            CASE_STUDY_REVIEW_GUIDANCE
+            + "\n\n"
+            + (
+                REVIEW_OUTPUT_INSTRUCTIONS + "\n\n"
+                if use_structured_review
+                else ""
+            )
+            + _review_rubric_for_cadre(cadre_profile_id, detected_chapter_numbers)
+        )
     if has_documents and is_document_rewrite:
         system_prompt += (
             "\n\nPROPOSED REWRITE OUTPUT:\n"
@@ -587,21 +763,9 @@ def answer_student_question(
         max_tokens=max_tokens,
         label="student assistant",
     )
+    if use_structured_review:
+        answer = _render_verified_review(answer, documents)
     answer = _remove_unverified_citations(answer, len(references))
-    non_care_studies = [
-        (filename, document_type)
-        for filename, document_type in document_types
-        if document_type != "care_study"
-    ]
-    if non_care_studies and _is_document_review_request(message):
-        names = ", ".join(filename for filename, _ in non_care_studies)
-        answer = (
-            f"**Attachment check:** {names} "
-            "may be supporting reference material or may not be a care/case study. "
-            "I’ll base this response on its actual contents; attach the care study "
-            "as well if you want me to review that document.\n\n"
-            + answer
-        )
     if not library_chunks and not document_chunks and not has_documents and not web_source_blocks:
         answer = (
             answer.rstrip()
