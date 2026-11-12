@@ -2247,11 +2247,6 @@ function StudentAssistantChat() {
         </div>
       </form>}
 
-      <div className="shrink-0 border-t px-2 py-2 text-center text-[11px] leading-relaxed text-muted-foreground">
-        Prompts, recent chat context, and extracted document text are sent to the configured AI gateway and may
-        be routed to model providers. Signed-in chats are saved until deleted.
-      </div>
-
       {printAnswer && (
         <div id="chat-answer-print-root">
           <h1>{printAnswer.title}</h1>
