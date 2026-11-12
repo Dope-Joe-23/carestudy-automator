@@ -380,10 +380,10 @@ export function LandingPage() {
 
       <footer className="border-t border-[#e0e9e1] bg-white/60">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-          <div>
+          <div className="flex justify-center sm:justify-start">
             <Brand />
           </div>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-[#62746b]">
+          <div className="flex flex-col items-center gap-3 text-center text-xs font-medium text-[#62746b] sm:flex-row sm:flex-wrap sm:gap-x-5 sm:gap-y-2 sm:text-left">
             <a href="#products" className="transition-colors hover:text-[#17382f]">Chatspace, NurseSpin &amp; NurseLearn</a>
             <Link href="/chat" className="transition-colors hover:text-[#17382f]">Open chatspace</Link>
             <Link href="/chat?auth=sign-in" className="transition-colors hover:text-[#17382f]">Sign in</Link>
@@ -392,7 +392,7 @@ export function LandingPage() {
             <a href="/privacy" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#17382f]">Privacy</a>
             <a href="/terms" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#17382f]">Terms</a>
           </div>
-          <p className="text-[11px] text-[#89968f]">© {new Date().getFullYear()} Nursuit</p>
+          <p className="text-center text-[11px] text-[#89968f]">© {new Date().getFullYear()} Nursuit</p>
         </div>
       </footer>
     </div>
