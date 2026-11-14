@@ -16,9 +16,10 @@ guidance, self-rate.
 """
 import ast
 import json
-import os
 import re
 import sys
+
+from model_gateway import _candidate_models, _chat_model, has_model_credentials
 
 # A study is far longer than any prompt should carry whole; keep the richest
 # material (drafts are the substance of the defense) and cap what we send.
@@ -190,25 +191,11 @@ def generate_viva_bank(title: dict, chapters: list) -> dict:
     Returns {"questions": [...]} or raises with a student-facing message when
     the engine is not configured or the model returns unusable output.
     """
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
-    if not api_key and not auth_token:
+    if not has_model_credentials():
         raise RuntimeError(
             "The viva question bank needs the AI engine to be configured "
-            "(set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN) — no key is present."
+            "(set GEMINI_API_KEY or an Anthropic-compatible provider key) — no key is present."
         )
-
-    import anthropic
-
-    client_kwargs: dict = {
-        "base_url": os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com",
-    }
-    if auth_token:
-        client_kwargs["auth_token"] = auth_token
-    else:
-        client_kwargs["api_key"] = api_key
-
-    client = anthropic.Anthropic(**client_kwargs)
 
     study_text = _build_study_text(title, chapters)
     prompt = (
@@ -218,46 +205,30 @@ def generate_viva_bank(title: dict, chapters: list) -> dict:
         "following the rules in the system prompt. Output the JSON only."
     )
 
-    # Same candidate chain as the drafting path: configured primary first, then
-    # explicit fallbacks (or openrouter/free on OpenRouter when unset).
-    primary_model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
-    configured_fallbacks = [
-        candidate.strip()
-        for candidate in os.environ.get("ANTHROPIC_FALLBACK_MODELS", "").split(",")
-        if candidate.strip()
-    ]
-    using_openrouter = "openrouter.ai" in client_kwargs["base_url"]
-    fallback_models = configured_fallbacks or (
-        ["openrouter/free"] if using_openrouter and primary_model != "openrouter/free" else []
-    )
-    candidate_models = list(dict.fromkeys([primary_model, *fallback_models]))
-
-    # Thinking models (openrouter/free) can spend thousands of tokens reasoning
-    # before emitting text; without headroom they stop at max_tokens with no
-    # usable output (seen: stop_reason='max_tokens', content=['thinking']).
-    raw = ""
-    for candidate_model in candidate_models:
+    candidate_models = _candidate_models()
+    model_errors = []
+    for candidate in candidate_models:
         try:
-            response = client.messages.create(
-                model=candidate_model,
+            raw = _chat_model(
+                SYSTEM_PROMPT,
+                prompt,
                 max_tokens=8000,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": prompt}],
+                label="viva question bank",
+                candidates=[candidate],
             )
-            raw = "".join(block.text for block in response.content if block.type == "text")
+            return _parse_bank(raw)
         except Exception as exc:
-            print(f"[viva] model {candidate_model} failed: {exc}", file=sys.stderr, flush=True)
-            continue
-        if raw.strip():
-            break
-        print(f"[viva] model {candidate_model} returned empty, trying next", file=sys.stderr, flush=True)
+            model_errors.append(f"{candidate.label}: {exc}")
+            print(
+                f"[viva] model {candidate.label} failed: {exc}",
+                file=sys.stderr,
+                flush=True,
+            )
 
-    if not raw.strip():
-        raise RuntimeError(
-            "The AI models returned no usable response for the viva bank "
-            f"(tried: {', '.join(candidate_models)}). Please try again."
-        )
-    return _parse_bank(raw)
+    raise RuntimeError(
+        "The AI models returned no usable response for the viva bank "
+        f"(tried: {'; '.join(model_errors)}). Please try again."
+    )
 
 
 if __name__ == "__main__":

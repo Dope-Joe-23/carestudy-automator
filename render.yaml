@@ -43,15 +43,24 @@ services:
           property: connectionString
       - key: PYTHON_BIN
         value: python3
-      # ── API Keys (set these in Render Dashboard) ──
+      # ── LLM provider and API keys ──
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: GEMINI_MODEL
+        value: gemini-4-hydrogen
+      - key: GEMINI_THINKING_LEVEL
+        value: low
+      - key: GEMINI_API_KEY
+        sync: false  # Set in Render Dashboard; keep server-side
+      - key: GEMINI_FALLBACK_MODELS
+        sync: false
+      # Optional Anthropic/OpenRouter fallbacks.
       - key: ANTHROPIC_AUTH_TOKEN
-        sync: false  # Set manually — secret
+        sync: false
       - key: ANTHROPIC_BASE_URL
         value: https://openrouter.ai/api
       - key: ANTHROPIC_MODEL
         value: openai/gpt-oss-20b:free
-      # Optional paid-model fallback list. When unset, the application retries
-      # failed or empty free-model responses through openrouter/free.
       - key: ANTHROPIC_FALLBACK_MODELS
         sync: false
       # ── Admin credentials (set these in Render Dashboard) ──
@@ -80,9 +89,7 @@ services:
       - key: CLOUDFLARE_API_TOKEN
         sync: false  # Set manually — secret
       # Opt in to real 8-second clips instead (paid, no free tier):
-      # set NURSEFLOW_VISUAL_PROVIDER=veo plus a Gemini key in the dashboard.
-      - key: GEMINI_API_KEY
-        sync: false  # Set manually — secret
+      # set NURSEFLOW_VISUAL_PROVIDER=veo; it reuses GEMINI_API_KEY above.
       # Generated job records and cached images/clips. Both default under
       # ./data, which is the mounted disk below; set them explicitly to keep
       # assets across redeploys.

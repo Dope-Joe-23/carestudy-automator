@@ -52,10 +52,11 @@ FROM node:22-alpine AS runtime
 RUN apk add --no-cache build-base python3 python3-dev py3-pip py3-virtualenv \
     && python3 -m venv /opt/venv \
     && /opt/venv/bin/pip install --no-cache-dir \
-        anthropic>=0.40 \
-        pypdf>=4.0 \
-        python-docx>=1.1 \
-        scikit-learn>=1.3
+        "anthropic>=0.40" \
+        "google-genai>=3.3.0" \
+        "pypdf>=4.0" \
+        "python-docx>=1.1" \
+        "scikit-learn>=1.3"
 
 # Make the venv python the default
 ENV PATH="/opt/venv/bin:$PATH"

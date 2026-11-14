@@ -7,11 +7,11 @@ containing sections with heading + content. The frontend then distributes
 this into the study's chapter scaffold.
 """
 import json
-import os
 import re
 import sys
-import time
 from typing import Any
+
+from model_gateway import _candidate_models, _chat_model
 
 
 # The standard chapter structure matching the NMC Ghana care study format.
@@ -25,40 +25,6 @@ CHAPTER_NAMES = [
     "Implementation",
     "Evaluation",
 ]
-
-
-def _make_client():
-    import anthropic
-
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
-    if not api_key and not auth_token:
-        raise RuntimeError("No AI API key is configured for document import.")
-
-    kwargs: dict[str, Any] = {
-        "base_url": os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com",
-    }
-    if auth_token:
-        kwargs["auth_token"] = auth_token
-    else:
-        kwargs["api_key"] = api_key
-    return anthropic.Anthropic(**kwargs)
-
-
-def _candidate_models() -> list[str]:
-    primary = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
-    configured = [
-        m.strip()
-        for m in os.environ.get("ANTHROPIC_FALLBACK_MODELS", "").split(",")
-        if m.strip()
-    ]
-    base_url = os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com"
-    fallbacks = configured or (
-        ["openrouter/free"]
-        if "openrouter.ai" in base_url and primary != "openrouter/free"
-        else []
-    )
-    return list(dict.fromkeys([primary, *fallbacks]))
 
 
 def import_study(raw_text: str) -> dict:
@@ -85,7 +51,6 @@ def import_study(raw_text: str) -> dict:
     if len(raw_text) > 80_000:
         raw_text = raw_text[:80_000] + "\n\n[...document truncated at 80 000 characters...]"
 
-    client = _make_client()
     models = _candidate_models()
 
     system = (
@@ -125,65 +90,45 @@ def import_study(raw_text: str) -> dict:
 
     prompt = f"PASTE THE CARE STUDY DOCUMENT BELOW:\n\n{raw_text}"
 
-    max_retries = 2
     model_errors: list[str] = []
 
-    for model in models:
-        last_exc: Exception | None = None
-        for attempt in range(1, max_retries + 1):
-            try:
-                response = client.messages.create(
-                    model=model,
-                    max_tokens=8000,
-                    system=system,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                text = "".join(
-                    b.text for b in response.content if b.type == "text"
-                ).strip()
-                if not text:
-                    if attempt < max_retries:
-                        time.sleep(2 ** attempt)
-                        continue
-                    model_errors.append(f"{model}: empty response")
-                    break
+    for candidate in models:
+        try:
+            text = _chat_model(
+                system,
+                prompt,
+                max_tokens=8000,
+                label="document import",
+                candidates=[candidate],
+            )
+            if text.startswith("```"):
+                lines = text.split("\n")
+                if lines[-1].strip() == "```":
+                    text = "\n".join(lines[1:-1])
+                elif lines[0].strip().startswith("```"):
+                    text = "\n".join(lines[1:])
 
-                # Strip markdown fences if the model wraps them anyway.
-                if text.startswith("```"):
-                    lines = text.split("\n")
-                    # Remove first and last lines (fences)
-                    if lines[-1].strip() == "```":
-                        text = "\n".join(lines[1:-1])
-                    elif lines[0].strip().startswith("```"):
-                        text = "\n".join(lines[1:])
-
-                result = json.loads(text)
-                # Basic validation.
-                if "chapters" not in result or not isinstance(result["chapters"], list):
-                    raise ValueError("Response missing 'chapters' array")
-                return result
-
-            except (json.JSONDecodeError, ValueError) as exc:
-                last_exc = exc
-                print(
-                    f"[worker] import_study model {model} returned bad JSON (attempt {attempt}/{max_retries}): {exc}",
-                    file=sys.stderr, flush=True,
-                )
-                if attempt < max_retries:
-                    time.sleep(2 ** attempt)
-            except Exception as exc:
-                last_exc = exc
-                print(
-                    f"[worker] import_study model {model} failed (attempt {attempt}/{max_retries}): {exc}",
-                    file=sys.stderr, flush=True,
-                )
-                if attempt < max_retries:
-                    time.sleep(2 ** attempt)
-
-        if last_exc is not None:
-            model_errors.append(f"{model}: {type(last_exc).__name__}: {last_exc}")
+            result = json.loads(text)
+            if "chapters" not in result or not isinstance(result["chapters"], list):
+                raise ValueError("Response missing 'chapters' array")
+            return result
+        except (json.JSONDecodeError, ValueError) as exc:
+            model_errors.append(f"{candidate.label}: {type(exc).__name__}: {exc}")
+            print(
+                f"[worker] import_study model {candidate.label} returned invalid JSON: {exc}",
+                file=sys.stderr,
+                flush=True,
+            )
+        except Exception as exc:
+            model_errors.append(f"{candidate.label}: {type(exc).__name__}: {exc}")
+            print(
+                f"[worker] import_study model {candidate.label} failed: {exc}",
+                file=sys.stderr,
+                flush=True,
+            )
 
     detail = "; ".join(model_errors) if model_errors else "all models returned unusable responses"
+    raise RuntimeError(f"All AI models failed for import_study: {detail}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -562,7 +507,6 @@ def import_study_with_fields(raw_text: str) -> dict:
     if deterministic is not None:
         return deterministic
 
-    client = _make_client()
     models = _candidate_models()
 
     system = (
@@ -605,62 +549,44 @@ def import_study_with_fields(raw_text: str) -> dict:
 
     prompt = f"PASTE THE CARE STUDY DOCUMENT BELOW:\n\n{raw_text}"
 
-    max_retries = 2
     model_errors: list[str] = []
 
-    for model in models:
-        last_exc: Exception | None = None
-        for attempt in range(1, max_retries + 1):
-            try:
-                response = client.messages.create(
-                    model=model,
-                    max_tokens=12000,
-                    system=system,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                text = "".join(
-                    b.text for b in response.content if b.type == "text"
-                ).strip()
-                if not text:
-                    if attempt < max_retries:
-                        time.sleep(2 ** attempt)
-                        continue
-                    model_errors.append(f"{model}: empty response")
-                    break
+    for candidate in models:
+        try:
+            text = _chat_model(
+                system,
+                prompt,
+                max_tokens=12000,
+                label="structured document import",
+                candidates=[candidate],
+            )
+            if text.startswith("```"):
+                lines = text.split("\n")
+                if lines[-1].strip() == "```":
+                    text = "\n".join(lines[1:-1])
+                elif lines[0].strip().startswith("```"):
+                    text = "\n".join(lines[1:])
 
-                if text.startswith("```"):
-                    lines = text.split("\n")
-                    if lines[-1].strip() == "```":
-                        text = "\n".join(lines[1:-1])
-                    elif lines[0].strip().startswith("```"):
-                        text = "\n".join(lines[1:])
-
-                result = json.loads(text)
-                if "chapters" not in result or not isinstance(result["chapters"], list):
-                    raise ValueError("Response missing 'chapters' array")
-                result["importMode"] = "ai"
-                result["coverage"] = _coverage_report(result.get("chapters", []))
-                return result
-
-            except (json.JSONDecodeError, ValueError) as exc:
-                last_exc = exc
-                print(
-                    f"[worker] import_study_with_fields model {model} bad JSON (attempt {attempt}/{max_retries}): {exc}",
-                    file=sys.stderr, flush=True,
-                )
-                if attempt < max_retries:
-                    time.sleep(2 ** attempt)
-            except Exception as exc:
-                last_exc = exc
-                print(
-                    f"[worker] import_study_with_fields model {model} failed (attempt {attempt}/{max_retries}): {exc}",
-                    file=sys.stderr, flush=True,
-                )
-                if attempt < max_retries:
-                    time.sleep(2 ** attempt)
-
-        if last_exc is not None:
-            model_errors.append(f"{model}: {type(last_exc).__name__}: {last_exc}")
+            result = json.loads(text)
+            if "chapters" not in result or not isinstance(result["chapters"], list):
+                raise ValueError("Response missing 'chapters' array")
+            result["importMode"] = "ai"
+            result["coverage"] = _coverage_report(result.get("chapters", []))
+            return result
+        except (json.JSONDecodeError, ValueError) as exc:
+            model_errors.append(f"{candidate.label}: {type(exc).__name__}: {exc}")
+            print(
+                f"[worker] import_study_with_fields model {candidate.label} returned invalid JSON: {exc}",
+                file=sys.stderr,
+                flush=True,
+            )
+        except Exception as exc:
+            model_errors.append(f"{candidate.label}: {type(exc).__name__}: {exc}")
+            print(
+                f"[worker] import_study_with_fields model {candidate.label} failed: {exc}",
+                file=sys.stderr,
+                flush=True,
+            )
 
     detail = "; ".join(model_errors) if model_errors else "all models returned unusable responses"
     raise RuntimeError(f"All AI models failed for import_study_with_fields: {detail}")

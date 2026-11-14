@@ -19,9 +19,9 @@ Protocol (JSON lines, one object per line):
     error response ->  {"id": <int>, "error": "..."}   (request failed, worker stays alive)
     error response ->  {"error": "..."}                  (unparseable line, no id to echo)
 
-The worker inherits the server's environment, so ANTHROPIC_API_KEY /
-ANTHROPIC_AUTH_TOKEN / ANTHROPIC_BASE_URL / ANTHROPIC_MODEL work exactly as
-they do for generate.py. Non-protocol diagnostics go to stderr, never stdout.
+The worker inherits the server's environment, so GEMINI_API_KEY and the
+LLM_PROVIDER / GEMINI_MODEL / ANTHROPIC_* settings work exactly as they do
+for generate.py. Non-protocol diagnostics go to stderr, never stdout.
 """
 import json
 import os

@@ -12,7 +12,8 @@ This project is deployed as two separate services:
 1. **GitHub/GitLab account** with this repository pushed
 2. **Render account** (https://render.com) — free tier available
 3. **Vercel account** (https://vercel.com) — free tier available
-4. **Anthropic API key** or **OpenRouter token** for the AI drafting engine
+4. **Google AI Studio API key** for Gemini (default), or an optional
+   **Anthropic/OpenRouter key** for fallback models
 
 ---
 
@@ -34,9 +35,15 @@ This project is deployed as two separate services:
    - Go to `carestudy-api` → **Environment** tab
    - Set these secrets:
      ```
-     ANTHROPIC_AUTH_TOKEN=your-openrouter-or-anthropic-token
+     GEMINI_API_KEY=your-google-ai-studio-key
      ADMIN_PASSWORD=your-secure-admin-password
      ```
+   - `LLM_PROVIDER=gemini` and the default Gemini model are set by the
+     Render blueprint. Optional OpenRouter fallback models require
+     `ANTHROPIC_AUTH_TOKEN`.
+   - Google AI Studio Free-tier prompts may be used to improve Google products.
+     De-identify patient data and follow your institution's requirements before
+     sending study content to the API.
    - Optional (R2 object storage — see [docs/r2-storage-setup.md](docs/r2-storage-setup.md)):
      ```
      CLOUDFLARE_ACCOUNT_ID=xxx
@@ -168,9 +175,15 @@ DB_DRIVER=postgres DATABASE_URL=postgresql://carestudy:carestudy_dev_password@lo
 | `PORT` | No | `5000` | Server port |
 | `DB_DRIVER` | No | `sqlite` | Database backend: `sqlite` or `postgres` |
 | `DATABASE_URL` | If postgres | — | PostgreSQL connection string |
-| `ANTHROPIC_AUTH_TOKEN` | Yes* | — | API token for AI drafting |
-| `ANTHROPIC_BASE_URL` | No | `https://openrouter.ai/api` | API endpoint |
-| `ANTHROPIC_MODEL` | No | `openai/gpt-oss-20b:free` | AI model to use |
+| `LLM_PROVIDER` | No | `gemini` | Primary LLM provider |
+| `GEMINI_API_KEY` | Yes* | — | Google AI Studio key for Gemini |
+| `GEMINI_MODEL` | No | `gemini-4-hydrogen` | Primary Gemini model |
+| `GEMINI_THINKING_LEVEL` | No | `low` | Gemini reasoning budget |
+| `GEMINI_FALLBACK_MODELS` | No | — | Additional Gemini models |
+| `ANTHROPIC_AUTH_TOKEN` | No | — | Optional Anthropic/OpenRouter fallback credential |
+| `ANTHROPIC_BASE_URL` | No | `https://openrouter.ai/api` | Anthropic-compatible fallback endpoint |
+| `ANTHROPIC_MODEL` | No | `openai/gpt-oss-20b:free` | Fallback model when Gemini is primary |
+| `ANTHROPIC_FALLBACK_MODELS` | No | — | Additional Anthropic/OpenRouter fallback models |
 | `ADMIN_USERNAME` | No | `admin` | Studio admin username |
 | `ADMIN_PASSWORD` | Yes | — | Studio admin password |
 | `MAX_UPLOAD_MB` | No | `250` | Max file upload size in MB |
@@ -180,7 +193,8 @@ DB_DRIVER=postgres DATABASE_URL=postgresql://carestudy:carestudy_dev_password@lo
 | `R2_BUCKET_NAME` | No | — | R2 storage |
 | `PYTHON_BIN` | No | `python` | Python binary path |
 
-*Required if not using direct Anthropic API
+*Required for the selected provider. Gemini Free-tier model access is subject
+to Google's model-specific quotas and data-use terms.
 
 ### Frontend (Vercel)
 

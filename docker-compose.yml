@@ -2,6 +2,7 @@
 # Docker Compose — Local development and testing
 # ============================================================================
 # Usage:
+#   Copy artifacts/api-server/.env.example to artifacts/api-server/.env first.
 #   docker compose up              # Start API server + PostgreSQL
 #   docker compose up -d           # Start in detached mode
 #   docker compose down            # Stop and remove containers
@@ -37,6 +38,8 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    env_file:
+      - ./artifacts/api-server/.env
     ports:
       - "5000:5000"
     environment:
@@ -44,18 +47,7 @@ services:
       DB_DRIVER: postgres
       DATABASE_URL: postgresql://carestudy:carestudy_dev_password@db:5432/carestudy
       PYTHON_BIN: python3
-      # Set your API keys here or in a .env file
-      ANTHROPIC_AUTH_TOKEN: ${ANTHROPIC_AUTH_TOKEN:-}
-      ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-https://openrouter.ai/api}
-      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-openai/gpt-oss-20b:free}
       ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
-      MAX_UPLOAD_MB: "250"
-      # Cloudflare R2 (optional — leave blank for local base64 uploads)
-      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
-      CLOUDFLARE_R2_ACCESS_KEY_ID: ${CLOUDFLARE_R2_ACCESS_KEY_ID:-}
-      CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY:-}
-      R2_BUCKET_NAME: ${R2_BUCKET_NAME:-}
     depends_on:
       db:
         condition: service_healthy

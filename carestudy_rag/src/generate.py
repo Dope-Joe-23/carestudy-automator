@@ -12,9 +12,9 @@ Usage:
     python src/generate.py --heading "1.2 Family's Medical/Surgical History" \
         --notes notes.txt
 
-Requires env var ANTHROPIC_API_KEY, or ANTHROPIC_AUTH_TOKEN when using
-an Anthropic-compatible gateway such as OpenRouter. ANTHROPIC_BASE_URL
-and ANTHROPIC_MODEL optionally override the endpoint and model.
+Uses GEMINI_API_KEY with the Gemini API by default. LLM_PROVIDER,
+GEMINI_MODEL, and the ANTHROPIC_* variables configure model routing and
+fallbacks.
 """
 import argparse
 import json
@@ -27,7 +27,11 @@ from typing import Dict, List
 sys.path.insert(0, os.path.dirname(__file__))
 from retrieval import RetrievedChunk, SimpleIndex
 from template import classify_section, is_data_only, get_word_count_range
-from model_gateway import _chat_model, sanitize_surrogates  # noqa: E402  (shared gateway — see model_gateway.py)
+from model_gateway import (  # noqa: E402
+    _chat_model,
+    has_model_credentials,
+    sanitize_surrogates,
+)
 
 TEMPLATE_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "template_index.pkl")
 REFERENCE_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "reference_index.pkl")
@@ -1183,7 +1187,7 @@ REWRITE_AS_SECTION_PROMPT = (
 )
 
 
-def _rewrite_as_prose(client, draft: str) -> str:
+def _rewrite_as_prose(draft: str) -> str:
     """One corrective pass that turns a data-dump draft into narrative prose.
 
     This is deliberately the cap: the rewrite output is accepted as-is without
@@ -1194,12 +1198,10 @@ def _rewrite_as_prose(client, draft: str) -> str:
         REWRITE_AS_PROSE_PROMPT.format(draft=draft),
         max_tokens=1500,
         label="prose rewrite",
-        _client=client,
     )
 
 
 def _rewrite_as_section(
-    client,
     heading: str,
     patient_notes: str,
     draft: str,
@@ -1220,7 +1222,6 @@ def _rewrite_as_section(
         ) + "\n\n" + format_instruction,
         max_tokens=1500,
         label="section rewrite",
-        _client=client,
     )
 
 
@@ -1273,9 +1274,7 @@ def draft_section(
         row_columns=row_columns,
     )
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
-    if not api_key and not auth_token:
+    if not has_model_credentials():
         dry = [f"- {c.heading} ({c.source}, score={c.score:.2f})" for c in template_examples]
         dry += [f"- {c.heading} ({c.source}, score={c.score:.2f})" for c in reference_chunks]
         dry += [
@@ -1287,28 +1286,14 @@ def draft_section(
             for c in (study_chunks or [])
         ]
         return DraftResult(
-            draft=("[DRY RUN - no ANTHROPIC_API_KEY set]\n\n"
+            draft=("[DRY RUN - no LLM API key set]\n\n"
                    "Retrieved template examples and reference chunks:\n" +
                    "\n".join(dry) +
-                   "\n\nSet ANTHROPIC_API_KEY (or ANTHROPIC_AUTH_TOKEN for "
-                   "Anthropic-compatible gateways like OpenRouter) to generate the "
-                   "actual drafted text."),
+                   "\n\nSet GEMINI_API_KEY for Gemini, or configure an "
+                   "Anthropic-compatible provider, to generate the actual drafted text."),
             references=references,
         )
 
-    import anthropic
-
-    client_kwargs: dict = {
-        "base_url": os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com",
-    }
-    if auth_token:
-        # OpenRouter and other Anthropic-compatible gateways expect
-        # Authorization: Bearer (auth_token) instead of x-api-key.
-        client_kwargs["auth_token"] = auth_token
-    else:
-        client_kwargs["api_key"] = api_key
-
-    client = anthropic.Anthropic(**client_kwargs)
     # The literature review is a long structured essay; a chapter intro is
     # deliberately short — give each only as much room as it needs. Thinking
     # models (openrouter/free) can burn 1-3k tokens reasoning before any text
@@ -1316,17 +1301,13 @@ def draft_section(
     max_tokens = 2500 if chapter_intro else (8000 if is_lit else 6000)
 
     # All model traffic goes through the shared gateway (model_gateway.py):
-    # ordered candidates from ANTHROPIC_MODEL / ANTHROPIC_FALLBACK_MODELS, per-
-    # model retries with backoff, fail-fast on retired model slugs, and a
-    # diagnostic RuntimeError naming every attempted model. The previous
-    # inline loop had zero retries, so a single transient 429 from a free-tier
-    # provider killed the whole request even though the next model was healthy.
+    # ordered Gemini and optional Anthropic-compatible candidates, per-model
+    # retries with backoff, and an error naming attempted models.
     draft = _chat_model(
         SYSTEM_PROMPT,
         prompt,
         max_tokens=max_tokens,
         label=f"draft '{heading[:60]}'" if heading else "draft",
-        _client=client,
     )
 
     # _chat_model raises when every candidate model fails or returns empty, so
@@ -1377,7 +1358,7 @@ def draft_section(
         and _looks_like_data_dump(draft)
     ):
         try:
-            rewritten = _rewrite_as_prose(client, draft)
+            rewritten = _rewrite_as_prose(draft)
             if rewritten.strip():
                 draft = rewritten
         except Exception as exc:  # keep the original draft; never fail the request

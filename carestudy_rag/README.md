@@ -11,7 +11,7 @@ tells you instead of making something up.
 
 ```
 your patient notes  ─┐
-                      ├─► Claude drafts the section, in the right style,
+                      ├─► Gemini drafts the section, in the right style,
 past care studies    ─┤    grounded in real reference material
 (structure/style)     │
                       │
@@ -95,19 +95,41 @@ enough for this corpus size. Swap in real embeddings later if you outgrow it (se
 
 ```bash
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...    # get one at console.anthropic.com
+export GEMINI_API_KEY=...              # create one in Google AI Studio
 ```
 
 The engine reads these env vars:
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | — | Anthropic key (required unless `ANTHROPIC_AUTH_TOKEN` is set) |
-| `ANTHROPIC_AUTH_TOKEN` | — | Alternative auth for Anthropic-compatible gateways (e.g. OpenRouter) — sent as `Authorization: Bearer` |
-| `ANTHROPIC_BASE_URL` | `https://api.anthropic.com` | API endpoint override |
-| `ANTHROPIC_MODEL` | `claude-sonnet-4-6` | Model override |
+| `LLM_PROVIDER` | `gemini` | Primary provider: `gemini` or `anthropic` |
+| `GEMINI_API_KEY` | — | Google AI Studio API key; required for Gemini |
+| `GEMINI_MODEL` | `gemini-4-hydrogen` | Primary Gemini model |
+| `GEMINI_THINKING_LEVEL` | `low` | Gemini reasoning budget: `minimal`, `low`, `medium`, `high`, or `xhigh` |
+| `GEMINI_FALLBACK_MODELS` | — | Optional comma-separated Gemini models tried after the primary |
+| `ANTHROPIC_AUTH_TOKEN` | — | Bearer token for an Anthropic-compatible gateway such as OpenRouter |
+| `ANTHROPIC_API_KEY` | — | Direct Anthropic API key (or endpoint accepting `x-api-key`) |
+| `ANTHROPIC_BASE_URL` | `https://api.anthropic.com` | Anthropic-compatible API endpoint |
+| `ANTHROPIC_MODEL` | `claude-sonnet-4-6` with `LLM_PROVIDER=anthropic` | Anthropic primary, or first fallback when Gemini is primary |
+| `ANTHROPIC_FALLBACK_MODELS` | — | Optional comma-separated Anthropic/OpenRouter fallback models |
 
-### Free option: OpenRouter free models
+### Gemini Free tier
+
+The default `gemini-4-hydrogen` model is listed with Free-tier access in
+[Google AI Studio pricing](https://aistudio.google.com/docs/pricing); quotas and
+availability are controlled by Google and can change. Google states that Free-tier
+content may be used to improve its products. This app can send student notes and
+uploaded care-study text to the provider, so remove patient identifiers and use
+the Free tier only when your institution permits this data handling. Requests use
+the stateless Interactions API option (`store=false`), but that does not change
+Google's Free-tier data-use terms.
+
+Get an API key from [Google AI Studio](https://aistudio.google.com/api-keys), then
+set `GEMINI_API_KEY` on the API server. Gemini models are tried first. If an
+Anthropic/OpenRouter key is also configured, the existing `ANTHROPIC_MODEL` and
+`ANTHROPIC_FALLBACK_MODELS` can provide cross-provider fallbacks.
+
+### Alternative: OpenRouter models
 
 If you don't have Anthropic credits, point the engine at OpenRouter's free-tier
 models (no payment method needed):
@@ -115,12 +137,13 @@ models (no payment method needed):
 1. Sign up at **openrouter.ai** and create a key at **openrouter.ai/keys**.
 2. Set the env vars before starting the server:
    ```bash
+   export LLM_PROVIDER=anthropic
    export ANTHROPIC_AUTH_TOKEN=sk-or-...            # your OpenRouter key
    export ANTHROPIC_BASE_URL=https://openrouter.ai/api
    export ANTHROPIC_MODEL=openai/gpt-oss-20b:free   # or openrouter/free, google/gemma-4-31b-it:free, ...
    ```
-3. Free models are rate-limited to 50 requests/day per account; use
-   `openrouter/free` as the model to auto-pick an available free model.
+3. Configure `ANTHROPIC_MODEL` and `ANTHROPIC_FALLBACK_MODELS` with model IDs
+   available to your OpenRouter account.
 
 ## 1. Add your source material
 

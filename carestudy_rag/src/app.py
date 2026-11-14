@@ -11,6 +11,7 @@ import streamlit as st
 
 sys.path.insert(0, os.path.dirname(__file__))
 from generate import draft_section
+from model_gateway import has_model_credentials
 from template import CHAPTERS, SECTIONS
 
 st.set_page_config(page_title="Care Study Drafting Assistant", layout="wide")
@@ -22,11 +23,11 @@ st.caption(
     "the tool never invents patient facts: sections with no input are not written."
 )
 
-if not os.environ.get("ANTHROPIC_API_KEY"):
+if not has_model_credentials():
     st.warning(
-        "ANTHROPIC_API_KEY is not set in this environment. The app will run in "
-        "dry-run mode (shows retrieval only, no drafted text). "
-        "Set it with: export ANTHROPIC_API_KEY=sk-ant-..."
+        "No LLM API key is set in this environment. The app will run in "
+        "dry-run mode (shows retrieval only, no drafted text). Set GEMINI_API_KEY "
+        "for Gemini, or configure an Anthropic-compatible provider."
     )
 
 
