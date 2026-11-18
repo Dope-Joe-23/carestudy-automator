@@ -51,7 +51,10 @@ from implementation_mapper import (  # noqa: E402
     skeleton_to_text,
 )
 from model_gateway import _chat_model  # noqa: E402  (shared gateway — see model_gateway.py)
-from student_assistant import answer_student_question  # noqa: E402
+from student_assistant import (  # noqa: E402
+    answer_student_question,
+    generate_student_document_work,
+)
 
 # Per-study retrieval indexes, keyed by study id and cached in memory so each
 # draft doesn't reload the pickled index from disk. Lives at the project root
@@ -931,6 +934,28 @@ def main() -> None:
                     attachments,
                     web_sources,
                     cadre_profile_id,
+                )
+                emit({"id": req.get("id"), **result})
+                continue
+            if op == "student_document_work":
+                message = req.get("message", "")
+                attachment = req.get("attachment")
+                work_type = req.get("workType")
+                scope = req.get("scope")
+                if (
+                    not isinstance(message, str)
+                    or not message.strip()
+                    or not isinstance(attachment, dict)
+                    or not isinstance(work_type, str)
+                    or not isinstance(scope, str)
+                ):
+                    emit({"id": req.get("id"), "error": "student_document_work requires a message, attachment, service, and scope"})
+                    continue
+                result = generate_student_document_work(
+                    message.strip(),
+                    attachment,
+                    work_type,
+                    scope,
                 )
                 emit({"id": req.get("id"), **result})
                 continue

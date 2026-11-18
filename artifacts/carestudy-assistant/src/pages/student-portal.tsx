@@ -28,20 +28,30 @@ import {
   type ChangeEvent,
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
+  type CSSProperties,
 } from "react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
   ArrowLeft,
   ArrowRight,
+  Bold,
   BookOpen,
   MessageCircle,
   Presentation,
   FlaskConical,
   ListChecks as QuizIcon,
   CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
   ClipboardList,
   Copy,
   Download,
@@ -50,10 +60,14 @@ import {
   FileText,
   GraduationCap,
   Globe2,
+  Highlighter,
   HeartPulse,
   ImagePlus,
   ListChecks,
   Lock,
+  Italic,
+  List as ListIcon,
+  ListOrdered,
   Loader2,
   LogOut,
   MoreHorizontal,
@@ -63,13 +77,18 @@ import {
   Plus,
   Receipt,
   RotateCcw,
+  Search,
   ShieldCheck,
+  Strikethrough,
   Trash2,
+  Undo2,
+  Redo2,
   Send,
   MessageSquareText,
   Moon,
   Sun,
   UserPlus,
+  Underline,
   Upload,
   X,
 } from "lucide-react";
@@ -134,19 +153,89 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import * as studentApi from "@/lib/studentApi";
+import { getPaystackKey, payWithPaystack } from "@/lib/paystack";
 import { PinDownloadDialog } from "@/components/pin-download-dialog";
 import { AuthDialog, type AuthMode } from "@/components/auth-dialog";
+import {
+  StudentDocumentRichEditor,
+  type StudentDocumentRichEditorHandle,
+} from "@/components/student-document-rich-editor";
+import { splitAssistantDocumentBlocks } from "@/components/assistant-markdown-html";
+import {
+  formatStudentChapterContent,
+  markdownFromEditorHtml,
+} from "@/lib/studentDocumentMarkdown";
 import { StudentPreviewPage } from "@/pages/student-preview";
 import { DownloadHistoryPage } from "@/pages/download-history";
 
 const AssistantMarkdown = lazy(() => import("@/components/assistant-markdown"));
 
-function FormattedAssistantMarkdown({ text }: { text: string }) {
+function FormattedAssistantMarkdown({ text, style }: { text: string; style?: CSSProperties }) {
   return (
     <Suspense fallback={<p className="py-2 text-sm text-muted-foreground">Preparing formatted answer…</p>}>
-      <AssistantMarkdown text={text} />
+      <AssistantMarkdown text={text} style={style} />
     </Suspense>
   );
+}
+
+function StudentDocumentMarkdown({ text, style }: { text: string; style?: CSSProperties }) {
+  return (
+    <div className="student-document-markdown">
+      {splitAssistantDocumentBlocks(text).map((block, index) => {
+        const paragraphStyle: CSSProperties = {
+          ...style,
+          ...(block.style.align ? { textAlign: block.style.align } : {}),
+          ...(block.style.spacing !== undefined ? { lineHeight: block.style.spacing } : {}),
+          ...(block.style.indent !== undefined ? { textIndent: `${block.style.indent}in` } : {}),
+        };
+        return <FormattedAssistantMarkdown key={index} text={block.content} style={paragraphStyle} />;
+      })}
+    </div>
+  );
+}
+
+type PreviewToolbarState = {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  strikeThrough: boolean;
+  highlight: boolean;
+  unorderedList: boolean;
+  orderedList: boolean;
+  alignment: "left" | "center" | "right" | "justify";
+};
+
+const EMPTY_PREVIEW_TOOLBAR_STATE: PreviewToolbarState = {
+  bold: false,
+  italic: false,
+  underline: false,
+  strikeThrough: false,
+  highlight: false,
+  unorderedList: false,
+  orderedList: false,
+  alignment: "justify",
+};
+
+function selectionElement(selection: Selection | null): HTMLElement | null {
+  const node = selection?.focusNode ?? selection?.anchorNode;
+  if (!node) return null;
+  return node.nodeType === Node.TEXT_NODE
+    ? node.parentElement
+    : node instanceof HTMLElement
+      ? node
+      : null;
+}
+
+function selectionBlock(editor: HTMLElement, element: HTMLElement | null): HTMLElement | null {
+  if (!element || !editor.contains(element)) return null;
+  let current: HTMLElement | null = element;
+  while (current && current !== editor) {
+    if (/^(?:blockquote|h[1-6]|li|p|pre|td|th)$/.test(current.tagName.toLowerCase())) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+  return editor;
 }
 
 // ---------------------------------------------------------------------------
@@ -1411,21 +1500,6 @@ type AssistantTurn = studentApi.StudentChatMessage & {
   attachmentFiles?: File[];
 };
 
-const ATTACHMENT_PROMPTS = [
-  {
-    label: "Review consistency",
-    prompt: "Review this care study for completeness and consistency.",
-  },
-  {
-    label: "Prioritize corrections",
-    prompt: "Critique this document and prioritize the corrections needed.",
-  },
-  {
-    label: "Suggest a rewrite",
-    prompt: "Suggest a rewrite without adding or changing patient facts.",
-  },
-];
-
 function isRewriteRequest(message: string): boolean {
   return /\b(?:rewrit\w*|revis\w*|correct\w*|edit\w*|improv\w*|polish\w*)\b/i.test(message);
 }
@@ -1472,6 +1546,7 @@ function StudentAssistantChat() {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const pendingPromptScrollIndexRef = useRef<number | null>(null);
   const pendingResponseScrollIndexRef = useRef<number | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [sourcesOpen, setSourcesOpen] = useState<number | null>(null);
@@ -1486,8 +1561,41 @@ function StudentAssistantChat() {
   } | null>(null);
   const [rewritePreview, setRewritePreview] = useState<{
     title: string;
+    work: studentApi.StudentDocumentWork;
+    chatId: number;
+    messageIndex: number;
+    chapterIndex: number;
+  } | null>(null);
+  const [previewPageImages, setPreviewPageImages] = useState<Record<string, string[]>>({});
+  const [previewImageLoading, setPreviewImageLoading] = useState<Record<string, boolean>>({});
+  const [previewImageErrors, setPreviewImageErrors] = useState<Record<string, string>>({});
+  const [legacyRewritePreview, setLegacyRewritePreview] = useState<{
+    title: string;
     content: string;
   } | null>(null);
+  const [documentWorkType, setDocumentWorkType] = useState<"correction" | "rewrite" | "">("");
+  const [previewDraft, setPreviewDraft] = useState("");
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [previewDirty, setPreviewDirty] = useState(false);
+  const [previewSaveStatus, setPreviewSaveStatus] = useState<"saved" | "unsaved" | "saving" | "error">("saved");
+  const [previewFont, setPreviewFont] = useState("Times New Roman");
+  const [previewFontSize, setPreviewFontSize] = useState(12);
+  const [previewLineSpacing, setPreviewLineSpacing] = useState(2);
+  const [previewIndent, setPreviewIndent] = useState(0);
+  const [previewBottomMargin, setPreviewBottomMargin] = useState(1);
+  const [previewAlignment, setPreviewAlignment] = useState<"left" | "center" | "right" | "justify">("justify");
+  const previewEditorRef = useRef<StudentDocumentRichEditorHandle>(null);
+  const [previewEditorRevision, setPreviewEditorRevision] = useState(0);
+  const [previewTextSelected, setPreviewTextSelected] = useState(false);
+  const [previewEditingActive, setPreviewEditingActive] = useState(false);
+  const [previewToolbarState, setPreviewToolbarState] = useState(EMPTY_PREVIEW_TOOLBAR_STATE);
+  const [previewToolbarOpen, setPreviewToolbarOpen] = useState(false);
+  const previewAutosaveRevisionRef = useRef(0);
+  const previewAutosaveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const [previewUndoStack, setPreviewUndoStack] = useState<string[]>([]);
+  const [previewRedoStack, setPreviewRedoStack] = useState<string[]>([]);
+  const [previewSearch, setPreviewSearch] = useState("");
+  const [previewSearchIndex, setPreviewSearchIndex] = useState(0);
   const assistantToolsQuery = useQuery({
     queryKey: ["studentAssistantTools"],
     queryFn: studentApi.getStudentAssistantTools,
@@ -1504,21 +1612,27 @@ function StudentAssistantChat() {
   }, [assistantToolsQuery.isError]);
 
   useEffect(() => {
-    const targetIndex = pendingResponseScrollIndexRef.current;
+    const promptIndex = pendingPromptScrollIndexRef.current;
+    const responseIndex = pendingResponseScrollIndexRef.current;
+    const targetIndex = promptIndex ?? responseIndex;
     if (targetIndex === null) return;
     const scrollFrame = window.requestAnimationFrame(() => {
       const scrollContainer = chatScrollRef.current;
-      const response = scrollContainer?.querySelector<HTMLElement>(
+      const target = scrollContainer?.querySelector<HTMLElement>(
         `[data-chat-message-index="${targetIndex}"]`,
       );
-      if (!scrollContainer || !response) return;
+      if (!scrollContainer || !target) return;
       const containerTop = scrollContainer.getBoundingClientRect().top;
-      const responseTop = response.getBoundingClientRect().top;
+      const targetTop = target.getBoundingClientRect().top;
       scrollContainer.scrollTo({
-        top: scrollContainer.scrollTop + responseTop - containerTop - 12,
+        top: scrollContainer.scrollTop + targetTop - containerTop - 12,
         behavior: "smooth",
       });
-      pendingResponseScrollIndexRef.current = null;
+      if (promptIndex !== null) {
+        pendingPromptScrollIndexRef.current = null;
+      } else {
+        pendingResponseScrollIndexRef.current = null;
+      }
     });
     return () => window.cancelAnimationFrame(scrollFrame);
   }, [messages, busy]);
@@ -1527,6 +1641,7 @@ function StudentAssistantChat() {
     const nextStudentId = student?.id ?? null;
     if (studentIdRef.current === nextStudentId) return;
     studentIdRef.current = nextStudentId;
+    pendingPromptScrollIndexRef.current = null;
     pendingResponseScrollIndexRef.current = null;
     setConversationId(null);
     setMessages([]);
@@ -1535,6 +1650,9 @@ function StudentAssistantChat() {
     setAttachments([]);
     setEditingIndex(null);
     setPrintAnswer(null);
+    setPreviewPageImages({});
+    setPreviewImageLoading({});
+    setPreviewImageErrors({});
     chatNavigation.setActiveChatId(null);
   }, [student?.id, chatNavigation.setActiveChatId]);
 
@@ -1561,10 +1679,14 @@ function StudentAssistantChat() {
 
   useEffect(() => {
     if (chatNavigation.newChatRequest === 0) return;
+    pendingPromptScrollIndexRef.current = null;
     pendingResponseScrollIndexRef.current = null;
     setConversationId(null);
     setMessages([]);
     setSourcesOpen(null);
+    setPreviewPageImages({});
+    setPreviewImageLoading({});
+    setPreviewImageErrors({});
     setPrompt("");
     setAttachments([]);
     setEditingIndex(null);
@@ -1596,6 +1718,7 @@ function StudentAssistantChat() {
     files: File[] = [],
     replaceFromIndex?: number,
     tool: "web" | "image" | null = webSearchMode ? "web" : null,
+    documentWorkRequest?: { type: "correction" | "rewrite"; scope: "chapters" },
   ) => {
     if (busy) return;
     const requestStudentId = student?.id ?? null;
@@ -1609,6 +1732,7 @@ function StudentAssistantChat() {
       attachmentFile: files[0],
       attachmentFiles: files,
     };
+    pendingPromptScrollIndexRef.current = replaceFromIndex ?? history.length;
     if (replaceFromIndex === undefined) {
       setMessages((current) => [...current, userTurn]);
     } else {
@@ -1642,7 +1766,6 @@ function StudentAssistantChat() {
           setConversationId(result.conversationId);
           chatNavigation.setActiveChatId(result.conversationId);
         }
-        pendingResponseScrollIndexRef.current = history.length + 1;
         setMessages((current) => [
           ...current,
           { role: "assistant", content: result.answer, imageDataUrl: result.imageDataUrl },
@@ -1657,17 +1780,25 @@ function StudentAssistantChat() {
           conversationId: conversationId ?? undefined,
           attachments: encodedAttachments.length ? encodedAttachments : undefined,
           webSearch: tool === "web",
+          documentWorkRequest,
         });
         if (studentIdRef.current !== requestStudentId) return;
         if (result.conversationId !== undefined) {
           setConversationId(result.conversationId);
           chatNavigation.setActiveChatId(result.conversationId);
         }
-        pendingResponseScrollIndexRef.current = history.length + 1;
         setMessages((current) => [
           ...current,
-          { role: "assistant", content: result.answer, references: result.references },
+          {
+            role: "assistant",
+            content: result.answer,
+            references: result.references,
+            ...(result.documentWork ? { documentWork: result.documentWork } : {}),
+          },
         ]);
+        if (result.conditionChangeRejected) {
+          toast.error("A different condition requires a completely new care study.");
+        }
       }
       if (student) {
         await queryClient.invalidateQueries({ queryKey: ["studentAssistantChats"] });
@@ -1684,7 +1815,15 @@ function StudentAssistantChat() {
 
   const sendMessage = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const message = prompt.trim() || (attachments.length ? "Summarize these documents and identify their key nursing concepts." : "");
+    const message = prompt.trim() || (
+      documentWorkType
+        ? documentWorkType === "correction"
+          ? "Correct this uploaded chapter with minimal changes. Preserve all supported facts and return the complete chapter."
+          : "Rewrite the complete uploaded chapter in a fully paraphrased form. Preserve all supported facts."
+        : attachments.length
+          ? "Summarize these documents and identify their key nursing concepts."
+          : ""
+    );
     if (!message || busy) return;
     const editedIndex = editingIndex;
     const history = editedIndex === null ? messages : messages.slice(0, editedIndex);
@@ -1692,17 +1831,23 @@ function StudentAssistantChat() {
       editedIndex === null
       ? lastAttachedFiles
       : messages[editedIndex]?.attachmentFiles
-    );
+    ) ?? [];
+    if (documentWorkType && (!student || files.length !== 1)) {
+      toast.error(!student ? "Sign in to request a paid chapter correction or rewrite." : "Attach exactly one chapter for correction or rewrite.");
+      return;
+    }
     void ask(
       message,
       history,
-    files,
+      files,
       editedIndex ?? undefined,
       imageMode ? "image" : webSearchMode ? "web" : null,
+      documentWorkType ? { type: documentWorkType, scope: "chapters" } : undefined,
     );
     setPrompt("");
     setAttachments([]);
     setEditingIndex(null);
+    setDocumentWorkType("");
   };
 
   const handleComposerKeyDown = (event: ReactKeyboardEvent<HTMLTextAreaElement>) => {
@@ -1749,9 +1894,13 @@ function StudentAssistantChat() {
     const previousMessages = messages;
     setBusy(true);
     chatNavigation.setChatBusy(true);
+    pendingPromptScrollIndexRef.current = null;
     pendingResponseScrollIndexRef.current = null;
     setMessages([]);
     setConversationId(null);
+    setPreviewPageImages({});
+    setPreviewImageLoading({});
+    setPreviewImageErrors({});
     setPrompt("");
     setAttachments([]);
     setEditingIndex(null);
@@ -1767,6 +1916,7 @@ function StudentAssistantChat() {
       setEditingIndex(null);
       setSourcesOpen(null);
     } catch (loadError) {
+      pendingPromptScrollIndexRef.current = null;
       pendingResponseScrollIndexRef.current = null;
       setConversationId(previousConversationId);
       setMessages(previousMessages);
@@ -1810,6 +1960,519 @@ function StudentAssistantChat() {
     } catch (exportError) {
       toast.error(exportError instanceof Error ? exportError.message : "Could not prepare this answer for printing.");
     }
+  };
+
+  const loadDocumentPreviewImages = async (
+    chatId: number,
+    work: studentApi.StudentDocumentWork,
+    chapterId: string,
+  ) => {
+    const chapter = work.chapters.find((item) => item.id === chapterId);
+    if (
+      !chapter ||
+      work.fullPaid ||
+      work.paidChapterIds.includes(chapterId)
+    ) return;
+    const key = `${work.id}:${chapterId}`;
+    if (previewPageImages[key] || previewImageLoading[key]) return;
+    setPreviewImageLoading((current) => ({ ...current, [key]: true }));
+    setPreviewImageErrors((current) => {
+      const remaining = { ...current };
+      delete remaining[key];
+      return remaining;
+    });
+    try {
+      const result = await studentApi.getStudentDocumentWorkPreview({
+        chatId,
+        workId: work.id,
+        chapterId,
+      });
+      if (!result.pages.length) throw new Error("No preview pages were returned.");
+      setPreviewPageImages((current) => ({ ...current, [key]: result.pages }));
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : "Could not load the watermarked preview pages.";
+      setPreviewImageErrors((current) => ({ ...current, [key]: message }));
+      toast.error(message);
+    } finally {
+      setPreviewImageLoading((current) => ({ ...current, [key]: false }));
+    }
+  };
+
+  const openDocumentPreview = (messageIndex: number, work: studentApi.StudentDocumentWork) => {
+    if (!conversationId) {
+      toast.error("Save this conversation before opening its document preview.");
+      return;
+    }
+    setRewritePreview({
+      title: work.title,
+      work,
+      chatId: conversationId,
+      messageIndex,
+      chapterIndex: 0,
+    });
+    if (work.chapters[0]) {
+      void loadDocumentPreviewImages(conversationId, work, work.chapters[0].id);
+    }
+    const firstChapter = work.chapters[0];
+    setPreviewDraft(
+      firstChapter
+        ? formatStudentChapterContent(firstChapter.content, firstChapter.name)
+        : "",
+    );
+    const formatting = work.chapters[0]?.formatting;
+    setPreviewFont(formatting?.fontFamily ?? "Times New Roman");
+    setPreviewFontSize(formatting?.fontSize ?? 12);
+    setPreviewLineSpacing(formatting?.lineSpacing ?? 2);
+    setPreviewIndent(formatting?.indent ?? 0);
+    setPreviewAlignment(formatting?.alignment ?? "justify");
+    setPreviewBottomMargin(formatting?.bottomMargin ?? 1);
+    setPreviewEditingActive(false);
+    setPreviewTextSelected(false);
+    setPreviewToolbarState(EMPTY_PREVIEW_TOOLBAR_STATE);
+    previewAutosaveRevisionRef.current += 1;
+    setPreviewDirty(false);
+    setPreviewSaveStatus("saved");
+    setPreviewUndoStack([]);
+    setPreviewRedoStack([]);
+    setPreviewEditorRevision((current) => current + 1);
+    setPreviewSearch("");
+    setPreviewSearchIndex(0);
+  };
+
+  const selectPreviewChapter = async (index: number) => {
+    if (!rewritePreview) return;
+    if (previewDirty && !(await saveDocumentWorkEdit())) return;
+    const chapter = rewritePreview.work.chapters[index];
+    if (!chapter) return;
+    setRewritePreview((current) => current ? { ...current, chapterIndex: index } : current);
+    setPreviewEditingActive(false);
+    setPreviewTextSelected(false);
+    setPreviewToolbarState(EMPTY_PREVIEW_TOOLBAR_STATE);
+    void loadDocumentPreviewImages(rewritePreview.chatId, rewritePreview.work, chapter.id);
+    setPreviewDraft(formatStudentChapterContent(chapter.content, chapter.name));
+    setPreviewEditorRevision((current) => current + 1);
+    setPreviewFont(chapter.formatting?.fontFamily ?? "Times New Roman");
+    setPreviewFontSize(chapter.formatting?.fontSize ?? 12);
+    setPreviewLineSpacing(chapter.formatting?.lineSpacing ?? 2);
+    setPreviewIndent(chapter.formatting?.indent ?? 0);
+    setPreviewAlignment(chapter.formatting?.alignment ?? "justify");
+    setPreviewBottomMargin(chapter.formatting?.bottomMargin ?? 1);
+    previewAutosaveRevisionRef.current += 1;
+    setPreviewDirty(false);
+    setPreviewSaveStatus("saved");
+    document.getElementById(`document-work-chapter-${chapter.id}`)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
+  const markPreviewDirty = () => {
+    previewAutosaveRevisionRef.current += 1;
+    setPreviewDirty(true);
+    setPreviewSaveStatus("unsaved");
+  };
+
+  const handlePreviewDraftChange = (next: string) => {
+    markPreviewDirty();
+    setPreviewUndoStack((current) => [...current.slice(-49), previewDraft]);
+    setPreviewRedoStack([]);
+    setPreviewDraft(next);
+    const chapter = rewritePreview?.work.chapters[rewritePreview.chapterIndex];
+    if (chapter) updateCurrentPreviewChapter({ content: next });
+  };
+
+  const undoPreviewEdit = () => {
+    if (!previewUndoStack.length) return;
+    setPreviewRedoStack((current) => [...current, previewDraft]);
+    setPreviewDraft(previewUndoStack[previewUndoStack.length - 1]);
+    setPreviewUndoStack((current) => current.slice(0, -1));
+    setPreviewEditorRevision((current) => current + 1);
+    markPreviewDirty();
+    updateCurrentPreviewChapter({ content: previewUndoStack[previewUndoStack.length - 1] });
+  };
+
+  const redoPreviewEdit = () => {
+    if (!previewRedoStack.length) return;
+    setPreviewUndoStack((current) => [...current, previewDraft]);
+    setPreviewDraft(previewRedoStack[previewRedoStack.length - 1]);
+    setPreviewRedoStack((current) => current.slice(0, -1));
+    setPreviewEditorRevision((current) => current + 1);
+    markPreviewDirty();
+    updateCurrentPreviewChapter({ content: previewRedoStack[previewRedoStack.length - 1] });
+  };
+
+  const replaceDocumentWork = (work: studentApi.StudentDocumentWork) => {
+    setRewritePreview((current) => current ? { ...current, work } : current);
+    setMessages((current) => current.map((turn, index) =>
+      rewritePreview && index === rewritePreview.messageIndex
+        ? { ...turn, documentWork: work }
+        : turn,
+    ));
+  };
+
+  const syncUnlockedChapterPreview = (
+    work: studentApi.StudentDocumentWork,
+    chapterId: string,
+  ) => {
+    const activeChapter = rewritePreview?.work.chapters[rewritePreview.chapterIndex];
+    const unlockedChapter = work.chapters.find((chapter) => chapter.id === chapterId);
+    const isUnlocked = Boolean(work.fullPaid || work.paidChapterIds.includes(chapterId));
+    if (!activeChapter || activeChapter.id !== chapterId || !unlockedChapter || !isUnlocked) return;
+    if (!unlockedChapter.content.trim()) {
+      toast.error("Payment is confirmed, but the chapter content is still loading. Please retry the preview.");
+      return;
+    }
+    setPreviewDraft(
+      formatStudentChapterContent(unlockedChapter.content, unlockedChapter.name),
+    );
+    setPreviewDirty(false);
+    setPreviewSaveStatus("saved");
+    setPreviewUndoStack([]);
+    setPreviewRedoStack([]);
+    setPreviewEditorRevision((current) => current + 1);
+  };
+
+  const updateCurrentPreviewChapter = (
+    updates: Partial<studentApi.StudentDocumentWork["chapters"][number]>,
+  ) => {
+    if (!rewritePreview) return;
+    const work = {
+      ...rewritePreview.work,
+      chapters: rewritePreview.work.chapters.map((chapter, index) =>
+        index === rewritePreview.chapterIndex ? { ...chapter, ...updates } : chapter,
+      ),
+    };
+    replaceDocumentWork(work);
+  };
+
+  type PreviewFormatting = NonNullable<studentApi.StudentDocumentWork["chapters"][number]["formatting"]>;
+  const applyPreviewFormatting = (updates: Partial<PreviewFormatting>) => {
+    const formatting: PreviewFormatting = {
+      fontFamily: previewFont,
+      fontSize: previewFontSize,
+      lineSpacing: previewLineSpacing,
+      indent: previewIndent,
+      alignment: previewAlignment,
+      bottomMargin: previewBottomMargin,
+      ...updates,
+    };
+    setPreviewFont(formatting.fontFamily);
+    setPreviewFontSize(formatting.fontSize);
+    setPreviewLineSpacing(formatting.lineSpacing);
+    setPreviewIndent(formatting.indent);
+    setPreviewAlignment(formatting.alignment);
+    setPreviewBottomMargin(formatting.bottomMargin);
+    markPreviewDirty();
+    updateCurrentPreviewChapter({ formatting });
+  };
+
+  const saveDocumentWorkDraft = ({
+    chatId,
+    workId,
+    chapterId,
+    content,
+    formatting,
+    revision,
+  }: {
+    chatId: number;
+    workId: string;
+    chapterId: string;
+    content: string;
+    formatting: PreviewFormatting;
+    revision: number;
+  }): Promise<boolean> => {
+    const saveOperation = previewAutosaveQueueRef.current.catch(() => undefined).then(async () => {
+      if (revision !== previewAutosaveRevisionRef.current) return false;
+      setPreviewSaveStatus("saving");
+      try {
+        const result = await studentApi.saveDocumentWorkEdits({
+          chatId,
+          workId,
+          chapters: [{ id: chapterId, content }],
+          formatting,
+        });
+        if (revision !== previewAutosaveRevisionRef.current) return false;
+        replaceDocumentWork(result.work);
+        setPreviewDirty(false);
+        setPreviewSaveStatus("saved");
+        return true;
+      } catch (error) {
+        if (revision === previewAutosaveRevisionRef.current) {
+          setPreviewSaveStatus("error");
+          toast.error(error instanceof Error ? `Autosave failed: ${error.message}` : "Autosave failed.");
+        }
+        return false;
+      }
+    });
+    previewAutosaveQueueRef.current = saveOperation.then(() => undefined);
+    return saveOperation;
+  };
+
+  useEffect(() => {
+    if (!previewDirty || !rewritePreview) return;
+    const chapter = rewritePreview.work.chapters[rewritePreview.chapterIndex];
+    if (!chapter) return;
+    const revision = previewAutosaveRevisionRef.current;
+    const snapshot = {
+      chatId: rewritePreview.chatId,
+      workId: rewritePreview.work.id,
+      chapterId: chapter.id,
+      content: previewDraft,
+      formatting: {
+        fontFamily: previewFont,
+        fontSize: previewFontSize,
+        lineSpacing: previewLineSpacing,
+        indent: previewIndent,
+        alignment: previewAlignment,
+        bottomMargin: previewBottomMargin,
+      },
+      revision,
+    };
+    const timeout = window.setTimeout(() => {
+      void saveDocumentWorkDraft(snapshot);
+    }, 900);
+    return () => window.clearTimeout(timeout);
+  }, [
+    previewDirty,
+    previewDraft,
+    previewFont,
+    previewFontSize,
+    previewLineSpacing,
+    previewIndent,
+    previewAlignment,
+    previewBottomMargin,
+    rewritePreview,
+  ]);
+
+  const payForDocumentWork = async (chapterId: string) => {
+    if (!rewritePreview || previewBusy) return;
+    const key = getPaystackKey();
+    if (!key) {
+      toast.error("Online payment is not configured. Please contact support.");
+      return;
+    }
+    setPreviewBusy(true);
+    try {
+      const initialized = await studentApi.initializeDocumentWorkPayment({
+        chatId: rewritePreview.chatId,
+        workId: rewritePreview.work.id,
+        scope: "chapter",
+        chapterId,
+      });
+      replaceDocumentWork(initialized.work);
+      try {
+        await payWithPaystack({
+          key,
+          reference: initialized.reference,
+          amount: initialized.amount,
+          email: initialized.email,
+          currency: "GHS",
+          label: rewritePreview.work.type === "correction" ? "Chapter correction" : "Chapter rewrite",
+        });
+      } catch {
+        const verification = await studentApi.verifyDocumentWorkPayment({
+          chatId: rewritePreview.chatId,
+          workId: rewritePreview.work.id,
+          reference: initialized.reference,
+        });
+        replaceDocumentWork(verification.work);
+        if (verification.verified) {
+          syncUnlockedChapterPreview(verification.work, chapterId);
+          toast.success("Payment confirmed. Editing and export are now unlocked.");
+        } else {
+          toast.error("Payment was not confirmed. You can try again.");
+        }
+        return;
+      }
+      const verification = await studentApi.verifyDocumentWorkPayment({
+        chatId: rewritePreview.chatId,
+        workId: rewritePreview.work.id,
+        reference: initialized.reference,
+      });
+      replaceDocumentWork(verification.work);
+      if (!verification.verified) {
+        toast.error(verification.message ?? "Payment was not confirmed. Please try again.");
+      } else {
+        syncUnlockedChapterPreview(verification.work, chapterId);
+        toast.success("Payment confirmed. Editing and export are now unlocked.");
+      }
+    } catch (paymentError) {
+      toast.error(paymentError instanceof Error ? paymentError.message : "Could not complete payment.");
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
+
+  const checkDocumentPayment = async () => {
+    if (!rewritePreview || previewBusy) return;
+    const unresolvedCharge = rewritePreview.work.charges.findLast(
+      (charge) => charge.status !== "verified",
+    );
+    if (!unresolvedCharge) return;
+    setPreviewBusy(true);
+    try {
+      const verification = await studentApi.verifyDocumentWorkPayment({
+        chatId: rewritePreview.chatId,
+        workId: rewritePreview.work.id,
+        reference: unresolvedCharge.reference,
+      });
+      replaceDocumentWork(verification.work);
+      if (verification.verified) {
+        const activeChapterId = rewritePreview.work.chapters[rewritePreview.chapterIndex]?.id;
+        if (activeChapterId) syncUnlockedChapterPreview(verification.work, activeChapterId);
+        toast.success("Payment confirmed. Editing and export are now unlocked.");
+      } else {
+        toast.error(verification.message ?? "Payment was not confirmed. You can try again.");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not verify the payment.");
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
+
+  const saveDocumentWorkEdit = async () => {
+    if (!rewritePreview || previewBusy) return false;
+    const chapter = rewritePreview.work.chapters[rewritePreview.chapterIndex];
+    if (!chapter) return false;
+    setPreviewBusy(true);
+    try {
+      const saved = await saveDocumentWorkDraft({
+        chatId: rewritePreview.chatId,
+        workId: rewritePreview.work.id,
+        chapterId: chapter.id,
+        content: previewDraft,
+        formatting: {
+          fontFamily: previewFont,
+          fontSize: previewFontSize,
+          lineSpacing: previewLineSpacing,
+          indent: previewIndent,
+          alignment: previewAlignment,
+          bottomMargin: previewBottomMargin,
+        },
+        revision: previewAutosaveRevisionRef.current,
+      });
+      if (saved) {
+        setPreviewUndoStack([]);
+        setPreviewRedoStack([]);
+        setPreviewEditorRevision((current) => current + 1);
+        toast.success("Chapter edits saved.");
+        return true;
+      }
+      return false;
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
+
+  const exportDocumentWork = async (chapterIds?: string[]) => {
+    if (!rewritePreview || previewBusy) return;
+    setPreviewBusy(true);
+    try {
+      const blob = await studentApi.exportStudentDocumentWork({
+        chatId: rewritePreview.chatId,
+        workId: rewritePreview.work.id,
+        chapterIds,
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${rewritePreview.title.replace(/[^\w -]/g, "").trim() || "care-study"}.docx`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("Word document downloaded.");
+    } catch (exportError) {
+      toast.error(exportError instanceof Error ? exportError.message : "Could not export this document.");
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
+
+  const runPreviewEditorCommand = (command: string, value?: string) => {
+    const editor = previewEditorRef.current?.getElement();
+    if (!editor) return;
+    const selection = window.getSelection();
+    if (!selection?.anchorNode || !editor.contains(selection.anchorNode)) return;
+    previewEditorRef.current?.runCommand(command, value);
+    setPreviewTextSelected(Boolean(selection && !selection.isCollapsed));
+    setPreviewEditingActive(true);
+    window.requestAnimationFrame(updatePreviewSelectionState);
+  };
+
+  const updatePreviewSelectionState = () => {
+    const editor = previewEditorRef.current?.getElement();
+    const selection = window.getSelection();
+    const element = selectionElement(selection);
+    const inside = Boolean(editor && selection?.anchorNode && selection.focusNode &&
+      editor.contains(selection.anchorNode) && editor.contains(selection.focusNode));
+    setPreviewEditingActive(inside);
+    setPreviewTextSelected(Boolean(inside && selection && !selection.isCollapsed));
+    if (!inside || !editor || !element) {
+      setPreviewToolbarState(EMPTY_PREVIEW_TOOLBAR_STATE);
+      return;
+    }
+
+    const hasAncestor = (selector: string) => {
+      const match = element.closest(selector);
+      return Boolean(match && editor.contains(match));
+    };
+    const block = selectionBlock(editor, element);
+    const blockStyle = block ? window.getComputedStyle(block) : null;
+    const alignment = blockStyle?.textAlign;
+    setPreviewToolbarState({
+      bold: hasAncestor("b, strong") || Number.parseInt(window.getComputedStyle(element).fontWeight, 10) >= 600,
+      italic: hasAncestor("i, em") || window.getComputedStyle(element).fontStyle === "italic",
+      underline: hasAncestor("u") || window.getComputedStyle(element).textDecorationLine.includes("underline"),
+      strikeThrough: hasAncestor("s, strike, del") || window.getComputedStyle(element).textDecorationLine.includes("line-through"),
+      highlight: hasAncestor("mark, [style*='background-color']"),
+      unorderedList: hasAncestor("ul"),
+      orderedList: hasAncestor("ol"),
+      alignment: alignment && ["left", "center", "right", "justify"].includes(alignment)
+        ? alignment as PreviewToolbarState["alignment"]
+        : previewAlignment,
+    });
+  };
+
+  const applyPreviewParagraphStyle = (style: {
+    alignment?: "left" | "center" | "right" | "justify";
+    lineSpacing?: number;
+    indent?: number;
+  }) => {
+    const editor = previewEditorRef.current?.getElement();
+    const selection = window.getSelection();
+    if (!editor || !selection?.anchorNode || !editor.contains(selection.anchorNode)) return;
+    const block = selectionBlock(editor, selectionElement(selection));
+    if (!block) return;
+    if (style.alignment) block.style.textAlign = style.alignment;
+    if (style.lineSpacing !== undefined) block.style.lineHeight = String(style.lineSpacing);
+    if (style.indent !== undefined) block.style.textIndent = `${style.indent}in`;
+    handlePreviewDraftChange(markdownFromEditorHtml(editor.innerHTML));
+    setPreviewEditingActive(true);
+    window.requestAnimationFrame(updatePreviewSelectionState);
+  };
+
+  const previewSearchResults = useMemo(() => {
+    const needle = previewSearch.trim().toLocaleLowerCase();
+    if (!needle || !rewritePreview) return [];
+    return rewritePreview.work.chapters.flatMap((chapter, chapterIndex) => {
+      const content = chapter.content.toLocaleLowerCase();
+      const matches: number[] = [];
+      let offset = 0;
+      while ((offset = content.indexOf(needle, offset)) >= 0) {
+        matches.push(chapterIndex);
+        offset += needle.length;
+      }
+      return matches;
+    });
+  }, [previewSearch, rewritePreview]);
+
+  const movePreviewSearch = (direction: -1 | 1) => {
+    if (!previewSearchResults.length) return;
+    const nextIndex = (previewSearchIndex + direction + previewSearchResults.length) % previewSearchResults.length;
+    setPreviewSearchIndex(nextIndex);
+    selectPreviewChapter(previewSearchResults[nextIndex]);
   };
 
   const toolButtons = () => {
@@ -1947,24 +2610,52 @@ function StudentAssistantChat() {
     </label>
   );
 
-  const attachmentPromptMenu = () => attachments.length > 0 && (
-    <div className="mb-2 flex flex-wrap items-center gap-1.5 px-1" aria-label="Optional suggested prompts">
-      {ATTACHMENT_PROMPTS.map(({ label, prompt: suggestedPrompt }) => (
-        <Button
-          key={label}
-          type="button"
-          size="sm"
-          variant="outline"
-          className="h-7 px-2 text-xs"
-          title={suggestedPrompt}
-          disabled={busy}
-          onClick={() => setPrompt(suggestedPrompt)}
-        >
-          {label}
-        </Button>
-      ))}
+  const attachmentOptions = () => attachments.length > 0 && (
+    <div className="mb-2 space-y-2 px-1">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2">
+        <label className="flex items-center gap-2 text-xs">
+          <span className="font-medium">Paid chapter service</span>
+          <select
+            aria-label="Document service"
+            value={documentWorkType}
+            disabled={busy}
+            onChange={(event) => setDocumentWorkType(event.target.value as "correction" | "rewrite" | "")}
+            className="h-8 rounded-md border bg-background px-2 text-xs"
+          >
+            <option value="">Chat review only</option>
+            <option value="correction">Minimal correction</option>
+            <option value="rewrite">Comprehensive rewrite</option>
+          </select>
+        </label>
+        {documentWorkType && (
+          <span className="text-xs text-muted-foreground">GH₵50 per chapter</span>
+        )}
+      </div>
+      {attachments.length !== 1 && documentWorkType && (
+        <p className="text-xs text-destructive">Attach exactly one chapter for correction or rewrite.</p>
+      )}
     </div>
   );
+
+  const previewChapter = rewritePreview?.work.chapters[rewritePreview.chapterIndex] ?? null;
+  const previewChapterUnlocked = Boolean(
+    rewritePreview &&
+    previewChapter &&
+    (rewritePreview.work.fullPaid || rewritePreview.work.paidChapterIds.includes(previewChapter.id)),
+  );
+  const previewAllUnlocked = Boolean(
+    rewritePreview &&
+    (rewritePreview.work.fullPaid ||
+      rewritePreview.work.chapters.every((chapter) => rewritePreview.work.paidChapterIds.includes(chapter.id))),
+  );
+  const previewChapterPrice = 50;
+  const inlineFormattingTools = [
+    { label: "Bold", command: "bold", Icon: Bold, active: previewToolbarState.bold },
+    { label: "Italic", command: "italic", Icon: Italic, active: previewToolbarState.italic },
+    { label: "Underline", command: "underline", Icon: Underline, active: previewToolbarState.underline },
+    { label: "Strikethrough", command: "strikeThrough", Icon: Strikethrough, active: previewToolbarState.strikeThrough },
+    { label: "Highlight", command: "hiliteColor", Icon: Highlighter, active: previewToolbarState.highlight, value: "yellow" },
+  ];
 
   return (
     <div className="flex h-full min-h-0 min-w-0 max-w-full flex-col">
@@ -1981,7 +2672,7 @@ function StudentAssistantChat() {
                     {welcomeName ? `Where do we begin, ${welcomeName}?` : "Where do we begin?"}
                   </h1>
                   <p className="text-sm text-muted-foreground sm:text-base">
-                    Attach a full care study or chapter, then ask in your own words for a critique, consistency check, correction, or rewrite.
+                    Attach a full care study for review, or upload one chapter for the paid correction or rewrite service.
                   </p>
                 </div>
                 <form onSubmit={sendMessage} className="mx-auto w-full max-w-3xl">
@@ -1997,7 +2688,7 @@ function StudentAssistantChat() {
                         ))}
                       </div>
                     )}
-                    {attachmentPromptMenu()}
+                    {attachmentOptions()}
                     <Textarea
                       value={prompt}
                       onChange={(event) => setPrompt(event.target.value)}
@@ -2065,7 +2756,30 @@ function StudentAssistantChat() {
                     </div>
                   ) : (
                     <>
-                      {isProposedRewrite ? (
+                      {turn.documentWork ? (
+                        <div className="space-y-3 rounded-xl border border-primary/20 bg-card p-4 shadow-sm">
+                          <div>
+                            <p className="font-medium">
+                              {turn.documentWork.type === "correction"
+                                ? "The corrected document is ready."
+                                : "The complete rewrite is ready."}
+                            </p>
+                            <div className="mt-2 text-sm text-muted-foreground">
+                              <FormattedAssistantMarkdown text={turn.content} />
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              if (turn.documentWork) openDocumentPreview(index, turn.documentWork);
+                            }}
+                          >
+                            <Eye className="size-4" /> Preview full document
+                          </Button>
+                        </div>
+                      ) : isProposedRewrite ? (
                         <div className="flex flex-col items-start gap-3 rounded-xl border bg-card p-4 shadow-sm">
                           <div>
                             <p className="font-medium">Your proposed changes are ready to review.</p>
@@ -2077,7 +2791,7 @@ function StudentAssistantChat() {
                             type="button"
                             size="sm"
                             variant="outline"
-                            onClick={() => setRewritePreview({ title: rewriteTitle, content: turn.content })}
+                            onClick={() => setLegacyRewritePreview({ title: rewriteTitle, content: turn.content })}
                           >
                             <Eye className="size-4" /> Preview proposed changes
                           </Button>
@@ -2223,7 +2937,7 @@ function StudentAssistantChat() {
               ))}
             </div>
           )}
-          {attachmentPromptMenu()}
+          {attachmentOptions()}
           <Textarea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
@@ -2269,30 +2983,366 @@ function StudentAssistantChat() {
       {rewritePreview && (
         <div className="fixed inset-0 z-[100] min-h-screen overflow-y-auto bg-background">
           <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
-            <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4">
+            <div className="mx-auto flex min-h-14 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-2">
               <div className="flex min-w-0 items-center gap-3">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setRewritePreview(null)}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={async () => {
+                    if (previewDirty && !(await saveDocumentWorkEdit())) return;
+                    setRewritePreview(null);
+                  }}
+                >
                   <ArrowLeft className="size-4" /> Back to chat
                 </Button>
                 <Separator orientation="vertical" className="h-5" />
-                <span className="truncate text-sm font-medium">Proposed rewrite preview</span>
+                <span className="truncate text-sm font-medium">
+                  Preview
+                </span>
               </div>
-              <span className="shrink-0 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary">
-                Draft only
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {previewChapter && previewChapterUnlocked && (
+                  <Button size="sm" variant="outline" disabled={previewBusy} onClick={() => void exportDocumentWork([previewChapter.id])}>
+                    <Download className="size-4" /> Export chapter
+                  </Button>
+                )}
+                {previewAllUnlocked && rewritePreview.work.chapters.length > 1 && (
+                  <Button size="sm" disabled={previewBusy} onClick={() => void exportDocumentWork()}>
+                    <Download className="size-4" /> Export full document
+                  </Button>
+                )}
+                {previewAllUnlocked ? (
+                  <Badge>Paid · editing and export unlocked</Badge>
+                ) : previewChapter && !previewChapterUnlocked ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={previewBusy}
+                    onClick={() => void payForDocumentWork(previewChapter.id)}
+                  >
+                    <Lock className="size-4" /> Unlock · GH₵{previewChapterPrice}
+                  </Button>
+                ) : previewChapterUnlocked ? (
+                  <Badge variant="secondary">Chapter paid</Badge>
+                ) : null}
+              </div>
             </div>
           </header>
-          <main className="mx-auto max-w-[780px] px-4 py-8 md:px-10">
-            <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
-              <p className="font-medium">Review before using</p>
-              <p className="mt-1 text-muted-foreground">
-                This is a proposed revision of {rewritePreview.title}. It has not changed your uploaded file or delivered study. Verify every detail against your records and course requirements.
+          <div className="mx-auto flex max-w-7xl">
+            <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-64 shrink-0 overflow-y-auto border-r p-4 lg:block">
+              <p className="mb-3 flex items-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <Search className="mr-1 size-3.5" /> Search document
               </p>
-            </div>
-            <article className="rounded-xl border bg-card px-5 py-6 shadow-sm sm:px-8 sm:py-8">
-              <FormattedAssistantMarkdown text={rewritePreview.content} />
-            </article>
-          </main>
+              <div className="mb-5 space-y-2">
+                <div className="flex items-center gap-1">
+                  <Input
+                    value={previewSearch}
+                    onChange={(event) => { setPreviewSearch(event.target.value); setPreviewSearchIndex(0); }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        movePreviewSearch(event.shiftKey ? -1 : 1);
+                      }
+                    }}
+                    placeholder="Search document"
+                    aria-label="Search this document"
+                    className="h-8 text-xs"
+                  />
+                  <Button size="icon" variant="outline" className="size-8 shrink-0" title="Previous match" aria-label="Previous search match" disabled={!previewSearchResults.length} onClick={() => movePreviewSearch(-1)}>
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                  <Button size="icon" variant="outline" className="size-8 shrink-0" title="Next match" aria-label="Next search match" disabled={!previewSearchResults.length} onClick={() => movePreviewSearch(1)}>
+                    <ChevronRight className="size-4" />
+                  </Button>
+                </div>
+                {previewSearch.trim() && (
+                  <p className="text-xs text-muted-foreground">
+                    {previewSearchResults.length
+                      ? `${Math.min(previewSearchIndex + 1, previewSearchResults.length)} of ${previewSearchResults.length} matches`
+                      : "No matches"}
+                  </p>
+                )}
+              </div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Document chapters</p>
+              <nav className="space-y-2">
+                {rewritePreview.work.chapters.map((chapter, index) => {
+                  const unlocked = rewritePreview.work.fullPaid ||
+                    rewritePreview.work.paidChapterIds.includes(chapter.id);
+                  return (
+                    <button
+                      key={chapter.id}
+                      type="button"
+                      onClick={() => selectPreviewChapter(index)}
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-lg border p-2 text-left text-sm hover:bg-muted/50",
+                        index === rewritePreview.chapterIndex && "border-primary/40 bg-primary/5",
+                      )}
+                    >
+                      {unlocked ? <CheckCircle2 className="size-4 text-primary" /> : <Lock className="size-4 text-muted-foreground" />}
+                      <span className="min-w-0 truncate">{chapter.name}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </aside>
+            <main className="min-w-0 flex-1 px-4 py-6 md:px-8">
+              <div className="sticky top-24 z-10 mb-5 space-y-2 rounded-xl border bg-card/95 p-2 shadow-sm backdrop-blur lg:top-14">
+                <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap">
+                  <p className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Document actions</p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 shrink-0 gap-1 px-2 sm:hidden"
+                    aria-expanded={previewToolbarOpen}
+                    aria-controls="student-document-formatting-toolbar"
+                    onClick={() => setPreviewToolbarOpen((open) => !open)}
+                  >
+                    {previewToolbarOpen ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                    {previewToolbarOpen ? "Hide tools" : "Show tools"}
+                  </Button>
+                  <div className="flex shrink-0 flex-nowrap gap-2">
+                    {rewritePreview.work.charges.some((charge) => charge.status !== "verified") && (
+                      <Button size="sm" variant="outline" disabled={previewBusy} onClick={() => void checkDocumentPayment()}>
+                        {previewBusy ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />} Check payment
+                      </Button>
+                    )}
+                    {previewChapter && previewChapterUnlocked && (
+                      <>
+                        <Button size="icon" variant="outline" disabled={!previewUndoStack.length || previewBusy} title="Undo last edit" aria-label="Undo last edit" onClick={undoPreviewEdit}>
+                          <Undo2 className="size-4" />
+                        </Button>
+                        <Button size="icon" variant="outline" disabled={!previewRedoStack.length || previewBusy} title="Redo last edit" aria-label="Redo last edit" onClick={redoPreviewEdit}>
+                          <Redo2 className="size-4" />
+                        </Button>
+                      </>
+                    )}
+                    {(previewDirty || previewSaveStatus !== "saved") && (
+                      <span className="px-1 text-xs text-muted-foreground" aria-live="polite">
+                        {previewSaveStatus === "saved" ? "All changes saved" :
+                          previewSaveStatus === "saving" ? "Saving…" :
+                            previewSaveStatus === "error" ? "Autosave failed" : "Unsaved changes"}
+                      </span>
+                    )}
+                    {previewSaveStatus === "error" && (
+                      <Button size="sm" variant="outline" disabled={previewBusy} onClick={() => void saveDocumentWorkEdit()}>
+                        Retry save
+                      </Button>
+                    )}
+                    {previewChapter && previewChapterUnlocked && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={previewBusy}
+                        onClick={() => void printAnswerAsPdf(
+                          formatStudentChapterContent(
+                            previewChapter.content,
+                            previewChapter.name,
+                          ),
+                        )}
+                      >
+                        <Printer className="size-4" /> Print / Save PDF
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div
+                  id="student-document-formatting-toolbar"
+                  className={cn(
+                    "grid gap-2 border-t pt-2 sm:grid-cols-2 xl:grid-cols-4",
+                    !previewToolbarOpen && "hidden sm:grid",
+                  )}
+                >
+                  <section className="rounded-md border bg-muted/30 p-2">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Selected text</p>
+                    <div className="flex flex-wrap items-center gap-1">
+                      {inlineFormattingTools.map(({ label, command, Icon, active, value }) => (
+                        <Button
+                          key={command}
+                          size="icon"
+                          variant={active ? "secondary" : "outline"}
+                          className="size-7"
+                          title={label}
+                          aria-label={label}
+                          aria-pressed={active}
+                          disabled={!previewTextSelected || !previewChapterUnlocked}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => runPreviewEditorCommand(command, value)}
+                        >
+                          <Icon className="size-3.5" />
+                        </Button>
+                      ))}
+                    </div>
+                  </section>
+                  <section className="rounded-md border bg-muted/30 p-2 sm:col-span-2">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Selected paragraph</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Button size="icon" variant={previewToolbarState.unorderedList ? "secondary" : "outline"} className="size-7" title="Bullet list" aria-label="Bullet list" aria-pressed={previewToolbarState.unorderedList} disabled={!previewEditingActive || !previewChapterUnlocked} onMouseDown={(event) => event.preventDefault()} onClick={() => runPreviewEditorCommand("insertUnorderedList")}><ListIcon className="size-3.5" /></Button>
+                      <Button size="icon" variant={previewToolbarState.orderedList ? "secondary" : "outline"} className="size-7" title="Numbered list" aria-label="Numbered list" aria-pressed={previewToolbarState.orderedList} disabled={!previewEditingActive || !previewChapterUnlocked} onMouseDown={(event) => event.preventDefault()} onClick={() => runPreviewEditorCommand("insertOrderedList")}><ListOrdered className="size-3.5" /></Button>
+                      <Separator orientation="vertical" className="mx-1 h-5" />
+                      {[["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight], ["justify", AlignJustify]].map(([alignment, Icon]) => {
+                        const AlignIcon = Icon as typeof AlignLeft;
+                        const active = previewToolbarState.alignment === alignment;
+                        return <Button key={alignment as string} size="icon" variant={active ? "secondary" : "outline"} className="size-7" title={`Align ${alignment}`} aria-label={`Align ${alignment}`} aria-pressed={active} disabled={!previewEditingActive || !previewChapterUnlocked} onMouseDown={(event) => event.preventDefault()} onClick={() => applyPreviewParagraphStyle({ alignment: alignment as PreviewFormatting["alignment"] })}><AlignIcon className="size-3.5" /></Button>;
+                      })}
+                      <label className="flex items-center gap-1 text-[10px] text-muted-foreground">Line spacing<select value={previewLineSpacing} disabled={!previewEditingActive || !previewChapterUnlocked} onChange={(event) => applyPreviewParagraphStyle({ lineSpacing: Number(event.target.value) })} className="h-7 rounded-md border bg-background px-1 text-xs">{[1, 1.15, 1.5, 2].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+                      <label className="flex items-center gap-1 text-[10px] text-muted-foreground">Indent<select value={previewIndent} disabled={!previewEditingActive || !previewChapterUnlocked} onChange={(event) => applyPreviewParagraphStyle({ indent: Number(event.target.value) })} className="h-7 rounded-md border bg-background px-1 text-xs">{[0, 0.25, 0.5].map((value) => <option key={value} value={value}>{value ? `${value}\"` : "None"}</option>)}</select></label>
+                    </div>
+                  </section>
+                  <section className="rounded-md border bg-muted/30 p-2">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Page layout</p>
+                    <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                      <label className="flex items-center gap-1">Font<select value={previewFont} disabled={!previewChapterUnlocked} onChange={(event) => applyPreviewFormatting({ fontFamily: event.target.value })} className="h-7 rounded-md border bg-background px-1 text-xs">{["Georgia", "Times New Roman", "Arial", "Calibri", "Garamond", "Helvetica", "Palatino", "Courier New"].map((font) => <option key={font}>{font}</option>)}</select></label>
+                      <label className="flex items-center gap-1">Size<select value={previewFontSize} disabled={!previewChapterUnlocked} onChange={(event) => applyPreviewFormatting({ fontSize: Number(event.target.value) })} className="h-7 rounded-md border bg-background px-1 text-xs">{[10, 11, 12, 13, 14].map((size) => <option key={size} value={size}>{size} pt</option>)}</select></label>
+                      <label className="flex items-center gap-1">Bottom margin<select value={previewBottomMargin} disabled={!previewChapterUnlocked} onChange={(event) => applyPreviewFormatting({ bottomMargin: Number(event.target.value) })} className="h-7 rounded-md border bg-background px-1 text-xs">{[0.5, 0.75, 1, 1.25, 1.5].map((margin) => <option key={margin} value={margin}>{margin}\"</option>)}</select></label>
+                    </div>
+                  </section>
+                </div>
+                {legacyRewritePreview && (
+                  <div className="fixed inset-0 z-[100] min-h-screen overflow-y-auto bg-background">
+                    <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
+                      <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4">
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setLegacyRewritePreview(null)}>
+                          <ArrowLeft className="size-4" /> Back to chat
+                        </Button>
+                        <Separator orientation="vertical" className="h-5" />
+                        <span className="truncate text-sm font-medium">Suggested changes · {legacyRewritePreview.title}</span>
+                      </div>
+                    </header>
+                    <main className="mx-auto max-w-[780px] px-4 py-8 md:px-10">
+                      <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+                        <p className="font-medium">Suggestion only</p>
+                        <p className="mt-1 text-muted-foreground">
+                          This chat suggestion is not a paid document correction or rewrite and does not change your uploaded file.
+                        </p>
+                      </div>
+                      <article className="rounded-xl border bg-card px-5 py-6 shadow-sm sm:px-8 sm:py-8">
+                        <FormattedAssistantMarkdown text={legacyRewritePreview.content} />
+                      </article>
+                    </main>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-8">
+                {rewritePreview.work.chapters.map((chapter, index) => {
+                  const activeChapter = index === rewritePreview.chapterIndex;
+                  const formatting = chapter.formatting;
+                  const fontFamily = activeChapter ? previewFont : formatting?.fontFamily ?? "Times New Roman";
+                  const fontSize = activeChapter ? previewFontSize : formatting?.fontSize ?? 12;
+                  const lineSpacing = activeChapter ? previewLineSpacing : formatting?.lineSpacing ?? 2;
+                  const alignment = activeChapter ? previewAlignment : formatting?.alignment ?? "justify";
+                  const indent = activeChapter ? previewIndent : formatting?.indent ?? 0;
+                  const chapterIsUnlocked = rewritePreview.work.fullPaid ||
+                    rewritePreview.work.paidChapterIds.includes(chapter.id);
+                  const pageImageKey = `${rewritePreview.work.id}:${chapter.id}`;
+                  const chapterPreviewPages = previewPageImages[pageImageKey] ?? [];
+                  const chapterStyle: CSSProperties = {
+                    fontFamily,
+                    fontSize: `${fontSize}pt`,
+                    lineHeight: lineSpacing,
+                    textAlign: alignment,
+                    "--doc-body-font": fontFamily,
+                    "--doc-heading-font": fontFamily,
+                    "--doc-body-size": `${fontSize}pt`,
+                    "--doc-line-height": String(lineSpacing),
+                    "--doc-align": alignment,
+                    "--doc-first-line-indent": `${indent}in`,
+                    "--doc-h1-size": "14pt",
+                    "--doc-h2-size": "12pt",
+                    "--doc-table-size": "10pt",
+                    "--doc-table-fill": "#d9d9d9",
+                  } as CSSProperties;
+                  const chapterContent = formatStudentChapterContent(
+                    chapter.content,
+                    chapter.name,
+                  );
+                  return (
+                    <div key={chapter.id} className="mx-auto w-full max-w-[820px] scroll-mt-24">
+                      {rewritePreview.work.type === "correction" && chapter.summary && (
+                        <div className="no-print mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+                          <p className="font-semibold">Correction summary</p>
+                          <FormattedAssistantMarkdown text={chapter.summary} />
+                        </div>
+                      )}
+                      <section
+                        id={`document-work-chapter-${chapter.id}`}
+                        className="print-doc student-document-sheet w-full scroll-mt-24"
+                        style={{
+                          ...chapterStyle,
+                          paddingBottom: `${(activeChapter ? previewBottomMargin : formatting?.bottomMargin ?? 1) * 0.25}in`,
+                        }}
+                      >
+                        {activeChapter && chapterIsUnlocked ? (
+                          <StudentDocumentRichEditor
+                            key={`${chapter.id}:${previewEditorRevision}`}
+                            ref={previewEditorRef}
+                            content={previewDraft}
+                            onChange={handlePreviewDraftChange}
+                            onSelectionChange={updatePreviewSelectionState}
+                            style={chapterStyle}
+                          />
+                        ) : chapterIsUnlocked ? (
+                          <StudentDocumentMarkdown text={chapterContent} style={chapterStyle} />
+                        ) : chapterPreviewPages.length ? (
+                          <div className="space-y-6" aria-label="Watermarked chapter preview pages">
+                            {chapterPreviewPages.map((page, pageIndex) => (
+                              <img
+                                key={`${pageImageKey}:${pageIndex}`}
+                                src={page}
+                                alt={`Watermarked preview page ${pageIndex + 1}`}
+                                draggable={false}
+                                onContextMenu={(event) => event.preventDefault()}
+                                className="mx-auto block w-full max-w-[816px] select-none border bg-white shadow-sm"
+                              />
+                            ))}
+                          </div>
+                        ) : previewImageLoading[pageImageKey] ? (
+                          <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-foreground">
+                            <Loader2 className="size-4 animate-spin" />
+                            Preparing watermarked preview pages…
+                          </div>
+                        ) : previewImageErrors[pageImageKey] ? (
+                          <div className="flex flex-col items-center gap-3 py-20 text-sm text-muted-foreground">
+                            <p>{previewImageErrors[pageImageKey]}</p>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => void loadDocumentPreviewImages(
+                                rewritePreview.chatId,
+                                rewritePreview.work,
+                                chapter.id,
+                              )}
+                            >
+                              Retry preview
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-3 py-20 text-center text-sm text-muted-foreground">
+                            <p>The watermarked preview has not loaded yet.</p>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => void loadDocumentPreviewImages(
+                                rewritePreview.chatId,
+                                rewritePreview.work,
+                                chapter.id,
+                              )}
+                            >
+                              Load preview
+                            </Button>
+                          </div>
+                        )}
+                      </section>
+                    </div>
+                  );
+                })}
+              </div>
+            </main>
+          </div>
         </div>
       )}
     </div>

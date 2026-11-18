@@ -174,6 +174,37 @@ export type StudentChatReference = {
   url?: string | null;
 };
 
+export type StudentDocumentWork = {
+  id: string;
+  type: "correction" | "rewrite";
+  scope: "chapters" | "full";
+  title: string;
+  sourceFilename: string;
+  chapters: {
+    id: string;
+    name: string;
+    content: string;
+    summary: string;
+    formatting?: {
+      fontFamily: string;
+      fontSize: number;
+      lineSpacing: number;
+      indent: number;
+      alignment: "left" | "center" | "right" | "justify";
+      bottomMargin: number;
+    };
+  }[];
+  paidChapterIds: string[];
+  fullPaid: boolean;
+  charges: {
+    reference: string;
+    scope: "chapter" | "full";
+    chapterId: string | null;
+    amount: number;
+    status: "pending" | "verified" | "failed";
+  }[];
+};
+
 export type StudentChatMessage = {
   role: "user" | "assistant";
   content: string;
@@ -181,6 +212,7 @@ export type StudentChatMessage = {
   attachmentNames?: string[];
   references?: StudentChatReference[];
   imageDataUrl?: string;
+  documentWork?: StudentDocumentWork;
 };
 
 export type StudentChatRow = {

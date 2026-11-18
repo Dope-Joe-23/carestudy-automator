@@ -133,11 +133,43 @@ export type AssistantHistoryMessage = {
   content: string;
 };
 
+export type StudentDocumentWork = {
+  id: string;
+  type: "correction" | "rewrite";
+  scope: "chapters" | "full";
+  title: string;
+  sourceFilename: string;
+  chapters: {
+    id: string;
+    name: string;
+    content: string;
+    summary: string;
+    formatting?: {
+      fontFamily: string;
+      fontSize: number;
+      lineSpacing: number;
+      indent: number;
+      alignment: "left" | "center" | "right" | "justify";
+      bottomMargin: number;
+    };
+  }[];
+  paidChapterIds: string[];
+  fullPaid: boolean;
+  charges: {
+    reference: string;
+    scope: "chapter" | "full";
+    chapterId: string | null;
+    amount: number;
+    status: "pending" | "verified" | "failed";
+  }[];
+};
+
 export type StudentChatMessage = AssistantHistoryMessage & {
   attachmentName?: string;
   attachmentNames?: string[];
   references?: AssistantReference[];
   imageDataUrl?: string;
+  documentWork?: StudentDocumentWork;
 };
 
 export type StudentChatSummary = {
@@ -223,9 +255,19 @@ export async function askStudentAssistant(input: {
   attachment?: { filename: string; content: string };
   attachments?: { filename: string; content: string }[];
   webSearch?: boolean;
-}): Promise<{ answer: string; references: AssistantReference[]; conversationId?: number }> {
+  documentWorkRequest?: { type: "correction" | "rewrite"; scope: "chapters" };
+}): Promise<{
+  answer: string;
+  references: AssistantReference[];
+  conversationId?: number;
+  documentWork?: StudentDocumentWork;
+  conditionChangeRejected?: boolean;
+}> {
   const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), 320_000);
+  const timer = window.setTimeout(
+    () => controller.abort(),
+    input.documentWorkRequest ? 12 * 60_000 : 320_000,
+  );
   try {
     return await requestJson("/student/assistant", {
       method: "POST",
@@ -288,6 +330,87 @@ export async function exportStudentChatDocx(input: {
     throw new Error(body?.error ?? `Export failed (${response.status}).`);
   }
   return response.blob();
+}
+
+export async function exportStudentDocumentWork(input: {
+  chatId: number;
+  workId: string;
+  chapterIds?: string[];
+}): Promise<Blob> {
+  const token = getStudentToken();
+  if (!token) throw new Error("Sign in to export this document.");
+  const response = await fetch(`${API_URL}/student/assistant/document-work/export`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null) as { error?: string } | null;
+    throw new Error(body?.error ?? `Export failed (${response.status}).`);
+  }
+  return response.blob();
+}
+
+export function getStudentDocumentWorkPreview(input: {
+  chatId: number;
+  workId: string;
+  chapterId: string;
+}): Promise<{ pages: string[] }> {
+  return requestJson("/student/assistant/document-work/preview", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function initializeDocumentWorkPayment(input: {
+  chatId: number;
+  workId: string;
+  scope: "chapter";
+  chapterId?: string;
+}): Promise<{
+  reference: string;
+  amount: number;
+  email: string;
+  authorization_url: string;
+  work: StudentDocumentWork;
+}> {
+  return requestJson("/student/assistant/document-work/payment/initialize", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function verifyDocumentWorkPayment(input: {
+  chatId: number;
+  workId: string;
+  reference: string;
+}): Promise<{ verified: boolean; work: StudentDocumentWork; message?: string }> {
+  return requestJson("/student/assistant/document-work/payment/verify", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function saveDocumentWorkEdits(input: {
+  chatId: number;
+  workId: string;
+  chapters: { id: string; content: string }[];
+  formatting?: {
+    fontFamily: string;
+    fontSize: number;
+    lineSpacing: number;
+    indent: number;
+    alignment: "left" | "center" | "right" | "justify";
+    bottomMargin: number;
+  };
+}): Promise<{ work: StudentDocumentWork }> {
+  return requestJson("/student/assistant/document-work", {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
 }
 
 export async function logoutStudent(): Promise<void> {

@@ -111,6 +111,7 @@ import {
   type TemplateRowColumn,
   type TemplateRowDef,
 } from '@/lib/template';
+import { markdownFromEditorHtml as markdownFromHtml } from '@/lib/studentDocumentMarkdown';
 import {
   addLibrarySource,
   createStudy,
@@ -453,7 +454,7 @@ const DEFAULT_DOC_THEME: DocTheme = {
   table_header_fill: 'D9D9D9',
   table_header_color: '000000',
   highlight_color: 'FFFF00',
-  line_spacing: 1.5,
+  line_spacing: 2,
   space_after: 6,
   heading1_space_before: 14,
   heading1_space_after: 8,
@@ -1765,106 +1766,6 @@ function splitParaGroups(text: string): { style: ParaStyle | null; lines: string
   }
   if (current) groups.push(current);
   return groups;
-}
-
-/**
- * Serialize a contenteditable paragraph back to draft markdown. Maps the HTML
- * produced by renderInlineMarkdown / the text tools (strong/em/mark/u/s/sup,
- * execCommand's span-with-background, styled paragraph divs and ul/ol lists)
- * back to **bold**, *italic*, ==highlight==, ++underline++, ~~strikethrough~~,
- * <sup> tokens, "- "/"1. " list lines and "<!-- align:... spacing:... -->"
- * directive lines.
- */
-function markdownFromHtml(html: string): string {
-  const template = document.createElement('template');
-  template.innerHTML = html;
-  const convert = (
-    node: Node,
-    list: { ordered: boolean; depth: number; index: { value: number } } | null = null,
-  ): string => {
-    if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
-    if (node.nodeType !== Node.ELEMENT_NODE) return '';
-    const element = node as HTMLElement;
-    const tag = element.tagName.toLowerCase();
-    if (tag === 'br') return '\n';
-    if (tag === 'li') {
-      // A styled list item (aligned/spaced via the paragraph tools) carries a
-      // directive line before it, just like a styled paragraph.
-      const align = element.style.textAlign;
-      const liSpacing = Number.parseFloat(element.style.lineHeight);
-      const liIndent = Number.parseFloat(element.style.textIndent);
-      const liStyle: ParaStyle = {};
-      if (align && ['left', 'center', 'right', 'justify'].includes(align)) {
-        liStyle.align = align as ParaStyle['align'];
-      }
-      if (Number.isFinite(liSpacing)) liStyle.spacing = liSpacing;
-      if (Number.isFinite(liIndent)) liStyle.indent = liIndent / 96;
-      const directive = directiveLineFor(liStyle);
-      const indent = '  '.repeat(list?.depth ?? 0);
-      const marker = list?.ordered ? `${list.index.value}. ` : '- ';
-      if (list) list.index.value += 1;
-      // Nested lists emit their own (indented) lines; the marker prefixes only
-      // the item's own text so wrapped lines never swallow the child list.
-      let own = '';
-      let nested = '';
-      for (const child of Array.from(element.childNodes)) {
-        if (
-          child.nodeType === Node.ELEMENT_NODE &&
-          ['ul', 'ol'].includes((child as HTMLElement).tagName.toLowerCase())
-        ) {
-          nested += convert(child, list);
-        } else {
-          own += convert(child, list);
-        }
-      }
-      return `${directive ? `${directive}\n` : ''}${indent}${marker}${own.trim()}\n${nested}`;
-    }
-    if (tag === 'ul' || tag === 'ol') {
-      return Array.from(element.childNodes)
-        .map((child) =>
-          convert(child, {
-            ordered: tag === 'ol',
-            depth: (list?.depth ?? -1) + 1,
-            index: { value: 1 },
-          }),
-        )
-        .join('');
-    }
-    const inner = Array.from(element.childNodes).map((child) => convert(child, list)).join('');
-    if (tag === 'p' || tag === 'div') {
-      // A block carrying paragraph styling round-trips through a directive
-      // line so the preview and the Word export both honour it.
-      const align = element.style.textAlign;
-      const spacing = Number.parseFloat(element.style.lineHeight);
-      const indent = Number.parseFloat(element.style.textIndent);
-      const style: ParaStyle = {};
-      if (align && ['left', 'center', 'right', 'justify'].includes(align)) {
-        style.align = align as ParaStyle['align'];
-      }
-      if (Number.isFinite(spacing)) style.spacing = spacing;
-      if (Number.isFinite(indent)) style.indent = indent / 96;
-      const directive = directiveLineFor(style);
-      return directive ? `${directive}\n${inner}\n` : `${inner}\n`;
-    }
-    if (tag === 'strong' || tag === 'b') return `**${inner}**`;
-    if (tag === 'em' || tag === 'i') return `*${inner}*`;
-    if (tag === 'mark') return `==${inner}==`;
-    if (tag === 'u') return `++${inner}++`;
-    if (tag === 's' || tag === 'strike' || tag === 'del') return `~~${inner}~~`;
-    if (tag === 'sup') return `<sup>${inner}</sup>`;
-    if (tag === 'span' && element.style.backgroundColor) return `==${inner}==`;
-    return inner;
-  };
-  // template.content is a DocumentFragment — convert() only understands text
-  // and element nodes, so iterate its children instead of passing the fragment
-  // itself (which would silently serialize to an empty string and wipe the
-  // draft on every blur).
-  return Array.from(template.content.childNodes)
-    .map((child) => convert(child))
-    .join('')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/[ \t]+\n/g, '\n')
-    .trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -7933,7 +7834,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
               '--doc-body-font': docTheme.body_font ?? 'Times New Roman',
               '--doc-heading-font': docTheme.heading_font ?? 'Times New Roman',
               '--doc-body-size': `${docTheme.body_size ?? 12}pt`,
-              '--doc-line-height': String(docTheme.line_spacing ?? 1.5),
+              '--doc-line-height': String(docTheme.line_spacing ?? 2),
               '--doc-align':
                 docTheme.body_alignment === 'left'
                   ? 'left'
@@ -8296,7 +8197,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                         Line spacing
                       </span>
                       <Select
-                        value={String(previewParaState.spacing ?? docTheme.line_spacing ?? 1.5)}
+                        value={String(previewParaState.spacing ?? docTheme.line_spacing ?? 2)}
                         onValueChange={(value) => applyParagraphStyle({ spacing: Number(value) })}
                         disabled={!previewEditingActive}
                       >

@@ -61,6 +61,17 @@ export type ExtractedQuestionsResult = {
 
 export type StudyAssistantResult = { answer: string; edits?: { sectionId: string; draft?: string; notes?: string; data?: Record<string, string> }[] };
 export type StudentChatResult = { answer: string; references: DraftReference[] };
+export type StudentDocumentWorkResult = {
+  answer: string;
+  work?: {
+    type: "correction" | "rewrite";
+    scope: "chapters";
+    title: string;
+    sourceFilename: string;
+    chapters: { id: string; name: string; content: string; summary: string }[];
+  };
+  conditionChangeRejected?: boolean;
+};
 export type StudentChatWebSource = {
   title: string;
   url: string;
@@ -176,7 +187,7 @@ export type ImportStudyResult = {
 };
 
 /** A worker response is a draft, an ingest result, a viva bank, an editorial answer, an import, or chapter 2 recommendations. */
-type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | StudentChatResult | ImportStudyResult | Chapter2Recommendations | PharmacologyRecommendations | CarePlanRecommendations | DischargeRecommendations | CareSummaryRecommendations | HomeVisitRecommendations;
+type WorkerResult = DraftResult | IngestResult | ExtractResult | VivaBankResult | StudyAssistantResult | StudentChatResult | StudentDocumentWorkResult | ImportStudyResult | Chapter2Recommendations | PharmacologyRecommendations | CarePlanRecommendations | DischargeRecommendations | CareSummaryRecommendations | HomeVisitRecommendations;
 
 interface PendingRequest {
   /** The worker instance this request was written to. */
@@ -302,6 +313,39 @@ class DraftWorker {
       try {
         child.stdin.write(
           JSON.stringify({ id, op: "student_chat", message, history, attachments, webSources, cadreProfileId }) + "\n",
+        );
+      } catch (writeErr) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(writeErr instanceof Error ? writeErr : new Error(String(writeErr)));
+      }
+    });
+  }
+
+  /** Correct or rewrite one uploaded student chapter. */
+  async createStudentDocumentWork(
+    message: string,
+    attachment: { filename: string; content: string },
+    workType: "correction" | "rewrite",
+    scope: "chapters",
+  ): Promise<StudentDocumentWorkResult> {
+    const child = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<StudentDocumentWorkResult>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        this.restartWorker(child);
+        reject(new Error("Document processing timed out. Please split the upload into chapters and try again."));
+      }, 12 * 60_000);
+      this.pending.set(id, {
+        child,
+        resolve: (result) => resolve(result as StudentDocumentWorkResult),
+        reject,
+        timer,
+      });
+      try {
+        child.stdin.write(
+          JSON.stringify({ id, op: "student_document_work", message, attachment, workType, scope }) + "\n",
         );
       } catch (writeErr) {
         this.pending.delete(id);
@@ -828,6 +872,8 @@ class DraftWorker {
       chunks?: number;
       bank?: VivaBankResult;
       answer?: string;
+      work?: StudentDocumentWorkResult["work"];
+      conditionChangeRejected?: boolean;
       edits?: { sectionId: string; draft: string }[];
       imported?: ImportStudyResult;
       recommendations?: Chapter2Recommendations;
@@ -863,6 +909,19 @@ class DraftWorker {
         ...(typeof msg.wordCountMax === 'number' ? { wordCountMax: msg.wordCountMax } : {}),
         ...(typeof msg.wordCountStatus === 'string' ? { wordCountStatus: msg.wordCountStatus } : {}),
       });
+    } else if (
+      typeof msg.answer === "string" &&
+      msg.work &&
+      typeof msg.work === "object" &&
+      Array.isArray(msg.work.chapters)
+    ) {
+      pending.resolve({
+        answer: msg.answer,
+        work: msg.work,
+        ...(msg.conditionChangeRejected === true ? { conditionChangeRejected: true } : {}),
+      });
+    } else if (typeof msg.answer === "string" && msg.conditionChangeRejected === true) {
+      pending.resolve({ answer: msg.answer, conditionChangeRejected: true });
     } else if (typeof msg.answer === "string") {
       pending.resolve({ answer: msg.answer, edits: Array.isArray(msg.edits) ? msg.edits : [] });
     } else if (msg.imported && Array.isArray(msg.imported.chapters)) {

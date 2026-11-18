@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import type { CSSProperties } from "react";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
@@ -6,21 +7,26 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 import { cn } from "@/lib/utils";
+import { assistantMarkdownSanitizeSchema } from "@/components/assistant-markdown-html";
 
-export default function AssistantMarkdown({ text }: { text: string }) {
+export default function AssistantMarkdown({ text, style }: { text: string; style?: CSSProperties }) {
   return (
-    <div className="assistant-markdown min-w-0 text-[15px] leading-7 text-foreground/90">
+    <div className="assistant-markdown min-w-0 text-[15px] leading-7 text-foreground/90" style={style}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeKatex]}
+        rehypePlugins={[
+          rehypeRaw,
+          [rehypeSanitize, assistantMarkdownSanitizeSchema],
+          rehypeKatex,
+        ]}
         components={{
           h1: ({ children }) => <h2 className="mb-3 mt-6 text-2xl font-semibold tracking-tight first:mt-0">{children}</h2>,
           h2: ({ children }) => <h3 className="mb-2 mt-6 text-xl font-semibold tracking-tight first:mt-0">{children}</h3>,
           h3: ({ children }) => <h4 className="mb-2 mt-5 text-lg font-semibold tracking-tight first:mt-0">{children}</h4>,
-          p: ({ children }) => <p className="my-3 text-left leading-7 sm:text-justify first:mt-0 last:mb-0">{children}</p>,
+          p: ({ children }) => <p style={style} className="my-3 text-left leading-7 sm:text-justify first:mt-0 last:mb-0">{children}</p>,
           ul: ({ children }) => <ul className="my-3 list-disc space-y-1.5 pl-6 marker:text-primary">{children}</ul>,
           ol: ({ children }) => <ol className="my-3 list-decimal space-y-1.5 pl-6 marker:text-primary">{children}</ol>,
-          li: ({ children }) => <li className="pl-1 text-left leading-7 sm:text-justify">{children}</li>,
+          li: ({ children }) => <li style={style} className="pl-1 text-left leading-7 sm:text-justify">{children}</li>,
           blockquote: ({ children }) => (
             <blockquote className="my-4 border-l-4 border-primary/40 bg-muted/40 py-2 pl-4 pr-3 text-muted-foreground [&>p]:my-1">
               {children}

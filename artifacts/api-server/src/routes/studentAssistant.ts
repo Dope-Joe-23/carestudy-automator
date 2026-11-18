@@ -1,5 +1,11 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { getStudyStore, type StudentChatMessage, type StudentChatReference } from "@workspace/db";
+import { randomBytes } from "node:crypto";
+import {
+  getStudyStore,
+  type StudentChatMessage,
+  type StudentChatReference,
+  type StudentDocumentWork,
+} from "@workspace/db";
 import { generateStudentAssistantImage, isStudentAssistantImageConfigured } from "../lib/nurseflowVideo";
 import { optionalStudent, requireStudent, type AuthedRequest } from "../lib/studentAuth";
 import { draftWorker, type DraftReference, type StudentCareStudyCadreProfile } from "../lib/draftWorker";
@@ -19,6 +25,7 @@ const ALLOWED_EXTENSIONS = new Set([".pdf", ".docx", ".txt", ".md"]);
 const DOCUMENT_REVIEW_INTENT =
   /\b(?:review\w*|critiqu\w*|analy[sz]\w*|check\w*|correct\w*|fix\w*|rewrit\w*|revis\w*|edit\w*|improv\w*|polish\w*|feedback|consisten\w*|contradict\w*|gaps?|missing|align\w*|compar\w*|assess\w*|evaluat\w*|audit\w*|wrong|errors?|issues?|concerns?|highlight\w*)\b/i;
 const MAX_WEB_SOURCES = 5;
+const PAYSTACK_BASE = "https://api.paystack.co";
 const CARE_STUDY_CADRE_PROFILES: StudentCareStudyCadreProfile[] = [
   { id: "registered_general_nurse", name: "Registered General Nurse", abbreviation: "RGN", status: "available" },
   { id: "registered_midwife", name: "Registered Midwife", abbreviation: "RM", status: "in_development" },
@@ -126,16 +133,47 @@ function mergeStoredImages(
 ): StudentChatMessage[] {
   return messages.map((message, index) => {
     const previous = existing[index];
-    if (
-      !message.imageDataUrl &&
-      previous?.role === message.role &&
-      previous.content === message.content &&
-      previous.imageDataUrl
-    ) {
-      return { ...message, imageDataUrl: previous.imageDataUrl };
-    }
-    return message;
+    if (previous?.role !== message.role || previous.content !== message.content) return message;
+    return {
+      ...message,
+      ...(!message.imageDataUrl && previous.imageDataUrl
+        ? { imageDataUrl: previous.imageDataUrl }
+        : {}),
+      ...(!message.documentWork && previous.documentWork
+        ? { documentWork: previous.documentWork }
+        : {}),
+    };
   });
+}
+
+function findDocumentWork(
+  messages: StudentChatMessage[],
+  workId: string,
+): { messageIndex: number; work: StudentDocumentWork } | null {
+  const messageIndex = messages.findIndex((message) => message.documentWork?.id === workId);
+  const work = messageIndex >= 0 ? messages[messageIndex].documentWork : undefined;
+  return work ? { messageIndex, work } : null;
+}
+
+function hasPaidChapter(work: StudentDocumentWork, chapterId: string): boolean {
+  return work.fullPaid || work.paidChapterIds.includes(chapterId);
+}
+
+function hideUnpaidChapterContent(work: StudentDocumentWork): StudentDocumentWork {
+  return {
+    ...work,
+    chapters: work.chapters.map((chapter) =>
+      hasPaidChapter(work, chapter.id) ? chapter : { ...chapter, content: "" },
+    ),
+  };
+}
+
+function hideUnpaidContentInMessages(messages: StudentChatMessage[]): StudentChatMessage[] {
+  return messages.map((message) =>
+    message.documentWork
+      ? { ...message, documentWork: hideUnpaidChapterContent(message.documentWork) }
+      : message,
+  );
 }
 
 async function searchBrave(query: string): Promise<WebSource[]> {
@@ -344,6 +382,70 @@ router.post(
         res.status(404).json({ error: "That conversation could not be found." });
         return;
       }
+      if (req.body?.documentWorkRequest !== undefined) {
+        const request = req.body.documentWorkRequest;
+        if (
+          !student ||
+          !request ||
+          typeof request !== "object" ||
+          !["correction", "rewrite"].includes((request as Record<string, unknown>).type as string) ||
+          (request as Record<string, unknown>).scope !== "chapters" ||
+          !attachments ||
+          attachments.length !== 1
+        ) {
+          res.status(422).json({
+            error: "Sign in, attach one chapter, and choose correction or rewrite.",
+          });
+          return;
+        }
+        const workRequest = request as { type: "correction" | "rewrite"; scope: "chapters" };
+        const result = await draftWorker.createStudentDocumentWork(
+          message,
+          attachments[0],
+          workRequest.type,
+          workRequest.scope,
+        );
+        const documentWork: StudentDocumentWork | undefined = result.work
+          ? {
+              ...result.work,
+              id: randomBytes(16).toString("hex"),
+              paidChapterIds: [],
+              fullPaid: false,
+              charges: [],
+            }
+          : undefined;
+        const assistantMessage: StudentChatMessage = {
+          role: "assistant",
+          content: result.answer,
+          ...(documentWork ? { documentWork } : {}),
+        };
+        const updatedMessages = mergeStoredImages(
+          [...chatMessages, assistantMessage],
+          existing?.messages,
+        );
+        const saved = existing
+          ? await store?.updateStudentChat(existing.id, student.id, {
+              title: chatTitle(updatedMessages),
+              messages: updatedMessages,
+            })
+          : await store?.addStudentChat({
+              studentId: student.id,
+              title: chatTitle(updatedMessages),
+              messages: updatedMessages,
+            });
+        if (!saved) {
+          res.status(404).json({ error: "That conversation was deleted before the result could be saved." });
+          return;
+        }
+        res.json({
+          answer: result.answer,
+          references: [],
+          conversationId: saved.id,
+          ...(documentWork ? { documentWork: hideUnpaidChapterContent(documentWork) } : {}),
+          ...(result.conditionChangeRejected ? { conditionChangeRejected: true } : {}),
+        });
+        return;
+      }
       const webSearch = req.body?.webSearch === true;
       const webSources = webSearch ? await searchBrave(message) : [];
       const result = await draftWorker.chatWithStudent(
@@ -404,6 +506,320 @@ router.get("/student/assistant/tools", (_req, res) => {
   });
 });
 
+router.post("/student/assistant/document-work/payment/initialize", requireStudent, async (req, res): Promise<void> => {
+  const chatId = Number(req.body?.chatId);
+  const workId = typeof req.body?.workId === "string" ? req.body.workId : "";
+  const scope = req.body?.scope;
+  const chapterId = typeof req.body?.chapterId === "string" ? req.body.chapterId : null;
+  if (!Number.isSafeInteger(chatId) || chatId < 1 || !workId || scope !== "chapter") {
+    res.status(422).json({ error: "The document payment request is invalid." });
+    return;
+  }
+  const secret = process.env.PAYSTACK_SECRET_KEY?.trim();
+  if (!secret) {
+    res.status(503).json({ error: "Online payment is not available right now. Please contact support." });
+    return;
+  }
+
+  const student = (req as AuthedRequest).student;
+  const db = getStudyStore();
+  const chat = await db.getStudentChat(chatId, student.id);
+  const found = chat && findDocumentWork(chat.messages, workId);
+  if (!chat || !found) {
+    res.status(404).json({ error: "The document work could not be found." });
+    return;
+  }
+  const { work, messageIndex } = found;
+  if (work.charges.some((charge) => charge.status === "pending")) {
+    res.status(409).json({ error: "A payment for this document is already in progress. Complete or verify it before starting another." });
+    return;
+  }
+  if (!chapterId || !work.chapters.some((chapter) => chapter.id === chapterId)) {
+    res.status(422).json({ error: "Choose a chapter in this document." });
+    return;
+  }
+  if (hasPaidChapter(work, chapterId)) {
+    res.status(409).json({ error: "This chapter has already been paid for." });
+    return;
+  }
+  const amount = 50;
+
+  const reference = `SW-${chatId}-${randomBytes(8).toString("hex")}`;
+  const charge: StudentDocumentWork["charges"][number] = {
+    reference,
+    scope,
+    chapterId,
+    amount,
+    status: "pending",
+  };
+  const pendingWork = { ...work, charges: [...work.charges, charge] };
+  const pendingMessages = chat.messages.map((item, index) =>
+    index === messageIndex ? { ...item, documentWork: pendingWork } : item,
+  );
+  const saved = await db.updateStudentChat(chat.id, student.id, {
+    title: chat.title,
+    messages: pendingMessages,
+  });
+  if (!saved) {
+    res.status(404).json({ error: "The document work was removed before checkout could start." });
+    return;
+  }
+
+  try {
+    const response = await fetch(`${PAYSTACK_BASE}/transaction/initialize`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: student.email,
+        amount: amount * 100,
+        reference,
+        currency: "GHS",
+        metadata: {
+          chatId,
+          workId,
+          scope,
+          chapterId,
+          studentId: student.id,
+          amountGhs: amount,
+        },
+      }),
+    });
+    const data = await response.json() as {
+      status?: boolean;
+      data?: { authorization_url?: string };
+      message?: string;
+    };
+    if (!response.ok || !data.status || !data.data?.authorization_url) {
+      throw new Error(data.message || "Paystack could not start checkout.");
+    }
+    res.json({
+      reference,
+      amount: amount * 100,
+      email: student.email,
+      authorization_url: data.data.authorization_url,
+      work: hideUnpaidChapterContent(pendingWork),
+    });
+  } catch (error) {
+    const failedWork = {
+      ...pendingWork,
+      charges: pendingWork.charges.map((item) =>
+        item.reference === reference ? { ...item, status: "failed" as const } : item,
+      ),
+    };
+    await db.updateStudentChat(chat.id, student.id, {
+      title: chat.title,
+      messages: pendingMessages.map((item, index) =>
+        index === messageIndex ? { ...item, documentWork: failedWork } : item,
+      ),
+    });
+    req.log?.error?.({ error, chatId, workId }, "student document payment initialization failed");
+    res.status(502).json({
+      error: error instanceof Error ? error.message : "Unable to start checkout.",
+    });
+  }
+});
+
+router.post("/student/assistant/document-work/payment/verify", requireStudent, async (req, res): Promise<void> => {
+  const chatId = Number(req.body?.chatId);
+  const workId = typeof req.body?.workId === "string" ? req.body.workId : "";
+  const reference = typeof req.body?.reference === "string" ? req.body.reference : "";
+  if (!Number.isSafeInteger(chatId) || chatId < 1 || !workId || !reference) {
+    res.status(422).json({ error: "The payment verification request is invalid." });
+    return;
+  }
+  const secret = process.env.PAYSTACK_SECRET_KEY?.trim();
+  if (!secret) {
+    res.status(503).json({ error: "Online payment verification is not available right now." });
+    return;
+  }
+  const student = (req as AuthedRequest).student;
+  const db = getStudyStore();
+  const chat = await db.getStudentChat(chatId, student.id);
+  const found = chat && findDocumentWork(chat.messages, workId);
+  if (!chat || !found) {
+    res.status(404).json({ error: "The document work could not be found." });
+    return;
+  }
+  const { work, messageIndex } = found;
+  const charge = work.charges.find((item) => item.reference === reference);
+  if (!charge) {
+    res.status(404).json({ error: "That payment reference does not belong to this document." });
+    return;
+  }
+  if (charge.status === "verified") {
+    res.json({ verified: true, work: hideUnpaidChapterContent(work) });
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(reference)}`,
+      { headers: { Authorization: `Bearer ${secret}` } },
+    );
+    const result = await response.json() as {
+      status?: boolean;
+      message?: string;
+      data?: {
+        status?: string;
+        amount?: number;
+        reference?: string;
+        currency?: string;
+      };
+    };
+    if (!response.ok || !result.status) {
+      res.status(502).json({ error: result.message || "Payment verification could not be completed." });
+      return;
+    }
+    const transactionSucceeded = result.data?.status === "success";
+    const referenceMatches = result.data?.reference === reference;
+    const amountMatches = result.data?.amount === charge.amount * 100;
+    const currencyMatches = result.data?.currency?.toUpperCase() === "GHS";
+    const validPayment =
+      transactionSucceeded &&
+      referenceMatches &&
+      amountMatches &&
+      currencyMatches;
+    if (!validPayment) {
+      req.log?.warn?.(
+        {
+          transactionSucceeded,
+          referenceMatches,
+          amountMatches,
+          currencyMatches,
+        },
+        "Paystack transaction did not match document payment",
+      );
+      const unresolvedWork: StudentDocumentWork = {
+        ...work,
+        charges: work.charges.map((item) =>
+          item.reference === reference
+            ? { ...item, status: transactionSucceeded ? "pending" : "failed" }
+            : item,
+        ),
+      };
+      await db.updateStudentChat(chat.id, student.id, {
+        title: chat.title,
+        messages: chat.messages.map((item, index) =>
+          index === messageIndex ? { ...item, documentWork: unresolvedWork } : item,
+        ),
+      });
+      res.json({
+        verified: false,
+        work: hideUnpaidChapterContent(unresolvedWork),
+        message: transactionSucceeded
+          ? "Paystack reports a successful payment, but its amount, currency, or reference did not match this chapter. The chapter remains locked; please contact support."
+          : "Payment was not confirmed. Please try again.",
+      });
+      return;
+    }
+
+    const paidChapterIds = charge.scope === "full" || !charge.chapterId
+      ? work.chapters.map((chapter) => chapter.id)
+      : [...new Set([...work.paidChapterIds, charge.chapterId])];
+    const verifiedWork: StudentDocumentWork = {
+      ...work,
+      fullPaid: work.fullPaid || charge.scope === "full",
+      paidChapterIds,
+      charges: work.charges.map((item) =>
+        item.reference === reference ? { ...item, status: "verified" as const } : item,
+      ),
+    };
+    const saved = await db.updateStudentChat(chat.id, student.id, {
+      title: chat.title,
+      messages: chat.messages.map((item, index) =>
+        index === messageIndex ? { ...item, documentWork: verifiedWork } : item,
+      ),
+    });
+    if (!saved) {
+      res.status(404).json({ error: "The document work was removed during payment verification." });
+      return;
+    }
+    res.json({ verified: true, work: hideUnpaidChapterContent(verifiedWork) });
+  } catch (error) {
+    req.log?.error?.({ error, chatId, workId }, "student document payment verification failed");
+    res.status(502).json({ error: "Payment verification could not be completed. Please try again." });
+  }
+});
+
+router.put("/student/assistant/document-work", requireStudent, async (req, res): Promise<void> => {
+  const chatId = Number(req.body?.chatId);
+  const workId = typeof req.body?.workId === "string" ? req.body.workId : "";
+  const edits = req.body?.chapters;
+  const rawFormatting = req.body?.formatting;
+  const validFormatting = rawFormatting === undefined || (
+    rawFormatting &&
+    typeof rawFormatting === "object" &&
+    ["Georgia", "Times New Roman", "Arial", "Calibri", "Garamond", "Helvetica", "Palatino", "Courier New"]
+      .includes(rawFormatting.fontFamily) &&
+    [10, 11, 12, 13, 14].includes(rawFormatting.fontSize) &&
+    [1, 1.15, 1.5, 2].includes(rawFormatting.lineSpacing) &&
+    [0, 0.25, 0.5].includes(rawFormatting.indent) &&
+    ["left", "center", "right", "justify"].includes(rawFormatting.alignment) &&
+    [0.5, 0.75, 1, 1.25, 1.5].includes(rawFormatting.bottomMargin)
+  );
+  if (
+    !Number.isSafeInteger(chatId) ||
+    chatId < 1 ||
+    !workId ||
+    !validFormatting ||
+    !Array.isArray(edits) ||
+    edits.length < 1 ||
+    edits.length > 12 ||
+    !edits.every((item) =>
+      item &&
+      typeof item.id === "string" &&
+      typeof item.content === "string" &&
+      item.content.length <= 100_000,
+    )
+  ) {
+    res.status(422).json({ error: "The document edits are invalid." });
+    return;
+  }
+  const student = (req as AuthedRequest).student;
+  const db = getStudyStore();
+  const chat = await db.getStudentChat(chatId, student.id);
+  const found = chat && findDocumentWork(chat.messages, workId);
+  if (!chat || !found) {
+    res.status(404).json({ error: "The document work could not be found." });
+    return;
+  }
+  const { work, messageIndex } = found;
+  const editableIds = new Set(
+    work.chapters.filter((chapter) => hasPaidChapter(work, chapter.id)).map((chapter) => chapter.id),
+  );
+  if (!edits.every((item: { id: string }) => editableIds.has(item.id))) {
+    res.status(403).json({ error: "Payment is required before editing this chapter." });
+    return;
+  }
+  const editedWork: StudentDocumentWork = {
+    ...work,
+    chapters: work.chapters.map((chapter) => {
+      const edit = edits.find((item: { id: string }) => item.id === chapter.id);
+      return edit
+        ? {
+            ...chapter,
+            content: edit.content,
+            ...(rawFormatting ? { formatting: rawFormatting } : {}),
+          }
+        : chapter;
+    }),
+  };
+  const saved = await db.updateStudentChat(chat.id, student.id, {
+    title: chat.title,
+    messages: chat.messages.map((item, index) =>
+      index === messageIndex ? { ...item, documentWork: editedWork } : item,
+    ),
+  });
+  if (!saved) {
+    res.status(404).json({ error: "The document work was removed before the edits were saved." });
+    return;
+  }
+  res.json({ work: hideUnpaidChapterContent(editedWork) });
+});
+
 router.get("/student/chats", requireStudent, async (req, res): Promise<void> => {
   try {
     const chats = await getStudyStore().listStudentChats(getStudentId(req));
@@ -428,11 +844,12 @@ router.get("/student/chats/:chatId", requireStudent, async (req, res): Promise<v
       res.status(404).json({ error: "That conversation could not be found." });
       return;
     }
+    res.setHeader("Cache-Control", "private, no-store, max-age=0");
     res.json({
       chat: {
         id: chat.id,
         title: chat.title,
-        messages: chat.messages,
+        messages: hideUnpaidContentInMessages(chat.messages),
         createdAt: chat.createdAt,
         updatedAt: chat.updatedAt,
       },

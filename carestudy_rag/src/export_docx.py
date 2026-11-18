@@ -110,7 +110,7 @@ class Theme:
     table_header_color: str = "000000"
     highlight_color: str = "FFFF00"  # ==highlight== runs
     first_line_indent: float = 0.0  # inches; e.g. 0.5 gives the classic essay look
-    line_spacing: float = 1.5
+    line_spacing: float = 2.0
     space_after: int = 6
     heading1_space_before: int = 14
     heading1_space_after: int = 8

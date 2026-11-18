@@ -414,6 +414,174 @@ class StudentAssistantTests(unittest.TestCase):
                 attachments,
             )
 
+    def test_numbered_section_titles_are_formatted_without_promoting_measurements(self):
+        content = (
+            "1.1 Assessment\n\nSection text.\n\n"
+            "1.2 mg every 8 hours\n\nMedication text.\n\n"
+            "### 2.9 follow-up\nSection text."
+        )
+
+        formatted = assistant._format_numbered_section_headings(content)
+
+        self.assertIn("## 1.1 Assessment\n\nSection text.", formatted)
+        self.assertIn("1.2 mg every 8 hours\n\nMedication text.", formatted)
+        self.assertIn("## 2.9 follow-up\nSection text.", formatted)
+
+    def test_paid_correction_returns_full_chapters_and_section_summaries(self):
+        source = (
+            "Diagnosis: pneumonia\n"
+            "CHAPTER ONE\n1.1 Assessment\nThe client was admittted yesterday.\n"
+            + ("The client was stable during observation. " * 200)
+        )
+        attachment = {
+            "filename": "care-study.txt",
+            "content": base64.b64encode(source.encode("utf-8")).decode("ascii"),
+        }
+        responses = [
+            "<CORRECTED_DOCUMENT>\nDiagnosis: pneumonia\nCHAPTER ONE\n"
+            "## 1.1 Assessment\n\n"
+            + "The client was admitted yesterday.\n"
+            + ("The client was stable during observation. " * 200)
+            + "\n</CORRECTED_DOCUMENT>\n<CHANGE_SUMMARY>\n"
+            "- Assessment: corrected a spelling error.\n</CHANGE_SUMMARY>",
+        ]
+
+        with mock.patch.object(assistant, "_chat_model", side_effect=responses) as model:
+            result = assistant.generate_student_document_work(
+                "Correct spelling only.",
+                attachment,
+                "correction",
+                "chapters",
+            )
+
+        self.assertEqual(len(result["work"]["chapters"]), 1)
+        self.assertIn("## 1.1 Assessment", result["work"]["chapters"][0]["content"])
+        self.assertIn("The client was admitted yesterday.", result["work"]["chapters"][0]["content"])
+        self.assertIn("Assessment: corrected a spelling error.", result["work"]["chapters"][0]["summary"])
+        self.assertIn("The complete uploaded chapter has been corrected.", result["answer"])
+        self.assertEqual(model.call_count, 1)
+        self.assertTrue(all(call.kwargs["max_tokens"] == 12_000 for call in model.call_args_list))
+        self.assertIn("Markdown level-2 heading", model.call_args.args[1])
+
+    def test_rewrite_processes_each_chapter_completely_and_keeps_condition(self):
+        source = (
+            "Diagnosis: asthma\n"
+            "CHAPTER ONE\n1.1 Assessment\n"
+            + ("The client reports wheezing during assessment. " * 250)
+        )
+        attachment = {
+            "filename": "case-study.txt",
+            "content": base64.b64encode(source.encode("utf-8")).decode("ascii"),
+        }
+        rewritten_content = (
+            "Diagnosis: asthma\nCHAPTER ONE\n## 1.1 Assessment\n\n"
+            + ("The client describes wheezing during assessment. " * 250)
+        )
+
+        with mock.patch.object(
+            assistant,
+            "_chat_model",
+            return_value=f"<REWRITTEN_CHAPTER>\n{rewritten_content}\n</REWRITTEN_CHAPTER>",
+        ) as model:
+            result = assistant.generate_student_document_work(
+                "Rewrite fully and change the student's name to Ama.",
+                attachment,
+                "rewrite",
+                "chapters",
+            )
+
+        self.assertEqual(len(result["work"]["chapters"]), 1)
+        self.assertIn("## 1.1 Assessment", result["work"]["chapters"][0]["content"])
+        self.assertIn("The client describes wheezing during assessment.", result["work"]["chapters"][0]["content"])
+        self.assertIn("The complete uploaded chapter has been rewritten.", result["answer"])
+        self.assertIn("The client reports wheezing during assessment.", model.call_args.args[1])
+        self.assertIn("Apply only the particulars explicitly requested", model.call_args_list[0].args[1])
+        self.assertIn("Markdown level-2 heading", model.call_args.args[1])
+
+    def test_paid_document_work_rejects_full_study_and_multiple_chapters(self):
+        source = (
+            "CHAPTER ONE\n"
+            + ("First chapter material. " * 150)
+            + "\nCHAPTER TWO\n"
+            + ("Second chapter material. " * 150)
+        )
+        attachment = {
+            "filename": "care-study.txt",
+            "content": base64.b64encode(source.encode("utf-8")).decode("ascii"),
+        }
+        with mock.patch.object(assistant, "_chat_model") as model:
+            with self.assertRaisesRegex(ValueError, "one chapter at a time"):
+                assistant.generate_student_document_work(
+                    "Rewrite this chapter.",
+                    attachment,
+                    "rewrite",
+                    "chapters",
+                )
+            with self.assertRaisesRegex(ValueError, "one chapter at a time"):
+                assistant.generate_student_document_work(
+                    "Rewrite this document.",
+                    attachment,
+                    "rewrite",
+                    "full",
+                )
+
+        model.assert_not_called()
+
+    def test_paid_document_work_requires_chapter_heading_and_word_count_range(self):
+        attachment = {
+            "filename": "chapter.txt",
+            "content": base64.b64encode(("CHAPTER ONE\n" + "word " * 400).encode("utf-8")).decode("ascii"),
+        }
+        with mock.patch.object(assistant, "_chat_model") as model:
+            with self.assertRaisesRegex(ValueError, "at least 500 words"):
+                assistant.generate_student_document_work(
+                    "Correct this chapter.",
+                    attachment,
+                    "correction",
+                    "chapters",
+                )
+
+            attachment["content"] = base64.b64encode(
+                ("CHAPTER ONE\n" + "word " * 7_500).encode("utf-8")
+            ).decode("ascii")
+            with self.assertRaisesRegex(ValueError, "limit is 7,500 words"):
+                assistant.generate_student_document_work(
+                    "Rewrite this chapter.",
+                    attachment,
+                    "rewrite",
+                    "chapters",
+                )
+
+            attachment["content"] = base64.b64encode(
+                ("Assessment\n" + "word " * 600).encode("utf-8")
+            ).decode("ascii")
+            with self.assertRaisesRegex(ValueError, "clear chapter heading"):
+                assistant.generate_student_document_work(
+                    "Rewrite this chapter.",
+                    attachment,
+                    "rewrite",
+                    "chapters",
+                )
+
+        model.assert_not_called()
+
+    def test_condition_change_request_is_rejected_before_model_call(self):
+        attachment = {
+            "filename": "case-study.txt",
+            "content": base64.b64encode(b"Diagnosis: malaria").decode("ascii"),
+        }
+        with mock.patch.object(assistant, "_chat_model") as model:
+            result = assistant.generate_student_document_work(
+                "Please change the diagnosis to pneumonia.",
+                attachment,
+                "rewrite",
+                "chapters",
+            )
+
+        self.assertTrue(result["conditionChangeRejected"])
+        self.assertIn("completely new care study", result["answer"])
+        model.assert_not_called()
+
     def test_rubric_covers_template_chapters_and_evidence_chain(self):
         for chapter in range(1, 7):
             self.assertIn(f"Chapter {chapter} —", CARE_STUDY_REVIEW_RUBRIC)

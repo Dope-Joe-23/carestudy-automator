@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowDown,
   ArrowRight,
+  ArrowUp,
   ArrowUpRight,
   BookOpen,
   Check,
@@ -206,8 +207,18 @@ function ProductCard({
 }
 
 export function LandingPage() {
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
   useEffect(() => {
     document.title = "Nursuit";
+  }, []);
+
+  useEffect(() => {
+    const updateVisibility = () => setShowBackToTop(window.scrollY > 400);
+    updateVisibility();
+    window.addEventListener("scroll", updateVisibility, { passive: true });
+
+    return () => window.removeEventListener("scroll", updateVisibility);
   }, []);
 
   return (
@@ -215,21 +226,30 @@ export function LandingPage() {
       <header className="sticky top-0 z-40 border-b border-[#dbe7df]/80 bg-[#f8faf6]/90 backdrop-blur-xl">
         <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-4 sm:px-7">
           <Brand />
-          <nav className="hidden items-center gap-8 text-sm font-medium text-[#61746c] md:flex">
-            <a className="transition-colors hover:text-[#173f34]" href="#products">Our products</a>
-            <a className="transition-colors hover:text-[#173f34]" href="#approach">Our approach</a>
-            <a className="transition-colors hover:text-[#173f34]" href="#about">About Nursuit</a>
+          <nav className="hidden flex-1 items-center justify-center gap-4 text-xs font-medium text-[#61746c] md:flex lg:flex-none lg:gap-8 lg:text-sm">
+            <a className="whitespace-nowrap transition-colors hover:text-[#173f34]" href="#products">
+              <span className="lg:hidden">Products</span><span className="hidden lg:inline">Our products</span>
+            </a>
+            <a className="whitespace-nowrap transition-colors hover:text-[#173f34]" href="#approach">
+              <span className="lg:hidden">Approach</span><span className="hidden lg:inline">Our approach</span>
+            </a>
+            <a className="whitespace-nowrap transition-colors hover:text-[#173f34]" href="#about">
+              <span className="lg:hidden">About</span><span className="hidden lg:inline">About Nursuit</span>
+            </a>
           </nav>
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-3 md:gap-1.5 lg:gap-3">
             <Link href="/chat?auth=sign-in" className="hidden px-2 py-2 text-sm font-medium text-[#536a62] transition-colors hover:text-[#173f34] sm:inline-flex">
               Sign in
             </Link>
-            <Link href="/staff/apply" className="hidden px-2 py-2 text-sm font-medium text-[#536a62] transition-colors hover:text-[#173f34] sm:inline-flex">Join our team</Link>
+            <Link href="/staff/apply" className="hidden whitespace-nowrap px-1 py-2 text-xs font-medium text-[#536a62] transition-colors hover:text-[#173f34] sm:inline-flex lg:px-2 lg:text-sm">
+              <span className="lg:hidden">Apply</span><span className="hidden lg:inline">Join our team</span>
+            </Link>
             <Link
               href="/chat"
-              className="inline-flex items-center gap-2 rounded-full bg-[#183e33] px-4 py-2.5 text-xs font-semibold text-white transition-all hover:bg-[#235d4b] sm:px-5 sm:text-sm"
+              className="inline-flex items-center gap-1 rounded-full bg-[#183e33] px-3 py-2.5 text-xs font-semibold text-white transition-all hover:bg-[#235d4b] sm:gap-2 sm:px-5 sm:text-sm md:gap-1 md:px-3 md:text-xs lg:gap-2 lg:px-5 lg:text-sm"
             >
-              Open chatspace <ArrowUpRight className="size-4" />
+              <span className="lg:hidden">Chat</span><span className="hidden lg:inline">Open chatspace</span>
+              <ArrowUpRight className="size-4" />
             </Link>
           </div>
         </div>
@@ -383,18 +403,37 @@ export function LandingPage() {
           <div className="flex justify-center sm:justify-start">
             <Brand />
           </div>
-          <div className="flex flex-col items-center gap-3 text-center text-xs font-medium text-[#62746b] sm:flex-row sm:flex-wrap sm:gap-x-5 sm:gap-y-2 sm:text-left">
-            <a href="#products" className="transition-colors hover:text-[#17382f]">Chatspace, NurseSpin &amp; NurseLearn</a>
-            <Link href="/chat" className="transition-colors hover:text-[#17382f]">Open chatspace</Link>
+          <div className="flex flex-col items-center gap-3 text-center text-xs font-medium text-[#62746b] sm:flex-row sm:flex-wrap sm:gap-x-5 sm:gap-y-2 sm:text-left md:flex-1 md:justify-center md:gap-x-3 md:text-center lg:flex-none lg:gap-x-5 lg:text-left">
+            <a href="#products" className="transition-colors hover:text-[#17382f]">
+              <span className="md:hidden lg:inline">Chatspace, NurseSpin &amp; NurseLearn</span><span className="hidden md:inline lg:hidden">Products</span>
+            </a>
+            <Link href="/chat" className="transition-colors hover:text-[#17382f]">
+              <span className="md:hidden lg:inline">Open chatspace</span><span className="hidden md:inline lg:hidden">Chat</span>
+            </Link>
             <Link href="/chat?auth=sign-in" className="transition-colors hover:text-[#17382f]">Sign in</Link>
-            <Link href="/staff/apply" className="transition-colors hover:text-[#17382f]">Apply to join our team</Link>
-            <a href="/ai-data-use" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#17382f]">AI &amp; data use</a>
+            <Link href="/staff/apply" className="transition-colors hover:text-[#17382f]">
+              <span className="md:hidden lg:inline">Apply to join our team</span><span className="hidden md:inline lg:hidden">Apply</span>
+            </Link>
+            <a href="/ai-data-use" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#17382f]">
+              <span className="md:hidden lg:inline">AI &amp; data use</span><span className="hidden md:inline lg:hidden">AI &amp; data</span>
+            </a>
             <a href="/privacy" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#17382f]">Privacy</a>
             <a href="/terms" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#17382f]">Terms</a>
           </div>
           <p className="text-center text-[11px] text-[#89968f]">© {new Date().getFullYear()} Nursuit</p>
         </div>
       </footer>
+      {showBackToTop && (
+        <button
+          type="button"
+          aria-label="Back to top"
+          title="Back to top"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-6 right-6 z-50 inline-flex size-12 items-center justify-center rounded-full bg-[#183e33] text-white shadow-lg transition-all hover:-translate-y-1 hover:bg-[#235d4b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16846c] focus-visible:ring-offset-2"
+        >
+          <ArrowUp className="size-5" />
+        </button>
+      )}
     </div>
   );
 }
