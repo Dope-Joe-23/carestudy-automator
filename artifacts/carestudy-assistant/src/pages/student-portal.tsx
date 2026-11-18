@@ -2623,7 +2623,7 @@ function StudentAssistantChat() {
             className="h-8 rounded-md border bg-background px-2 text-xs"
           >
             <option value="">Chat review only</option>
-            <option value="correction">Minimal correction</option>
+            <option value="correction">Correction rewrite</option>
             <option value="rewrite">Comprehensive rewrite</option>
           </select>
         </label>
