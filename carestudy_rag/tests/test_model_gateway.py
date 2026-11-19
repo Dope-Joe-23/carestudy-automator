@@ -5,6 +5,8 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
+import httpx
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import model_gateway as gateway  # noqa: E402
@@ -66,6 +68,21 @@ class ModelGatewayTests(unittest.TestCase):
             generation_config={"max_output_tokens": 123, "thinking_level": "low"},
             store=False,
         )
+
+    def test_gemini_client_has_bounded_timeout_and_no_sdk_retries(self):
+        with (
+            mock.patch.dict(
+                os.environ,
+                {"GEMINI_API_KEY": "google-test-key"},
+                clear=True,
+            ),
+            mock.patch("google.genai.Client") as client_constructor,
+        ):
+            gateway._client_for(gateway.ModelCandidate("gemini", "gemini-test"))
+
+        options = client_constructor.call_args.kwargs["http_options"]
+        self.assertEqual(options.timeout, gateway.MODEL_REQUEST_TIMEOUT_SECONDS * 1000)
+        self.assertEqual(options.retry_options.attempts, 1)
 
     def test_gemini_extracts_text_from_model_output_steps(self):
         response = SimpleNamespace(
@@ -157,6 +174,66 @@ class ModelGatewayTests(unittest.TestCase):
 
         self.assertEqual(answer, "fallback answer")
         anthropic_client.messages.create.assert_called_once()
+
+    def test_anthropic_client_has_bounded_timeout_and_no_sdk_retries(self):
+        with (
+            mock.patch.dict(
+                os.environ,
+                {
+                    "ANTHROPIC_AUTH_TOKEN": "openrouter-test-key",
+                    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
+                },
+                clear=True,
+            ),
+            mock.patch("anthropic.Anthropic") as client_constructor,
+        ):
+            gateway._client_for(gateway.ModelCandidate("anthropic", "openrouter/test"))
+
+        self.assertEqual(
+            client_constructor.call_args.kwargs["timeout"],
+            gateway.MODEL_REQUEST_TIMEOUT_SECONDS,
+        )
+        self.assertEqual(client_constructor.call_args.kwargs["max_retries"], 0)
+
+    def test_gemini_timeout_skips_to_openrouter_without_retrying(self):
+        openrouter_client = mock.Mock()
+        openrouter_client.messages.create.return_value = SimpleNamespace(
+            content=[SimpleNamespace(type="text", text="fallback answer")]
+        )
+        with (
+            mock.patch.dict(
+                os.environ,
+                {
+                    "LLM_PROVIDER": "gemini",
+                    "GEMINI_MODEL": "gemini-primary",
+                    "ANTHROPIC_AUTH_TOKEN": "openrouter-test-key",
+                    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
+                    "ANTHROPIC_MODEL": "openrouter/fallback-model",
+                },
+                clear=True,
+            ),
+            mock.patch.object(
+                gateway,
+                "_client_for",
+                side_effect=[object(), openrouter_client],
+            ),
+            mock.patch.object(
+                gateway,
+                "_request_model",
+                side_effect=[
+                    httpx.ReadTimeout("Gemini request timed out"),
+                    SimpleNamespace(
+                        content=[SimpleNamespace(type="text", text="fallback answer")]
+                    ),
+                ],
+            ) as request_model,
+        ):
+            answer = gateway._chat_model("system", "prompt")
+
+        self.assertEqual(answer, "fallback answer")
+        self.assertEqual(request_model.call_count, 2)
+        self.assertEqual(request_model.call_args_list[0].args[1].provider, "gemini")
+        self.assertEqual(request_model.call_args_list[1].args[1].provider, "anthropic")
 
     def test_rate_limit_skips_to_the_next_fallback_without_retrying(self):
         class RateLimitError(Exception):

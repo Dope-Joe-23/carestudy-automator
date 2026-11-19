@@ -7,7 +7,11 @@ import sys
 import time
 from dataclasses import dataclass
 
+import httpx
+
 sys.path.insert(0, os.path.dirname(__file__))
+
+MODEL_REQUEST_TIMEOUT_SECONDS = 120
 
 
 @dataclass(frozen=True)
@@ -244,8 +248,15 @@ def _client_for(candidate: ModelCandidate):
         if not api_key:
             raise RuntimeError("GEMINI_API_KEY is required for Gemini models.")
         from google import genai
+        from google.genai import types
 
-        return genai.Client(api_key=api_key)
+        return genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(
+                timeout=MODEL_REQUEST_TIMEOUT_SECONDS * 1000,
+                retry_options=types.HttpRetryOptions(attempts=1),
+            ),
+        )
 
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
@@ -259,12 +270,24 @@ def _client_for(candidate: ModelCandidate):
 
     client_kwargs: dict = {
         "base_url": os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com",
+        "timeout": MODEL_REQUEST_TIMEOUT_SECONDS,
+        "max_retries": 0,
     }
     if auth_token:
         client_kwargs["auth_token"] = auth_token
     else:
         client_kwargs["api_key"] = api_key
     return anthropic.Anthropic(**client_kwargs)
+
+
+def _is_timeout_error(exc: Exception) -> bool:
+    if isinstance(exc, httpx.TimeoutException):
+        return True
+    try:
+        from anthropic import APITimeoutError
+    except ImportError:
+        return False
+    return isinstance(exc, APITimeoutError)
 
 
 def _request_model(
@@ -349,6 +372,7 @@ def _chat_model(
 
         last_exc: Exception | None = None
         for attempt in range(1, max_retries + 1):
+            request_started = time.monotonic()
             try:
                 response = _request_model(
                     client,
@@ -360,12 +384,21 @@ def _chat_model(
                 )
                 answer = _response_text(response)
                 if answer:
+                    elapsed = time.monotonic() - request_started
+                    print(
+                        f"[worker] {label} model {candidate.label} succeeded "
+                        f"in {elapsed:.1f}s",
+                        file=sys.stderr,
+                        flush=True,
+                    )
                     return answer
                 if attempt < max_retries:
                     wait = 2 ** attempt
+                    elapsed = time.monotonic() - request_started
                     print(
                         f"[worker] {label} model {candidate.label} returned empty "
-                        f"(attempt {attempt}/{max_retries}), retrying in {wait}s",
+                        f"(attempt {attempt}/{max_retries}, {elapsed:.1f}s), "
+                        f"retrying in {wait}s",
                         file=sys.stderr,
                         flush=True,
                     )
@@ -377,10 +410,23 @@ def _chat_model(
                 )
                 break
             except Exception as exc:
+                elapsed = time.monotonic() - request_started
+                if _is_timeout_error(exc):
+                    model_errors.append(
+                        f"{candidate.label}: timed out after {elapsed:.1f}s"
+                    )
+                    print(
+                        f"[worker] {label} model {candidate.label} timed out "
+                        f"after {elapsed:.1f}s; trying the next model",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    last_exc = None
+                    break
                 last_exc = exc
                 print(
                     f"[worker] {label} model {candidate.label} failed "
-                    f"(attempt {attempt}/{max_retries}): {exc}",
+                    f"(attempt {attempt}/{max_retries}, {elapsed:.1f}s): {exc}",
                     file=sys.stderr,
                     flush=True,
                 )

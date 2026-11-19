@@ -113,6 +113,11 @@ The engine reads these env vars:
 | `ANTHROPIC_MODEL` | `claude-sonnet-4-6` with `LLM_PROVIDER=anthropic` | Anthropic primary, or first fallback when Gemini is primary |
 | `ANTHROPIC_FALLBACK_MODELS` | — | Optional comma-separated Anthropic/OpenRouter fallback models |
 
+Each model request has a 120-second timeout. A timed-out model is skipped so the
+next configured candidate can be tried; SDK-level retries are disabled so they
+do not delay that failover. The worker logs provider/model elapsed time without
+logging prompts or generated text.
+
 ### Gemini Free tier
 
 The default `gemini-4-hydrogen` model is listed with Free-tier access in
