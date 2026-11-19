@@ -1,5 +1,5 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import pg from "pg";
 import * as schema from "./schema/postgres";
 import type {
@@ -38,6 +38,7 @@ const POSTGRES_SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS "studies" (
   "id" serial PRIMARY KEY,
   "name" text NOT NULL,
+  "owner_admin_id" integer,
   "data" jsonb NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
@@ -88,6 +89,8 @@ CREATE TABLE IF NOT EXISTS "admins" (
   "invited_by" integer,
   "created_at" timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE "studies" ADD COLUMN IF NOT EXISTS "owner_admin_id" integer;
+CREATE INDEX IF NOT EXISTS "studies_owner_admin_id_idx" ON "studies" ("owner_admin_id");
 CREATE TABLE IF NOT EXISTS "admin_sessions" (
   "token" text PRIMARY KEY,
   "admin_id" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
@@ -359,6 +362,7 @@ function toRow(row: typeof schema.studiesTable.$inferSelect): StudyRow {
   return {
     id: row.id,
     name: row.name,
+    ownerAdminId: row.ownerAdminId,
     data: row.data,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -540,13 +544,30 @@ export function createPostgresStore(): StudyStore {
       return rows.map(toRow);
     },
 
-    async create(name, data) {
-      const [row] = await db.insert(studies).values({ name, data }).returning();
+    async listByOwner(ownerAdminId) {
+      const rows = await db
+        .select()
+        .from(studies)
+        .where(eq(studies.ownerAdminId, ownerAdminId))
+        .orderBy(desc(studies.updatedAt), desc(studies.id));
+      return rows.map(toRow);
+    },
+
+    async create(name, data, ownerAdminId) {
+      const [row] = await db.insert(studies).values({ name, data, ownerAdminId }).returning();
       return toRow(row);
     },
 
     async get(id) {
       const [row] = await db.select().from(studies).where(eq(studies.id, id));
+      return row ? toRow(row) : null;
+    },
+
+    async getOwned(id, ownerAdminId) {
+      const [row] = await db
+        .select()
+        .from(studies)
+        .where(and(eq(studies.id, id), eq(studies.ownerAdminId, ownerAdminId)));
       return row ? toRow(row) : null;
     },
 
@@ -559,9 +580,35 @@ export function createPostgresStore(): StudyStore {
       return updated ? toRow(updated) : null;
     },
 
+    async updateOwned(id, name, data, ownerAdminId) {
+      const [updated] = await db
+        .update(studies)
+        .set({ name, data, updatedAt: new Date() })
+        .where(and(eq(studies.id, id), eq(studies.ownerAdminId, ownerAdminId)))
+        .returning();
+      return updated ? toRow(updated) : null;
+    },
+
     async remove(id) {
       const deleted = await db.delete(studies).where(eq(studies.id, id)).returning();
       return deleted.length > 0;
+    },
+
+    async removeOwned(id, ownerAdminId) {
+      const deleted = await db
+        .delete(studies)
+        .where(and(eq(studies.id, id), eq(studies.ownerAdminId, ownerAdminId)))
+        .returning();
+      return deleted.length > 0;
+    },
+
+    async assignUnownedStudiesToAdmin(ownerAdminId) {
+      const updated = await db
+        .update(studies)
+        .set({ ownerAdminId })
+        .where(isNull(studies.ownerAdminId))
+        .returning();
+      return updated.length;
     },
 
 

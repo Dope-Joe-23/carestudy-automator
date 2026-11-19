@@ -63,6 +63,11 @@ router.post(
       res.status(401).json({ error: "Incorrect username or password." });
       return;
     }
+    const bootstrapUsername = (process.env.ADMIN_USERNAME || "admin").trim();
+    const bootstrapAdmin = await db.getAdminByUsername(bootstrapUsername);
+    if (bootstrapAdmin?.role === "admin") {
+      await db.assignUnownedStudiesToAdmin(bootstrapAdmin.id);
+    }
     const token = createAuthToken();
     await db.createAdminSession(admin.id, token);
     res.json({ token, admin: publicAdmin(admin) });

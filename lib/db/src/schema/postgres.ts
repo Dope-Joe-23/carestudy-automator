@@ -16,6 +16,7 @@ import type { StudentChatMessage } from "../store";
 export const studiesTable = pgTable("studies", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  ownerAdminId: integer("owner_admin_id"),
   data: jsonb("data").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

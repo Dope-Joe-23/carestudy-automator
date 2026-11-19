@@ -1281,6 +1281,7 @@ studioRouter.post(
 
     }
 
+    const admin = (req as AuthedAdminRequest).admin;
     const study = await db.create(order.title, {
       title: {
         patientName: importedTitle?.patientName || "",
@@ -1292,7 +1293,7 @@ studioRouter.post(
         year: importedTitle?.year || student?.year || String(new Date().getFullYear()),
       },
       chapters,
-    });
+    }, admin.id);
 
     // Register the student's materials as the study's clinical documents, so
     // every draft is grounded on them. Order files and study files share the

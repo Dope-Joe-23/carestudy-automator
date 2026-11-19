@@ -78,34 +78,13 @@ function summarizeStudy(row: StudyRow) {
   };
 }
 
-// GET /api/studies — list saved studies, most recently updated first.
-// Admins see all studies; staff only see studies from their tied students' orders.
+// GET /api/studies — list only the authenticated account's saved studies.
 router.get(
   "/studies",
   asyncRoute(async (req, res) => {
     const admin = (req as AuthedAdminRequest).admin;
-    const db = studyStore();
-    
-    if (admin.role === "admin") {
-      // Admins see all studies
-      const rows = await db.list();
-      res.json(rows.map(summarizeStudy));
-    } else {
-      // Staff: get orders from their students, then filter studies
-      const staffOrders = await db.listOrdersByStaff(admin.id);
-      const studyIds = new Set(
-        staffOrders
-          .map((order) => order.producedStudyId)
-          .filter((id): id is number => id !== null),
-      );
-      if (studyIds.size === 0) {
-        res.json([]);
-        return;
-      }
-      const rows = await db.list();
-      const filtered = rows.filter((row) => studyIds.has(row.id));
-      res.json(filtered.map(summarizeStudy));
-    }
+    const rows = await studyStore().listByOwner(admin.id);
+    res.json(rows.map(summarizeStudy));
   }),
 );
 
@@ -119,7 +98,8 @@ router.post(
       res.status(422).json({ error: "A study payload with a chapters array is required" });
       return;
     }
-    const created = await studyStore().create(name, req.body.data);
+    const admin = (req as AuthedAdminRequest).admin;
+    const created = await studyStore().create(name, req.body.data, admin.id);
     res.status(201).json(summarizeStudy(created));
   }),
 );
@@ -133,7 +113,8 @@ router.get(
       res.status(400).json({ error: "Invalid study id" });
       return;
     }
-    const row = await studyStore().get(id);
+    const admin = (req as AuthedAdminRequest).admin;
+    const row = await studyStore().getOwned(id, admin.id);
     if (!row) {
       res.status(404).json({ error: "Study not found" });
       return;
@@ -157,7 +138,8 @@ router.put(
       res.status(422).json({ error: "A study payload with a chapters array is required" });
       return;
     }
-    const row = await studyStore().update(id, name, req.body.data);
+    const admin = (req as AuthedAdminRequest).admin;
+    const row = await studyStore().updateOwned(id, name, req.body.data, admin.id);
     if (!row) {
       res.status(404).json({ error: "Study not found" });
       return;
@@ -176,9 +158,14 @@ router.delete(
       return;
     }
     const db = studyStore();
+    const admin = (req as AuthedAdminRequest).admin;
+    if (!(await db.getOwned(id, admin.id))) {
+      res.status(404).json({ error: "Study not found" });
+      return;
+    }
     // Grab the upload references before the rows cascade away.
     const files = await db.listFiles(id);
-    const removed = await db.remove(id);
+    const removed = await db.removeOwned(id, admin.id);
     if (!removed) {
       res.status(404).json({ error: "Study not found" });
       return;

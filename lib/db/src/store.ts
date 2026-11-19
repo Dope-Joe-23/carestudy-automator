@@ -7,6 +7,8 @@
 export type StudyRow = {
   id: number;
   name: string;
+  /** Studio account that owns this saved study. */
+  ownerAdminId: number | null;
   /** Full workspace snapshot (title + chapters). Shape is app-defined. */
   data: unknown;
   createdAt: Date;
@@ -379,14 +381,29 @@ export type NewStudentInvite = {
 export interface StudyStore {
   /** All studies, most recently updated first. */
   list(): Promise<StudyRow[]>;
-  /** Create a study. */
-  create(name: string, data: unknown): Promise<StudyRow>;
+  /** Studies owned by one Studio account, most recently updated first. */
+  listByOwner(ownerAdminId: number): Promise<StudyRow[]>;
+  /** Create a study owned by the authenticated Studio account. */
+  create(name: string, data: unknown, ownerAdminId: number): Promise<StudyRow>;
   /** Latest snapshot of one study, or null when it doesn't exist. */
   get(id: number): Promise<StudyRow | null>;
+  /** Latest snapshot, only when owned by the requested Studio account. */
+  getOwned(id: number, ownerAdminId: number): Promise<StudyRow | null>;
   /** Save the current snapshot; null when the study is missing. */
   update(id: number, name: string, data: unknown): Promise<StudyRow | null>;
+  /** Save a snapshot only when the study belongs to the requested account. */
+  updateOwned(
+    id: number,
+    name: string,
+    data: unknown,
+    ownerAdminId: number,
+  ): Promise<StudyRow | null>;
   /** Delete a study; false when nothing was deleted. */
   remove(id: number): Promise<boolean>;
+  /** Delete only when the study belongs to the requested account. */
+  removeOwned(id: number, ownerAdminId: number): Promise<boolean>;
+  /** Assign pre-ownership studies to the bootstrap owner without reassigning owned rows. */
+  assignUnownedStudiesToAdmin(ownerAdminId: number): Promise<number>;
   /** Uploaded document rows for a study, oldest first. */
   listFiles(studyId: number): Promise<StudyFileRow[]>;
   /** Register a freshly-uploaded document. */

@@ -4,7 +4,7 @@ import {
   type AsyncRemoteCallback,
   type SqliteRemoteDatabase,
 } from "drizzle-orm/sqlite-proxy";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import * as schema from "./schema";
 import { SCHEMA_DDL } from "./ddl";
 import type {
@@ -65,6 +65,7 @@ function openSqlite(): DatabaseSync {
     'ALTER TABLE "student_orders" ADD COLUMN "commission_staff_id" integer',
     'ALTER TABLE "student_orders" ADD COLUMN "commission_ref" text',
     'ALTER TABLE "student_orders" ADD COLUMN "commission_paid_at" integer',
+    'ALTER TABLE "studies" ADD COLUMN "owner_admin_id" integer',
     'ALTER TABLE "admins" ADD COLUMN "role" text NOT NULL DEFAULT \'staff\'',
     'ALTER TABLE "admins" ADD COLUMN "email" text',
     'ALTER TABLE "admins" ADD COLUMN "invited_by" integer',
@@ -77,6 +78,7 @@ function openSqlite(): DatabaseSync {
       // Columns already exist on databases created with the latest schema.
     }
   }
+  sqlite.exec('CREATE INDEX IF NOT EXISTS "studies_owner_admin_id_idx" ON "studies" ("owner_admin_id")');
   // Backfill username for existing students from their email prefix + id
   try {
     sqlite.exec(
@@ -193,6 +195,7 @@ function toRow(row: typeof schema.studiesTable.$inferSelect): StudyRow {
   return {
     id: row.id,
     name: row.name,
+    ownerAdminId: row.ownerAdminId,
     data: row.data,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -375,13 +378,30 @@ export function createSqliteStore(): StudyStore {
       return rows.map(toRow);
     },
 
-    async create(name, data) {
-      const [row] = await db.insert(studies).values({ name, data }).returning();
+    async listByOwner(ownerAdminId) {
+      const rows = await db
+        .select()
+        .from(studies)
+        .where(eq(studies.ownerAdminId, ownerAdminId))
+        .orderBy(desc(studies.updatedAt), desc(studies.id));
+      return rows.map(toRow);
+    },
+
+    async create(name, data, ownerAdminId) {
+      const [row] = await db.insert(studies).values({ name, data, ownerAdminId }).returning();
       return toRow(row);
     },
 
     async get(id) {
       const [row] = await db.select().from(studies).where(eq(studies.id, id));
+      return row ? toRow(row) : null;
+    },
+
+    async getOwned(id, ownerAdminId) {
+      const [row] = await db
+        .select()
+        .from(studies)
+        .where(and(eq(studies.id, id), eq(studies.ownerAdminId, ownerAdminId)));
       return row ? toRow(row) : null;
     },
 
@@ -394,11 +414,39 @@ export function createSqliteStore(): StudyStore {
       return updated ? toRow(updated) : null;
     },
 
+    async updateOwned(id, name, data, ownerAdminId) {
+      const [updated] = await db
+        .update(studies)
+        .set({ name, data, updatedAt: new Date() })
+        .where(and(eq(studies.id, id), eq(studies.ownerAdminId, ownerAdminId)))
+        .returning();
+      return updated ? toRow(updated) : null;
+    },
+
     async remove(id) {
       // RETURNING tells us whether a row was actually deleted (SQLite has no
       // reliable rowCount through the proxy driver).
       const deleted = await db.delete(studies).where(eq(studies.id, id)).returning().all();
       return deleted.length > 0;
+    },
+
+    async removeOwned(id, ownerAdminId) {
+      const deleted = await db
+        .delete(studies)
+        .where(and(eq(studies.id, id), eq(studies.ownerAdminId, ownerAdminId)))
+        .returning()
+        .all();
+      return deleted.length > 0;
+    },
+
+    async assignUnownedStudiesToAdmin(ownerAdminId) {
+      const updated = await db
+        .update(studies)
+        .set({ ownerAdminId })
+        .where(isNull(studies.ownerAdminId))
+        .returning()
+        .all();
+      return updated.length;
     },
 
     async listFiles(studyId) {

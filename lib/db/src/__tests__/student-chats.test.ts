@@ -1,13 +1,29 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 
 const tempDir = mkdtempSync(join(tmpdir(), "carestudy-chats-test-"));
-process.env.SQLITE_PATH = join(tempDir, "test.db");
+const sqlitePath = join(tempDir, "test.db");
+process.env.SQLITE_PATH = sqlitePath;
 process.env.DB_DRIVER = "sqlite";
+
+const legacyDatabase = new DatabaseSync(sqlitePath);
+legacyDatabase.exec(`
+  CREATE TABLE studies (
+    id integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name text NOT NULL,
+    data text NOT NULL,
+    created_at integer NOT NULL,
+    updated_at integer NOT NULL
+  );
+  INSERT INTO studies (id, name, data, created_at, updated_at)
+  VALUES (1, 'Legacy study', '{"chapters":[]}', 1, 1);
+`);
+legacyDatabase.close();
 
 let createSqliteStore: typeof import("../sqlite").createSqliteStore;
 let closeSqlite: typeof import("../sqlite").closeSqlite;
@@ -79,6 +95,40 @@ describe("Student chat history", () => {
 
     assert.equal(await store.removeStudentChat(chat.id, owner.id), true);
     assert.equal(await store.getStudentChat(chat.id, owner.id), null);
+  });
+});
+
+describe("Study ownership", () => {
+  it("migrates legacy studies to the bootstrap owner without reassigning owned rows", async () => {
+    const bootstrapAdmin = await store.addAdmin({
+      username: "admin",
+      passwordHash: "test-password-hash",
+      role: "admin",
+    });
+
+    assert.equal(await store.assignUnownedStudiesToAdmin(bootstrapAdmin.id), 1);
+    assert.equal((await store.get(1))?.ownerAdminId, bootstrapAdmin.id);
+    assert.equal(await store.assignUnownedStudiesToAdmin(bootstrapAdmin.id), 0);
+  });
+
+  it("lists and mutates studies only for their owning Studio account", async () => {
+    const owner = await createAdmin();
+    const otherOwner = await createAdmin();
+    const ownedStudy = await store.create("Owner study", { chapters: [] }, owner.id);
+    const otherStudy = await store.create("Other study", { chapters: [] }, otherOwner.id);
+
+    assert.deepEqual(
+      (await store.listByOwner(owner.id)).map((study) => study.id),
+      [ownedStudy.id],
+    );
+    assert.equal(await store.getOwned(otherStudy.id, owner.id), null);
+    assert.equal(
+      await store.updateOwned(otherStudy.id, "Changed name", { chapters: [] }, owner.id),
+      null,
+    );
+    assert.equal(await store.removeOwned(otherStudy.id, owner.id), false);
+    assert.equal((await store.get(otherStudy.id))?.name, "Other study");
+    assert.equal(await store.removeOwned(ownedStudy.id, owner.id), true);
   });
 });
 

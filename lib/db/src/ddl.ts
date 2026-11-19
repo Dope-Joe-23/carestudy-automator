@@ -5,6 +5,7 @@ export const SCHEMA_DDL = `
 CREATE TABLE IF NOT EXISTS "studies" (
   "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   "name" text NOT NULL,
+  "owner_admin_id" integer,
   "data" text NOT NULL,
   "created_at" integer NOT NULL,
   "updated_at" integer NOT NULL

@@ -15,6 +15,7 @@ import type { StudentChatMessage } from "../store";
 export const studiesTable = sqliteTable("studies", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
+  ownerAdminId: integer("owner_admin_id"),
   data: text("data", { mode: "json" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),

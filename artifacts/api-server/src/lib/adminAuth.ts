@@ -13,6 +13,25 @@ import { createAuthToken, hashPassword } from "./studentAuth";
 /** The request once requireAdmin() has resolved the bearer token. */
 export type AuthedAdminRequest = Request & { admin: AdminRow };
 
+let legacyStudyOwnershipMigration: Promise<void> | null = null;
+
+async function migrateLegacyStudyOwnership(): Promise<void> {
+  if (!legacyStudyOwnershipMigration) {
+    legacyStudyOwnershipMigration = (async () => {
+      const db = getStudyStore();
+      const username = (process.env.ADMIN_USERNAME || "admin").trim();
+      const bootstrapAdmin = await db.getAdminByUsername(username);
+      if (bootstrapAdmin?.role === "admin") {
+        await db.assignUnownedStudiesToAdmin(bootstrapAdmin.id);
+      }
+    })().catch((err) => {
+      legacyStudyOwnershipMigration = null;
+      throw err;
+    });
+  }
+  await legacyStudyOwnershipMigration;
+}
+
 /**
  * Bootstrap the first admin account from the environment.
  *
@@ -76,6 +95,7 @@ export async function requireAdmin(
       res.status(403).json({ error: "Your staff application is awaiting review." });
       return;
     }
+    await migrateLegacyStudyOwnership();
     (req as AuthedAdminRequest).admin = admin;
     next();
   } catch (err) {

@@ -2,6 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import path from "node:path";
 import { getStudyStore, type StudyFileRow, type StudyStore } from "@workspace/db";
 import { draftWorker } from "../lib/draftWorker";
+import type { AuthedAdminRequest } from "../lib/adminAuth";
 import {
   detectUploadType,
   materializeStored,
@@ -51,6 +52,12 @@ function asyncRoute(handler: (req: Request, res: Response) => Promise<void>) {
 function parseId(raw: string | string[] | undefined): number | null {
   const value = Number(Array.isArray(raw) ? raw[0] : raw);
   return Number.isInteger(value) && value > 0 ? value : null;
+}
+
+function getOwnerAdminId(req: Request): number {
+  const admin = (req as AuthedAdminRequest).admin;
+  if (!admin) throw new Error("Studio sign-in is required to access study files.");
+  return admin.id;
 }
 
 /** Decode the client's base64 payload; null when it isn't valid base64. */
@@ -158,7 +165,7 @@ router.post(
       res.status(400).json({ error: "Invalid study id" });
       return;
     }
-    if (!(await studyStore().get(studyId))) {
+    if (!(await studyStore().getOwned(studyId, getOwnerAdminId(req)))) {
       res.status(404).json({ error: "Study not found" });
       return;
     }
@@ -200,7 +207,7 @@ router.post(
       res.status(400).json({ error: "Invalid study id" });
       return;
     }
-    if (!(await studyStore().get(studyId))) {
+    if (!(await studyStore().getOwned(studyId, getOwnerAdminId(req)))) {
       res.status(404).json({ error: "Study not found" });
       return;
     }
@@ -277,7 +284,7 @@ router.post(
       res.status(400).json({ error: "Invalid study id" });
       return;
     }
-    const existing = await studyStore().get(studyId);
+    const existing = await studyStore().getOwned(studyId, getOwnerAdminId(req));
     if (!existing) {
       res.status(404).json({ error: "Study not found" });
       return;
@@ -322,7 +329,7 @@ router.get(
       res.status(400).json({ error: "Invalid study id" });
       return;
     }
-    const existing = await studyStore().get(studyId);
+    const existing = await studyStore().getOwned(studyId, getOwnerAdminId(req));
     if (!existing) {
       res.status(404).json({ error: "Study not found" });
       return;
@@ -344,6 +351,10 @@ router.delete(
       return;
     }
     const db = studyStore();
+    if (!(await db.getOwned(studyId, getOwnerAdminId(req)))) {
+      res.status(404).json({ error: "Study not found" });
+      return;
+    }
     const row = await db.getFile(fileId);
     if (!row || row.studyId !== studyId) {
       res.status(404).json({ error: "File not found" });

@@ -5047,7 +5047,8 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
   // Study storage — autosave, open, and delete via the server database
   // -------------------------------------------------------------------------
 
-  const LAST_STUDY_KEY = 'carestudy_last_study';
+  const LAST_STUDY_KEY = `carestudy_last_study:${admin?.id ?? 'signed-out'}`;
+  const LEGACY_LAST_STUDY_KEY = 'carestudy_last_study';
 
   /** Serialize the workspace into the server-side snapshot shape. */
   const buildStudyPayload = (): StoredStudy => ({
@@ -5723,10 +5724,18 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
   // Resume the last-opened study after a refresh. Silently falls back to a
   // blank workspace when the server is unreachable or the study was deleted.
   useEffect(() => {
+    if (!admin) return;
     let cancelled = false;
     (async () => {
       try {
-        const raw = window.localStorage.getItem(LAST_STUDY_KEY);
+        let raw = window.localStorage.getItem(LAST_STUDY_KEY);
+        if (!raw && admin.username === 'admin') {
+          raw = window.localStorage.getItem(LEGACY_LAST_STUDY_KEY);
+          if (raw) {
+            window.localStorage.setItem(LAST_STUDY_KEY, raw);
+            window.localStorage.removeItem(LEGACY_LAST_STUDY_KEY);
+          }
+        }
         if (!raw) return;
         const id = Number(raw);
         if (!Number.isInteger(id)) return;
@@ -5746,7 +5755,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           });
         }
       } catch {
-        // No last study, server unreachable, or it was deleted — keep the blank workspace.
+        // A missing/unowned study or unavailable server leaves this account's workspace blank.
         try {
           window.localStorage.removeItem(LAST_STUDY_KEY);
         } catch {
@@ -5758,7 +5767,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [admin?.id]);
 
   // Load the personal reference library once — it is user-level, not tied to
   // a study, so it survives resets and study switches.
@@ -8823,6 +8832,7 @@ function LegacyRedirect({ to }: { to: string }) {
 /** The studio renders inside one gate and one shell so its sidebar persists. */
 function StudioArea() {
   const [location] = useLocation();
+  const admin = useAdmin();
 
   return (
     <AdminGate>
@@ -8840,9 +8850,9 @@ function StudioArea() {
           ) : location === "/studio/nurselearn" ? (
             <NurseLearnAdminPage />
           ) : location === "/studio/rm-preview" ? (
-            <Home key="registered_midwife" cadreProfile={RM_CARE_STUDY_CADRE_PROFILE} />
+            <Home key={`${admin?.id ?? 'unknown'}:registered_midwife`} cadreProfile={RM_CARE_STUDY_CADRE_PROFILE} />
           ) : (
-            <Home key="registered_general_nurse" cadreProfile={ACTIVE_CARE_STUDY_CADRE_PROFILE} />
+            <Home key={`${admin?.id ?? 'unknown'}:registered_general_nurse`} cadreProfile={ACTIVE_CARE_STUDY_CADRE_PROFILE} />
           )}
         </ErrorBoundary>
       </StudioShell>
