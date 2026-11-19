@@ -135,6 +135,23 @@ CREATE TABLE IF NOT EXISTS "student_chats" (
 );
 CREATE INDEX IF NOT EXISTS "student_chats_student_id_updated_at_idx"
   ON "student_chats" ("student_id", "updated_at");
+CREATE TABLE IF NOT EXISTS "ai_usage_daily" (
+  "subject_key" text NOT NULL,
+  "usage_date" text NOT NULL,
+  "metric" text NOT NULL,
+  "request_count" integer NOT NULL,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY ("subject_key", "usage_date", "metric")
+);
+CREATE TABLE IF NOT EXISTS "ai_usage_documents" (
+  "subject_key" text NOT NULL,
+  "usage_date" text NOT NULL,
+  "document_hash" text NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY ("subject_key", "usage_date", "document_hash")
+);
+CREATE INDEX IF NOT EXISTS "ai_usage_documents_usage_date_idx"
+  ON "ai_usage_documents" ("usage_date");
 CREATE TABLE IF NOT EXISTS "student_orders" (
   "id" serial PRIMARY KEY,
   "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,
@@ -792,6 +809,78 @@ export function createPostgresStore(): StudyStore {
         ))
         .returning();
       return deleted.length > 0;
+    },
+
+    async reserveAiDailyUsage(subjectKey, usageDate, metric, limit) {
+      const result = await pool!.query<{ request_count: number }>(
+        `INSERT INTO "ai_usage_daily"
+          ("subject_key", "usage_date", "metric", "request_count", "updated_at")
+        VALUES ($1, $2, $3, 1, now())
+        ON CONFLICT ("subject_key", "usage_date", "metric") DO UPDATE
+          SET "request_count" = "ai_usage_daily"."request_count" + 1,
+              "updated_at" = now()
+          WHERE "ai_usage_daily"."request_count" < $4
+        RETURNING "request_count"`,
+        [subjectKey, usageDate, metric, limit],
+      );
+      if (result.rows[0]) {
+        return { status: "reserved", count: Number(result.rows[0].request_count) };
+      }
+      const current = await pool!.query<{ request_count: number }>(
+        `SELECT "request_count" FROM "ai_usage_daily"
+        WHERE "subject_key" = $1 AND "usage_date" = $2 AND "metric" = $3`,
+        [subjectKey, usageDate, metric],
+      );
+      return { status: "limit", count: Number(current.rows[0]?.request_count ?? limit) };
+    },
+
+    async reserveAiDocument(subjectKey, usageDate, documentHash, limit) {
+      const client = await pool!.connect();
+      try {
+        await client.query("BEGIN");
+        await client.query(
+          `DELETE FROM "ai_usage_documents" WHERE "usage_date" < $1`,
+          [usageDate],
+        );
+        const insertedDocument = await client.query(
+          `INSERT INTO "ai_usage_documents"
+            ("subject_key", "usage_date", "document_hash")
+          VALUES ($1, $2, $3)
+          ON CONFLICT ("subject_key", "usage_date", "document_hash") DO NOTHING
+          RETURNING "document_hash"`,
+          [subjectKey, usageDate, documentHash],
+        );
+        if (insertedDocument.rows.length === 0) {
+          await client.query("COMMIT");
+          return { status: "duplicate", count: 0 };
+        }
+
+        const counter = await client.query<{ request_count: number }>(
+          `INSERT INTO "ai_usage_daily"
+            ("subject_key", "usage_date", "metric", "request_count", "updated_at")
+          VALUES ($1, $2, 'rewrite_documents', 1, now())
+          ON CONFLICT ("subject_key", "usage_date", "metric") DO UPDATE
+            SET "request_count" = "ai_usage_daily"."request_count" + 1,
+                "updated_at" = now()
+            WHERE "ai_usage_daily"."request_count" < $3
+          RETURNING "request_count"`,
+          [subjectKey, usageDate, limit],
+        );
+        if (!counter.rows[0]) {
+          await client.query("ROLLBACK");
+          return { status: "limit", count: limit };
+        }
+
+        await client.query("COMMIT");
+        return { status: "reserved", count: Number(counter.rows[0].request_count) };
+      } catch (error) {
+        await client.query("ROLLBACK").catch(() => {
+          // Preserve the original error if the transaction already ended.
+        });
+        throw error;
+      } finally {
+        client.release();
+      }
     },
 
     async addOrder(order) {

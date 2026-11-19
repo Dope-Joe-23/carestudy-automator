@@ -114,6 +114,24 @@ CREATE TABLE IF NOT EXISTS "student_chats" (
 );
 CREATE INDEX IF NOT EXISTS "student_chats_student_id_updated_at_idx" ON "student_chats" ("student_id", "updated_at");
 
+CREATE TABLE IF NOT EXISTS "ai_usage_daily" (
+  "subject_key" text NOT NULL,
+  "usage_date" text NOT NULL,
+  "metric" text NOT NULL,
+  "request_count" integer NOT NULL,
+  "updated_at" integer NOT NULL,
+  PRIMARY KEY ("subject_key", "usage_date", "metric")
+);
+
+CREATE TABLE IF NOT EXISTS "ai_usage_documents" (
+  "subject_key" text NOT NULL,
+  "usage_date" text NOT NULL,
+  "document_hash" text NOT NULL,
+  "created_at" integer NOT NULL,
+  PRIMARY KEY ("subject_key", "usage_date", "document_hash")
+);
+CREATE INDEX IF NOT EXISTS "ai_usage_documents_usage_date_idx" ON "ai_usage_documents" ("usage_date");
+
 CREATE TABLE IF NOT EXISTS "student_orders" (
   "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   "student_id" integer NOT NULL REFERENCES "students"("id") ON DELETE CASCADE,

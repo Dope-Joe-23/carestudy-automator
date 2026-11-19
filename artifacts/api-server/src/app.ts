@@ -7,6 +7,12 @@ import { MAX_UPLOAD_BYTES } from "./lib/uploads";
 
 const app: Express = express();
 
+const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS ?? "0");
+if (!Number.isInteger(trustProxyHops) || trustProxyHops < 0) {
+  throw new Error("TRUST_PROXY_HOPS must be a non-negative integer.");
+}
+app.set("trust proxy", trustProxyHops);
+
 app.use(
   pinoHttp({
     logger,

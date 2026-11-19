@@ -230,6 +230,11 @@ export type NewStudentChat = {
   messages: StudentChatMessage[];
 };
 
+export type AiUsageReservation = {
+  status: "reserved" | "limit" | "duplicate";
+  count: number;
+};
+
 /** "submitted" | "in_production" | "ready" | "cancelled". */
 export type OrderStatus = "submitted" | "in_production" | "ready" | "cancelled";
 
@@ -469,6 +474,20 @@ export interface StudyStore {
   ): Promise<StudentChatRow | null>;
   /** Delete only a chat owned by the student. */
   removeStudentChat(id: number, studentId: number): Promise<boolean>;
+  /** Atomically consume one per-subject daily AI quota unit. */
+  reserveAiDailyUsage(
+    subjectKey: string,
+    usageDate: string,
+    metric: string,
+    limit: number,
+  ): Promise<AiUsageReservation>;
+  /** Atomically record one unique document and consume its daily allowance. */
+  reserveAiDocument(
+    subjectKey: string,
+    usageDate: string,
+    documentHash: string,
+    limit: number,
+  ): Promise<AiUsageReservation>;
 
   /** Place an order (status starts as "submitted"). */
   addOrder(order: NewOrder): Promise<OrderRow>;

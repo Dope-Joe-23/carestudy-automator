@@ -184,6 +184,8 @@ DB_DRIVER=postgres DATABASE_URL=postgresql://carestudy:carestudy_dev_password@lo
 | `ANTHROPIC_BASE_URL` | No | `https://openrouter.ai/api` | Anthropic-compatible fallback endpoint |
 | `ANTHROPIC_MODEL` | No | `openai/gpt-oss-20b:free` | Fallback model when Gemini is primary |
 | `ANTHROPIC_FALLBACK_MODELS` | No | — | Additional Anthropic/OpenRouter fallback models |
+| `AI_USAGE_HMAC_KEY` | Recommended | — | Stable secret used to create privacy-preserving guest quota identities; falls back to a model API key if unset |
+| `TRUST_PROXY_HOPS` | No | `0` | Number of trusted reverse proxies; the Render blueprint sets this to `1` |
 | `ADMIN_USERNAME` | No | `admin` | Studio admin username |
 | `ADMIN_PASSWORD` | Yes | — | Studio admin password |
 | `MAX_UPLOAD_MB` | No | `250` | Max file upload size in MB |
@@ -195,6 +197,21 @@ DB_DRIVER=postgres DATABASE_URL=postgresql://carestudy:carestudy_dev_password@lo
 
 *Required for the selected provider. Gemini Free-tier model access is subject
 to Google's model-specific quotas and data-use terms.
+
+### Student AI usage limits
+
+Student AI quotas are counted per UTC day. Guests may make 3 text requests per
+day per IP and must sign in to attach documents or generate images. Signed-in
+students may make 50 text requests, 2 attached-document reviews, 5 unique
+correction/rewrite document requests, and (by default) 2 image generations per
+day. Each request, including a retry or regeneration, consumes a request unit;
+failed model attempts also count. Document reviews allow one file per request,
+up to 10 MB. Exact duplicate files cannot be used for correction/rewrite more
+than once per student per day.
+
+These are request-count limits, not exact token or dollar budgets. Keep provider
+spending limits enabled as a second safeguard; per-user provider-token accounting
+is not currently available.
 
 ### Frontend (Vercel)
 

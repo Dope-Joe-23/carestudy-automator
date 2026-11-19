@@ -666,6 +666,79 @@ export function createSqliteStore(): StudyStore {
       return deleted.length > 0;
     },
 
+    async reserveAiDailyUsage(subjectKey, usageDate, metric, limit) {
+      const database = sqlite;
+      if (!database) throw new Error("SQLite is not initialized.");
+      const now = Date.now();
+      const row = database.prepare(`
+        INSERT INTO "ai_usage_daily"
+          ("subject_key", "usage_date", "metric", "request_count", "updated_at")
+        VALUES (?, ?, ?, 1, ?)
+        ON CONFLICT ("subject_key", "usage_date", "metric") DO UPDATE
+          SET "request_count" = "request_count" + 1,
+              "updated_at" = excluded."updated_at"
+          WHERE "request_count" < ?
+        RETURNING "request_count"
+      `).get(subjectKey, usageDate, metric, now, limit) as
+        | { request_count: number }
+        | undefined;
+      if (row) return { status: "reserved", count: row.request_count };
+      const current = database.prepare(`
+        SELECT "request_count" FROM "ai_usage_daily"
+        WHERE "subject_key" = ? AND "usage_date" = ? AND "metric" = ?
+      `).get(subjectKey, usageDate, metric) as { request_count: number } | undefined;
+      return { status: "limit", count: current?.request_count ?? limit };
+    },
+
+    async reserveAiDocument(subjectKey, usageDate, documentHash, limit) {
+      const database = sqlite;
+      if (!database) throw new Error("SQLite is not initialized.");
+      database.exec("BEGIN IMMEDIATE");
+      try {
+        database.prepare(`
+          DELETE FROM "ai_usage_documents" WHERE "usage_date" < ?
+        `).run(usageDate);
+        const insertedDocument = database.prepare(`
+          INSERT INTO "ai_usage_documents"
+            ("subject_key", "usage_date", "document_hash", "created_at")
+          VALUES (?, ?, ?, ?)
+          ON CONFLICT ("subject_key", "usage_date", "document_hash") DO NOTHING
+          RETURNING "document_hash"
+        `).get(subjectKey, usageDate, documentHash, Date.now());
+        if (!insertedDocument) {
+          database.exec("COMMIT");
+          return { status: "duplicate", count: 0 };
+        }
+
+        const row = database.prepare(`
+          INSERT INTO "ai_usage_daily"
+            ("subject_key", "usage_date", "metric", "request_count", "updated_at")
+          VALUES (?, ?, 'rewrite_documents', 1, ?)
+          ON CONFLICT ("subject_key", "usage_date", "metric") DO UPDATE
+            SET "request_count" = "request_count" + 1,
+                "updated_at" = excluded."updated_at"
+            WHERE "request_count" < ?
+          RETURNING "request_count"
+        `).get(subjectKey, usageDate, Date.now(), limit) as
+          | { request_count: number }
+          | undefined;
+        if (!row) {
+          database.exec("ROLLBACK");
+          return { status: "limit", count: limit };
+        }
+
+        database.exec("COMMIT");
+        return { status: "reserved", count: row.request_count };
+      } catch (error) {
+        try {
+          database.exec("ROLLBACK");
+        } catch {
+          // Preserve the original storage error if the transaction already ended.
+        }
+        throw error;
+      }
+    },
+
     async addOrder(order) {
       const [row] = await db.insert(orders).values(order).returning();
       return toOrderRow(row);

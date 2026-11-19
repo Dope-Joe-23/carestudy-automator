@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
 import {
   getStudyStore,
   type StudentChatMessage,
@@ -21,6 +21,12 @@ const MAX_CHAT_IMAGE_DATA_URL_LENGTH = 5_600_000;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 const MAX_TOTAL_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 const MAX_ATTACHMENT_COUNT = 3;
+const MAX_REQUEST_ATTACHMENTS = 1;
+const GUEST_TEXT_REQUESTS_PER_DAY = 3;
+const STUDENT_TEXT_REQUESTS_PER_DAY = 50;
+const STUDENT_DOCUMENT_REVIEWS_PER_DAY = 2;
+const STUDENT_REWRITE_DOCUMENTS_PER_DAY = 5;
+const STUDENT_IMAGE_GENERATIONS_PER_DAY = 2;
 const ALLOWED_EXTENSIONS = new Set([".pdf", ".docx", ".txt", ".md"]);
 const DOCUMENT_REVIEW_INTENT =
   /\b(?:review\w*|critiqu\w*|analy[sz]\w*|check\w*|correct\w*|fix\w*|rewrit\w*|revis\w*|edit\w*|improv\w*|polish\w*|feedback|consisten\w*|contradict\w*|gaps?|missing|align\w*|compar\w*|assess\w*|evaluat\w*|audit\w*|wrong|errors?|issues?|concerns?|highlight\w*)\b/i;
@@ -32,6 +38,103 @@ const CARE_STUDY_CADRE_PROFILES: StudentCareStudyCadreProfile[] = [
   { id: "public_health_nurse", name: "Public Health Nurse", abbreviation: "PHN", status: "in_development" },
   { id: "mental_health_nurse", name: "Mental Health Nurse", abbreviation: "MHN", status: "in_development" },
 ];
+
+class AiQuotaError extends Error {
+  constructor(
+    message: string,
+    readonly statusCode: number = 429,
+    readonly retryAfterSeconds?: number,
+  ) {
+    super(message);
+    this.name = "AiQuotaError";
+  }
+}
+
+function usageWindow(): { date: string; resetsAt: Date } {
+  const now = new Date();
+  return {
+    date: now.toISOString().slice(0, 10),
+    resetsAt: new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + 1,
+    )),
+  };
+}
+
+function aiUsageSubjectKey(
+  req: Request,
+  student: AuthedRequest["student"] | undefined,
+): string {
+  if (student) return `student:${student.id}`;
+  const ip = req.ip || req.socket.remoteAddress;
+  const secret = (
+    process.env.AI_USAGE_HMAC_KEY ||
+    process.env.GEMINI_API_KEY ||
+    process.env.ANTHROPIC_AUTH_TOKEN ||
+    process.env.ANTHROPIC_API_KEY ||
+    ""
+  ).trim();
+  if (!ip || !secret) {
+    throw new AiQuotaError(
+      "Guest AI usage limits are not configured. Please sign in or try again later.",
+      503,
+    );
+  }
+  return `guest:${createHmac("sha256", secret).update(ip).digest("hex")}`;
+}
+
+async function reserveDailyAiUsage(
+  store: ReturnType<typeof getStudyStore>,
+  subjectKey: string,
+  metric: string,
+  limit: number,
+  label: string,
+): Promise<void> {
+  const { date, resetsAt } = usageWindow();
+  const reservation = await store.reserveAiDailyUsage(subjectKey, date, metric, limit);
+  if (reservation.status === "limit") {
+    const retryAfterSeconds = Math.max(1, Math.ceil((resetsAt.getTime() - Date.now()) / 1000));
+    throw new AiQuotaError(
+      `Daily ${label} limit reached (${limit}/day). Resets at ${resetsAt.toISOString()} UTC.`,
+      429,
+      retryAfterSeconds,
+    );
+  }
+}
+
+async function reserveRewriteDocument(
+  store: ReturnType<typeof getStudyStore>,
+  subjectKey: string,
+  attachment: { content: string },
+): Promise<void> {
+  const { date, resetsAt } = usageWindow();
+  const documentHash = createHash("sha256")
+    .update(Buffer.from(attachment.content, "base64"))
+    .digest("hex");
+  const reservation = await store.reserveAiDocument(
+    subjectKey,
+    date,
+    documentHash,
+    STUDENT_REWRITE_DOCUMENTS_PER_DAY,
+  );
+  if (reservation.status === "duplicate") {
+    const retryAfterSeconds = Math.max(1, Math.ceil((resetsAt.getTime() - Date.now()) / 1000));
+    throw new AiQuotaError(
+      "This exact document was already used for correction or rewrite today. Try again after the daily reset.",
+      409,
+      retryAfterSeconds,
+    );
+  }
+  if (reservation.status === "limit") {
+    const retryAfterSeconds = Math.max(1, Math.ceil((resetsAt.getTime() - Date.now()) / 1000));
+    throw new AiQuotaError(
+      `Daily correction/rewrite document limit reached (${STUDENT_REWRITE_DOCUMENTS_PER_DAY}/day). Resets at ${resetsAt.toISOString()} UTC.`,
+      429,
+      retryAfterSeconds,
+    );
+  }
+}
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 type WebSource = { title: string; url: string; snippet: string; date: string };
@@ -263,7 +366,7 @@ function decodeAttachments(
   const rawAttachments = value === undefined ? legacyValue : value;
   if (rawAttachments === undefined || rawAttachments === null) return undefined;
   const items = Array.isArray(rawAttachments) ? rawAttachments : [rawAttachments];
-  if (items.length > MAX_ATTACHMENT_COUNT) return null;
+  if (items.length > MAX_REQUEST_ATTACHMENTS) return null;
 
   const attachments: { filename: string; content: string }[] = [];
   let totalBytes = 0;
@@ -357,8 +460,12 @@ router.post(
     const attachments = decodeAttachments(req.body?.attachments, req.body?.attachment);
     if (attachments === null) {
       res.status(422).json({
-        error: "Attach up to 3 PDF, DOCX, TXT, or Markdown files, no larger than 10 MB each or 20 MB combined.",
+        error: "Attach one PDF, DOCX, TXT, or Markdown file, no larger than 10 MB.",
       });
+      return;
+    }
+    if (!student && attachments?.length) {
+      res.status(401).json({ error: "Sign in to review attached documents." });
       return;
     }
     const savedAttachmentNames = chatMessages
@@ -374,9 +481,10 @@ router.post(
     }
 
     try {
-      const store = student ? getStudyStore() : null;
+      const store = getStudyStore();
+      const subjectKey = aiUsageSubjectKey(req, student);
       const existing = student && conversationId !== null
-        ? await store?.getStudentChat(conversationId, student.id)
+        ? await store.getStudentChat(conversationId, student.id)
         : null;
       if (conversationId !== null && !existing) {
         res.status(404).json({ error: "That conversation could not be found." });
@@ -399,6 +507,7 @@ router.post(
           return;
         }
         const workRequest = request as { type: "correction" | "rewrite"; scope: "chapters" };
+        await reserveRewriteDocument(store, subjectKey, attachments[0]);
         const result = await draftWorker.createStudentDocumentWork(
           message,
           attachments[0],
@@ -424,11 +533,11 @@ router.post(
           existing?.messages,
         );
         const saved = existing
-          ? await store?.updateStudentChat(existing.id, student.id, {
+          ? await store.updateStudentChat(existing.id, student.id, {
               title: chatTitle(updatedMessages),
               messages: updatedMessages,
             })
-          : await store?.addStudentChat({
+          : await store.addStudentChat({
               studentId: student.id,
               title: chatTitle(updatedMessages),
               messages: updatedMessages,
@@ -446,6 +555,23 @@ router.post(
         });
         return;
       }
+      if (attachments?.length) {
+        await reserveDailyAiUsage(
+          store,
+          subjectKey,
+          "document_review",
+          STUDENT_DOCUMENT_REVIEWS_PER_DAY,
+          "attached-document review",
+        );
+      } else {
+        await reserveDailyAiUsage(
+          store,
+          subjectKey,
+          student ? "student_text" : "guest_text",
+          student ? STUDENT_TEXT_REQUESTS_PER_DAY : GUEST_TEXT_REQUESTS_PER_DAY,
+          student ? "text chat request" : "guest text request",
+        );
+      }
       const webSearch = req.body?.webSearch === true;
       const webSources = webSearch ? await searchBrave(message) : [];
       const result = await draftWorker.chatWithStudent(
@@ -461,7 +587,7 @@ router.post(
       const references: DraftReference[] = Array.isArray(result.references)
         ? result.references
         : [];
-      if (!student || !store) {
+      if (!student) {
         res.json({ answer: result.answer, references });
         return;
       }
@@ -485,12 +611,23 @@ router.post(
       }
       res.json({ answer: result.answer, references, conversationId: saved.id });
     } catch (err) {
-      req.log?.error?.({ err, studentId: student?.id }, "student assistant failed");
+      if (!(err instanceof AiQuotaError)) {
+        req.log?.error?.({ err, studentId: student?.id }, "student assistant failed");
+      }
       const isSearchSetupError = err instanceof Error && err.message.includes("BRAVE_SEARCH_API_KEY");
       const attachmentTooLarge = err instanceof Error
         ? err.message.match(/ATTACHMENT_TOO_LARGE:\s*(.*)/)?.[1]?.trim()
         : undefined;
-      const status = attachmentTooLarge ? 413 : isSearchSetupError ? 503 : 502;
+      const status = err instanceof AiQuotaError
+        ? err.statusCode
+        : attachmentTooLarge
+          ? 413
+          : isSearchSetupError
+            ? 503
+            : 502;
+      if (err instanceof AiQuotaError && err.retryAfterSeconds) {
+        res.setHeader("Retry-After", String(err.retryAfterSeconds));
+      }
       res.status(status).json({
         error: attachmentTooLarge ?? (err instanceof Error ? err.message : "Nursuit could not answer right now."),
       });
@@ -895,8 +1032,8 @@ router.post("/student/assistant/image", optionalStudent, async (req, res): Promi
     return;
   }
   const student = (req as AuthedRequest).student;
-  if (!student && conversationId !== null) {
-    res.status(401).json({ error: "Sign in to open and continue saved conversations." });
+  if (!student) {
+    res.status(401).json({ error: "Sign in to generate images." });
     return;
   }
   const chatMessages = validateChatMessages(req.body?.messages);
@@ -905,14 +1042,22 @@ router.post("/student/assistant/image", optionalStudent, async (req, res): Promi
     return;
   }
   try {
-    const store = student ? getStudyStore() : null;
+    const store = getStudyStore();
+    const subjectKey = aiUsageSubjectKey(req, student);
     const existing = student && conversationId !== null
-      ? await store?.getStudentChat(conversationId, student.id)
+      ? await store.getStudentChat(conversationId, student.id)
       : null;
     if (conversationId !== null && !existing) {
       res.status(404).json({ error: "That conversation could not be found." });
       return;
     }
+    await reserveDailyAiUsage(
+      store,
+      subjectKey,
+      "image_generation",
+      STUDENT_IMAGE_GENERATIONS_PER_DAY,
+      "image generation",
+    );
     const image = await generateStudentAssistantImage(prompt);
     const imageDataUrl = `data:${image.mimeType};base64,${image.bytes.toString("base64")}`;
     const updatedMessages = mergeStoredImages(
@@ -926,13 +1071,6 @@ router.post("/student/assistant/image", optionalStudent, async (req, res): Promi
       ],
       existing?.messages,
     );
-    if (!student || !store) {
-      res.json({
-        answer: updatedMessages.at(-1)?.content,
-        imageDataUrl,
-      });
-      return;
-    }
     const saved = existing
       ? await store.updateStudentChat(existing.id, student.id, {
           title: chatTitle(updatedMessages),
@@ -953,9 +1091,15 @@ router.post("/student/assistant/image", optionalStudent, async (req, res): Promi
       imageDataUrl,
     });
   } catch (err) {
-    req.log?.error?.({ err, studentId: student?.id }, "student image generation failed");
+    if (!(err instanceof AiQuotaError)) {
+      req.log?.error?.({ err, studentId: student?.id }, "student image generation failed");
+    }
     const isSetupError = err instanceof Error && err.message.includes("CLOUDFLARE_API_TOKEN");
-    res.status(isSetupError ? 503 : 502).json({
+    const status = err instanceof AiQuotaError ? err.statusCode : isSetupError ? 503 : 502;
+    if (err instanceof AiQuotaError && err.retryAfterSeconds) {
+      res.setHeader("Retry-After", String(err.retryAfterSeconds));
+    }
+    res.status(status).json({
       error: err instanceof Error ? err.message : "Image generation failed.",
     });
   }

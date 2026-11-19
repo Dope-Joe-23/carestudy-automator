@@ -35,6 +35,8 @@ services:
     envVars:
       - key: PORT
         value: 5000
+      - key: TRUST_PROXY_HOPS
+        value: "1"
       - key: DB_DRIVER
         value: postgres
       - key: DATABASE_URL
@@ -62,6 +64,8 @@ services:
       - key: ANTHROPIC_MODEL
         value: openai/gpt-oss-20b:free
       - key: ANTHROPIC_FALLBACK_MODELS
+        sync: false
+      - key: AI_USAGE_HMAC_KEY
         sync: false
       # ── Admin credentials (set these in Render Dashboard) ──
       - key: ADMIN_USERNAME

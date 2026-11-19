@@ -72,3 +72,51 @@ describe("Student chat history", () => {
     assert.equal(await store.getStudentChat(chat.id, owner.id), null);
   });
 });
+
+describe("Daily AI usage quotas", () => {
+  it("atomically enforces per-subject daily request limits", async () => {
+    const subject = "student:quota-test";
+    const today = "2026-11-19";
+
+    assert.deepEqual(
+      await store.reserveAiDailyUsage(subject, today, "student_text", 2),
+      { status: "reserved", count: 1 },
+    );
+    assert.deepEqual(
+      await store.reserveAiDailyUsage(subject, today, "student_text", 2),
+      { status: "reserved", count: 2 },
+    );
+    assert.deepEqual(
+      await store.reserveAiDailyUsage(subject, today, "student_text", 2),
+      { status: "limit", count: 2 },
+    );
+    assert.deepEqual(
+      await store.reserveAiDailyUsage(subject, "2026-11-20", "student_text", 2),
+      { status: "reserved", count: 1 },
+    );
+  });
+
+  it("blocks duplicate rewrite documents and enforces the daily unique-document cap", async () => {
+    const subject = "student:rewrite-quota-test";
+    const today = "2026-11-19";
+
+    for (let index = 1; index <= 5; index += 1) {
+      assert.deepEqual(
+        await store.reserveAiDocument(subject, today, `hash-${index}`, 5),
+        { status: "reserved", count: index },
+      );
+    }
+    assert.deepEqual(
+      await store.reserveAiDocument(subject, today, "hash-1", 5),
+      { status: "duplicate", count: 0 },
+    );
+    assert.deepEqual(
+      await store.reserveAiDocument(subject, today, "hash-6", 5),
+      { status: "limit", count: 5 },
+    );
+    assert.deepEqual(
+      await store.reserveAiDocument(subject, "2026-11-20", "hash-1", 5),
+      { status: "reserved", count: 1 },
+    );
+  });
+});

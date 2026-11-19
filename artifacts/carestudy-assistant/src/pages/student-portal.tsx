@@ -1869,7 +1869,7 @@ function StudentAssistantChat() {
     const turn = messages[index];
     if (turn.role !== "user") return;
     setPrompt(turn.content);
-    setAttachments(turn.attachmentFiles ?? (turn.attachmentFile ? [turn.attachmentFile] : []));
+    setAttachments((turn.attachmentFiles ?? (turn.attachmentFile ? [turn.attachmentFile] : [])).slice(0, 1));
     setEditingIndex(index);
     setSourcesOpen(null);
   };
@@ -2576,33 +2576,22 @@ function StudentAssistantChat() {
         "relative size-8 shrink-0 cursor-pointer",
       )}
       aria-label="Attach file"
-      title={attachments.length ? `${attachments.length} file${attachments.length === 1 ? "" : "s"} attached` : "Attach up to 3 files"}
+      title={attachments.length ? `${attachments.length} file attached` : "Attach one file (up to 10 MB)"}
     >
       <Paperclip className="size-4" />
       <input
         type="file"
-        multiple
         accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
         className="sr-only"
         disabled={busy || imageMode}
         onChange={(event) => {
-          const selected = Array.from(event.target.files ?? []);
-          if (attachments.length + selected.length > 3) {
-            toast.error("Attach up to 3 files per message.");
-          }
-          const added = selected.slice(0, Math.max(0, 3 - attachments.length));
-          const uniqueAdded = added.filter((file) => !attachments.some(
-            (current) => current.name === file.name && current.size === file.size && current.lastModified === file.lastModified,
-          ));
-          const oversized = uniqueAdded.find((file) => file.size > 10 * 1024 * 1024);
-          const combinedSize = attachments.reduce((total, file) => total + file.size, 0)
-            + uniqueAdded.reduce((total, file) => total + file.size, 0);
-          if (oversized) {
-            toast.error(`${oversized.name} exceeds the 10 MB per-file limit.`);
-          } else if (combinedSize > 20 * 1024 * 1024) {
-            toast.error("The combined file size must not exceed 20 MB.");
-          } else if (uniqueAdded.length) {
-            setAttachments((current) => [...current, ...uniqueAdded]);
+          const file = event.target.files?.[0];
+          if (file && attachments.length) {
+            toast.error("Only one document may be attached to a message. Remove the current file first.");
+          } else if (file && file.size > 10 * 1024 * 1024) {
+            toast.error(`${file.name} exceeds the 10 MB per-file limit.`);
+          } else if (file) {
+            setAttachments([file]);
           }
           event.target.value = "";
         }}
@@ -2834,9 +2823,11 @@ function StudentAssistantChat() {
                         <Button type="button" variant="ghost" size="icon" className="size-8" aria-label="Copy answer" title="Copy answer" onClick={() => void copyText(turn.content)}>
                           <Copy className="size-4" />
                         </Button>
-                        <Button type="button" variant="ghost" size="icon" className="size-8" aria-label="Regenerate answer" title="Regenerate answer" onClick={() => retryAnswer(index)} disabled={busy}>
-                          <RotateCcw className="size-4" />
-                        </Button>
+                        {!turn.documentWork && (
+                          <Button type="button" variant="ghost" size="icon" className="size-8" aria-label="Regenerate answer" title="Regenerate answer" onClick={() => retryAnswer(index)} disabled={busy}>
+                            <RotateCcw className="size-4" />
+                          </Button>
+                        )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button type="button" variant="ghost" size="icon" className="size-8" aria-label="More answer options">
@@ -2847,9 +2838,11 @@ function StudentAssistantChat() {
                             <DropdownMenuItem onSelect={() => void copyText(turn.content)}>
                               <Copy className="size-4" /> Copy answer
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => retryAnswer(index)} disabled={busy}>
-                              <RotateCcw className="size-4" /> Regenerate answer
-                            </DropdownMenuItem>
+                            {!turn.documentWork && (
+                              <DropdownMenuItem onSelect={() => retryAnswer(index)} disabled={busy}>
+                                <RotateCcw className="size-4" /> Regenerate answer
+                              </DropdownMenuItem>
+                            )}
                             {turn.references && turn.references.length > 0 && (
                               <>
                                 <DropdownMenuSeparator />
