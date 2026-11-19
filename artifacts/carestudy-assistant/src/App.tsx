@@ -123,6 +123,8 @@ import {
   listLibrarySources,
   listStudyFiles,
   requestDraft,
+  resetStudioAiTargetUsage,
+  rotateUnsavedStudioProjectKey,
   requestStudyAssistant,
   requestChapter2Recommendations,
   requestPharmacologyRecommendations,
@@ -3387,7 +3389,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     setDocImportError(null);
     try {
       const { importStudyWithFields } = await import('@/lib/api');
-      const result = await importStudyWithFields(docImportText.trim());
+      const result = await importStudyWithFields(docImportText.trim(), currentStudyId);
       // Map the AI-returned chapters into the workspace.
       setChapters((previous) => {
         const next = previous.map((chapter) => ({ ...chapter }));
@@ -3786,6 +3788,32 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     setDraftError(null);
   };
 
+  const resetStudioAiTargets = async (targetIds: string[], label: string) => {
+    if (aiBusy) return;
+    if (!window.confirm(`Reset the AI attempt limit for ${label} in this study?`)) {
+      return;
+    }
+    try {
+      const resetCount = await resetStudioAiTargetUsage(currentStudyId, targetIds);
+      toast.success('AI limit reset', {
+        description: resetCount
+          ? `${label} can use AI up to 3 more times in this project.`
+          : `There were no recorded AI attempts for ${label} to reset.`,
+      });
+    } catch (error) {
+      toast.error('Could not reset the AI limit', {
+        description: error instanceof Error ? error.message : 'The Studio owner reset failed.',
+      });
+    }
+  };
+
+  const resetCurrentSectionAiLimit = () =>
+    resetStudioAiTargets([`section:${currentSection.id}`], `section ${currentSection.id}`);
+  const resetChapterIntroAiLimit = () =>
+    resetStudioAiTargets([`chapter-intro:${activeChapter}`], `Chapter ${activeChapter + 1} introduction`);
+  const resetStudyAssistantAiLimit = () =>
+    resetStudioAiTargets(['study-assistant'], 'the study assistant');
+
   const selectChapter = (index: number) => jumpTo(index, 0);
 
   const recommendChapter2 = async () => {
@@ -3803,7 +3831,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     setChapter2RecommendationBusy(true);
     try {
       const condition = studyFacts.patient.diagnosis;
-      const result = await requestChapter2Recommendations(chapter1Fields, condition);
+      const result = await requestChapter2Recommendations(chapter1Fields, condition, currentStudyId);
       setChapter2Recommendations(result);
       setChapter2RecommendationOpen(true);
     } catch (error) {
@@ -3924,7 +3952,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     }
     setPharmacologyBusy(true);
     try {
-      const result = await requestPharmacologyRecommendations(chapter1Fields);
+      const result = await requestPharmacologyRecommendations(chapter1Fields, currentStudyId);
       setPharmacologyRecommendations(result);
     } catch (error) {
       toast.error('Could not generate pharmacology recommendations', {
@@ -3968,7 +3996,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
       }
       setPlanningBusy(true);
       try {
-        const proposed = await requestCarePlanRecommendations(problems, [], 'No nursing diagnoses recorded yet — propose the most suitable NANDA-I diagnoses for these documented problems, then write the plan for each.');
+        const proposed = await requestCarePlanRecommendations(problems, [], 'No nursing diagnoses recorded yet — propose the most suitable NANDA-I diagnoses for these documented problems, then write the plan for each.', currentStudyId);
         const objectives = {
           longTerm: proposed.rows.map((row, index) => `${index + 1}. ${row.diagnosis}: by discharge or the agreed follow-up period, the objective (${row.objective.replace(/^Patient will /, '')}) will be sustained or exceeded.`).join('\n'),
           shortTerm: proposed.rows.map((row, index) => `${index + 1}. ${row.diagnosis}: ${row.objective}`).join('\n'),
@@ -4050,7 +4078,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
 
     setPlanningBusy(true);
     try {
-      const result = await requestCarePlanRecommendations(diagnosisList, drugs, patientContext);
+      const result = await requestCarePlanRecommendations(diagnosisList, drugs, patientContext, currentStudyId);
       // Objectives per diagnosis come from the engine's SMART builder; the
       // 3.1 objectives fields keep their four-part shape.
       const objectives = {
@@ -4113,12 +4141,14 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           visitInput.diagnoses,
           facts.assessment.evidenceText.slice(0, 2000),
           visitInput.discharge,
+          currentStudyId,
         ),
         requestCareSummarySkeleton(
           visitInput.patient,
           admission,
           facts.planning.carePlanRows,
           visitInput.drugs,
+          currentStudyId,
         ),
         // 4.3 skeleton is deterministic: purposes/education come from the
         // conventional visit sequence and the documented 4.2 education; the
@@ -4133,6 +4163,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           visitInput.socio,
           visitInput.visitRows,
           visitInput.admission,
+          currentStudyId,
         ),
       ]);
       setImplementationProposal({ careGiven: careSummary.careGiven, discharge, homeVisits });
@@ -4214,6 +4245,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           input.socio,
           input.visitRows,
           input.admission,
+          currentStudyId,
         );
         homeVisitEducationSuggestions = homeVisits.visits.map((visit) => visit.educationSuggestions);
         beginStagedPreview([
@@ -4458,6 +4490,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
         'section',
         currentStudyId,
         rowColumns,
+        `section:${targetSectionId}`,
       );
       updateSection(targetChapter, targetSection, {
         draft: result.draft,
@@ -4515,6 +4548,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
   const resetAll = () => {
     if (aiBusy) return;
     workspaceGeneration.current += 1;
+    rotateUnsavedStudioProjectKey();
     setSectionTab('draft');
     setCollectOpen(false);
     setChapters(makeChapters(cadreProfile));
@@ -4593,7 +4627,15 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
         chapter.blurb,
         ...chapter.sections.map((section) => `${section.id} ${section.heading} — ${section.blurb}`),
       ].join('\n');
-      const result = await requestDraft(heading, notes, false, 'chapter_intro', currentStudyId);
+      const result = await requestDraft(
+        heading,
+        notes,
+        false,
+        'chapter_intro',
+        currentStudyId,
+        [],
+        `chapter-intro:${targetChapter}`,
+      );
       updateChapterIntro(targetChapter, result.draft, result.references);
       // The intro's citations feed the whole-study verification — it's stale now.
       setVerifyAll(null);
@@ -4693,6 +4735,8 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
             false,
             'chapter_intro',
             currentStudyId,
+            [],
+            `chapter-intro:${targetChapterIndex}`,
           );
           updateChapterIntro(targetChapterIndex, result.draft, result.references);
           // The intro's citations feed the whole-study verification — it's stale now.
@@ -4728,6 +4772,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
             'section',
             currentStudyId,
             rowColumns,
+            `section:${section.id}`,
           );
           updateSection(targetChapterIndex, sectionIndex, {
             draft: result.draft,
@@ -5041,7 +5086,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     setAssistantBusy(true);
     setAssistantMessages((messages) => [...messages, { role: 'user', content: message }]);
     try {
-      const result = await requestStudyAssistant(buildStudyPayload(), message);
+      const result = await requestStudyAssistant(buildStudyPayload(), message, currentStudyId);
       setAssistantMessages((messages) => [
         ...messages,
         { role: 'assistant', content: result.answer, edits: result.edits },
@@ -5066,7 +5111,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     setAssistantBusy(true);
     setAssistantMessages((messages) => [...messages, { role: 'user', content: `Polish: ${sectionHeading}` }]);
     try {
-      const result = await requestStudyAssistant(buildStudyPayload(), prompt);
+      const result = await requestStudyAssistant(buildStudyPayload(), prompt, currentStudyId);
       setAssistantMessages((messages) => [
         ...messages,
         { role: 'assistant', content: result.answer, edits: result.edits },
@@ -5582,6 +5627,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
   const startNewStudy = (name: string | null = null) => {
     if (aiBusy) return;
     workspaceGeneration.current += 1;
+    rotateUnsavedStudioProjectKey();
     suppressDirty.current = true;
       setChapters(makeChapters(cadreProfile));
     setVerifyBySection({});
@@ -6150,6 +6196,19 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                     </>
                   )}
                 </Button>
+                {isAdmin && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void resetCurrentSectionAiLimit()}
+                    disabled={aiBusy}
+                    title="Reset this section's project AI attempt limit"
+                    className="h-9 gap-1.5"
+                  >
+                    <RotateCcw className="size-4" />
+                    Reset AI limit
+                  </Button>
+                )}
             </div>
 
             {/* Chapter navigation buttons */}
@@ -6257,6 +6316,18 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                         )}
                       </span>
                       <div className="flex shrink-0 items-center gap-1.5">
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 gap-1.5 text-muted-foreground"
+                            onClick={() => void resetChapterIntroAiLimit()}
+                            disabled={aiBusy}
+                            title="Reset the AI attempt limit for this introduction"
+                          >
+                            <RotateCcw className="size-3.5" /> Reset limit
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -7695,6 +7766,23 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                   </>
                 )}
               </Button>
+              {isAdmin && docImportText.trim() && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    void resetStudioAiTargets(
+                      [`import:${docImportText.trim()}`],
+                      'this imported document',
+                    )
+                  }
+                  disabled={docImportBusy}
+                  title="Reset the AI attempt limit for this document"
+                  className="gap-2"
+                >
+                  <RotateCcw className="size-4" /> Reset AI limit
+                </Button>
+              )}
             </div>
             {docImportError && (
               <p className="flex items-start gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs leading-relaxed text-destructive">
@@ -8522,6 +8610,18 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                       Reviews the complete work currently on screen.
                     </p>
                   </div>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 px-2 text-[11px] text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground"
+                      onClick={() => void resetStudyAssistantAiLimit()}
+                      disabled={assistantBusy}
+                      title="Reset the AI attempt limit for the study assistant"
+                    >
+                      <RotateCcw className="size-3" /> Reset limit
+                    </Button>
+                  )}
                   <Button variant="ghost" size="icon" className="size-7 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" onClick={() => setAssistantOpen(false)} aria-label="Close study assistant">
                     <X className="size-4" />
                   </Button>

@@ -213,6 +213,20 @@ These are request-count limits, not exact token or dollar budgets. Keep provider
 spending limits enabled as a second safeguard; per-user provider-token accounting
 is not currently available.
 
+### Studio AI usage limits
+
+Each section or document target can use AI up to 3 times per study project.
+This project-scoped limit does not reset daily and is shared by Studio users.
+The Studio owner can reset section, chapter-introduction, study-assistant, and
+document-import counters from their respective workspaces.
+There is no overall daily Studio request cap; instead, each admin is limited to
+2 concurrent AI requests and 10 requests per minute. Attempts are reserved
+before generation, so failed model attempts count too.
+
+These are request limits, not exact token or dollar budgets. Set provider-side
+spending limits and alerts as the final cost backstop, especially if multiple
+API server instances are deployed.
+
 ### Frontend (Vercel)
 
 | Variable | Required | Default | Description |

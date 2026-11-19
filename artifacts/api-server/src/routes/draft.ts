@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { draftWorker } from "../lib/draftWorker";
+import { reserveStudioAiUsage } from "../lib/studioAiQuota";
 
 const router: IRouter = Router();
 
@@ -26,6 +27,17 @@ router.post("/sections/draft", async (req, res) => {
   }
 
   try {
+    const rawTargetId = req.body?.targetId;
+    const targetId = typeof rawTargetId === "string" && rawTargetId.trim()
+      ? rawTargetId.trim()
+      : `${kind}:${heading}`;
+    if (!await reserveStudioAiUsage(
+      req,
+      res,
+      targetId,
+      { heading, notes, tabular, rowColumns },
+      studyId,
+    )) return;
     const result = await draftWorker.draft(heading, notes, tabular, kind, studyId, rowColumns);
     res.json(result);
   } catch (err) {

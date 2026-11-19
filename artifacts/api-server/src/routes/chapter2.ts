@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request } from "express";
 import {
   draftWorker,
   type Chapter2Recommendations,
@@ -8,8 +8,14 @@ import {
   type CareSummaryRecommendations,
   type HomeVisitRecommendations,
 } from "../lib/draftWorker";
+import { reserveStudioAiUsage } from "../lib/studioAiQuota";
 
 const router: IRouter = Router();
+
+function getStudyId(req: Request): number | null {
+  const rawStudyId = req.body?.studyId;
+  return Number.isSafeInteger(rawStudyId) && rawStudyId > 0 ? rawStudyId as number : null;
+}
 
 function collectChapter1Fields(rawFields: unknown): Record<string, string> | null {
   if (!rawFields || typeof rawFields !== "object" || Array.isArray(rawFields)) return null;
@@ -50,6 +56,13 @@ router.post("/chapter2/recommendations", async (req, res) => {
   }
 
   try {
+    if (!await reserveStudioAiUsage(
+      req,
+      res,
+      ["section:2.1", "section:2.2", "section:2.3", "section:2.4", "section:2.5"],
+      { chapter1Fields, condition },
+      getStudyId(req),
+    )) return;
     const recommendations: Chapter2Recommendations = await draftWorker.recommendChapter2(
       chapter1Fields,
       condition,
@@ -81,6 +94,13 @@ router.post("/chapter3/care-plan", async (req, res) => {
   const patientContext = typeof req.body?.patientContext === "string" ? req.body.patientContext : "";
 
   try {
+    if (!await reserveStudioAiUsage(
+      req,
+      res,
+      ["section:3.1", "section:3.2"],
+      { diagnoses: rawDiagnoses, drugs, patientContext },
+      getStudyId(req),
+    )) return;
     const carePlan: CarePlanRecommendations = await draftWorker.recommendCarePlan(
       rawDiagnoses.map((item: string) => item.trim()),
       drugs,
@@ -110,6 +130,13 @@ router.post("/chapter4/discharge", async (req, res) => {
   const discharge = collectStringRecord(req.body?.discharge);
 
   try {
+    if (!await reserveStudioAiUsage(
+      req,
+      res,
+      "section:4.2",
+      { patient, drugs, diagnoses, patientContext, discharge },
+      getStudyId(req),
+    )) return;
     const result: DischargeRecommendations = await draftWorker.recommendDischarge(
       patient,
       drugs,
@@ -143,6 +170,13 @@ router.post("/chapter4/care-summary", async (req, res) => {
   const drugs = collectStringList(req.body?.drugs);
 
   try {
+    if (!await reserveStudioAiUsage(
+      req,
+      res,
+      "section:4.1",
+      { patient, admission, carePlanRows, drugs },
+      getStudyId(req),
+    )) return;
     const careSummary: CareSummaryRecommendations = await draftWorker.careSummarySkeleton(
       patient,
       admission,
@@ -180,6 +214,13 @@ router.post("/chapter4/home-visits", async (req, res) => {
     : [];
 
   try {
+    if (!await reserveStudioAiUsage(
+      req,
+      res,
+      "section:4.3",
+      { patient, discharge, socio, admission, drugs, diagnoses, visitRows },
+      getStudyId(req),
+    )) return;
     const homeVisits: HomeVisitRecommendations = await draftWorker.homeVisitSkeleton(
       patient,
       drugs,
@@ -207,6 +248,13 @@ router.post("/chapter2/pharmacology", async (req, res) => {
   }
 
   try {
+    if (!await reserveStudioAiUsage(
+      req,
+      res,
+      "section:2.2",
+      { chapter1Fields },
+      getStudyId(req),
+    )) return;
     const pharmacology: PharmacologyRecommendations = await draftWorker.recommendPharmacology(
       chapter1Fields,
     );

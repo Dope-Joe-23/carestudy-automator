@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { draftWorker } from "../lib/draftWorker";
+import { reserveStudioAiUsageForOptionalAdmin } from "../lib/studioAiQuota";
 
 const router: IRouter = Router();
 const MAX_TEXT_BYTES = 180_000;
@@ -23,6 +24,17 @@ router.post("/import-study", async (req, res) => {
   }
 
   try {
+    const rawStudyId = req.body?.studyId;
+    const studyId = Number.isSafeInteger(rawStudyId) && rawStudyId > 0
+      ? rawStudyId as number
+      : null;
+    if (!await reserveStudioAiUsageForOptionalAdmin(
+      req,
+      res,
+      `import:${text}`,
+      { text },
+      studyId,
+    )) return;
     const result = await draftWorker.importStudy(text);
     res.json(result);
   } catch (err) {
@@ -53,6 +65,17 @@ router.post("/import-study-fields", async (req, res) => {
   }
 
   try {
+    const rawStudyId = req.body?.studyId;
+    const studyId = Number.isSafeInteger(rawStudyId) && rawStudyId > 0
+      ? rawStudyId as number
+      : null;
+    if (!await reserveStudioAiUsageForOptionalAdmin(
+      req,
+      res,
+      `import:${text}`,
+      { text },
+      studyId,
+    )) return;
     const result = await draftWorker.importStudyWithFields(text);
     res.json(result);
   } catch (err) {

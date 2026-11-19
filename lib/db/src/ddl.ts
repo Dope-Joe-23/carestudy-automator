@@ -123,6 +123,14 @@ CREATE TABLE IF NOT EXISTS "ai_usage_daily" (
   PRIMARY KEY ("subject_key", "usage_date", "metric")
 );
 
+CREATE TABLE IF NOT EXISTS "ai_usage_project" (
+  "project_key" text NOT NULL,
+  "target_key" text NOT NULL,
+  "request_count" integer NOT NULL,
+  "updated_at" integer NOT NULL,
+  PRIMARY KEY ("project_key", "target_key")
+);
+
 CREATE TABLE IF NOT EXISTS "ai_usage_documents" (
   "subject_key" text NOT NULL,
   "usage_date" text NOT NULL,

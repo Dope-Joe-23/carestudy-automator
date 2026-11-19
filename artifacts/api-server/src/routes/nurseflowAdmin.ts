@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { draftWorker } from "../lib/draftWorker";
+import { reserveStudioAiUsage } from "../lib/studioAiQuota";
 import { detectUploadType } from "../lib/uploads";
 import {
   isNurseFlowCategory,
@@ -168,6 +169,12 @@ nurseFlowAdminRouter.post("/nurseflow/questions/extract", async (req: Request, r
   }
   const category = normalizeNurseFlowCategory(requestedCategory);
   try {
+    if (!await reserveStudioAiUsage(
+      req,
+      res,
+      "nurseflow:question-extraction",
+      { content: doc.buffer.toString("base64") },
+    )) return;
     const result = await draftWorker.documentQuestions({
       kind: doc.kind,
       content: doc.buffer.toString("base64"),

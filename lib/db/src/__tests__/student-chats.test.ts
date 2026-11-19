@@ -96,6 +96,24 @@ describe("Daily AI usage quotas", () => {
     );
   });
 
+  it("enforces project-scoped AI attempt limits and supports owner resets", async () => {
+    const project = "study:quota-test";
+    const section = "section:2.1";
+
+    assert.deepEqual(await store.reserveAiProjectUsage(project, [section], 3), { status: "reserved", count: 1 });
+    assert.deepEqual(await store.reserveAiProjectUsage(project, [section], 3), { status: "reserved", count: 2 });
+    assert.deepEqual(await store.reserveAiProjectUsage(project, [section], 3), { status: "reserved", count: 3 });
+    assert.deepEqual(await store.reserveAiProjectUsage(project, [section], 3), { status: "limit", count: 3 });
+    assert.deepEqual(await store.reserveAiProjectUsage(project, ["section:2.2"], 3), { status: "reserved", count: 1 });
+    assert.deepEqual(
+      await store.reserveAiProjectUsage(project, ["section:2.2", section], 3),
+      { status: "limit", count: 3 },
+    );
+    assert.deepEqual(await store.reserveAiProjectUsage(project, ["section:2.2"], 3), { status: "reserved", count: 2 });
+    assert.equal(await store.resetAiProjectUsage(project, [section]), 1);
+    assert.deepEqual(await store.reserveAiProjectUsage(project, [section], 3), { status: "reserved", count: 1 });
+  });
+
   it("blocks duplicate rewrite documents and enforces the daily unique-document cap", async () => {
     const subject = "student:rewrite-quota-test";
     const today = "2026-11-19";

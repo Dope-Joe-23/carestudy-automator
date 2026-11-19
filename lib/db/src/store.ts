@@ -235,6 +235,11 @@ export type AiUsageReservation = {
   count: number;
 };
 
+export type AiProjectUsageReservation = {
+  status: "reserved" | "limit";
+  count: number;
+};
+
 /** "submitted" | "in_production" | "ready" | "cancelled". */
 export type OrderStatus = "submitted" | "in_production" | "ready" | "cancelled";
 
@@ -481,6 +486,14 @@ export interface StudyStore {
     metric: string,
     limit: number,
   ): Promise<AiUsageReservation>;
+  /** Atomically consume one per-target AI attempt for a study project. */
+  reserveAiProjectUsage(
+    projectKey: string,
+    targetKeys: string[],
+    limit: number,
+  ): Promise<AiProjectUsageReservation>;
+  /** Clear a project target's AI attempt counters for an owner-initiated reset. */
+  resetAiProjectUsage(projectKey: string, targetKeys: string[]): Promise<number>;
   /** Atomically record one unique document and consume its daily allowance. */
   reserveAiDocument(
     subjectKey: string,

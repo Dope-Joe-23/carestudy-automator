@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { draftWorker } from "../lib/draftWorker";
+import { reserveStudioAiUsage } from "../lib/studioAiQuota";
 
 const router: IRouter = Router();
 const MAX_STUDY_BYTES = 180_000;
@@ -27,6 +28,17 @@ router.post("/study-assistant", async (req, res) => {
   }
 
   try {
+    const rawStudyId = req.body?.studyId;
+    const studyId = Number.isSafeInteger(rawStudyId) && rawStudyId > 0
+      ? rawStudyId as number
+      : null;
+    if (!await reserveStudioAiUsage(
+      req,
+      res,
+      "study-assistant",
+      { study, message },
+      studyId,
+    )) return;
     const result = await draftWorker.assistStudy(study, message);
     res.json(result);
   } catch (err) {

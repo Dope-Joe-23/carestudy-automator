@@ -16,6 +16,33 @@ const REQUEST_TIMEOUT_MS = 320_000;
 import { getAdminToken, notifyAdminUnauthorized } from "./adminAuth";
 import { API_URL } from "./apiBase";
 
+const UNSAVED_STUDIO_PROJECT_KEY = "carestudy-studio:unsaved-ai-project";
+let volatileStudioProjectKey: string | null = null;
+
+function getStudioProjectKey(studyId: number | null): string | null {
+  if (studyId !== null) return null;
+  try {
+    const stored = window.localStorage.getItem(UNSAVED_STUDIO_PROJECT_KEY);
+    if (stored) return stored;
+    const created = crypto.randomUUID();
+    window.localStorage.setItem(UNSAVED_STUDIO_PROJECT_KEY, created);
+    return created;
+  } catch {
+    volatileStudioProjectKey ??= crypto.randomUUID();
+    return volatileStudioProjectKey;
+  }
+}
+
+export function rotateUnsavedStudioProjectKey(): void {
+  const projectKey = crypto.randomUUID();
+  volatileStudioProjectKey = projectKey;
+  try {
+    window.localStorage.setItem(UNSAVED_STUDIO_PROJECT_KEY, projectKey);
+  } catch {
+    volatileStudioProjectKey = projectKey;
+  }
+}
+
 /** JSON headers with the studio admin's bearer token when signed in. */
 function apiHeaders(): Record<string, string> {
   const token = getAdminToken();
@@ -28,6 +55,31 @@ function apiHeaders(): Record<string, string> {
 /** Surface a 401 as a session-expiry signal so the studio shows the login screen. */
 function signalIfUnauthorized(response: Response): void {
   if (response.status === 401) notifyAdminUnauthorized();
+}
+
+export async function resetStudioAiTargetUsage(
+  studyId: number | null,
+  targetIds: string[],
+): Promise<number> {
+  const response = await fetch(`${API_URL}/studio/ai-usage/reset`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({
+      studyId,
+      studioProjectKey: getStudioProjectKey(studyId),
+      targetIds,
+    }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `Could not reset AI attempt limits (${response.status}).`);
+  }
+  const body = (await response.json()) as { resetCount?: number };
+  if (typeof body.resetCount !== "number") {
+    throw new Error("The AI limit reset response was invalid.");
+  }
+  return body.resetCount;
 }
 
 /** A citable source a draft was grounded on (from the reference library). */
@@ -56,6 +108,7 @@ export async function requestDraft(
   kind: "section" | "chapter_intro" = "section",
   studyId: number | null = null,
   rowColumns: string[] = [],
+  targetId: string | null = null,
 ): Promise<{ draft: string; references: DraftReference[]; wordCount?: DraftWordCount }> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -64,7 +117,16 @@ export async function requestDraft(
     const response = await fetch(`${API_URL}/sections/draft`, {
       method: "POST",
       headers: apiHeaders(),
-      body: JSON.stringify({ heading, notes, tabular, kind, studyId, rowColumns }),
+      body: JSON.stringify({
+        heading,
+        notes,
+        tabular,
+        kind,
+        studyId,
+        rowColumns,
+        targetId,
+        studioProjectKey: getStudioProjectKey(studyId),
+      }),
       signal: controller.signal,
     });
 
@@ -133,6 +195,7 @@ export type StudyAssistantResponse = {
 export async function requestStudyAssistant(
   study: StoredStudy,
   message: string,
+  studyId: number | null = null,
 ): Promise<StudyAssistantResponse> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -140,7 +203,7 @@ export async function requestStudyAssistant(
     const response = await fetch(`${API_URL}/study-assistant`, {
       method: "POST",
       headers: apiHeaders(),
-      body: JSON.stringify({ study, message }),
+      body: JSON.stringify({ study, message, studyId, studioProjectKey: getStudioProjectKey(studyId) }),
       signal: controller.signal,
     });
     if (!response.ok) {
@@ -208,11 +271,20 @@ export async function requestDischargeRecommendations(
   diagnoses: string[],
   patientContext: string,
   discharge: Record<string, string> = {},
+  studyId: number | null = null,
 ): Promise<DischargeRecommendations> {
   const response = await fetch(`${API_URL}/chapter4/discharge`, {
     method: "POST",
     headers: apiHeaders(),
-    body: JSON.stringify({ patient, drugs, diagnoses, patientContext, discharge }),
+    body: JSON.stringify({
+      patient,
+      drugs,
+      diagnoses,
+      patientContext,
+      discharge,
+      studyId,
+      studioProjectKey: getStudioProjectKey(studyId),
+    }),
   });
   if (!response.ok) {
     signalIfUnauthorized(response);
@@ -251,11 +323,19 @@ export async function requestCareSummarySkeleton(
   admission: Record<string, string>,
   carePlanRows: string[][],
   drugs: string[],
+  studyId: number | null = null,
 ): Promise<CareSummaryRecommendations> {
   const response = await fetch(`${API_URL}/chapter4/care-summary`, {
     method: "POST",
     headers: apiHeaders(),
-    body: JSON.stringify({ patient, admission, carePlanRows, drugs }),
+    body: JSON.stringify({
+      patient,
+      admission,
+      carePlanRows,
+      drugs,
+      studyId,
+      studioProjectKey: getStudioProjectKey(studyId),
+    }),
   });
   if (!response.ok) {
     signalIfUnauthorized(response);
@@ -276,11 +356,22 @@ export async function requestHomeVisitSkeleton(
   socio: Record<string, string>,
   visitRows: string[][],
   admission: Record<string, string> = {},
+  studyId: number | null = null,
 ): Promise<HomeVisitRecommendations> {
   const response = await fetch(`${API_URL}/chapter4/home-visits`, {
     method: "POST",
     headers: apiHeaders(),
-    body: JSON.stringify({ patient, drugs, diagnoses, discharge, socio, visitRows, admission }),
+    body: JSON.stringify({
+      patient,
+      drugs,
+      diagnoses,
+      discharge,
+      socio,
+      visitRows,
+      admission,
+      studyId,
+      studioProjectKey: getStudioProjectKey(studyId),
+    }),
   });
   if (!response.ok) {
     signalIfUnauthorized(response);
@@ -297,11 +388,12 @@ export async function requestCarePlanRecommendations(
   diagnoses: string[],
   drugs: string[],
   patientContext: string,
+  studyId: number | null = null,
 ): Promise<CarePlanRecommendations> {
   const response = await fetch(`${API_URL}/chapter3/care-plan`, {
     method: "POST",
     headers: apiHeaders(),
-    body: JSON.stringify({ diagnoses, drugs, patientContext }),
+    body: JSON.stringify({ diagnoses, drugs, patientContext, studyId, studioProjectKey: getStudioProjectKey(studyId) }),
   });
   if (!response.ok) {
     signalIfUnauthorized(response);
@@ -317,11 +409,17 @@ export async function requestCarePlanRecommendations(
 export async function requestChapter2Recommendations(
   chapter1Fields: Record<string, string>,
   condition: string,
+  studyId: number | null = null,
 ): Promise<Chapter2Recommendations> {
   const response = await fetch(`${API_URL}/chapter2/recommendations`, {
     method: "POST",
     headers: apiHeaders(),
-    body: JSON.stringify({ chapter1Fields, condition }),
+    body: JSON.stringify({
+      chapter1Fields,
+      condition,
+      studyId,
+      studioProjectKey: getStudioProjectKey(studyId),
+    }),
   });
   if (!response.ok) {
     signalIfUnauthorized(response);
@@ -336,11 +434,16 @@ export async function requestChapter2Recommendations(
 /** Recommend section 2.2 pharmacology table rows from the collected Chapter 1 drug data. */
 export async function requestPharmacologyRecommendations(
   chapter1Fields: Record<string, string>,
+  studyId: number | null = null,
 ): Promise<PharmacologyRecommendations> {
   const response = await fetch(`${API_URL}/chapter2/pharmacology`, {
     method: "POST",
     headers: apiHeaders(),
-    body: JSON.stringify({ chapter1Fields }),
+    body: JSON.stringify({
+      chapter1Fields,
+      studyId,
+      studioProjectKey: getStudioProjectKey(studyId),
+    }),
   });
   if (!response.ok) {
     signalIfUnauthorized(response);
@@ -366,11 +469,14 @@ export type ImportedTitle = {
 export type ImportStudyResponse = { title: ImportedTitle; chapters: ImportedChapter[] };
 
 /** Parse a pasted/uploaded care study document into structured chapters. */
-export async function importStudyDocument(text: string): Promise<ImportStudyResponse> {
+export async function importStudyDocument(
+  text: string,
+  studyId: number | null = null,
+): Promise<ImportStudyResponse> {
   const response = await fetch(`${API_URL}/import-study`, {
     method: "POST",
     headers: apiHeaders(),
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, studyId, studioProjectKey: getStudioProjectKey(studyId) }),
   });
   if (!response.ok) {
     signalIfUnauthorized(response);
@@ -411,11 +517,14 @@ export type ImportStudyFieldsResponse = {
 };
 
 /** Parse a care study document with field extraction — returns sectionIds, extracted fields, and draft text. */
-export async function importStudyWithFields(text: string): Promise<ImportStudyFieldsResponse> {
+export async function importStudyWithFields(
+  text: string,
+  studyId: number | null = null,
+): Promise<ImportStudyFieldsResponse> {
   const response = await fetch(`${API_URL}/import-study-fields`, {
     method: "POST",
     headers: apiHeaders(),
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, studyId, studioProjectKey: getStudioProjectKey(studyId) }),
   });
   if (!response.ok) {
     signalIfUnauthorized(response);

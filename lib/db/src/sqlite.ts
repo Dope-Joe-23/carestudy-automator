@@ -690,6 +690,62 @@ export function createSqliteStore(): StudyStore {
       return { status: "limit", count: current?.request_count ?? limit };
     },
 
+    async reserveAiProjectUsage(projectKey, targetKeys, limit) {
+      const database = sqlite;
+      if (!database) throw new Error("SQLite is not initialized.");
+      const uniqueTargetKeys = [...new Set(targetKeys)];
+      if (uniqueTargetKeys.length === 0) throw new Error("At least one AI target is required.");
+      database.exec("BEGIN IMMEDIATE");
+      try {
+        let count = 0;
+        for (const [index, targetKey] of uniqueTargetKeys.entries()) {
+          const row = database.prepare(`
+            INSERT INTO "ai_usage_project"
+              ("project_key", "target_key", "request_count", "updated_at")
+            VALUES (?, ?, 1, ?)
+            ON CONFLICT ("project_key", "target_key") DO UPDATE
+              SET "request_count" = "request_count" + 1,
+                  "updated_at" = excluded."updated_at"
+              WHERE "request_count" < ?
+            RETURNING "request_count"
+          `).get(projectKey, targetKey, Date.now(), limit) as
+            | { request_count: number }
+            | undefined;
+          if (!row) {
+            const current = database.prepare(`
+              SELECT "request_count" FROM "ai_usage_project"
+              WHERE "project_key" = ? AND "target_key" = ?
+            `).get(projectKey, targetKey) as { request_count: number } | undefined;
+            database.exec("ROLLBACK");
+            return { status: "limit", count: current?.request_count ?? limit };
+          }
+          if (index === 0) count = row.request_count;
+        }
+        database.exec("COMMIT");
+        return { status: "reserved", count };
+      } catch (error) {
+        try {
+          database.exec("ROLLBACK");
+        } catch {
+          // Preserve the original storage error if the transaction already ended.
+        }
+        throw error;
+      }
+    },
+
+    async resetAiProjectUsage(projectKey, targetKeys) {
+      const database = sqlite;
+      if (!database) throw new Error("SQLite is not initialized.");
+      const uniqueTargetKeys = [...new Set(targetKeys)];
+      if (uniqueTargetKeys.length === 0) return 0;
+      const placeholders = uniqueTargetKeys.map(() => "?").join(", ");
+      const result = database.prepare(`
+        DELETE FROM "ai_usage_project"
+        WHERE "project_key" = ? AND "target_key" IN (${placeholders})
+      `).run(projectKey, ...uniqueTargetKeys);
+      return Number(result.changes);
+    },
+
     async reserveAiDocument(subjectKey, usageDate, documentHash, limit) {
       const database = sqlite;
       if (!database) throw new Error("SQLite is not initialized.");

@@ -143,6 +143,13 @@ CREATE TABLE IF NOT EXISTS "ai_usage_daily" (
   "updated_at" timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY ("subject_key", "usage_date", "metric")
 );
+CREATE TABLE IF NOT EXISTS "ai_usage_project" (
+  "project_key" text NOT NULL,
+  "target_key" text NOT NULL,
+  "request_count" integer NOT NULL,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY ("project_key", "target_key")
+);
 CREATE TABLE IF NOT EXISTS "ai_usage_documents" (
   "subject_key" text NOT NULL,
   "usage_date" text NOT NULL,
@@ -832,6 +839,60 @@ export function createPostgresStore(): StudyStore {
         [subjectKey, usageDate, metric],
       );
       return { status: "limit", count: Number(current.rows[0]?.request_count ?? limit) };
+    },
+
+    async reserveAiProjectUsage(projectKey, targetKeys, limit) {
+      const uniqueTargetKeys = [...new Set(targetKeys)];
+      if (uniqueTargetKeys.length === 0) throw new Error("At least one AI target is required.");
+      const client = await pool!.connect();
+      try {
+        await client.query("BEGIN");
+        let count = 0;
+        for (const [index, targetKey] of uniqueTargetKeys.entries()) {
+          const result = await client.query<{ request_count: number }>(
+            `INSERT INTO "ai_usage_project"
+              ("project_key", "target_key", "request_count", "updated_at")
+            VALUES ($1, $2, 1, now())
+            ON CONFLICT ("project_key", "target_key") DO UPDATE
+              SET "request_count" = "ai_usage_project"."request_count" + 1,
+                  "updated_at" = now()
+              WHERE "ai_usage_project"."request_count" < $3
+            RETURNING "request_count"`,
+            [projectKey, targetKey, limit],
+          );
+          if (!result.rows[0]) {
+            const current = await client.query<{ request_count: number }>(
+              `SELECT "request_count" FROM "ai_usage_project"
+              WHERE "project_key" = $1 AND "target_key" = $2`,
+              [projectKey, targetKey],
+            );
+            await client.query("ROLLBACK");
+            return { status: "limit", count: Number(current.rows[0]?.request_count ?? limit) };
+          }
+          if (index === 0) count = Number(result.rows[0].request_count);
+        }
+        await client.query("COMMIT");
+        return { status: "reserved", count };
+      } catch (error) {
+        await client.query("ROLLBACK").catch(() => {
+          // Preserve the original error if the transaction already ended.
+        });
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+
+    async resetAiProjectUsage(projectKey, targetKeys) {
+      const uniqueTargetKeys = [...new Set(targetKeys)];
+      if (uniqueTargetKeys.length === 0) return 0;
+      const result = await pool!.query(
+        `DELETE FROM "ai_usage_project"
+        WHERE "project_key" = $1 AND "target_key" = ANY($2::text[])
+        RETURNING "target_key"`,
+        [projectKey, uniqueTargetKeys],
+      );
+      return result.rowCount ?? result.rows.length;
     },
 
     async reserveAiDocument(subjectKey, usageDate, documentHash, limit) {

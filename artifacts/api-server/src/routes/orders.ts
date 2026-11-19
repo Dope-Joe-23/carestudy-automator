@@ -43,6 +43,7 @@ import {
 } from "../lib/studentAuth";
 import { type AuthedAdminRequest } from "../lib/adminAuth";
 import { draftWorker, type VivaQuestion } from "../lib/draftWorker";
+import { reserveStudioAiUsage } from "../lib/studioAiQuota";
 import { buildDocx } from "./export";
 
 // Paystack configuration — the secret key lives in the API server's env,
@@ -1214,6 +1215,12 @@ studioRouter.post(
     let importedTitle: { patientName?: string; diagnosis?: string; studentName?: string; indexNumber?: string; collegeName?: string; collegeLocation?: string; year?: string } | null = null;
     let importCoverage: ImportCoverage | null = null;
     if (order.correctionText && order.correctionScope) {
+      if (!await reserveStudioAiUsage(
+        req,
+        res,
+        `order-correction:${id}`,
+        { orderId: id },
+      )) return;
       try {
         const imported = await draftWorker.importStudyWithFields(order.correctionText);
         importedTitle = imported.title;
