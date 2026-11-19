@@ -131,6 +131,22 @@ CREATE TABLE IF NOT EXISTS "ai_usage_project" (
   PRIMARY KEY ("project_key", "target_key")
 );
 
+CREATE TABLE IF NOT EXISTS "staff_preview_export_access" (
+  "admin_id" integer PRIMARY KEY NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+  "free_export_used" integer NOT NULL DEFAULT 0,
+  "paid_credits" integer NOT NULL DEFAULT 0,
+  "updated_at" integer NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "staff_preview_export_payments" (
+  "reference" text PRIMARY KEY NOT NULL,
+  "admin_id" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+  "amount_pesewas" integer NOT NULL,
+  "status" text NOT NULL,
+  "created_at" integer NOT NULL,
+  "verified_at" integer
+);
+
 CREATE TABLE IF NOT EXISTS "ai_usage_documents" (
   "subject_key" text NOT NULL,
   "usage_date" text NOT NULL,

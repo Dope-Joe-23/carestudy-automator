@@ -119,6 +119,7 @@ import {
   deleteStudy,
   deleteStudyFile,
   exportStudyDocx,
+  initializeStaffPreviewExportPayment,
   getStudy,
   listLibrarySources,
   listStudyFiles,
@@ -126,12 +127,14 @@ import {
   resetStudioAiTargetUsage,
   rotateUnsavedStudioProjectKey,
   requestStudyAssistant,
+  StaffPreviewExportPaymentRequiredError,
   requestChapter2Recommendations,
   requestPharmacologyRecommendations,
   requestCarePlanRecommendations,
   requestDischargeRecommendations,
   requestCareSummarySkeleton,
   requestHomeVisitSkeleton,
+  verifyStaffPreviewExportPayment,
   type Chapter2Recommendations,
   type PharmacologyRecommendations,
   type CarePlanRecommendations,
@@ -231,6 +234,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudiesPanel } from '@/components/studies-panel';
 import { useAdmin, getInitials, getDisplayName, getRoleLabel } from '@/lib/adminContext';
+import { getPaystackKey, payWithPaystack } from '@/lib/paystack';
 import { StudentInviteDialog } from '@/components/student-invite-dialog';
 import { deriveStudyFacts, validateStudyFacts } from '@/lib/studyFacts';
 import {
@@ -4977,7 +4981,31 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
       }
     }
     try {
-      const blob = await exportStudyDocx(buildExportPayload(scope));
+      const payload = buildExportPayload(scope);
+      let blob: Blob;
+      try {
+        blob = await exportStudyDocx(payload);
+      } catch (error) {
+        if (!(error instanceof StaffPreviewExportPaymentRequiredError) || admin?.role !== 'staff') {
+          throw error;
+        }
+        toast('Your free staff export has been used', {
+          description: `Pay GH₵${error.amountGhs} to download this Word document.`,
+        });
+        const key = getPaystackKey();
+        if (!key) throw new Error('Paystack is not configured — set VITE_PAYSTACK_PUBLIC_KEY.');
+        const payment = await initializeStaffPreviewExportPayment();
+        const result = await payWithPaystack({
+          key,
+          reference: payment.reference,
+          amount: payment.amount,
+          email: payment.email,
+          currency: 'GHS',
+          label: 'CareStudy preview document export',
+        });
+        await verifyStaffPreviewExportPayment(result.reference);
+        blob = await exportStudyDocx(payload);
+      }
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       const safeName =
@@ -8199,6 +8227,19 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                           <WordIcon className="size-3.5" />
                         </Button>
                       </>
+                    )}
+                    {admin?.role === 'staff' && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-6"
+                        onClick={() => downloadDocx()}
+                        disabled={!canExport}
+                        title="One free Word export; GH₵150 for each additional export"
+                        aria-label="Download Word document"
+                      >
+                        <WordIcon className="size-3.5" />
+                      </Button>
                     )}
                     <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
                     <Button

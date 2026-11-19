@@ -746,6 +746,124 @@ export function createSqliteStore(): StudyStore {
       return Number(result.changes);
     },
 
+    async reserveStaffPreviewExport(adminId) {
+      const database = sqlite;
+      if (!database) throw new Error("SQLite is not initialized.");
+      database.exec("BEGIN IMMEDIATE");
+      try {
+        const now = Date.now();
+        database.prepare(`
+          INSERT INTO "staff_preview_export_access"
+            ("admin_id", "free_export_used", "paid_credits", "updated_at")
+          VALUES (?, 0, 0, ?)
+          ON CONFLICT ("admin_id") DO NOTHING
+        `).run(adminId, now);
+        const free = database.prepare(`
+          UPDATE "staff_preview_export_access"
+          SET "free_export_used" = 1, "updated_at" = ?
+          WHERE "admin_id" = ? AND "free_export_used" = 0
+          RETURNING "admin_id"
+        `).get(now, adminId);
+        if (free) {
+          database.exec("COMMIT");
+          return "free";
+        }
+        const paid = database.prepare(`
+          UPDATE "staff_preview_export_access"
+          SET "paid_credits" = "paid_credits" - 1, "updated_at" = ?
+          WHERE "admin_id" = ? AND "paid_credits" > 0
+          RETURNING "admin_id"
+        `).get(now, adminId);
+        database.exec("COMMIT");
+        return paid ? "paid" : null;
+      } catch (error) {
+        try {
+          database.exec("ROLLBACK");
+        } catch {
+          // Preserve the original storage error if the transaction already ended.
+        }
+        throw error;
+      }
+    },
+
+    async refundStaffPreviewExport(adminId, source) {
+      const database = sqlite;
+      if (!database) throw new Error("SQLite is not initialized.");
+      if (source === "free") {
+        database.prepare(`
+          UPDATE "staff_preview_export_access"
+          SET "free_export_used" = 0, "updated_at" = ?
+          WHERE "admin_id" = ? AND "free_export_used" = 1
+        `).run(Date.now(), adminId);
+        return;
+      }
+      database.prepare(`
+        UPDATE "staff_preview_export_access"
+        SET "paid_credits" = "paid_credits" + 1, "updated_at" = ?
+        WHERE "admin_id" = ?
+      `).run(Date.now(), adminId);
+    },
+
+    async createStaffPreviewExportPayment(adminId, reference, amountPesewas) {
+      const database = sqlite;
+      if (!database) throw new Error("SQLite is not initialized.");
+      database.prepare(`
+        INSERT INTO "staff_preview_export_payments"
+          ("admin_id", "reference", "amount_pesewas", "status", "created_at")
+        VALUES (?, ?, ?, 'pending', ?)
+      `).run(adminId, reference, amountPesewas, Date.now());
+    },
+
+    async verifyStaffPreviewExportPayment(adminId, reference, amountPesewas) {
+      const database = sqlite;
+      if (!database) throw new Error("SQLite is not initialized.");
+      database.exec("BEGIN IMMEDIATE");
+      try {
+        const payment = database.prepare(`
+          SELECT "amount_pesewas", "status"
+          FROM "staff_preview_export_payments"
+          WHERE "admin_id" = ? AND "reference" = ?
+        `).get(adminId, reference) as
+          | { amount_pesewas: number; status: string }
+          | undefined;
+        if (!payment || payment.amount_pesewas !== amountPesewas) {
+          database.exec("ROLLBACK");
+          return false;
+        }
+        if (payment.status === "verified") {
+          database.exec("COMMIT");
+          return true;
+        }
+        if (payment.status !== "pending") {
+          database.exec("ROLLBACK");
+          return false;
+        }
+
+        const now = Date.now();
+        database.prepare(`
+          UPDATE "staff_preview_export_payments"
+          SET "status" = 'verified', "verified_at" = ?
+          WHERE "admin_id" = ? AND "reference" = ? AND "status" = 'pending'
+        `).run(now, adminId, reference);
+        database.prepare(`
+          INSERT INTO "staff_preview_export_access"
+            ("admin_id", "free_export_used", "paid_credits", "updated_at")
+          VALUES (?, 0, 1, ?)
+          ON CONFLICT ("admin_id") DO UPDATE
+            SET "paid_credits" = "paid_credits" + 1, "updated_at" = excluded."updated_at"
+        `).run(adminId, now);
+        database.exec("COMMIT");
+        return true;
+      } catch (error) {
+        try {
+          database.exec("ROLLBACK");
+        } catch {
+          // Preserve the original storage error if the transaction already ended.
+        }
+        throw error;
+      }
+    },
+
     async reserveAiDocument(subjectKey, usageDate, documentHash, limit) {
       const database = sqlite;
       if (!database) throw new Error("SQLite is not initialized.");

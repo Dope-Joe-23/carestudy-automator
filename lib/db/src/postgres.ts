@@ -150,6 +150,20 @@ CREATE TABLE IF NOT EXISTS "ai_usage_project" (
   "updated_at" timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY ("project_key", "target_key")
 );
+CREATE TABLE IF NOT EXISTS "staff_preview_export_access" (
+  "admin_id" integer PRIMARY KEY NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+  "free_export_used" boolean NOT NULL DEFAULT false,
+  "paid_credits" integer NOT NULL DEFAULT 0,
+  "updated_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS "staff_preview_export_payments" (
+  "reference" text PRIMARY KEY NOT NULL,
+  "admin_id" integer NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+  "amount_pesewas" integer NOT NULL,
+  "status" text NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "verified_at" timestamptz
+);
 CREATE TABLE IF NOT EXISTS "ai_usage_documents" (
   "subject_key" text NOT NULL,
   "usage_date" text NOT NULL,
@@ -893,6 +907,126 @@ export function createPostgresStore(): StudyStore {
         [projectKey, uniqueTargetKeys],
       );
       return result.rowCount ?? result.rows.length;
+    },
+
+    async reserveStaffPreviewExport(adminId) {
+      const client = await pool!.connect();
+      try {
+        await client.query("BEGIN");
+        await client.query(
+          `INSERT INTO "staff_preview_export_access"
+            ("admin_id", "free_export_used", "paid_credits")
+          VALUES ($1, false, 0)
+          ON CONFLICT ("admin_id") DO NOTHING`,
+          [adminId],
+        );
+        const free = await client.query(
+          `UPDATE "staff_preview_export_access"
+          SET "free_export_used" = true, "updated_at" = now()
+          WHERE "admin_id" = $1 AND "free_export_used" = false
+          RETURNING "admin_id"`,
+          [adminId],
+        );
+        if (free.rows[0]) {
+          await client.query("COMMIT");
+          return "free";
+        }
+        const paid = await client.query(
+          `UPDATE "staff_preview_export_access"
+          SET "paid_credits" = "paid_credits" - 1, "updated_at" = now()
+          WHERE "admin_id" = $1 AND "paid_credits" > 0
+          RETURNING "admin_id"`,
+          [adminId],
+        );
+        await client.query("COMMIT");
+        return paid.rows[0] ? "paid" : null;
+      } catch (error) {
+        await client.query("ROLLBACK").catch(() => {
+          // Preserve the original storage error if the transaction already ended.
+        });
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+
+    async refundStaffPreviewExport(adminId, source) {
+      if (source === "free") {
+        await pool!.query(
+          `UPDATE "staff_preview_export_access"
+          SET "free_export_used" = false, "updated_at" = now()
+          WHERE "admin_id" = $1 AND "free_export_used" = true`,
+          [adminId],
+        );
+        return;
+      }
+      await pool!.query(
+        `UPDATE "staff_preview_export_access"
+        SET "paid_credits" = "paid_credits" + 1, "updated_at" = now()
+        WHERE "admin_id" = $1`,
+        [adminId],
+      );
+    },
+
+    async createStaffPreviewExportPayment(adminId, reference, amountPesewas) {
+      await pool!.query(
+        `INSERT INTO "staff_preview_export_payments"
+          ("admin_id", "reference", "amount_pesewas", "status")
+        VALUES ($1, $2, $3, 'pending')`,
+        [adminId, reference, amountPesewas],
+      );
+    },
+
+    async verifyStaffPreviewExportPayment(adminId, reference, amountPesewas) {
+      const client = await pool!.connect();
+      try {
+        await client.query("BEGIN");
+        const result = await client.query<{ amount_pesewas: number; status: string }>(
+          `SELECT "amount_pesewas", "status"
+          FROM "staff_preview_export_payments"
+          WHERE "admin_id" = $1 AND "reference" = $2
+          FOR UPDATE`,
+          [adminId, reference],
+        );
+        const payment = result.rows[0];
+        if (!payment || Number(payment.amount_pesewas) !== amountPesewas) {
+          await client.query("ROLLBACK");
+          return false;
+        }
+        if (payment.status === "verified") {
+          await client.query("COMMIT");
+          return true;
+        }
+        if (payment.status !== "pending") {
+          await client.query("ROLLBACK");
+          return false;
+        }
+
+        await client.query(
+          `UPDATE "staff_preview_export_payments"
+          SET "status" = 'verified', "verified_at" = now()
+          WHERE "admin_id" = $1 AND "reference" = $2 AND "status" = 'pending'`,
+          [adminId, reference],
+        );
+        await client.query(
+          `INSERT INTO "staff_preview_export_access"
+            ("admin_id", "free_export_used", "paid_credits")
+          VALUES ($1, false, 1)
+          ON CONFLICT ("admin_id") DO UPDATE
+            SET "paid_credits" = "staff_preview_export_access"."paid_credits" + 1,
+                "updated_at" = now()`,
+          [adminId],
+        );
+        await client.query("COMMIT");
+        return true;
+      } catch (error) {
+        await client.query("ROLLBACK").catch(() => {
+          // Preserve the original error if the transaction already ended.
+        });
+        throw error;
+      } finally {
+        client.release();
+      }
     },
 
     async reserveAiDocument(subjectKey, usageDate, documentHash, limit) {

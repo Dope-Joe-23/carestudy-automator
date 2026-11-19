@@ -37,6 +37,15 @@ async function createStudent(name: string) {
   });
 }
 
+async function createAdmin(role: "admin" | "staff" = "staff") {
+  const suffix = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  return store.addAdmin({
+    username: `export_${suffix}`,
+    passwordHash: "test-password-hash",
+    role,
+  });
+}
+
 describe("Student chat history", () => {
   it("isolates conversations by student and supports loading, updating, and deletion", async () => {
     const owner = await createStudent("Chat Owner");
@@ -112,6 +121,37 @@ describe("Daily AI usage quotas", () => {
     assert.deepEqual(await store.reserveAiProjectUsage(project, ["section:2.2"], 3), { status: "reserved", count: 2 });
     assert.equal(await store.resetAiProjectUsage(project, [section]), 1);
     assert.deepEqual(await store.reserveAiProjectUsage(project, [section], 3), { status: "reserved", count: 1 });
+  });
+
+  it("limits staff to one free export and grants one credit per verified payment", async () => {
+    const staff = await createAdmin();
+    const otherStaff = await createAdmin();
+    const reference = `CSE-${staff.id}-test`;
+
+    assert.equal(await store.reserveStaffPreviewExport(staff.id), "free");
+    assert.equal(await store.reserveStaffPreviewExport(staff.id), null);
+    await store.createStaffPreviewExportPayment(staff.id, reference, 15_000);
+    assert.equal(
+      await store.verifyStaffPreviewExportPayment(otherStaff.id, reference, 15_000),
+      false,
+    );
+    assert.equal(await store.verifyStaffPreviewExportPayment(staff.id, reference, 14_999), false);
+    assert.equal(await store.verifyStaffPreviewExportPayment(staff.id, reference, 15_000), true);
+    assert.equal(await store.verifyStaffPreviewExportPayment(staff.id, reference, 15_000), true);
+    const paidEntitlement = await store.reserveStaffPreviewExport(staff.id);
+    if (paidEntitlement !== "paid") throw new Error("The verified payment did not grant an export credit.");
+    await store.refundStaffPreviewExport(staff.id, paidEntitlement);
+    assert.equal(await store.reserveStaffPreviewExport(staff.id), "paid");
+    assert.equal(await store.reserveStaffPreviewExport(staff.id), null);
+  });
+
+  it("restores a staff export entitlement when export generation fails", async () => {
+    const staff = await createAdmin();
+
+    const freeEntitlement = await store.reserveStaffPreviewExport(staff.id);
+    assert.equal(freeEntitlement, "free");
+    await store.refundStaffPreviewExport(staff.id, freeEntitlement);
+    assert.equal(await store.reserveStaffPreviewExport(staff.id), "free");
   });
 
   it("blocks duplicate rewrite documents and enforces the daily unique-document cap", async () => {

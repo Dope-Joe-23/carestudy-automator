@@ -686,7 +686,7 @@ function OrderRow({
               </div>
               <p className="text-[11px] leading-relaxed text-muted-foreground">
                 The student opens the study with this PIN. Share it only once they have paid you —
-                our GH₵{order.commission?.amount ?? 100} commission is charged the moment they
+                our GH₵{order.commission?.amount ?? 150} commission is charged the moment they
                 download, whether you release it here or send it yourself.
               </p>
             </div>
@@ -715,7 +715,7 @@ function OrderRow({
                     Confirm payment &amp; release
                   </Button>
                   <span className="text-[11px] leading-relaxed text-muted-foreground">
-                    Optional — releasing here just marks the GH₵{order.commission?.amount ?? 100}
+                    Optional — releasing here just marks the GH₵{order.commission?.amount ?? 150}
                     commission due now instead of at download.
                   </span>
                 </div>
@@ -734,7 +734,7 @@ function OrderRow({
             <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs">
               <span className="flex items-center gap-1.5">
                 <CreditCard className="size-3.5" />
-                Platform commission <strong>GH₵{order.commission.amount ?? 100}</strong>
+                Platform commission <strong>GH₵{order.commission.amount ?? 150}</strong>
               </span>
               {order.commission.status === "paid" ? (
                 <Badge variant="default" className="gap-1">
@@ -912,7 +912,7 @@ export function StudioBin() {
           <FileText className="size-3.5" />
           Set a download PIN, then "Deliver study" to export the produced study as a Word document
           and lock it. Hand the PIN to the student once they have paid you — the GH₵
-          {commissions.data?.amountPerOrder ?? 100} platform commission is charged the moment they
+          {commissions.data?.amountPerOrder ?? 150} platform commission is charged the moment they
           download, however the PIN reached them.
         </p>
       </main>

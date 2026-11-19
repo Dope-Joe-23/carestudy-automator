@@ -688,6 +688,55 @@ export async function verifyReferences(
   }
 }
 
+export class StaffPreviewExportPaymentRequiredError extends Error {
+  constructor(readonly amountGhs: number) {
+    super(`A GH₵${amountGhs} payment is required for this export.`);
+    this.name = "StaffPreviewExportPaymentRequiredError";
+  }
+}
+
+export async function initializeStaffPreviewExportPayment(): Promise<{
+  reference: string;
+  amount: number;
+  email: string;
+}> {
+  const response = await fetch(`${API_URL}/export/docx/payment/initialize`, {
+    method: "POST",
+    headers: apiHeaders(),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `Could not start Paystack checkout (${response.status}).`);
+  }
+  const body = (await response.json()) as { reference?: string; amount?: number; email?: string };
+  if (
+    typeof body.reference !== "string" ||
+    typeof body.amount !== "number" ||
+    typeof body.email !== "string"
+  ) {
+    throw new Error("The preview export payment response was invalid.");
+  }
+  return { reference: body.reference, amount: body.amount, email: body.email };
+}
+
+export async function verifyStaffPreviewExportPayment(reference: string): Promise<void> {
+  const response = await fetch(`${API_URL}/export/docx/payment/verify`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ reference }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as { message?: string; error?: string } | null;
+    throw new Error(body?.message ?? body?.error ?? `Payment verification failed (${response.status}).`);
+  }
+  const body = (await response.json()) as { verified?: boolean };
+  if (body.verified !== true) {
+    throw new Error("Paystack has not confirmed the preview export payment.");
+  }
+}
+
 export async function exportStudyDocx(payload: ExportPayload): Promise<Blob> {
   const response = await fetch(`${API_URL}/export/docx`, {
     method: "POST",
@@ -698,8 +747,15 @@ export async function exportStudyDocx(payload: ExportPayload): Promise<Blob> {
   if (!response.ok) {
     signalIfUnauthorized(response);
     const body = (await response.json().catch(() => null)) as
-      | { error?: string }
+      | { error?: string; paymentRequired?: boolean; amountGhs?: number }
       | null;
+    if (
+      response.status === 402 &&
+      body?.paymentRequired === true &&
+      typeof body.amountGhs === "number"
+    ) {
+      throw new StaffPreviewExportPaymentRequiredError(body.amountGhs);
+    }
     throw new Error(body?.error ?? `Export failed (${response.status})`);
   }
 

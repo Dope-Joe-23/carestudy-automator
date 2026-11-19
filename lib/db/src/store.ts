@@ -494,6 +494,22 @@ export interface StudyStore {
   ): Promise<AiProjectUsageReservation>;
   /** Clear a project target's AI attempt counters for an owner-initiated reset. */
   resetAiProjectUsage(projectKey: string, targetKeys: string[]): Promise<number>;
+  /** Atomically reserve the free export or one previously paid export credit. */
+  reserveStaffPreviewExport(adminId: number): Promise<"free" | "paid" | null>;
+  /** Restore an export entitlement when document generation fails. */
+  refundStaffPreviewExport(adminId: number, source: "free" | "paid"): Promise<void>;
+  /** Record a pending Paystack charge for one staff preview export. */
+  createStaffPreviewExportPayment(
+    adminId: number,
+    reference: string,
+    amountPesewas: number,
+  ): Promise<void>;
+  /** Verify a pending payment and grant exactly one export credit. */
+  verifyStaffPreviewExportPayment(
+    adminId: number,
+    reference: string,
+    amountPesewas: number,
+  ): Promise<boolean>;
   /** Atomically record one unique document and consume its daily allowance. */
   reserveAiDocument(
     subjectKey: string,

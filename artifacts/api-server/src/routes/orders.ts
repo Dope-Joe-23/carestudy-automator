@@ -62,11 +62,11 @@ const PRICE_CHAPTER = 50;
  * Platform commission charged to the staff for each released delivery.
  * The student pays the staff directly (off-platform); we collect our cut from
  * the staff through Paystack once the PIN has been released. Override with
- * CARE_COMMISSION_GHS; defaults to GH₵100.
+ * CARE_COMMISSION_GHS; defaults to GH₵150.
  */
 function getCommissionGhs(): number {
   const value = Number(process.env.CARE_COMMISSION_GHS);
-  return Number.isFinite(value) && value > 0 ? Math.round(value) : 100;
+  return Number.isFinite(value) && value > 0 ? Math.round(value) : 150;
 }
 
 /** A delivery PIN set by the staff: 4–8 digits. */

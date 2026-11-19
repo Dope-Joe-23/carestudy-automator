@@ -188,6 +188,8 @@ DB_DRIVER=postgres DATABASE_URL=postgresql://carestudy:carestudy_dev_password@lo
 | `TRUST_PROXY_HOPS` | No | `0` | Number of trusted reverse proxies; the Render blueprint sets this to `1` |
 | `ADMIN_USERNAME` | No | `admin` | Studio admin username |
 | `ADMIN_PASSWORD` | Yes | — | Studio admin password |
+| `PAYSTACK_SECRET_KEY` | Required for paid exports | — | Server-side Paystack key |
+| `CARE_COMMISSION_GHS` | No | `150` | Staff platform commission per released order delivery |
 | `MAX_UPLOAD_MB` | No | `250` | Max file upload size in MB |
 | `CLOUDFLARE_ACCOUNT_ID` | No | — | R2 storage — [setup guide](docs/r2-storage-setup.md) |
 | `CLOUDFLARE_R2_ACCESS_KEY_ID` | No | — | R2 storage |
@@ -227,11 +229,18 @@ These are request limits, not exact token or dollar budgets. Set provider-side
 spending limits and alerts as the final cost backstop, especially if multiple
 API server instances are deployed.
 
+Studio staff receive one complimentary preview Word export per account. Each
+additional export costs GH₵150 through Paystack. Admins retain unrestricted
+exports. The platform commission for each order delivery is GH₵150 by default;
+set `CARE_COMMISSION_GHS=150` in the deployment environment if an older override
+is already configured. These are separate charges.
+
 ### Frontend (Vercel)
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `VITE_API_URL` | No | `/api` | Backend API URL |
+| `VITE_PAYSTACK_PUBLIC_KEY` | Required for paid exports | — | Paystack Inline public key |
 
 ---
 
