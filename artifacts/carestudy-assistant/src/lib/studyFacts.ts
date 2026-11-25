@@ -33,6 +33,8 @@ export type StudyFacts = {
     healthProblems: string;
     strengths: string;
     nursingDiagnoses: string;
+    pharmacologyRows: string[][];
+    treatmentGivenList: string;
   };
   planning: {
     objectives: Record<string, string>;
@@ -125,6 +127,8 @@ export function deriveStudyFacts(
       healthProblems: fieldsFrom(sections.get("2.3")).healthProblems || "",
       strengths: fieldsFrom(sections.get("2.4")).strengths || "",
       nursingDiagnoses: fieldsFrom(sections.get("2.5")).nursingDiagnoses || "",
+      pharmacologyRows: rowsFrom(sections.get("2.2")),
+      treatmentGivenList: fieldsFrom(sections.get("2.1")).treatmentGivenList || "",
     },
     planning: {
       objectives: fieldsFrom(sections.get("3.1")),

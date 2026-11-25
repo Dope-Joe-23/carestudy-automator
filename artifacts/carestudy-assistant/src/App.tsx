@@ -327,6 +327,13 @@ const CHAPTER_ICONS: LucideIcon[] = [
 let rowIdCounter = 0;
 const nextRowId = () => ++rowIdCounter;
 
+function importedRowsToRowData(rows: string[][], columnCount: number): RowRow[] {
+  return rows.map((cells) => ({
+    id: nextRowId(),
+    cells: Array.from({ length: columnCount }, (_, index) => cells[index] ?? ''),
+  }));
+}
+
 /** The merged "Additional Pages" workspace chapter holds both the preliminary
  *  sections (P.*) and the closing 6.x summary sections, but the DOCUMENT must
  *  keep them at opposite ends: P.* open the study unnumbered, the 6.x sections
@@ -3484,6 +3491,12 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
             if (aiSection.fields && typeof aiSection.fields === 'object') {
               section.data = { ...section.data, ...aiSection.fields };
             }
+            if (section.rows && aiSection.rows?.length) {
+              section.rowData = importedRowsToRowData(
+                aiSection.rows,
+                section.rows.columns.length,
+              );
+            }
             // Set the draft so it appears polished in the preview.
             if (typeof aiSection.draft === 'string' && aiSection.draft.trim()) {
               if (aiSection.draft.trim() !== section.draft) {
@@ -3580,6 +3593,12 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           if (!target) continue;
           target.data = { ...importedSection.fields };
           target.draft = importedSection.draft.trim();
+          if (target.rows && importedSection.rows?.length) {
+            target.rowData = importedRowsToRowData(
+              importedSection.rows,
+              target.rows.columns.length,
+            );
+          }
           target.status = computeStatus(target);
         }
       }
@@ -4160,11 +4179,23 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
   const recommendPharmacology = async () => {
     if (pharmacologyBusy || aiBusy) return;
     // Drug data lives in Chapter 1: the regular-medications field and the
-    // treatment fields on the admission/implementation sections.
+    // treatment fields on the admission/implementation sections. An imported
+    // Chapter 2.2 table is also a valid documented drug source.
+    const importedDrugEntries = [
+      studyFacts.analysis.treatmentGivenList,
+      ...studyFacts.analysis.pharmacologyRows
+        .map((row) => [row[0], row[2]].filter((value) => value?.trim()).join(' — ')),
+    ].filter((value) => value.trim());
     const chapter1Fields: Record<string, string> = {
       ...studyFacts.assessment.fields,
       clinicalNotes: studyFacts.assessment.evidenceText,
     };
+    if (importedDrugEntries.length > 0) {
+      chapter1Fields.treatmentGivenList = [
+        chapter1Fields.treatmentGivenList,
+        ...importedDrugEntries,
+      ].filter(Boolean).join('\n');
+    }
     if (!chapter1Fields.medications && !chapter1Fields.treatmentGivenList && !chapter1Fields.treatmentStarted && !chapter1Fields.treatment) {
       toast.error('No drug data collected yet.', {
         description: 'Add the patient\'s medications or treatment given in Chapter 1 first.',
@@ -4407,13 +4438,25 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
       ward: facts.patient.ward,
       admissionDateTime: facts.patient.admissionDateTime,
     };
+    const importedDrugs = facts.analysis.pharmacologyRows
+      .map((row) => [row[0], row[2]].filter((value) => value?.trim()).join(' — '))
+      .filter(Boolean);
+    const documentedTreatments = facts.analysis.treatmentGivenList
+      .split(/[,;\n]+/)
+      .map((drug) => drug.trim())
+      .filter(Boolean);
     const drugs = facts.implementation.fields.drugsGiven
       ? facts.implementation.fields.drugsGiven.split(/[;\n]/).map((d) => d.trim()).filter(Boolean)
-      : [];
-    const diagnoses = facts.analysis.nursingDiagnoses
-      .split(/\n+/)
-      .map((line) => line.replace(/^\s*[-•]\s*/, '').trim())
-      .filter(Boolean);
+      : [...documentedTreatments, ...importedDrugs];
+    const diagnoses = Array.from(new Set([
+      ...facts.analysis.nursingDiagnoses
+        .split(/\n+/)
+        .map((line) => line.replace(/^\s*[-•]\s*/, '').trim())
+        .filter(Boolean),
+      ...facts.planning.carePlanRows
+        .map((row) => row[1]?.trim() ?? '')
+        .filter(Boolean),
+    ]));
     return {
       patient,
       drugs,

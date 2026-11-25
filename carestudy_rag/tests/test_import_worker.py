@@ -1,6 +1,9 @@
+import json
 import os
 import sys
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -30,6 +33,263 @@ class ImportStudyWithFieldsTests(unittest.TestCase):
         self.assertNotIn("DOCX table", sections["3.1"]["draft"])
         self.assertIn(table_header, sections["3.2"]["draft"])
         self.assertIn("Risk for deficient fluid volume", sections["3.2"]["draft"])
+
+    def test_extracts_care_plan_docx_rows_into_eight_column_schema(self):
+        header = (
+            "Date/Time | Nursing Diagnosis | Objective/Outcome Criteria | Nursing Orders | "
+            "Nursing Interventions | Evaluation"
+        )
+        raw_text = (
+            "3.2 Nursing Care Plan\n"
+            f"DOCX table 13, row 1: {header}\n"
+            "DOCX table 13, row 2: 28/07/2026\n"
+            "9:10 a.m. | Risk for deficient fluid volume | Maintain fluid balance | "
+            "Monitor intake and output | Encourage oral fluids | Goal met\n"
+            f"DOCX table 14, row 1: {header}\n"
+            "DOCX table 14, row 2: 29/07/2026 | Acute pain | Patient will report reduced pain | "
+            "Assess pain regularly | Administer prescribed analgesia | Pain reduced"
+        )
+
+        result = import_study_with_fields(raw_text)
+
+        planning = next(chapter for chapter in result["chapters"] if chapter["name"] == "Planning")
+        care_plan = next(section for section in planning["sections"] if section["sectionId"] == "3.2")
+        self.assertEqual(len(care_plan["rows"]), 2)
+        self.assertTrue(all(len(row) == 8 for row in care_plan["rows"]))
+        self.assertEqual(care_plan["rows"][0][0], "28/07/2026\n9:10 a.m.")
+        self.assertEqual(care_plan["rows"][0][1], "Risk for deficient fluid volume")
+        self.assertEqual(care_plan["rows"][0][3], "Monitor intake and output")
+        self.assertEqual(care_plan["rows"][0][4], "Encourage oral fluids")
+        self.assertEqual(care_plan["rows"][0][5], "")
+        self.assertEqual(care_plan["rows"][0][6], "Goal met")
+
+    def test_extracts_pharmacology_docx_rows_into_six_column_schema(self):
+        raw_text = (
+            "2.2 Pharmacology of Drugs Prescribed\n"
+            "DOCX table 4, row 1: Drug | Classification | Dose, Route & Frequency | "
+            "Indication | Side Effects | Nursing Responsibilities\n"
+            "DOCX table 4, row 2: Artemether | Antimalarial | 80 mg IM daily | Malaria | "
+            "Nausea | Monitor response and adverse effects"
+        )
+
+        result = import_study_with_fields(raw_text)
+
+        pharmacology = next(
+            section
+            for chapter in result["chapters"]
+            for section in chapter["sections"]
+            if section["sectionId"] == "2.2"
+        )
+        self.assertEqual(
+            pharmacology["rows"],
+            [[
+                "Artemether",
+                "Antimalarial",
+                "80 mg IM daily",
+                "Malaria",
+                "Nausea",
+                "Monitor response and adverse effects",
+            ]],
+        )
+
+    def test_extracts_markdown_pharmacology_rows(self):
+        raw_text = (
+            "2.2 Pharmacology of Drugs Prescribed\n"
+            "| Drug | Class | Dose | Indication |\n"
+            "| --- | --- | --- | --- |\n"
+            "| Artemether | Antimalarial | 80 mg IM daily | Malaria |\n"
+        )
+
+        result = import_study_with_fields(raw_text)
+
+        pharmacology = next(
+            section
+            for chapter in result["chapters"]
+            for section in chapter["sections"]
+            if section["sectionId"] == "2.2"
+        )
+        self.assertEqual(
+            pharmacology["rows"],
+            [["Artemether", "Antimalarial", "80 mg IM daily", "Malaria", "", ""]],
+        )
+
+    def test_extracts_home_visit_docx_rows_into_five_column_schema(self):
+        raw_text = (
+            "4.3 Follow-up / Home Visit / Continuity of Care\n"
+            "DOCX table 9, row 1: Date / Visit | Objectives | Assessment & Findings | "
+            "Health Education | Outcome / Continuity\n"
+            "DOCX table 9, row 2: Visit 1 | Assess home environment | Client stable | "
+            "Medication adherence | Referred to community nurse"
+        )
+
+        result = import_study_with_fields(raw_text)
+
+        home_visits = next(
+            section
+            for chapter in result["chapters"]
+            for section in chapter["sections"]
+            if section["sectionId"] == "4.3"
+        )
+        self.assertEqual(
+            home_visits["rows"],
+            [[
+                "Visit 1",
+                "Assess home environment",
+                "Client stable",
+                "Medication adherence",
+                "Referred to community nurse",
+            ]],
+        )
+
+    def test_maps_recommendation_inputs_from_labeled_analysis_and_care_notes(self):
+        raw_text = (
+            "2.1 Comparison of Data with Standards\n"
+            "List of treatment/medications given to patient: IV Artemether 80 mg daily.\n"
+            "2.3 Patient Health Problems\n"
+            "Actual health problems: Acute pain at the incision site.\n"
+            "Potential health problems: Risk of infection.\n"
+            "Prioritisation of problems: 1. Acute pain; 2. Risk of infection.\n"
+            "2.4 Patient/Family Strengths\n"
+            "General strengths: Family is supportive.\n"
+            "Specific strengths: Patient is willing to follow treatment.\n"
+            "2.5 Nursing Diagnoses\n"
+            "Nursing diagnoses: Acute pain related to tissue injury.\n"
+            "Prioritisation of diagnoses: 1. Acute pain related to tissue injury.\n"
+            "4.1 Summary of the Actual Nursing Care\n"
+            "Care actually given: Vital signs monitored and medication administered.\n"
+            "Health education given: Medication adherence explained.\n"
+            "Family involvement: Family participated in care.\n"
+            "4.2 Preparation of Patient and Family for Discharge and Rehabilitation\n"
+            "Discharge health education: Warning signs and follow-up explained.\n"
+            "Date of discharge: 2026-09-10\n"
+            "Review date: 2026-09-17\n"
+        )
+
+        result = import_study_with_fields(raw_text)
+        mapped = {
+            section["sectionId"]: section["fields"]
+            for chapter in result["chapters"]
+            for section in chapter["sections"]
+        }
+
+        self.assertEqual(mapped["2.3"]["healthProblems"], "Acute pain at the incision site.")
+        self.assertEqual(
+            mapped["2.1"]["treatmentGivenList"],
+            "IV Artemether 80 mg daily.",
+        )
+        self.assertEqual(mapped["2.3"]["potentialProblems"], "Risk of infection.")
+        self.assertEqual(mapped["2.3"]["problemPriority"], "1. Acute pain; 2. Risk of infection.")
+        self.assertEqual(mapped["2.4"]["generalStrengths"], "Family is supportive.")
+        self.assertEqual(mapped["2.4"]["strengths"], "Patient is willing to follow treatment.")
+        self.assertEqual(mapped["2.5"]["nursingDiagnoses"], "Acute pain related to tissue injury.")
+        self.assertEqual(mapped["2.5"]["diagnosisPriority"], "1. Acute pain related to tissue injury.")
+        self.assertIn("Vital signs monitored", mapped["4.1"]["careGiven"])
+        self.assertEqual(mapped["4.1"]["healthEducation"], "Medication adherence explained.")
+        self.assertEqual(mapped["4.1"]["familyInvolvement"], "Family participated in care.")
+        self.assertEqual(mapped["4.2"]["dischargeEducation"], "Warning signs and follow-up explained.")
+        self.assertEqual(mapped["4.2"]["dischargeDate"], "2026-09-10")
+        self.assertEqual(mapped["4.2"]["reviewDate"], "2026-09-17")
+
+    def test_maps_health_problems_and_diagnoses_from_table_columns(self):
+        raw_text = (
+            "2.3 Patient Health Problems\n"
+            "DOCX table 2, row 1: Actual health problems | Potential health problems | Priority\n"
+            "DOCX table 2, row 2: Acute pain | Risk of infection | 1. Acute pain\n"
+            "2.5 Nursing Diagnoses\n"
+            "DOCX table 5, row 1: Nursing Diagnoses | Prioritisation of Diagnoses\n"
+            "DOCX table 5, row 2: Acute pain related to tissue injury | 1. Acute pain"
+        )
+
+        result = import_study_with_fields(raw_text)
+        mapped = {
+            section["sectionId"]: section["fields"]
+            for chapter in result["chapters"]
+            for section in chapter["sections"]
+        }
+
+        self.assertEqual(mapped["2.3"]["healthProblems"], "Acute pain")
+        self.assertEqual(mapped["2.3"]["potentialProblems"], "Risk of infection")
+        self.assertEqual(mapped["2.3"]["problemPriority"], "1. Acute pain")
+        self.assertEqual(
+            mapped["2.5"]["nursingDiagnoses"],
+            "Acute pain related to tissue injury",
+        )
+        self.assertEqual(mapped["2.5"]["diagnosisPriority"], "1. Acute pain")
+
+    def test_uses_section_narrative_as_primary_recommendation_input_when_unlabeled(self):
+        health_problem = "The patient reported severe pain at the surgical site."
+        diagnosis = "Acute pain related to tissue injury as evidenced by guarding."
+        care_given = "Vital signs were monitored and prescribed treatment was administered."
+        discharge = "The patient and family were taught warning signs and medication adherence."
+        raw_text = (
+            f"2.3 Patient Health Problems\n{health_problem}\n"
+            f"2.5 Nursing Diagnoses\n{diagnosis}\n"
+            f"4.1 Summary of the Actual Nursing Care\n{care_given}\n"
+            f"4.2 Preparation of Patient and Family for Discharge and Rehabilitation\n{discharge}"
+        )
+
+        result = import_study_with_fields(raw_text)
+        mapped = {
+            section["sectionId"]: section["fields"]
+            for chapter in result["chapters"]
+            for section in chapter["sections"]
+        }
+
+        self.assertEqual(mapped["2.3"]["healthProblems"], health_problem)
+        self.assertEqual(mapped["2.5"]["nursingDiagnoses"], diagnosis)
+        self.assertEqual(mapped["4.1"]["careGiven"], care_given)
+        self.assertEqual(mapped["4.2"]["dischargeEducation"], discharge)
+
+    @patch("import_worker._deterministic_import", return_value=None)
+    @patch(
+        "import_worker._candidate_models",
+        return_value=[SimpleNamespace(label="test-model")],
+    )
+    @patch(
+        "import_worker._chat_model",
+        return_value=json.dumps(
+            {
+                "chapters": [
+                    {
+                        "name": "Analysis of Data",
+                        "sections": [
+                            {
+                                "sectionId": "2.5",
+                                "heading": "Nursing Diagnoses",
+                                "fields": {},
+                                "draft": "Nursing diagnoses: Acute pain related to tissue injury.",
+                            },
+                            {
+                                "sectionId": "2.2",
+                                "heading": "Pharmacology",
+                                "fields": {},
+                                "draft": (
+                                    "DOCX table 4, row 1: Drug | Class | Dose | Indication\n"
+                                    "DOCX table 4, row 2: Artemether | Antimalarial | 80 mg | Malaria"
+                                ),
+                            },
+                        ],
+                    }
+                ]
+            }
+        ),
+    )
+    def test_enriches_ai_import_fields_and_rows_locally(self, *_mocks):
+        result = import_study_with_fields("unheaded imported study content")
+        sections = {
+            section["sectionId"]: section
+            for chapter in result["chapters"]
+            for section in chapter["sections"]
+        }
+
+        self.assertEqual(
+            sections["2.5"]["fields"]["nursingDiagnoses"],
+            "Acute pain related to tissue injury.",
+        )
+        self.assertEqual(
+            sections["2.2"]["rows"],
+            [["Artemether", "Antimalarial", "80 mg", "Malaria", "", ""]],
+        )
 
     def test_keeps_chapter_introduction_out_of_previous_section(self):
         validation = "The data used in this care study has undergone comprehensive validation."
@@ -155,6 +415,7 @@ class ImportStudyWithFieldsTests(unittest.TestCase):
             "Antimalarial therapy was administered.\n"
             "Table 5: Pharmacology of Drugs\n"
             "DOCX table 7, row 1: Date | Drug | Dose | Classification\n"
+            "DOCX table 7, row 2: 28/07/2026 | Artemether | 80 mg IM daily | Antimalarial\n"
             "2.5 Nursing Diagnosis\n"
             "The patient did not develop major complications during admission.\n"
             "2.6 Patient and Family Strengths\n"
@@ -169,19 +430,23 @@ class ImportStudyWithFieldsTests(unittest.TestCase):
 
         self.assertEqual(result["importMode"], "deterministic")
         mapped = {
-            section["sectionId"]: section["draft"]
+            section["sectionId"]: section
             for chapter in result["chapters"]
             for section in chapter["sections"]
         }
-        self.assertIn("The actual cause of malaria", mapped["2.1"])
-        self.assertIn("Comparison of Clinical Features", mapped["2.1"])
-        self.assertIn("Comparison of Treatment", mapped["2.1"])
-        self.assertIn("major complications", mapped["2.1"])
-        self.assertNotIn("DOCX table 7", mapped["2.1"])
-        self.assertIn("DOCX table 7", mapped["2.2"])
-        self.assertIn("family provided emotional support", mapped["2.4"])
-        self.assertIn("complained of nausea", mapped["2.3"])
-        self.assertIn("Risk for deficient fluid volume", mapped["2.5"])
+        self.assertIn("The actual cause of malaria", mapped["2.1"]["draft"])
+        self.assertIn("Comparison of Clinical Features", mapped["2.1"]["draft"])
+        self.assertIn("Comparison of Treatment", mapped["2.1"]["draft"])
+        self.assertIn("major complications", mapped["2.1"]["draft"])
+        self.assertNotIn("DOCX table 7", mapped["2.1"]["draft"])
+        self.assertIn("DOCX table 7", mapped["2.2"]["draft"])
+        self.assertEqual(
+            mapped["2.2"]["rows"],
+            [["Artemether", "Antimalarial", "80 mg IM daily", "", "", ""]],
+        )
+        self.assertIn("family provided emotional support", mapped["2.4"]["draft"])
+        self.assertIn("complained of nausea", mapped["2.3"]["draft"])
+        self.assertIn("Risk for deficient fluid volume", mapped["2.5"]["draft"])
 
     def test_reads_markdown_numbered_chapter_intro(self):
         raw_text = (

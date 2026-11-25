@@ -98,7 +98,13 @@ def load_as_text(path: str) -> str:
                 table_number += 1
                 table = Table(element, doc)
                 for row_number, row in enumerate(table.rows, start=1):
-                    cells = [cell.text.strip() for cell in row.cells]
+                    cells = []
+                    previous_cell_id = None
+                    for cell in row.cells:
+                        cell_id = hash(cell._tc)
+                        if cell_id != previous_cell_id:
+                            cells.append(" ".join(cell.text.split()))
+                        previous_cell_id = cell_id
                     if any(cells):
                         parts.append(
                             f"DOCX table {table_number}, row {row_number}: "

@@ -503,6 +503,7 @@ export type ImportedFieldSection = {
   heading: string;
   fields: Record<string, string>;
   draft: string;
+  rows?: string[][];
 };
 export type ImportedFieldChapter = { name: string; intro?: string; sections: ImportedFieldSection[] };
 export type ImportCoverage = {

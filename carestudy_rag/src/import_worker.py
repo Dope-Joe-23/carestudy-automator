@@ -184,7 +184,7 @@ SECTION_FIELDS = {
     "1.9": ["understanding", "perceivedCause", "emotionalResponse"],
     "1.10": ["condition", "definition", "anatomy", "incidence", "causes", "pathophysiology", "clinicalFeatures", "diagnostics", "treatment", "complications", "nursingConsiderations"],
     "1.11": ["validationMethods", "discrepancies"],
-    "2.1": ["featuresComparison", "testsComparison", "treatmentComparison"],
+    "2.1": ["featuresComparison", "testsComparison", "treatmentGivenList", "treatmentComparison"],
     "2.3": ["healthProblems", "potentialProblems", "problemPriority"],
     "2.4": ["generalStrengths", "strengths"],
     "2.5": ["nursingDiagnoses", "diagnosisPriority"],
@@ -270,12 +270,30 @@ def _section_with_draft(section_id: str, draft: str) -> dict[str, Any]:
             if key not in fields
         }
     )
-    return {
+    fields.update(
+        {
+            key: value
+            for key, value in _extract_table_fields(draft, section_id).items()
+            if key not in fields
+        }
+    )
+    fields.update(
+        {
+            key: value
+            for key, value in _extract_section_fallback_field(draft, section_id).items()
+            if key not in fields
+        }
+    )
+    section = {
         "sectionId": section_id,
         "heading": SECTION_ID_MAP[section_id],
         "fields": fields,
         "draft": draft.strip(),
     }
+    rows = _extract_import_rows(draft, section_id)
+    if rows:
+        section["rows"] = rows
+    return section
 
 
 def _route_chapter_two_sections(sections: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -331,6 +349,344 @@ def _route_chapter_two_sections(sections: list[dict[str, Any]]) -> list[dict[str
 
         routed.append(section)
     return routed
+
+
+def _extract_tables(text: str) -> list[list[list[str]]]:
+    row_pattern = re.compile(r"^DOCX table (\d+), row (\d+):\s*(.*)$")
+    tables: dict[int, dict[int, list[str]]] = {}
+    current_table: int | None = None
+    current_row: int | None = None
+    current_parts: list[str] = []
+
+    def finish_row() -> None:
+        nonlocal current_table, current_row, current_parts
+        if current_table is not None and current_row is not None:
+            row_text = "\n".join(current_parts).strip()
+            tables.setdefault(current_table, {})[current_row] = [
+                cell.strip() for cell in row_text.split(" | ")
+            ]
+        current_table = None
+        current_row = None
+        current_parts = []
+
+    for line in text.splitlines():
+        match = row_pattern.match(line)
+        if match:
+            finish_row()
+            current_table = int(match.group(1))
+            current_row = int(match.group(2))
+            current_parts = [match.group(3)]
+        elif current_table is not None:
+            if "|" in line:
+                current_parts.append(line.rstrip())
+            else:
+                finish_row()
+    finish_row()
+
+    extracted = [
+        [rows[row_number] for row_number in sorted(rows)]
+        for _, rows in sorted(tables.items())
+    ]
+
+    markdown_rows: list[list[str]] = []
+    for line in text.splitlines():
+        if line.strip().startswith("|"):
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if cells and not all(re.fullmatch(r":?-{2,}:?", cell) for cell in cells):
+                markdown_rows.append(cells)
+        elif markdown_rows:
+            if len(markdown_rows) > 1:
+                extracted.append(markdown_rows)
+            markdown_rows = []
+    if len(markdown_rows) > 1:
+        extracted.append(markdown_rows)
+    return extracted
+
+
+def _extract_care_plan_rows(text: str) -> list[list[str]]:
+    required_headers = (
+        "date time",
+        "nursing diagnosis",
+        "objective outcome criteria",
+        "nursing orders",
+        "nursing interventions",
+        "evaluation",
+    )
+    extracted: list[list[str]] = []
+    for table in _extract_tables(text):
+        if not table:
+            continue
+        header = table[0]
+        normalised_header = [
+            " ".join(re.findall(r"[a-z0-9]+", cell.lower()))
+            for cell in header
+        ]
+        if not all(
+            any(required in label for label in normalised_header)
+            for required in required_headers
+        ):
+            continue
+
+        for cells in table[1:]:
+            mapped = [""] * 8
+            for index, label in enumerate(normalised_header):
+                if index >= len(cells):
+                    continue
+                if "date" in label and "evaluation" in label:
+                    target = 5
+                elif "date" in label:
+                    target = 0
+                elif "nursing diagnosis" in label:
+                    target = 1
+                elif "objective" in label or "outcome criteria" in label:
+                    target = 2
+                elif "nursing order" in label:
+                    target = 3
+                elif "nursing intervention" in label:
+                    target = 4
+                elif "evaluation" in label:
+                    target = 6
+                elif "rationale" in label:
+                    target = 7
+                else:
+                    continue
+                value = cells[index]
+                if value:
+                    mapped[target] = "\n".join(filter(None, (mapped[target], value)))
+            if mapped[1] and any(mapped[2:]):
+                extracted.append(mapped)
+    return extracted
+
+
+def _extract_import_rows(text: str, section_id: str) -> list[list[str]]:
+    schemas: dict[str, tuple[dict[str, tuple[str, ...]], tuple[str, ...]]] = {
+        "2.2": (
+            {
+                "name": ("drug", "drug name", "name of drug", "medication"),
+                "class": ("class", "classification", "drug class"),
+                "dose": ("dose", "dosage", "route", "frequency"),
+                "indication": ("indication", "purpose", "reason for use"),
+                "sideEffects": ("side effects", "adverse effects", "undesirable effects"),
+                "nursing": ("nursing responsibility", "nursing responsibilities", "nursing consideration", "nursing implications"),
+            },
+            ("name",),
+        ),
+        "4.3": (
+            {
+                "date": ("date", "date visit", "visit date", "visit number"),
+                "objectives": ("objective", "objectives", "purpose"),
+                "findings": ("assessment", "findings", "assessment findings"),
+                "education": ("health education", "education", "teaching"),
+                "outcome": ("outcome", "continuity", "outcome continuity", "follow up"),
+            },
+            ("date",),
+        ),
+        "5.1": (
+            {
+                "diagnosis": ("nursing diagnosis", "diagnosis"),
+                "outcome": ("outcome", "evaluation", "evaluation of outcome", "status"),
+            },
+            ("diagnosis", "outcome"),
+        ),
+        "5.2": (
+            {
+                "diagnosis": ("nursing diagnosis", "diagnosis"),
+                "amendment": ("amendment", "amendment made", "revised care"),
+                "reason": ("reason", "rationale", "reason for amendment"),
+                "result": ("result", "outcome", "evaluation"),
+            },
+            ("diagnosis", "amendment"),
+        ),
+    }
+    if section_id == "3.2":
+        return _extract_care_plan_rows(text)
+    schema = schemas.get(section_id)
+    if schema is None:
+        return []
+
+    aliases, required_fields = schema
+    extracted: list[list[str]] = []
+    for table in _extract_tables(text):
+        if len(table) < 2:
+            continue
+        headers = [
+            " ".join(re.findall(r"[a-z0-9]+", cell.lower()))
+            for cell in table[0]
+        ]
+        field_indexes = {
+            field: [
+                index
+                for index, header in enumerate(headers)
+                if any(alias in header for alias in field_aliases)
+            ]
+            for field, field_aliases in aliases.items()
+        }
+        if not all(field_indexes[field] for field in required_fields):
+            continue
+
+        field_order = list(aliases)
+        for cells in table[1:]:
+            mapped = [""] * len(field_order)
+            for field, indexes in field_indexes.items():
+                target = field_order.index(field)
+                values = [
+                    cells[index].strip()
+                    for index in indexes
+                    if index < len(cells) and cells[index].strip()
+                ]
+                if values:
+                    mapped[target] = "\n".join(values)
+            if all(mapped[field_order.index(field)] for field in required_fields):
+                extracted.append(mapped)
+    return extracted
+
+
+def _extract_table_fields(text: str, section_id: str) -> dict[str, str]:
+    aliases: dict[str, dict[str, tuple[str, ...]]] = {
+        "2.3": {
+            "healthProblems": ("actual health problem", "actual problem", "health problem", "identified problem"),
+            "potentialProblems": ("potential health problem", "potential problem", "anticipated problem"),
+            "problemPriority": ("problem priority", "priority of problem", "prioritisation of problem", "prioritization of problem", "priority"),
+        },
+        "2.4": {
+            "generalStrengths": ("general strength",),
+            "strengths": ("specific strength", "strength"),
+        },
+        "2.5": {
+            "nursingDiagnoses": ("nursing diagnosis", "nursing diagnoses", "diagnosis"),
+            "diagnosisPriority": (
+                "diagnosis priority",
+                "priority of diagnosis",
+                "priority of nursing diagnosis",
+                "prioritisation of diagnosis",
+                "prioritisation of diagnoses",
+                "prioritisation of nursing diagnosis",
+                "priority",
+                "prioritization of diagnosis",
+                "prioritization of diagnoses",
+                "prioritization of nursing diagnosis",
+            ),
+        },
+        "2.1": {
+            "treatmentGivenList": (
+                "treatment given to patient",
+                "medications given to patient",
+                "treatment received by patient",
+            ),
+        },
+    }
+    fields = aliases.get(section_id)
+    if not fields:
+        return {}
+
+    result: dict[str, list[str]] = {}
+    for table in _extract_tables(text):
+        if len(table) < 2:
+            continue
+        headers = [
+            " ".join(re.findall(r"[a-z0-9]+", cell.lower()))
+            for cell in table[0]
+        ]
+        field_indexes = {
+            field: [
+                index
+                for index, header in enumerate(headers)
+                if (
+                    any(alias in header for alias in field_aliases)
+                    and not (
+                        section_id == "2.3"
+                        and field == "healthProblems"
+                        and "potential" in header
+                    )
+                    and not (
+                        section_id == "2.4"
+                        and field == "strengths"
+                        and "general" in header
+                    )
+                    and not (
+                        section_id == "2.5"
+                        and field == "nursingDiagnoses"
+                        and "priority" in header
+                    )
+                )
+            ]
+            for field, field_aliases in fields.items()
+        }
+        for field, indexes in field_indexes.items():
+            for row in table[1:]:
+                result.setdefault(field, []).extend(
+                    row[index].strip()
+                    for index in indexes
+                    if index < len(row) and row[index].strip()
+                )
+    return {
+        field: "\n".join(dict.fromkeys(values))
+        for field, values in result.items()
+        if values
+    }
+
+
+def _extract_section_fallback_field(text: str, section_id: str) -> dict[str, str]:
+    primary_fields = {
+        "2.3": "healthProblems",
+        "2.4": "strengths",
+        "2.5": "nursingDiagnoses",
+        "4.1": "careGiven",
+        "4.2": "dischargeEducation",
+    }
+    field = primary_fields.get(section_id)
+    if not field or re.search(r"(?im)^\s*DOCX table \d+,\s*row \d+:", text):
+        return {}
+    narrative_lines = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("|")
+    ]
+    narrative = "\n".join(narrative_lines).strip()
+    return {field: narrative} if narrative else {}
+
+
+def _enrich_import_sections(chapters: list[dict[str, Any]]) -> None:
+    """Apply deterministic field and row mapping to sections returned by AI."""
+    for chapter in chapters:
+        for section in chapter.get("sections", []):
+            section_id = section.get("sectionId")
+            draft = section.get("draft")
+            if not isinstance(section_id, str) or not isinstance(draft, str):
+                continue
+            fields = section.get("fields")
+            if not isinstance(fields, dict):
+                fields = {}
+                section["fields"] = fields
+            extracted_fields = _extract_labeled_fields(draft, section_id)
+            extracted_fields.update(
+                {
+                    key: value
+                    for key, value in _extract_narrative_fields(draft, section_id).items()
+                    if key not in extracted_fields
+                }
+            )
+            extracted_fields.update(
+                {
+                    key: value
+                    for key, value in _extract_table_fields(draft, section_id).items()
+                    if key not in extracted_fields
+                }
+            )
+            extracted_fields.update(
+                {
+                    key: value
+                    for key, value in _extract_section_fallback_field(draft, section_id).items()
+                    if key not in extracted_fields
+                }
+            )
+            for key, value in extracted_fields.items():
+                fields.setdefault(key, value)
+            rows = section.get("rows")
+            if not isinstance(rows, list) or not rows:
+                imported_rows = _extract_import_rows(draft, section_id)
+                if imported_rows:
+                    section["rows"] = imported_rows
 
 
 def _infer_docx_care_plan_headings(raw_text: str) -> str:
@@ -424,11 +780,33 @@ def _extract_labeled_fields(text: str, section_id: str) -> dict[str, str]:
         "familyHistoryPresent": ["known history", "family history", "hereditary or chronic disease"],
         "familyConditions": ["family conditions", "hereditary conditions", "chronic conditions", "conditions found in the family"],
         "familySurgery": ["family surgery", "family surgical history", "significant family surgical history"],
+        "healthProblems": ["actual health problems", "actual problems", "health problems", "identified health problems"],
+        "potentialProblems": ["potential health problems", "potential problems", "anticipated problems"],
+        "problemPriority": ["problem priority", "priority of problems", "prioritisation of problems", "prioritization of problems"],
+        "generalStrengths": ["general strengths", "patient/family general strengths"],
+        "strengths": ["specific strengths", "patient/family strengths"],
         "pseudonym": ["pseudonym"],
         "chiefComplaint": ["chief complaint", "presenting complaint"],
         "presentingSymptoms": ["presenting symptoms", "symptoms"],
         "admissionDate": ["date of admission", "admission date"],
-        "nursingDiagnoses": ["nursing diagnoses", "nursing diagnosis"],
+        "treatmentStarted": ["treatment started", "treatment initiated", "treatment given on admission"],
+        "nursingDiagnoses": ["nursing diagnoses", "nursing diagnosis", "diagnoses identified"],
+        "diagnosisPriority": ["diagnosis priority", "priority of diagnoses", "prioritisation of diagnoses", "prioritization of diagnoses"],
+        "careGiven": ["care actually given", "actual nursing care", "nursing care given", "care given"],
+        "healthEducation": ["health education given", "health education provided"],
+        "familyInvolvement": ["family involvement", "family participation"],
+        "dischargeEducation": ["discharge health education", "discharge education"],
+        "longTermNeeds": ["long term needs", "long-term needs", "long term responsibilities"],
+        "communityResources": ["community resources", "community referrals", "resources and referrals"],
+        "dischargeProcess": ["discharge process", "discharge preparation process"],
+        "dischargeDate": ["date of discharge", "discharge date"],
+        "reviewDate": ["date of review", "review date", "follow up date"],
+        "treatmentGivenList": [
+            "list of treatment/medications given to patient",
+            "treatment medications given to patient",
+            "treatment given list",
+            "medications given",
+        ],
     }
     result: dict[str, str] = {}
     label_to_field = {
@@ -442,6 +820,9 @@ def _extract_labeled_fields(text: str, section_id: str) -> dict[str, str]:
     # plural labels such as "Family Conditions" matchable after normalisation.
     pattern = re.compile(r"^\s*([^:|\-]+?)\s*[:\-]\s*(.+?)\s*$", re.IGNORECASE)
     for line in text.splitlines():
+        docx_row = re.match(r"^\s*DOCX table \d+,\s*row \d+:\s*(.*)$", line, re.IGNORECASE)
+        if docx_row:
+            line = docx_row.group(1)
         match = pattern.match(line)
         if match:
             pairs = [(match.group(1), match.group(2))]
@@ -451,7 +832,8 @@ def _extract_labeled_fields(text: str, section_id: str) -> dict[str, str]:
         for label, value in pairs:
             field = label_to_field.get(_normalise_heading(label))
             value = value.strip()
-            if field and value and field not in result:
+            value_is_field_label = _normalise_heading(value) in label_to_field
+            if field and value and not value_is_field_label and field not in result:
                 result[field] = value
     return result
 
@@ -568,6 +950,27 @@ def _deterministic_import(raw_text: str) -> dict | None:
                 if key not in current["fields"]
             }
         )
+        current["fields"].update(
+            {
+                key: value
+                for key, value in _extract_table_fields(
+                    current["draft"], current["sectionId"]
+                ).items()
+                if key not in current["fields"]
+            }
+        )
+        current["fields"].update(
+            {
+                key: value
+                for key, value in _extract_section_fallback_field(
+                    current["draft"], current["sectionId"]
+                ).items()
+                if key not in current["fields"]
+            }
+        )
+        imported_rows = _extract_import_rows(current["draft"], current["sectionId"])
+        if imported_rows:
+            current["rows"] = imported_rows
         sections.append(current)
         current = None
 
@@ -753,6 +1156,8 @@ def _deterministic_import(raw_text: str) -> dict | None:
             existing["fields"].update(
                 {key: value for key, value in section["fields"].items() if key not in existing["fields"]}
             )
+            if section.get("rows"):
+                existing.setdefault("rows", []).extend(section["rows"])
     chapters = list(chapter_by_name.values())
     return {
         "title": {},
@@ -865,6 +1270,7 @@ def import_study_with_fields(raw_text: str) -> dict:
             result = json.loads(text)
             if "chapters" not in result or not isinstance(result["chapters"], list):
                 raise ValueError("Response missing 'chapters' array")
+            _enrich_import_sections(result["chapters"])
             result["importMode"] = "ai"
             result["coverage"] = _coverage_report(result.get("chapters", []))
             return result
