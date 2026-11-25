@@ -504,7 +504,7 @@ export type ImportedFieldSection = {
   fields: Record<string, string>;
   draft: string;
 };
-export type ImportedFieldChapter = { name: string; sections: ImportedFieldSection[] };
+export type ImportedFieldChapter = { name: string; intro?: string; sections: ImportedFieldSection[] };
 export type ImportCoverage = {
   expected: string[];
   detected: string[];

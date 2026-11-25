@@ -383,75 +383,171 @@ def _deterministic_import(raw_text: str) -> dict | None:
         _normalise_heading(heading): section_id
         for section_id, heading in SECTION_ID_MAP.items()
     }
-    heading_pattern = re.compile(r"^\s*((?:P|[1-6])\.\d+)\s*[).:\-]?\s*(.*?)\s*$", re.IGNORECASE)
+    chapter_names_by_number = {
+        "1": "Assessment", "i": "Assessment", "one": "Assessment",
+        "2": "Analysis of Data", "ii": "Analysis of Data", "two": "Analysis of Data",
+        "3": "Planning", "iii": "Planning", "three": "Planning",
+        "4": "Implementation", "iv": "Implementation", "four": "Implementation",
+        "5": "Evaluation", "v": "Evaluation", "five": "Evaluation",
+        "6": "Additional Pages", "vi": "Additional Pages", "six": "Additional Pages",
+    }
+    chapter_heading_pattern = re.compile(
+        r"^\s*chapter\s+(one|two|three|four|five|six|i{1,3}|iv|v|vi|[1-6])"
+        r"\b(?:\s*[:.)\-–—]?\s*(.*?))?\s*$",
+        re.IGNORECASE,
+    )
+    heading_pattern = re.compile(
+        r"^\s*((?:P|[1-6])\.\d+(?:\.\d+)*)\s*[).:\-]?\s*(.*?)\s*$",
+        re.IGNORECASE,
+    )
     sections: list[dict[str, Any]] = []
     current: dict[str, Any] | None = None
+
+    def chapter_for_section(section_id: str) -> str:
+        if section_id.startswith(("P.", "6.")):
+            return "Additional Pages"
+        return chapter_names_by_number.get(section_id[0], "Assessment")
+
+    def finish_section() -> None:
+        nonlocal current
+        if not current:
+            return
+        current["draft"] = "\n".join(current["lines"]).strip()
+        current.pop("lines", None)
+        current["fields"] = _extract_labeled_fields(current["draft"], current["sectionId"])
+        current["fields"].update(
+            {
+                key: value
+                for key, value in _extract_narrative_fields(current["draft"], current["sectionId"]).items()
+                if key not in current["fields"]
+            }
+        )
+        sections.append(current)
+        current = None
+
+    chapter_order: list[str] = []
+    chapter_intro_lines: dict[str, list[str]] = {}
+    intro_lines: list[str] = []
+    active_chapter: str | None = None
+    chapter_title_pending = False
+
+    def add_chapter(chapter_name: str) -> None:
+        if chapter_name not in chapter_order:
+            chapter_order.append(chapter_name)
+
+    def finish_intro() -> None:
+        if active_chapter and intro_lines:
+            chapter_intro_lines.setdefault(active_chapter, []).extend(intro_lines)
+            intro_lines.clear()
+
+    chapter_title_names = {
+        _normalise_heading(name): chapter_names_by_number[number]
+        for number, name in {
+            "1": "Assessment",
+            "2": "Analysis of Data",
+            "3": "Planning",
+            "4": "Implementation",
+            "5": "Evaluation",
+            "6": "Summary and Conclusion",
+        }.items()
+    }
+    chapter_title_names[_normalise_heading("Additional Pages")] = "Additional Pages"
+
     for raw_line in raw_text.splitlines():
-        line = raw_line.strip()
+        line = re.sub(r"^#{1,6}\s*", "", raw_line.strip())
+        chapter_match = chapter_heading_pattern.match(line)
+        if chapter_match:
+            finish_section()
+            finish_intro()
+            active_chapter = chapter_names_by_number[chapter_match.group(1).lower()]
+            add_chapter(active_chapter)
+            chapter_title_pending = not bool((chapter_match.group(2) or "").strip())
+            continue
+
+        normalised_line = _normalise_heading(line)
+        if chapter_title_pending and line:
+            chapter_title_pending = False
+            if normalised_line in chapter_title_names or normalised_line in {
+                "introduction",
+                "chapter introduction",
+            }:
+                continue
+        if normalised_line in chapter_title_names:
+            finish_section()
+            finish_intro()
+            active_chapter = chapter_title_names[normalised_line]
+            add_chapter(active_chapter)
+            continue
+
         match = heading_pattern.match(line)
-        section_id = match.group(1).upper() if match else None
+        raw_section_id = match.group(1).upper() if match else None
         heading = match.group(2).strip() if match else ""
         if re.search(r"(?:\.{3,}|…{2,})", line):
             match = None
-            section_id = None
+            raw_section_id = None
             heading = ""
+
+        if raw_section_id and raw_section_id.startswith(tuple(f"{number}." for number in "123456")):
+            parts = raw_section_id.split(".")
+            if len(parts) == 2 and parts[1] == "0":
+                finish_section()
+                finish_intro()
+                active_chapter = chapter_names_by_number[parts[0]]
+                add_chapter(active_chapter)
+                chapter_title_pending = False
+                continue
+
+        nested_heading = False
+        section_id = raw_section_id
+        if section_id and len(section_id.split(".")) > 2:
+            nested_heading = True
+            section_id = ".".join(section_id.split(".")[:2])
         if not match:
             section_id = _section_id_for_heading(line, heading_by_normalised)
             heading = line
         if section_id not in SECTION_ID_MAP:
             section_id = _section_id_for_heading(heading, heading_by_normalised)
+
         if section_id:
-            if current:
-                current["draft"] = "\n".join(current["lines"]).strip()
-                current.pop("lines", None)
-                current["fields"] = _extract_labeled_fields(current["draft"], current["sectionId"])
-                current["fields"].update(
-                    {key: value for key, value in _extract_narrative_fields(current["draft"], current["sectionId"]).items()
-                     if key not in current["fields"]}
-                )
-                sections.append(current)
+            if nested_heading and current and current["sectionId"] == section_id:
+                current["lines"].append(line)
+                continue
+            finish_section()
+            finish_intro()
+            section_chapter = chapter_for_section(section_id)
+            if active_chapter != section_chapter:
+                active_chapter = section_chapter
+            add_chapter(active_chapter)
             current = {
                 "sectionId": section_id,
                 "heading": SECTION_ID_MAP[section_id],
-                "lines": [],
+                "lines": [line] if nested_heading else [],
                 "fields": {},
                 "draft": "",
             }
             continue
         if current:
             current["lines"].append(raw_line.rstrip())
+        elif active_chapter and line:
+            intro_lines.append(raw_line.rstrip())
 
-    if current:
-        current["draft"] = "\n".join(current["lines"]).strip()
-        current.pop("lines", None)
-        current["fields"] = _extract_labeled_fields(current["draft"], current["sectionId"])
-        current["fields"].update(
-            {key: value for key, value in _extract_narrative_fields(current["draft"], current["sectionId"]).items()
-             if key not in current["fields"]}
-        )
-        sections.append(current)
+    finish_section()
+    finish_intro()
 
-    if not sections:
+    if not sections and not chapter_intro_lines:
         return None
-    chapters: list[dict[str, Any]] = []
-    chapter_by_name: dict[str, dict[str, Any]] = {}
+    chapter_by_name: dict[str, dict[str, Any]] = {
+        chapter_name: {"name": chapter_name, "sections": []}
+        for chapter_name in chapter_order
+    }
+    for chapter_name, lines in chapter_intro_lines.items():
+        intro = "\n".join(lines).strip()
+        if intro:
+            chapter_by_name.setdefault(chapter_name, {"name": chapter_name, "sections": []})["intro"] = intro
     section_by_id: dict[str, dict[str, Any]] = {}
     for section in sections:
         section_id = section["sectionId"]
-        # "Additional Pages" is the merged front-matter + closing chapter:
-        # preliminary sections (P.*) and the 6.x summary/conclusion/bibliography
-        # sections all map there — the document's page order is unchanged.
-        if section_id.startswith("P.") or section_id.startswith("6."):
-            chapter_name = "Additional Pages"
-        else:
-            chapter_name = {
-                "1": "Assessment",
-                "2": "Analysis of Data",
-                "3": "Planning",
-                "4": "Implementation",
-                "5": "Evaluation",
-                "6": "Summary and Conclusion",
-            }.get(section_id[0], "Assessment")
+        chapter_name = chapter_for_section(section_id)
         chapter = chapter_by_name.setdefault(
             chapter_name,
             {"name": chapter_name, "sections": []},
@@ -461,12 +557,17 @@ def _deterministic_import(raw_text: str) -> dict | None:
             section_by_id[section_id] = section
             chapter["sections"].append(section)
         else:
-            if len(section["draft"]) > len(existing["draft"]):
-                existing["draft"] = section["draft"]
+            existing_draft = existing["draft"]
+            repeated_draft = section["draft"]
+            if repeated_draft and repeated_draft not in existing_draft:
+                if existing_draft and existing_draft not in repeated_draft:
+                    existing["draft"] = f"{existing_draft}\n\n{repeated_draft}"
+                else:
+                    existing["draft"] = repeated_draft
             existing["fields"].update(
                 {key: value for key, value in section["fields"].items() if key not in existing["fields"]}
             )
-    chapters.extend(chapter_by_name.values())
+    chapters = list(chapter_by_name.values())
     return {
         "title": {},
         "chapters": chapters,
@@ -522,28 +623,34 @@ def import_study_with_fields(raw_text: str) -> dict:
         '  "title": { "patientName": "", "diagnosis": "", "studentName": "", "indexNumber": "", "collegeName": "", "collegeLocation": "", "year": "" },\n'
         '  "chapters": [\n'
         '    { "name": "one of ' + str(CHAPTER_NAMES) + '",\n'
+        '      "intro": "Verbatim chapter-introduction text before the first numbered section, or empty string if none",\n'
         '      "sections": [\n'
         '        { "sectionId": "1.1", "heading": "Patient\'s Particulars",\n'
         '          "fields": { "initials": "extracted value", "age": "extracted value", ... },\n'
-        '          "draft": "Full polished section text — the complete paragraph(s) from the document" },\n'
+        '          "draft": "Complete section text copied faithfully from the document" },\n'
         "      ]\n    }\n  ]\n}\n\n"
         "Rules:\n"
         "- Every section MUST have a 'sectionId' that matches one of the IDs listed above.\n"
         "- The 'heading' should match the standard heading for that sectionId.\n"
+        "- Text after a chapter heading and before its first numbered section belongs in that chapter's 'intro', "
+        "not in the preceding section. Preserve the wording exactly.\n"
         "- Treat only an explicit numbered heading (for example, '1.10 Literature Review') "
         "or an exact standard heading as a section boundary.\n"
         "- Subheadings inside Literature Review, including Definition, Incidence, Causes, "
         "Pathophysiology, Signs and Symptoms, Diagnostic Investigations, Medical Management, "
         "Nursing Management, Prevention, and Complications, must remain in section 1.10; "
         "do not map them to other canonical sections.\n"
-        "- The 'draft' is the FULL text of the section from the document — preserve the student's original wording.\n"
+        "- The 'draft' is the FULL text of the section from the document. Copy it verbatim; do not summarize, "
+        "rewrite, polish, or replace it with an interpretation.\n"
+        "- Preserve every table heading, row, and cell as source text. Never replace a table with prose that "
+        "describes or infers what the table means.\n"
         "- The 'fields' object extracts specific values from the text. Use the field IDs listed above.\n"
         "  Only include fields you can confidently extract. Omit fields you cannot find.\n"
         "  For field values, use SHORT extracted values (names, dates, numbers), not full sentences.\n"
         "  Long narrative text belongs in 'draft', not in 'fields'.\n"
         "- Sections with only a table (drugs, care plan, home visits, bibliography) should have\n"
         "  the table text in 'draft' and an empty 'fields' object.\n"
-        "- If a chapter has no matching content, include it with an empty 'sections' array.\n"
+        "- If a chapter has no matching content, include it with an empty 'intro' and 'sections' array.\n"
         "- Do NOT invent content. Only include text that exists in the source document."
     )
 

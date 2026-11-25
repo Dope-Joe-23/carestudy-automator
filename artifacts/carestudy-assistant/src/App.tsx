@@ -3463,7 +3463,7 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     try {
       const { importStudyWithFields } = await import('@/lib/api');
       const result = await importStudyWithFields(docImportText.trim(), currentStudyId);
-      // Map the AI-returned chapters into the workspace.
+      // Map imported chapter introductions and sections into the workspace.
       setChapters((previous) => {
         const next = previous.map((chapter) => ({ ...chapter }));
         for (const aiChapter of result.chapters) {
@@ -3472,6 +3472,9 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           );
           if (chapterIndex < 0) continue;
           const target = next[chapterIndex];
+          if (typeof aiChapter.intro === 'string' && aiChapter.intro.trim()) {
+            target.intro = aiChapter.intro.trim();
+          }
           for (const aiSection of aiChapter.sections) {
             const section = target.sections.find(
               (s) => s.id === aiSection.sectionId,
@@ -3558,7 +3561,18 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
       }
 
       const importedChapters = makeChapters(cadreProfile);
+      const chapterNameAliases: Record<string, string> = {
+        'Summary and Conclusion': 'Additional Pages',
+      };
       for (const importedChapter of unfinishedImportReview.chapters) {
+        const targetChapterName =
+          chapterNameAliases[importedChapter.name] ?? importedChapter.name;
+        const targetChapter = importedChapters.find(
+          (chapter) => chapter.name === targetChapterName,
+        );
+        if (targetChapter && typeof importedChapter.intro === 'string') {
+          targetChapter.intro = importedChapter.intro.trim();
+        }
         for (const importedSection of importedChapter.sections) {
           const target = importedChapters
             .flatMap((chapter) => chapter.sections)
@@ -3614,7 +3628,9 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
       const startedChapters = importedChapters
         .map((chapter, index) => ({ chapter, index }))
         .filter(({ chapter, index }) =>
-          index > 0 && chapter.sections.some((section) => importedSectionIds.has(section.id)),
+          index > 0 &&
+          (chapter.intro.trim() ||
+            chapter.sections.some((section) => importedSectionIds.has(section.id))),
         );
       const incompleteChapter = startedChapters.find(({ chapter }) =>
         chapter.sections.some((section) => !importedSectionIds.has(section.id)),
@@ -6083,7 +6099,8 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dirty, canSave, chapters, exportMeta, docTheme]);
 
-  const draftAvailable = sectionFilledCount(currentSection) > 0;
+  const draftAvailable =
+    sectionFilledCount(currentSection) > 0 || Boolean(currentSection.draft.trim());
   const filledCount = sectionFilledCount(currentSection);
   const collectedCount = sectionCollectedCount(currentSection);
   const collectedTotal = sectionCollectedTotal(currentSection);
@@ -8161,11 +8178,12 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           {unfinishedImportReview && (() => {
             const coverage = unfinishedImportReview.coverage;
             const sections = unfinishedImportReview.chapters.flatMap((chapter) => chapter.sections);
+            const intros = unfinishedImportReview.chapters.filter((chapter) => chapter.intro?.trim());
             const drafts = sections.filter((section) => section.draft.trim()).length;
             const fields = sections.reduce((sum, section) => sum + Object.keys(section.fields ?? {}).length, 0);
             return (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                   <div className="rounded-md border bg-muted/30 p-3">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Sections mapped</p>
                     <p className="mt-1 text-lg font-semibold">
@@ -8179,6 +8197,10 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                   <div className="rounded-md border bg-muted/30 p-3">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Fields extracted</p>
                     <p className="mt-1 text-lg font-semibold">{fields}</p>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Chapter intros</p>
+                    <p className="mt-1 text-lg font-semibold">{intros.length}</p>
                   </div>
                   <div className="rounded-md border bg-muted/30 p-3">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Parser</p>
@@ -8204,6 +8226,20 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                 <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-muted-foreground">
                   Imported text and extracted fields still need your review. The Studio will not invent missing patient details, care provided, or outcomes.
                 </div>
+                {intros.length > 0 && (
+                  <div className="max-h-40 space-y-1 overflow-y-auto">
+                    {intros.map((chapter) => (
+                      <details key={chapter.name} className="rounded border px-2.5 py-2 text-xs">
+                        <summary className="cursor-pointer font-medium">
+                          Chapter introduction · {chapter.name}
+                        </summary>
+                        <div className="mt-2 whitespace-pre-wrap border-t pt-2 leading-relaxed text-muted-foreground">
+                          {chapter.intro}
+                        </div>
+                      </details>
+                    ))}
+                  </div>
+                )}
                 <div className="max-h-56 space-y-1 overflow-y-auto">
                   {sections.map((section) => (
                     <details key={section.sectionId} className="rounded border px-2.5 py-2 text-xs">
@@ -8258,9 +8294,9 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
               Import a care study document
             </DialogTitle>
             <DialogDescription>
-              Paste the full text or upload a file. The AI will parse it into the standard
-              section structure — extracting field values and populating drafts so the
-              content appears polished in the preview.
+              Paste the full text or upload a file.               The importer will map it into the standard section structure, extract
+              available field values, and preserve section and chapter-introduction text
+              as drafts for your review.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -8354,11 +8390,12 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           {docImportReview && (() => {
             const coverage = docImportReview.coverage;
             const sections = docImportReview.chapters.flatMap((chapter) => chapter.sections);
+            const intros = docImportReview.chapters.filter((chapter) => chapter.intro?.trim());
             const drafts = sections.filter((section) => section.draft.trim()).length;
             const fields = sections.reduce((sum, section) => sum + Object.keys(section.fields ?? {}).length, 0);
             return (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                   <div className="rounded-md border bg-muted/30 p-3">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Sections</p>
                     <p className="mt-1 text-lg font-semibold">{coverage ? `${coverage.detected.length}/${coverage.expected.length}` : sections.length}</p>
@@ -8370,6 +8407,10 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                   <div className="rounded-md border bg-muted/30 p-3">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Fields</p>
                     <p className="mt-1 text-lg font-semibold">{fields}</p>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Chapter intros</p>
+                    <p className="mt-1 text-lg font-semibold">{intros.length}</p>
                   </div>
                   <div className="rounded-md border bg-muted/30 p-3">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Mode</p>
@@ -8387,6 +8428,19 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                   <p className="flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">
                     <CheckCircle2 className="size-4" /> All canonical sections were detected.
                   </p>
+                )}
+                {intros.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Chapter introductions</p>
+                    {intros.map((chapter) => (
+                      <details key={chapter.name} className="rounded border px-2.5 py-2 text-xs">
+                        <summary className="cursor-pointer font-medium">{chapter.name}</summary>
+                        <div className="mt-2 whitespace-pre-wrap border-t pt-2 leading-relaxed text-muted-foreground">
+                          {chapter.intro}
+                        </div>
+                      </details>
+                    ))}
+                  </div>
                 )}
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Imported sections</p>
