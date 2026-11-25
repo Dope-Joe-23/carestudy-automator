@@ -8,11 +8,38 @@ from import_worker import import_study_with_fields
 
 
 class ImportStudyWithFieldsTests(unittest.TestCase):
+    def test_routes_unheaded_objectives_and_docx_care_plan_tables_separately(self):
+        objectives = (
+            "Patient and family care objectives or outcome criteria refer to goals "
+            "the nurse aims to achieve after interventions."
+        )
+        table_header = (
+            "DOCX table 13, row 1: Date/Time | Nursing Diagnosis | Objective/Outcome Criteria | "
+            "Nursing Orders | Nursing Interventions | Evaluation"
+        )
+        table_row = (
+            "DOCX table 13, row 2: 28/07/2026 9:10 a.m. | Risk for deficient fluid volume | "
+            "Maintain fluid balance | Monitor intake and output | Encourage oral fluids | Goal met"
+        )
+        result = import_study_with_fields(f"{objectives}\n{table_header}\n{table_row}")
+
+        self.assertEqual(result["importMode"], "deterministic")
+        planning = next(chapter for chapter in result["chapters"] if chapter["name"] == "Planning")
+        sections = {section["sectionId"]: section for section in planning["sections"]}
+        self.assertIn(objectives, sections["3.1"]["draft"])
+        self.assertNotIn("DOCX table", sections["3.1"]["draft"])
+        self.assertIn(table_header, sections["3.2"]["draft"])
+        self.assertIn("Risk for deficient fluid volume", sections["3.2"]["draft"])
+
     def test_keeps_chapter_introduction_out_of_previous_section(self):
         validation = "The data used in this care study has undergone comprehensive validation."
         chapter_intro = (
             "As outlined by Hellman (2024), data analysis is the step in the nursing process.\n"
             "This chapter involves comparing data with established standards."
+        )
+        section_lead_in = (
+            "In this section, the patient's data is compared with the standard as presented "
+            "in the literature review."
         )
         investigation = (
             "2.1.1 Diagnostic Investigations\n"
@@ -25,8 +52,7 @@ class ImportStudyWithFieldsTests(unittest.TestCase):
             "CHAPTER ONE\nASSESSMENT\n"
             f"1.11 Validation of Data\n{validation}\n"
             "CHAPTER TWO\nANALYSIS OF DATA\n"
-            f"{chapter_intro}\n"
-            "2.1 Comparison of Data with Standards\n"
+            f"{chapter_intro}\n{section_lead_in}\n"
             f"{investigation}\n"
         )
 
@@ -41,8 +67,73 @@ class ImportStudyWithFieldsTests(unittest.TestCase):
 
         self.assertEqual(analysis["intro"], chapter_intro)
         self.assertEqual(validation_section["draft"], validation)
+        self.assertIn(section_lead_in, comparison_section["draft"])
         self.assertIn("2.1.1 Diagnostic Investigations", comparison_section["draft"])
         self.assertIn("Microscopy | Blood Film requested", comparison_section["draft"])
+
+    def test_preserves_section_lead_in_before_first_nested_heading(self):
+        section_lead_in = (
+            "In this section, the patient's data is compared with the standard as presented "
+            "in the literature review."
+        )
+        raw_text = (
+            f"{section_lead_in}\n"
+            "2.1.1 Diagnostic Investigations\n"
+            "Blood Film for Malaria Parasites\n"
+            "DOCX table 3, row 1: Investigation from Literature Review | Patient's Ordered Investigations\n"
+            "DOCX table 3, row 2: Microscopy | Blood Film for Malaria Parasites requested for patient\n"
+            "2.1.2 Comments on Diagnostic Investigation\n"
+            "The investigations requested were appropriate.\n"
+            "DOCX table 4, row 1: Date | Specimen | Investigation | Result\n"
+            "2.2 Comparison of Clinical Manifestations\n"
+            "The patient's symptoms were compared with literature."
+        )
+
+        result = import_study_with_fields(raw_text)
+
+        self.assertEqual(result["importMode"], "deterministic")
+        mapped = {
+            section["sectionId"]: section
+            for chapter in result["chapters"]
+            for section in chapter["sections"]
+        }
+        self.assertIn(section_lead_in, mapped["2.1"]["draft"])
+        self.assertIn("2.1.1 Diagnostic Investigations", mapped["2.1"]["draft"])
+        self.assertIn("DOCX table 3, row 2", mapped["2.1"]["draft"])
+        self.assertIn("2.1.2 Comments on Diagnostic Investigation", mapped["2.1"]["draft"])
+        self.assertIn("DOCX table 4, row 1", mapped["2.1"]["draft"])
+        self.assertEqual(
+            mapped["2.2"]["draft"],
+            "The patient's symptoms were compared with literature.",
+        )
+
+    def test_assigns_section_lead_in_to_following_canonical_section(self):
+        cases = (
+            ("2.1", "2.2.1", "2.2"),
+            ("3.1", "3.2.1", "3.2"),
+            ("4.1", "4.2.1", "4.2"),
+            ("5.1", "5.2.1", "5.2"),
+        )
+        for previous_section, nested_heading, target_section in cases:
+            with self.subTest(target_section=target_section):
+                lead_in = f"In this section, chapter {target_section[0]} content is discussed."
+                result = import_study_with_fields(
+                    f"{previous_section} Previous section\n"
+                    f"Existing content for {previous_section}.\n"
+                    f"{lead_in}\n"
+                    f"{nested_heading} Section details\n"
+                    f"Content for {target_section}."
+                )
+
+                mapped = {
+                    section["sectionId"]: section["draft"]
+                    for chapter in result["chapters"]
+                    for section in chapter["sections"]
+                }
+                self.assertEqual(result["importMode"], "deterministic")
+                self.assertNotIn(lead_in, mapped[previous_section])
+                self.assertIn(lead_in, mapped[target_section])
+                self.assertIn(f"Content for {target_section}.", mapped[target_section])
 
     def test_reads_markdown_numbered_chapter_intro(self):
         raw_text = (

@@ -261,6 +261,72 @@ def _section_id_for_heading(value: str, heading_by_normalised: dict[str, str]) -
     return heading_by_normalised.get(normalised)
 
 
+def _infer_docx_care_plan_headings(raw_text: str) -> str:
+    """Add missing 3.1/3.2 boundaries when extracted DOCX tables identify a care plan."""
+    lines = raw_text.splitlines()
+    care_plan_header = re.compile(r"^\s*DOCX table \d+,\s*row 1:\s*(.*)$", re.IGNORECASE)
+    care_plan_table_index: int | None = None
+    for index, line in enumerate(lines):
+        match = care_plan_header.match(line)
+        if not match:
+            continue
+        header = " ".join(re.findall(r"[a-z0-9]+", match.group(1).lower()))
+        if all(
+            label in header
+            for label in (
+                "nursing diagnosis",
+                "objective outcome criteria",
+                "nursing order",
+                "nursing intervention",
+                "evaluation",
+            )
+        ):
+            care_plan_table_index = index
+            break
+    if care_plan_table_index is None:
+        return raw_text
+
+    def has_section_heading(section_id: str) -> bool:
+        pattern = re.compile(rf"^\s*{re.escape(section_id)}(?:\b|[).:\-])", re.IGNORECASE)
+        heading_by_normalised = {
+            _normalise_heading(heading): mapped_id
+            for mapped_id, heading in SECTION_ID_MAP.items()
+        }
+        return any(
+            pattern.match(re.sub(r"^#{1,6}\s*", "", line.strip()))
+            or _section_id_for_heading(line.strip(), heading_by_normalised) == section_id
+            for line in lines
+        )
+
+    insertions: dict[int, list[str]] = {}
+    if not has_section_heading("3.2"):
+        insertions.setdefault(care_plan_table_index, []).append("3.2 Nursing Care Plan")
+
+    if not has_section_heading("3.1"):
+        objectives_start = next(
+            (
+                index
+                for index, line in enumerate(lines[:care_plan_table_index])
+                if re.search(
+                    r"\b(?:patient(?:\s+and\s+family)?|family)\s+care objectives\b",
+                    line,
+                    re.IGNORECASE,
+                )
+            ),
+            None,
+        )
+        if objectives_start is not None:
+            insertions.setdefault(objectives_start, []).insert(0, "3.1 Objectives for Patient/Family Care")
+
+    if not insertions:
+        return raw_text
+    output: list[str] = []
+    for index, line in enumerate(lines):
+        output.extend(insertions.get(index, []))
+        output.append(line)
+    return "\n".join(output)
+
+
 def _extract_labeled_fields(text: str, section_id: str) -> dict[str, str]:
     """Extract unambiguous label/value pairs without requiring an AI call."""
     fields = SECTION_FIELDS.get(section_id, [])
@@ -379,6 +445,7 @@ def _deterministic_import(raw_text: str) -> dict | None:
     result, including one with unmapped narrative omitted, means the document
     had enough structure to import without an external model.
     """
+    raw_text = _infer_docx_care_plan_headings(raw_text)
     heading_by_normalised = {
         _normalise_heading(heading): section_id
         for section_id, heading in SECTION_ID_MAP.items()
@@ -428,6 +495,8 @@ def _deterministic_import(raw_text: str) -> dict | None:
     chapter_order: list[str] = []
     chapter_intro_lines: dict[str, list[str]] = {}
     intro_lines: list[str] = []
+    preamble_lines: list[str] = []
+    pending_section_lead_in: list[str] = []
     active_chapter: str | None = None
     chapter_title_pending = False
 
@@ -439,6 +508,19 @@ def _deterministic_import(raw_text: str) -> dict | None:
         if active_chapter and intro_lines:
             chapter_intro_lines.setdefault(active_chapter, []).extend(intro_lines)
             intro_lines.clear()
+
+    def take_section_lead_in(lines: list[str]) -> list[str]:
+        for index, line in enumerate(lines):
+            if re.search(r"\bthis section\b", line, re.IGNORECASE):
+                lead_in = lines[index:]
+                del lines[index:]
+                return lead_in
+        return []
+
+    def flush_pending_section_lead_in() -> None:
+        if current and pending_section_lead_in:
+            current["lines"].extend(pending_section_lead_in)
+            pending_section_lead_in.clear()
 
     chapter_title_names = {
         _normalise_heading(name): chapter_names_by_number[number]
@@ -457,8 +539,10 @@ def _deterministic_import(raw_text: str) -> dict | None:
         line = re.sub(r"^#{1,6}\s*", "", raw_line.strip())
         chapter_match = chapter_heading_pattern.match(line)
         if chapter_match:
+            flush_pending_section_lead_in()
             finish_section()
             finish_intro()
+            preamble_lines.clear()
             active_chapter = chapter_names_by_number[chapter_match.group(1).lower()]
             add_chapter(active_chapter)
             chapter_title_pending = not bool((chapter_match.group(2) or "").strip())
@@ -473,8 +557,10 @@ def _deterministic_import(raw_text: str) -> dict | None:
             }:
                 continue
         if normalised_line in chapter_title_names:
+            flush_pending_section_lead_in()
             finish_section()
             finish_intro()
+            preamble_lines.clear()
             active_chapter = chapter_title_names[normalised_line]
             add_chapter(active_chapter)
             continue
@@ -490,8 +576,10 @@ def _deterministic_import(raw_text: str) -> dict | None:
         if raw_section_id and raw_section_id.startswith(tuple(f"{number}." for number in "123456")):
             parts = raw_section_id.split(".")
             if len(parts) == 2 and parts[1] == "0":
+                flush_pending_section_lead_in()
                 finish_section()
                 finish_intro()
+                preamble_lines.clear()
                 active_chapter = chapter_names_by_number[parts[0]]
                 add_chapter(active_chapter)
                 chapter_title_pending = False
@@ -509,11 +597,23 @@ def _deterministic_import(raw_text: str) -> dict | None:
             section_id = _section_id_for_heading(heading, heading_by_normalised)
 
         if section_id:
+            section_lead_in: list[str] = []
+            if current and pending_section_lead_in:
+                if current["sectionId"] != section_id:
+                    section_lead_in = pending_section_lead_in[:]
+                    pending_section_lead_in.clear()
+                else:
+                    flush_pending_section_lead_in()
             if nested_heading and current and current["sectionId"] == section_id:
                 current["lines"].append(line)
                 continue
+            if nested_heading and current is None and not section_lead_in:
+                section_lead_in = take_section_lead_in(intro_lines)
+                if not section_lead_in:
+                    section_lead_in = take_section_lead_in(preamble_lines)
             finish_section()
             finish_intro()
+            preamble_lines.clear()
             section_chapter = chapter_for_section(section_id)
             if active_chapter != section_chapter:
                 active_chapter = section_chapter
@@ -521,16 +621,22 @@ def _deterministic_import(raw_text: str) -> dict | None:
             current = {
                 "sectionId": section_id,
                 "heading": SECTION_ID_MAP[section_id],
-                "lines": [line] if nested_heading else [],
+                "lines": [*section_lead_in, *([line] if nested_heading else [])],
                 "fields": {},
                 "draft": "",
             }
             continue
         if current:
-            current["lines"].append(raw_line.rstrip())
+            if pending_section_lead_in or re.search(r"\bthis section\b", line, re.IGNORECASE):
+                pending_section_lead_in.append(raw_line.rstrip())
+            else:
+                current["lines"].append(raw_line.rstrip())
         elif active_chapter and line:
             intro_lines.append(raw_line.rstrip())
+        elif line:
+            preamble_lines.append(raw_line.rstrip())
 
+    flush_pending_section_lead_in()
     finish_section()
     finish_intro()
 
@@ -648,6 +754,8 @@ def import_study_with_fields(raw_text: str) -> dict:
         "  Only include fields you can confidently extract. Omit fields you cannot find.\n"
         "  For field values, use SHORT extracted values (names, dates, numbers), not full sentences.\n"
         "  Long narrative text belongs in 'draft', not in 'fields'.\n"
+        "- Care-plan tables with columns for Nursing Diagnosis, Objective/Outcome Criteria, Nursing Orders, "
+        "Nursing Interventions, and Evaluation belong in section 3.2 'Nursing Care Plan', never in section 3.1.\n"
         "- Sections with only a table (drugs, care plan, home visits, bibliography) should have\n"
         "  the table text in 'draft' and an empty 'fields' object.\n"
         "- If a chapter has no matching content, include it with an empty 'intro' and 'sections' array.\n"
