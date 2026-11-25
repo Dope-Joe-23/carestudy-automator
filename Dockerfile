@@ -54,10 +54,14 @@ RUN apk add --no-cache build-base python3 python3-dev py3-pip py3-virtualenv \
     && /opt/venv/bin/pip install --no-cache-dir \
         "anthropic>=0.40" \
         "google-genai>=3.3.0" \
+        "httpx>=0.28.1" \
         "pypdf>=4.0" \
         "Pillow>=11.0" \
         "python-docx>=1.1" \
         "scikit-learn>=1.3"
+
+# Fail the image build if the HTTP client required by the worker is missing.
+RUN /opt/venv/bin/python -c "import httpx"
 
 # Make the venv python the default
 ENV PATH="/opt/venv/bin:$PATH"
