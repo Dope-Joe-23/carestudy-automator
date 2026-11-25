@@ -135,6 +135,54 @@ class ImportStudyWithFieldsTests(unittest.TestCase):
                 self.assertIn(lead_in, mapped[target_section])
                 self.assertIn(f"Content for {target_section}.", mapped[target_section])
 
+    def test_routes_misnumbered_chapter_two_content_by_section_meaning(self):
+        raw_text = (
+            "In this section, patient data is compared with literature.\n"
+            "2.1.1 Diagnostic Investigations\n"
+            "Blood Film for Malaria Parasites.\n"
+            "2.1.2 Comments on Diagnostic Investigation\n"
+            "The requested investigations were appropriate.\n"
+            "2.2 Pharmacology of Drugs Prescribed\n"
+            "The actual cause of malaria is infection with Plasmodium parasites transmitted by mosquitoes.\n"
+            "2.3 Patient Health Problems\n"
+            "Table 3: Comparison of Clinical Features in Literature to those Exhibited by Patient\n"
+            "2.3.1 Comments on Clinical Features\n"
+            "The patient exhibited fever and chills.\n"
+            "2.4 Patient/Family Strengths\n"
+            "28/07/2026\nIV Paracetamol 1g 8hourly.\n"
+            "Table 4: Comparison of Treatment in Literature to Treatment Given to Patient\n"
+            "2.4.1 Comments on Medical Treatment\n"
+            "Antimalarial therapy was administered.\n"
+            "Table 5: Pharmacology of Drugs\n"
+            "DOCX table 7, row 1: Date | Drug | Dose | Classification\n"
+            "2.5 Nursing Diagnosis\n"
+            "The patient did not develop major complications during admission.\n"
+            "2.6 Patient and Family Strengths\n"
+            "The family provided emotional support.\n"
+            "2.7 Patient/Family Health Problems\n"
+            "The patient complained of nausea and vomiting.\n"
+            "2.8 Nursing Diagnosis\n"
+            "Risk for deficient fluid volume related to vomiting."
+        )
+
+        result = import_study_with_fields(raw_text)
+
+        self.assertEqual(result["importMode"], "deterministic")
+        mapped = {
+            section["sectionId"]: section["draft"]
+            for chapter in result["chapters"]
+            for section in chapter["sections"]
+        }
+        self.assertIn("The actual cause of malaria", mapped["2.1"])
+        self.assertIn("Comparison of Clinical Features", mapped["2.1"])
+        self.assertIn("Comparison of Treatment", mapped["2.1"])
+        self.assertIn("major complications", mapped["2.1"])
+        self.assertNotIn("DOCX table 7", mapped["2.1"])
+        self.assertIn("DOCX table 7", mapped["2.2"])
+        self.assertIn("family provided emotional support", mapped["2.4"])
+        self.assertIn("complained of nausea", mapped["2.3"])
+        self.assertIn("Risk for deficient fluid volume", mapped["2.5"])
+
     def test_reads_markdown_numbered_chapter_intro(self):
         raw_text = (
             "### 2.0 Introduction\n"

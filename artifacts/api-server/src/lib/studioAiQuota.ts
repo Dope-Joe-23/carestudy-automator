@@ -4,6 +4,7 @@ import { getStudyStore } from "@workspace/db";
 import type { AuthedAdminRequest } from "./adminAuth";
 
 const STUDIO_TARGET_REQUESTS_PER_PROJECT = 3;
+const STUDIO_IMPORT_REQUESTS_PER_PROJECT_FOR_OWNER = 10;
 const STUDIO_AI_MAX_IN_FLIGHT_PER_ADMIN = 2;
 const STUDIO_AI_BURST_WINDOW_MS = 60_000;
 const STUDIO_AI_REQUESTS_PER_WINDOW = 10;
@@ -77,6 +78,14 @@ function targetKeysFor(targets: string | string[]): string[] {
   return list.map((target) => digest(target.trim().toLowerCase()));
 }
 
+function targetRequestLimit(role: string, targets: string | string[]): number {
+  const list = Array.isArray(targets) ? targets : [targets];
+  if (role === "admin" && list.some((target) => target.startsWith("import:"))) {
+    return STUDIO_IMPORT_REQUESTS_PER_PROJECT_FOR_OWNER;
+  }
+  return STUDIO_TARGET_REQUESTS_PER_PROJECT;
+}
+
 export async function reserveStudioAiUsage(
   req: Request,
   res: Response,
@@ -90,15 +99,16 @@ export async function reserveStudioAiUsage(
   }
   if (!acquireStudioAiPermit(res, admin.id)) return false;
 
+  const requestLimit = targetRequestLimit(admin.role, targets);
   const reservation = await getStudyStore().reserveAiProjectUsage(
     projectKeyFor(req, studyId, fingerprint),
     targetKeysFor(targets),
-    STUDIO_TARGET_REQUESTS_PER_PROJECT,
+    requestLimit,
   );
   if (reservation.status === "reserved") return true;
 
   res.status(429).json({
-    error: `This section or document has reached ${STUDIO_TARGET_REQUESTS_PER_PROJECT} AI attempts for this project. The Studio owner can reset its limit.`,
+    error: `This section or document has reached ${requestLimit} AI attempts for this project. The Studio owner can reset its limit.`,
   });
   return false;
 }

@@ -261,6 +261,78 @@ def _section_id_for_heading(value: str, heading_by_normalised: dict[str, str]) -
     return heading_by_normalised.get(normalised)
 
 
+def _section_with_draft(section_id: str, draft: str) -> dict[str, Any]:
+    fields = _extract_labeled_fields(draft, section_id)
+    fields.update(
+        {
+            key: value
+            for key, value in _extract_narrative_fields(draft, section_id).items()
+            if key not in fields
+        }
+    )
+    return {
+        "sectionId": section_id,
+        "heading": SECTION_ID_MAP[section_id],
+        "fields": fields,
+        "draft": draft.strip(),
+    }
+
+
+def _route_chapter_two_sections(sections: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    routed: list[dict[str, Any]] = []
+    cause_markers = re.compile(r"\b(?:cause|causes|etiology|transmitted|mosquito|exposure)\b", re.IGNORECASE)
+    drug_markers = re.compile(
+        r"\b(?:dose|dosage|mg|tablet|injection|drug|medication|side effects)\b",
+        re.IGNORECASE,
+    )
+    clinical_comparison_markers = re.compile(
+        r"(?:comparison of clinical features|comments on clinical features|clinical features exhibited by patient)",
+        re.IGNORECASE,
+    )
+    pharmacology_table = re.compile(
+        r"(?im)^Table\s+\d+\s*:\s*Pharmacology of Drugs\b.*$",
+    )
+    treatment_comparison_markers = re.compile(
+        r"(?:comparison of treatment|comments on medical treatment)",
+        re.IGNORECASE,
+    )
+    diagnosis_markers = re.compile(r"\b(?:nursing diagnosis|related to|NANDA)\b", re.IGNORECASE)
+
+    for section in sections:
+        section_id = section["sectionId"]
+        draft = section["draft"]
+
+        if section_id == "2.2" and cause_markers.search(draft) and not drug_markers.search(draft):
+            routed.append(_section_with_draft("2.1", draft))
+            continue
+
+        if section_id == "2.3" and clinical_comparison_markers.search(draft):
+            routed.append(_section_with_draft("2.1", draft))
+            continue
+
+        if section_id == "2.4":
+            pharmacology_match = pharmacology_table.search(draft)
+            if pharmacology_match and treatment_comparison_markers.search(draft[:pharmacology_match.start()]):
+                treatment_text = draft[:pharmacology_match.start()].strip()
+                drug_text = draft[pharmacology_match.start():].strip()
+                if treatment_text:
+                    routed.append(_section_with_draft("2.1", treatment_text))
+                if drug_text:
+                    routed.append(_section_with_draft("2.2", drug_text))
+                continue
+
+        if (
+            section_id == "2.5"
+            and re.search(r"\bcomplications?\b", draft, re.IGNORECASE)
+            and not diagnosis_markers.search(draft)
+        ):
+            routed.append(_section_with_draft("2.1", draft))
+            continue
+
+        routed.append(section)
+    return routed
+
+
 def _infer_docx_care_plan_headings(raw_text: str) -> str:
     """Add missing 3.1/3.2 boundaries when extracted DOCX tables identify a care plan."""
     lines = raw_text.splitlines()
@@ -450,6 +522,13 @@ def _deterministic_import(raw_text: str) -> dict | None:
         _normalise_heading(heading): section_id
         for section_id, heading in SECTION_ID_MAP.items()
     }
+    heading_by_normalised.update(
+        {
+            _normalise_heading("Patient and Family Strengths"): "2.4",
+            _normalise_heading("Patient/Family Health Problems"): "2.3",
+            _normalise_heading("Nursing Diagnosis"): "2.5",
+        }
+    )
     chapter_names_by_number = {
         "1": "Assessment", "i": "Assessment", "one": "Assessment",
         "2": "Analysis of Data", "ii": "Analysis of Data", "two": "Analysis of Data",
@@ -639,6 +718,7 @@ def _deterministic_import(raw_text: str) -> dict | None:
     flush_pending_section_lead_in()
     finish_section()
     finish_intro()
+    sections = _route_chapter_two_sections(sections)
 
     if not sections and not chapter_intro_lines:
         return None

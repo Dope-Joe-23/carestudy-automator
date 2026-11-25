@@ -4013,9 +4013,12 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     }
     try {
       const resetCount = await resetStudioAiTargetUsage(currentStudyId, targetIds);
+      const attemptLimit = isAdmin && targetIds.some((targetId) => targetId.startsWith('import:'))
+        ? 10
+        : 3;
       toast.success('AI limit reset', {
         description: resetCount
-          ? `${label} can use AI up to 3 more times in this project.`
+          ? `${label} can use AI up to ${attemptLimit} more times in this project.`
           : `There were no recorded AI attempts for ${label} to reset.`,
       });
     } catch (error) {
