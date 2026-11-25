@@ -121,6 +121,7 @@ import {
   exportStudyDocx,
   initializeStaffPreviewExportPayment,
   getStudy,
+  importStudyFile,
   listLibrarySources,
   listStudyFiles,
   requestDraft,
@@ -146,6 +147,7 @@ import {
   verifyReferences,
   type DocTheme,
   type DraftReference,
+  type DraftVersion,
   type ExportPayload,
   type ExportScope,
   type ImportStudyFieldsResponse,
@@ -252,6 +254,9 @@ type Section = {
   rows?: TemplateRowDef;
   notes: string;
   draft: string;
+  draftVersion: number;
+  draftCreatedAt: string | null;
+  draftHistory: DraftVersion[];
   /** Reference sources this section's draft was grounded on. */
   references: DraftReference[];
   status: SectionStatus;
@@ -371,6 +376,9 @@ function makeChapters(profile: DraftingCadreProfile = ACTIVE_CARE_STUDY_CADRE_PR
       rows: section.rows,
       notes: '',
       draft: '',
+      draftVersion: 0,
+      draftCreatedAt: null,
+      draftHistory: [],
       references: [],
       status: 'empty' as SectionStatus,
       data: {},
@@ -428,6 +436,35 @@ function sectionCompletion(section: Section): number {
   const total = sectionInputCount(section);
   if (total <= 0) return 0;
   return Math.round((sectionFilledCount(section) / total) * 100);
+}
+
+function archiveCurrentDraft(
+  section: Section,
+): Pick<Section, 'draftVersion' | 'draftCreatedAt' | 'draftHistory'> {
+  const history = section.draftHistory ?? [];
+  const hasCurrentDraft = Boolean(section.draft.trim());
+  const currentRevision =
+    section.draftVersion || Math.max(0, ...history.map((version) => version.revision)) + 1;
+  const nextHistory = hasCurrentDraft
+    ? [
+        ...history.filter((version) => version.revision !== currentRevision),
+        {
+          revision: currentRevision,
+          draft: section.draft,
+          references: section.references,
+          wordCount: section.wordCount,
+          createdAt: section.draftCreatedAt || new Date().toISOString(),
+        },
+      ]
+    : history;
+  const nextRevision = hasCurrentDraft
+    ? Math.max(currentRevision, ...nextHistory.map((version) => version.revision)) + 1
+    : Math.max(0, ...nextHistory.map((version) => version.revision)) + 1;
+  return {
+    draftHistory: nextHistory,
+    draftVersion: nextRevision,
+    draftCreatedAt: new Date().toISOString(),
+  };
 }
 
 // The client-side fail-fast ceiling. Both the direct-to-R2 path and the
@@ -678,7 +715,17 @@ function composeSectionInput(section: Section): string {
  * literature review. Supplying that review as a separate benchmark prevents a
  * generic "not specified in the references" draft when 1.10 is already filled. */
 function composeDraftInput(section: Section, chapters: Chapter[]): string {
-  const sectionInput = composeSectionInput(section);
+  const sectionInput = [
+    composeSectionInput(section),
+    section.draft.trim()
+      ? [
+          'EXISTING SECTION DRAFT (source material to revise or continue; preserve supported facts and do not invent missing patient-specific details):',
+          section.draft.trim(),
+        ].join('\n')
+      : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
   if (section.id !== '2.1') return sectionInput;
 
   const literatureReview = chapters
@@ -2968,6 +3015,12 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
   const [docImportError, setDocImportError] = useState<string | null>(null);
   const [docImportReview, setDocImportReview] = useState<ImportStudyFieldsResponse | null>(null);
   const docImportFileRef = useRef<HTMLInputElement>(null);
+  const [unfinishedImportOpen, setUnfinishedImportOpen] = useState(false);
+  const [unfinishedImportFile, setUnfinishedImportFile] = useState<File | null>(null);
+  const [unfinishedImportReview, setUnfinishedImportReview] = useState<ImportStudyFieldsResponse | null>(null);
+  const [unfinishedImportBusy, setUnfinishedImportBusy] = useState(false);
+  const [unfinishedImportError, setUnfinishedImportError] = useState<string | null>(null);
+  const unfinishedImportFileRef = useRef<HTMLInputElement>(null);
 
   /** Compute a human-readable summary of how much data a chapter array holds. */
   const summariseChapterData = (
@@ -3080,6 +3133,9 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           id: section.id,
           notes: section.notes,
           draft: section.draft,
+          draftVersion: section.draftVersion,
+          draftCreatedAt: section.draftCreatedAt,
+          draftHistory: section.draftHistory,
           references: section.references,
           data: section.data,
           rowData: section.rowData.map((row) => ({ cells: row.cells })),
@@ -3165,6 +3221,19 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           const updates: Partial<Section> = {
             notes: typeof saved.notes === 'string' ? saved.notes : '',
             draft: typeof saved.draft === 'string' ? saved.draft : '',
+            draftVersion:
+              typeof saved.draftVersion === 'number'
+                ? saved.draftVersion
+                : typeof saved.draft === 'string' && saved.draft.trim()
+                  ? 1
+                  : 0,
+            draftCreatedAt:
+              typeof saved.draftCreatedAt === 'string'
+                ? saved.draftCreatedAt
+                : typeof saved.draft === 'string' && saved.draft.trim()
+                  ? new Date().toISOString()
+                  : null,
+            draftHistory: Array.isArray(saved.draftHistory) ? saved.draftHistory : [],
             references: Array.isArray(saved.references) ? saved.references : [],
             data: saved.data && typeof saved.data === 'object' ? (saved.data as Record<string, string>) : {},
             rowData: Array.isArray(saved.rowData)
@@ -3414,7 +3483,11 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
             }
             // Set the draft so it appears polished in the preview.
             if (typeof aiSection.draft === 'string' && aiSection.draft.trim()) {
+              if (aiSection.draft.trim() !== section.draft) {
+                Object.assign(section, archiveCurrentDraft(section));
+              }
               section.draft = aiSection.draft.trim();
+              if (!section.draftCreatedAt) section.draftCreatedAt = new Date().toISOString();
             }
             section.status = computeStatus(section);
           }
@@ -3449,6 +3522,125 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
       toast.error('Document import failed', { description: msg });
     } finally {
       setDocImportBusy(false);
+    }
+  };
+
+  const parseUnfinishedStudy = async () => {
+    if (!unfinishedImportFile || unfinishedImportBusy) return;
+    setUnfinishedImportBusy(true);
+    setUnfinishedImportError(null);
+    try {
+      const result = await importStudyFile(unfinishedImportFile);
+      setUnfinishedImportReview(result);
+      setUnfinishedImportOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not import this document.';
+      setUnfinishedImportError(message);
+      toast.error('Study import failed', { description: message });
+    } finally {
+      setUnfinishedImportBusy(false);
+    }
+  };
+
+  const createStudyFromUnfinishedImport = async () => {
+    if (!unfinishedImportReview || unfinishedImportBusy) return;
+    setUnfinishedImportBusy(true);
+    try {
+      if (dirty && canSave) {
+        const currentName = currentStudyName ?? deriveStudyName();
+        const savedCurrent = currentStudyId
+          ? await updateStudy(currentStudyId, currentName, buildStudyPayload())
+          : await createStudy(currentName, buildStudyPayload());
+        setCurrentStudyId(savedCurrent.id);
+        setCurrentStudyName(currentName);
+        setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        setDirty(false);
+      }
+
+      const importedChapters = makeChapters(cadreProfile);
+      for (const importedChapter of unfinishedImportReview.chapters) {
+        for (const importedSection of importedChapter.sections) {
+          const target = importedChapters
+            .flatMap((chapter) => chapter.sections)
+            .find((section) => section.id === importedSection.sectionId);
+          if (!target) continue;
+          target.data = { ...importedSection.fields };
+          target.draft = importedSection.draft.trim();
+          target.status = computeStatus(target);
+        }
+      }
+
+      const importedTitle = unfinishedImportReview.title;
+      const data: StoredStudy = {
+        title: {
+          patientName: importedTitle.patientName || '',
+          diagnosis: importedTitle.diagnosis || '',
+          studentName: importedTitle.studentName || '',
+          indexNumber: importedTitle.indexNumber || '',
+          collegeName: importedTitle.collegeName || 'Nursing & Midwifery Training College',
+          collegeLocation: importedTitle.collegeLocation || '',
+          year: importedTitle.year || String(new Date().getFullYear()),
+        },
+        chapters: importedChapters.map((chapter) => ({
+          name: chapter.name,
+          intro: chapter.intro,
+          introReferences: chapter.introReferences,
+          sections: chapter.sections.map((section) => ({
+            id: section.id,
+            notes: section.notes,
+            draft: section.draft,
+            draftVersion: section.draftVersion,
+            draftCreatedAt: section.draftCreatedAt,
+            draftHistory: section.draftHistory,
+            references: section.references,
+            data: section.data,
+            rowData: section.rowData.map((row) => ({ cells: row.cells })),
+          })),
+        })),
+      };
+      const filenameName = unfinishedImportFile?.name.replace(/\.[^.]+$/, '').trim();
+      const name = [
+        importedTitle.patientName || data.title.patientName,
+        importedTitle.diagnosis || data.title.diagnosis,
+      ].filter(Boolean).join(' — ') || filenameName || 'Imported care study';
+      const saved = await createStudy(name.slice(0, 80), data);
+
+      loadStudyIntoWorkspace(data, saved.id, false);
+      const importedSectionIds = new Set(
+        unfinishedImportReview.chapters.flatMap((chapter) =>
+          chapter.sections.map((section) => section.sectionId),
+        ),
+      );
+      const startedChapters = importedChapters
+        .map((chapter, index) => ({ chapter, index }))
+        .filter(({ chapter, index }) =>
+          index > 0 && chapter.sections.some((section) => importedSectionIds.has(section.id)),
+        );
+      const incompleteChapter = startedChapters.find(({ chapter }) =>
+        chapter.sections.some((section) => !importedSectionIds.has(section.id)),
+      );
+      const lastStartedIndex = startedChapters.at(-1)?.index ?? 1;
+      setActiveChapter(
+        incompleteChapter?.index ?? Math.min(lastStartedIndex + 1, importedChapters.length - 1),
+      );
+      setCurrentStudyName(saved.name);
+      setLastSavedAt(new Date(saved.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setStudyListKey((key) => key + 1);
+      try {
+        window.localStorage.setItem(LAST_STUDY_KEY, String(saved.id));
+      } catch {
+        // The study is saved server-side even when browser storage is unavailable.
+      }
+      setUnfinishedImportReview(null);
+      setUnfinishedImportFile(null);
+      toast.success('Imported study is ready', {
+        description: 'The original workspace was preserved. Review the imported sections and continue your study.',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not create the imported study.';
+      toast.error('Could not continue the imported study', { description: message });
+    } finally {
+      setUnfinishedImportBusy(false);
     }
   };
 
@@ -3700,11 +3892,17 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
         if (ci !== chapterIndex) return chapter;
         return {
           ...chapter,
-          sections: chapter.sections.map((section, si) =>
-            si === sectionIndex
-              ? { ...section, ...updates, status: computeStatus({ ...section, ...updates }) }
-              : section,
-          ),
+          sections: chapter.sections.map((section, si) => {
+            if (si !== sectionIndex) return section;
+            const draftChanged =
+              typeof updates.draft === 'string' && updates.draft !== section.draft;
+            const next = {
+              ...section,
+              ...(draftChanged ? archiveCurrentDraft(section) : {}),
+              ...updates,
+            };
+            return { ...next, status: computeStatus(next) };
+          }),
         };
       }),
     );
@@ -4601,6 +4799,48 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     });
   };
 
+  const selectDraftVersion = (revision: number) => {
+    if (!Number.isInteger(revision) || revision === currentSection.draftVersion) return;
+    const selected = currentSection.draftHistory.find((version) => version.revision === revision);
+    if (!selected) return;
+
+    const currentRevision =
+      currentSection.draftVersion ||
+      Math.max(0, ...currentSection.draftHistory.map((version) => version.revision)) + 1;
+    const nextHistory = currentSection.draftHistory.filter(
+      (version) => version.revision !== revision && version.revision !== currentRevision,
+    );
+    if (currentSection.draft.trim()) {
+      nextHistory.push({
+        revision: currentRevision,
+        draft: currentSection.draft,
+        references: currentSection.references,
+        wordCount: currentSection.wordCount,
+        createdAt: currentSection.draftCreatedAt || new Date().toISOString(),
+      });
+    }
+
+    updateCurrentSection({
+      draft: selected.draft,
+      references: selected.references,
+      wordCount: selected.wordCount,
+      draftVersion: selected.revision,
+      draftCreatedAt: selected.createdAt,
+      draftHistory: nextHistory,
+    });
+    setVerifyBySection((previous) => {
+      if (!(currentSection.id in previous)) return previous;
+      const next = { ...previous };
+      delete next[currentSection.id];
+      return next;
+    });
+    setVerifyAll(null);
+    setCopied(false);
+    toast.success(`Draft version ${selected.revision} selected`, {
+      description: 'This version is now shown in the preview and will be used for export.',
+    });
+  };
+
   /** Update the active chapter's introduction (and the sources it cites). */
   const updateChapterIntro = (
     chapterIndex: number,
@@ -5063,6 +5303,9 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
         id: section.id,
         notes: section.notes,
         draft: section.draft,
+        draftVersion: section.draftVersion,
+        draftCreatedAt: section.draftCreatedAt,
+        draftHistory: section.draftHistory,
         references: section.references,
         data: section.data,
         rowData: section.rowData.map((row) => ({ cells: row.cells })),
@@ -5096,7 +5339,14 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
           if (edit.data && typeof edit.data === 'object') {
             updates.data = { ...section.data, ...edit.data };
           }
-          return { ...section, ...updates, status: computeStatus({ ...section, ...updates }) };
+          const draftChanged =
+            typeof updates.draft === 'string' && updates.draft !== section.draft;
+          const next = {
+            ...section,
+            ...(draftChanged ? archiveCurrentDraft(section) : {}),
+            ...updates,
+          };
+          return { ...next, status: computeStatus(next) };
         }),
       })),
     );
@@ -5192,6 +5442,27 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
         if (!target) continue;
         target.notes = typeof saved.notes === 'string' ? saved.notes : '';
         target.draft = typeof saved.draft === 'string' ? saved.draft : '';
+        target.draftHistory = Array.isArray(saved.draftHistory)
+          ? saved.draftHistory.filter(
+              (version): version is DraftVersion =>
+                typeof version?.revision === 'number' &&
+                Number.isInteger(version.revision) &&
+                typeof version.draft === 'string' &&
+                typeof version.createdAt === 'string',
+            )
+          : [];
+        target.draftVersion =
+          typeof saved.draftVersion === 'number' && Number.isInteger(saved.draftVersion)
+            ? saved.draftVersion
+            : target.draft.trim()
+              ? 1
+              : 0;
+        target.draftCreatedAt =
+          typeof saved.draftCreatedAt === 'string'
+            ? saved.draftCreatedAt
+            : target.draft.trim()
+              ? new Date().toISOString()
+              : null;
         target.references = Array.isArray(saved.references) ? saved.references : [];
         // Restore word-count metadata if present in the saved snapshot.
         if (saved.wordCount && typeof saved.wordCount === 'object') {
@@ -6099,6 +6370,15 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                 </DropdownMenuItem>
                 <DropdownMenuItem disabled={aiBusy} onClick={() => setDocImportOpen(true)}>
                   <FileText /> Import document
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={aiBusy}
+                  onClick={() => {
+                    setUnfinishedImportError(null);
+                    setUnfinishedImportOpen(true);
+                  }}
+                >
+                  <FileUp /> Import unfinished project
                 </DropdownMenuItem>
                 <DropdownMenuItem disabled={aiBusy} onClick={resetAll}>
                   <RotateCcw /> Reset all progress
@@ -7318,6 +7598,46 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                             </p>
                           </div>
                         </div>
+                        {currentSection.draftHistory.length > 0 && !draftEditing && (
+                          <div className="flex items-center gap-2">
+                            <History className="size-3.5 text-muted-foreground" />
+                            <Select
+                              value="current"
+                              onValueChange={(value) => selectDraftVersion(Number(value))}
+                            >
+                              <SelectTrigger
+                                aria-label="Choose a draft version"
+                                className="h-8 w-[190px] text-xs"
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="current">
+                                  Current draft · v{currentSection.draftVersion}
+                                </SelectItem>
+                                {[...currentSection.draftHistory]
+                                  .sort((a, b) => b.revision - a.revision)
+                                  .map((version) => {
+                                    const timestamp = Date.parse(version.createdAt);
+                                    const dateLabel = Number.isNaN(timestamp)
+                                      ? ''
+                                      : ` · ${new Date(timestamp).toLocaleDateString()}`;
+                                    return (
+                                      <SelectItem
+                                        key={version.revision}
+                                        value={String(version.revision)}
+                                      >
+                                        Draft v{version.revision}{dateLabel}
+                                      </SelectItem>
+                                    );
+                                  })}
+                              </SelectContent>
+                            </Select>
+                            <span className="hidden text-[10px] text-muted-foreground xl:inline">
+                              Selected version appears in preview
+                            </span>
+                          </div>
+                        )}
                         {/* Word-count badge */}
                         {currentSection.wordCount && currentSection.wordCount.wordCountStatus !== 'no_target' && (
                           <span
@@ -7736,6 +8056,197 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
               <FileUp className="size-4" /> Import & replace chapter
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={unfinishedImportOpen}
+        onOpenChange={(open) => {
+          setUnfinishedImportOpen(open);
+          if (!open) setUnfinishedImportError(null);
+        }}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileUp className="size-4 text-primary" /> Import unfinished project
+            </DialogTitle>
+            <DialogDescription>
+              Upload your existing care-study document. We’ll extract and map its content, then show you a preview before creating a separate study in the Studio.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <input
+              ref={unfinishedImportFileRef}
+              type="file"
+              accept=".docx,.pdf,.txt,.md,.markdown"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                event.target.value = '';
+                setUnfinishedImportError(null);
+                if (file && file.size > 25 * 1024 * 1024) {
+                  setUnfinishedImportFile(null);
+                  setUnfinishedImportError('The file is larger than the 25 MB import limit.');
+                  return;
+                }
+                setUnfinishedImportFile(file);
+              }}
+            />
+            <div className="rounded-lg border border-dashed p-5 text-center">
+              <p className="text-sm font-medium">
+                {unfinishedImportFile?.name ?? 'Choose your unfinished care-study file'}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Word (.docx), PDF, Markdown, or plain text · up to 25 MB
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => unfinishedImportFileRef.current?.click()}
+                disabled={unfinishedImportBusy}
+              >
+                <Upload className="mr-2 size-3.5" /> Choose file
+              </Button>
+            </div>
+            {unfinishedImportError && (
+              <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                {unfinishedImportError}
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setUnfinishedImportOpen(false)}
+                disabled={unfinishedImportBusy}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => void parseUnfinishedStudy()}
+                disabled={!unfinishedImportFile || unfinishedImportBusy}
+                className="gap-2"
+              >
+                {unfinishedImportBusy
+                  ? <><RotateCcw className="size-4 animate-spin" /> Reading document…</>
+                  : <><Sparkles className="size-4" /> Parse & preview</>}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(unfinishedImportReview)}
+        onOpenChange={(open) => {
+          if (!open && !unfinishedImportBusy) {
+            setUnfinishedImportReview(null);
+            setUnfinishedImportFile(null);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListChecks className="size-4 text-primary" /> Review imported study
+            </DialogTitle>
+            <DialogDescription>
+              Check the sections recognized from your document. Nothing in your current workspace will be replaced; continuing creates a separate saved study.
+            </DialogDescription>
+          </DialogHeader>
+          {unfinishedImportReview && (() => {
+            const coverage = unfinishedImportReview.coverage;
+            const sections = unfinishedImportReview.chapters.flatMap((chapter) => chapter.sections);
+            const drafts = sections.filter((section) => section.draft.trim()).length;
+            const fields = sections.reduce((sum, section) => sum + Object.keys(section.fields ?? {}).length, 0);
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Sections mapped</p>
+                    <p className="mt-1 text-lg font-semibold">
+                      {coverage ? `${coverage.detected.length}/${coverage.expected.length}` : sections.length}
+                    </p>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Draft sections</p>
+                    <p className="mt-1 text-lg font-semibold">{drafts}</p>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Fields extracted</p>
+                    <p className="mt-1 text-lg font-semibold">{fields}</p>
+                  </div>
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Parser</p>
+                    <p className="mt-1 text-sm font-semibold capitalize">{unfinishedImportReview.importMode ?? 'unknown'}</p>
+                  </div>
+                </div>
+                {coverage && coverage.missing.length > 0 ? (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+                    <p className="flex items-center gap-2 font-medium text-amber-800 dark:text-amber-300">
+                      <CircleAlert className="size-4" /> Sections not found ({coverage.missing.length})
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{coverage.missing.join(', ')}</p>
+                  </div>
+                ) : coverage ? (
+                  <p className="flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">
+                    <CheckCircle2 className="size-4" /> All expected sections were detected.
+                  </p>
+                ) : (
+                  <p className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                    Section coverage could not be calculated; review each imported section below.
+                  </p>
+                )}
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-muted-foreground">
+                  Imported text and extracted fields still need your review. The Studio will not invent missing patient details, care provided, or outcomes.
+                </div>
+                <div className="max-h-56 space-y-1 overflow-y-auto">
+                  {sections.map((section) => (
+                    <details key={section.sectionId} className="rounded border px-2.5 py-2 text-xs">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                        <span className="min-w-0 truncate font-medium">{section.sectionId} · {section.heading}</span>
+                        <span className="shrink-0 text-muted-foreground">
+                          {section.draft.trim() ? 'content found' : 'no draft'} · {Object.keys(section.fields ?? {}).length} fields
+                        </span>
+                      </summary>
+                      <div className="mt-2 whitespace-pre-wrap border-t pt-2 leading-relaxed text-muted-foreground">
+                        {section.draft.trim() || Object.entries(section.fields ?? {})
+                          .map(([key, value]) => `${key}: ${value}`)
+                          .join('\n') || 'No text was extracted for this section.'}
+                      </div>
+                    </details>
+                  ))}
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setUnfinishedImportReview(null);
+                      setUnfinishedImportFile(null);
+                    }}
+                    disabled={unfinishedImportBusy}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => void createStudyFromUnfinishedImport()}
+                    disabled={unfinishedImportBusy || sections.length === 0}
+                    className="gap-2"
+                  >
+                    {unfinishedImportBusy
+                      ? <><RotateCcw className="size-4 animate-spin" /> Saving study…</>
+                      : <><FileUp className="size-4" /> Create study & continue</>}
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 

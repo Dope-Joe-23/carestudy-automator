@@ -25,6 +25,7 @@ CHAPTER_NAMES = [
     "Implementation",
     "Evaluation",
 ]
+MAX_IMPORT_CHARS = 180_000
 
 
 def import_study(raw_text: str) -> dict:
@@ -47,9 +48,8 @@ def import_study(raw_text: str) -> dict:
         }
     """
     # Truncate very long documents so the prompt stays within context limits.
-    # 80k chars is roughly 20k tokens — generous for a care study.
-    if len(raw_text) > 80_000:
-        raw_text = raw_text[:80_000] + "\n\n[...document truncated at 80 000 characters...]"
+    if len(raw_text) > MAX_IMPORT_CHARS:
+        raw_text = raw_text[:MAX_IMPORT_CHARS] + f"\n\n[...document truncated at {MAX_IMPORT_CHARS:,} characters...]"
 
     models = _candidate_models()
 
@@ -500,8 +500,8 @@ def import_study_with_fields(raw_text: str) -> dict:
           ]
         }
     """
-    if len(raw_text) > 80_000:
-        raw_text = raw_text[:80_000] + "\n\n[...document truncated at 80 000 characters...]"
+    if len(raw_text) > MAX_IMPORT_CHARS:
+        raw_text = raw_text[:MAX_IMPORT_CHARS] + f"\n\n[...document truncated at {MAX_IMPORT_CHARS:,} characters...]"
 
     deterministic = _deterministic_import(raw_text)
     if deterministic is not None:

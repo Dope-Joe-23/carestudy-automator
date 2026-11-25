@@ -101,6 +101,14 @@ export type DraftWordCount = {
   wordCountStatus: string;
 };
 
+export type DraftVersion = {
+  revision: number;
+  draft: string;
+  references: DraftReference[];
+  wordCount?: DraftWordCount;
+  createdAt: string;
+};
+
 export async function requestDraft(
   heading: string,
   notes: string,
@@ -538,6 +546,29 @@ export async function importStudyWithFields(
   return data;
 }
 
+export async function importStudyFile(file: File): Promise<ImportStudyFieldsResponse> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  }
+  const response = await fetch(`${API_URL}/studio/import-study-file`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ filename: file.name, fileBase64: btoa(binary) }),
+  });
+  if (!response.ok) {
+    signalIfUnauthorized(response);
+    const body = (await response.json().catch(() => null)) as
+      | { error?: string; detail?: string }
+      | null;
+    throw new Error(body?.detail ?? body?.error ?? `Import failed (${response.status})`);
+  }
+  const data = (await response.json()) as ImportStudyFieldsResponse;
+  if (!data.chapters?.length) throw new Error("The import returned no chapters.");
+  return data;
+}
+
 export type ExportField = { label: string; value: string };
 
 export type ExportSection = {
@@ -771,6 +802,9 @@ export type StoredSection = {
   id: string;
   notes: string;
   draft: string;
+  draftVersion?: number;
+  draftCreatedAt?: string | null;
+  draftHistory?: DraftVersion[];
   /** Reference sources this section's draft was grounded on. */
   references: DraftReference[];
   /** Field values keyed by template field id. */
