@@ -4047,8 +4047,44 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
     }
   };
 
-  const resetCurrentSectionAiLimit = () =>
-    resetStudioAiTargets([`section:${currentSection.id}`], `section ${currentSection.id}`);
+  const resetCurrentSectionAiLimit = () => {
+    if (isChapter2) {
+      return resetStudioAiTargets(
+        ['section:2.1', 'section:2.2', 'section:2.3', 'section:2.4', 'section:2.5'],
+        'Chapter 2 recommendations',
+      );
+    }
+    if (isChapter3) {
+      return resetStudioAiTargets(
+        ['section:3.1', 'section:3.2'],
+        'Chapter 3 recommendations',
+      );
+    }
+    if (isChapter4) {
+      return resetStudioAiTargets(
+        ['section:4.1', 'section:4.2', 'section:4.3'],
+        'Chapter 4 recommendations',
+      );
+    }
+    return resetStudioAiTargets(
+      [`section:${currentSection.id}`],
+      `section ${currentSection.id}`,
+    );
+  };
+  const resetAiLimitLabel = isChapter2
+    ? 'Reset Chapter 2 limits'
+    : isChapter3
+      ? 'Reset Chapter 3 limits'
+      : isChapter4
+        ? 'Reset Chapter 4 limits'
+        : 'Reset AI limit';
+  const resetAiLimitTitle = isChapter2
+    ? 'Reset Chapter 2 recommendation attempts for sections 2.1-2.5'
+    : isChapter3
+      ? 'Reset Chapter 3 recommendation attempts for sections 3.1-3.2'
+      : isChapter4
+        ? 'Reset Chapter 4 recommendation attempts for sections 4.1-4.3'
+        : "Reset this section's project AI attempt limit";
   const resetChapterIntroAiLimit = () =>
     resetStudioAiTargets([`chapter-intro:${activeChapter}`], `Chapter ${activeChapter + 1} introduction`);
   const resetStudyAssistantAiLimit = () =>
@@ -6582,11 +6618,11 @@ function Home({ cadreProfile = ACTIVE_CARE_STUDY_CADRE_PROFILE }: { cadreProfile
                     variant="outline"
                     onClick={() => void resetCurrentSectionAiLimit()}
                     disabled={aiBusy}
-                    title="Reset this section's project AI attempt limit"
+                    title={resetAiLimitTitle}
                     className="h-9 gap-1.5"
                   >
                     <RotateCcw className="size-4" />
-                    Reset AI limit
+                    {resetAiLimitLabel}
                   </Button>
                 )}
             </div>
