@@ -275,6 +275,37 @@ class ModelGatewayTests(unittest.TestCase):
         self.assertEqual(request_model.call_args_list[0].args[1].provider, "gemini")
         self.assertEqual(request_model.call_args_list[1].args[1].provider, "anthropic")
 
+    def test_service_unavailable_retries_before_giving_up_on_model(self):
+        class ServiceUnavailableError(Exception):
+            status_code = 503
+
+        client = object()
+        answer_response = SimpleNamespace(
+            content=[SimpleNamespace(type="text", text="recovered answer")]
+        )
+        with (
+            mock.patch.object(gateway, "_client_for", return_value=client),
+            mock.patch.object(
+                gateway,
+                "_request_model",
+                side_effect=[
+                    ServiceUnavailableError("temporarily unavailable"),
+                    ServiceUnavailableError("temporarily unavailable"),
+                    answer_response,
+                ],
+            ) as request_model,
+            mock.patch.object(gateway.time, "sleep") as sleep,
+        ):
+            answer = gateway._chat_model(
+                "system",
+                "prompt",
+                candidates=[gateway.ModelCandidate("gemini", "gemini-test")],
+            )
+
+        self.assertEqual(answer, "recovered answer")
+        self.assertEqual(request_model.call_count, 3)
+        self.assertEqual(sleep.call_args_list, [mock.call(2), mock.call(4)])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -354,7 +354,6 @@ def _chat_model(
     system = sanitize_surrogates(system)
     prompt = sanitize_surrogates(prompt)
 
-    max_retries = 2
     model_errors: list[str] = []
     for candidate in candidates or _candidate_models():
         try:
@@ -371,7 +370,10 @@ def _chat_model(
             continue
 
         last_exc: Exception | None = None
-        for attempt in range(1, max_retries + 1):
+        max_attempts = 2
+        attempt = 0
+        while attempt < max_attempts:
+            attempt += 1
             request_started = time.monotonic()
             try:
                 response = _request_model(
@@ -392,12 +394,12 @@ def _chat_model(
                         flush=True,
                     )
                     return answer
-                if attempt < max_retries:
+                if attempt < max_attempts:
                     wait = 2 ** attempt
                     elapsed = time.monotonic() - request_started
                     print(
                         f"[worker] {label} model {candidate.label} returned empty "
-                        f"(attempt {attempt}/{max_retries}, {elapsed:.1f}s), "
+                        f"(attempt {attempt}/{max_attempts}, {elapsed:.1f}s), "
                         f"retrying in {wait}s",
                         file=sys.stderr,
                         flush=True,
@@ -406,7 +408,7 @@ def _chat_model(
                     continue
                 model_errors.append(
                     f"{candidate.label}: returned empty response after "
-                    f"{max_retries} attempts{_response_diagnostic(response)}"
+                    f"{max_attempts} attempts{_response_diagnostic(response)}"
                 )
                 break
             except Exception as exc:
@@ -424,13 +426,21 @@ def _chat_model(
                     last_exc = None
                     break
                 last_exc = exc
+                status = getattr(exc, "status_code", None)
+                if status is None:
+                    status = getattr(exc, "code", None)
+                try:
+                    status = int(status)
+                except (TypeError, ValueError):
+                    status = None
+                if status is not None and 500 <= status <= 599:
+                    max_attempts = max(max_attempts, 3)
                 print(
                     f"[worker] {label} model {candidate.label} failed "
-                    f"(attempt {attempt}/{max_retries}, {elapsed:.1f}s): {exc}",
+                    f"(attempt {attempt}/{max_attempts}, {elapsed:.1f}s): {exc}",
                     file=sys.stderr,
                     flush=True,
                 )
-                status = getattr(exc, "status_code", None)
                 exc_text = str(exc)
                 if status == 429:
                     model_errors.append(
@@ -450,7 +460,7 @@ def _chat_model(
                     )
                     last_exc = None
                     break
-                if attempt < max_retries:
+                if attempt < max_attempts:
                     time.sleep(2 ** attempt)
         if last_exc is not None:
             model_errors.append(

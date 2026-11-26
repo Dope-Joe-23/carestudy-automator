@@ -170,13 +170,6 @@ router.post("/chapter4/care-summary", async (req, res) => {
   const drugs = collectStringList(req.body?.drugs);
 
   try {
-    if (!await reserveStudioAiUsage(
-      req,
-      res,
-      "section:4.1",
-      { patient, admission, carePlanRows, drugs },
-      getStudyId(req),
-    )) return;
     const careSummary: CareSummaryRecommendations = await draftWorker.careSummarySkeleton(
       patient,
       admission,
@@ -214,13 +207,6 @@ router.post("/chapter4/home-visits", async (req, res) => {
     : [];
 
   try {
-    if (!await reserveStudioAiUsage(
-      req,
-      res,
-      "section:4.3",
-      { patient, discharge, socio, admission, drugs, diagnoses, visitRows },
-      getStudyId(req),
-    )) return;
     const homeVisits: HomeVisitRecommendations = await draftWorker.homeVisitSkeleton(
       patient,
       drugs,
